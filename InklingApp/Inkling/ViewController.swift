@@ -33,7 +33,14 @@ class ViewController: UIViewController, WKScriptMessageHandler, WKUIDelegate, UI
 
         let url = URL(string: baseUrl + "?inWrapper=true&deviceId=" + deviceId)!
         Log.log("loading: \(url.absoluteString)")
+      
+        // Clear cache
+        URLCache.shared.removeAllCachedResponses()
+        URLCache.shared.diskCapacity = 0
+        URLCache.shared.memoryCapacity = 0
 
+        
+        // Load webview
         webView = WKWebView(frame: view.frame, configuration: configuration)
         webView!.load(URLRequest(url: url))
         webView!.autoresizingMask = [.flexibleWidth, .flexibleHeight]
