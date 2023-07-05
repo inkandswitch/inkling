@@ -42,7 +42,14 @@ class WetStroke {
         this.last_b = Vec.clone(pos)
         this.velocity = 0
 
-        this.snaps = []
+        this.h_snap
+        this.v_snap
+        this.ref_line
+        this.angle_snap
+        this.angle_offset
+        this.len_snap
+        this.point_snap
+
     }
 
     update(pos, points, ref_line) {
@@ -52,30 +59,34 @@ class WetStroke {
         this.velocity = 0.05 * new_velocity + (1 - 0.05) * this.velocity // Filter velocity
         //console.log(this.velocity);
 
-        this.hv_snap = false
+        this.h_snap = false
+        this.v_snap = false
 
         if(Math.abs(this.a.x-this.b.x) < 10) {
             this.b.x = this.a.x
-            this.hv_snap = true
+            this.v_snap = true
         }
     
         if(Math.abs(this.a.y-this.b.y) < 10) {
             this.b.y = this.a.y
-            this.hv_snap = true
+            this.h_snap = true
         }
         
-        this.snaps = []
+        let snaps = []
         if(this.velocity < 1.5) {
             points.forEach(point=>{
                 let sx = Line.getXforY(this, point.pos.y)
                 let sy = Line.getYforX(this, point.pos.x)
-                this.snaps.push({x: sx, y: point.pos.y, snap: point})
-                this.snaps.push({x: point.pos.x, y: sy, snap: point})
+                snaps.push({x: sx, y: point.pos.y, snap: point, type: "horizontal"})
+                snaps.push({x: point.pos.x, y: sy, snap: point, type: "vertical"})
             })
 
-            this.snaps.forEach(snap=>{
+            this.point_snap = false
+            snaps.forEach(snap=>{
                 if(Vec.dist(pos, snap) < 10) {
-                    this.b = snap
+                    this.b.x = snap.x
+                    this.b.y = snap.y
+                    this.point_snap = snap
                 }
             })
         } 
@@ -84,12 +95,16 @@ class WetStroke {
         let point_snap = points.find(point=>Vec.dist(point.pos, pos) < 10)
         if(point_snap) {
             this.b = point_snap.pos
+            this.point_snap = {snap: point_snap, type: "coincident"}
         }
 
         
         // Snap with reference point
         this.len_snap = false
+        this.angle_snap = false
+        this.angle_offset = null
         if(ref_line) {
+            this.ref_line = ref_line
             // Snap lengths
             let ref_len = Line.len(Line(ref_line.a.pos, ref_line.b.pos))
             let cur_len = Line.len(Line(this.a, this.b))
@@ -110,7 +125,8 @@ class WetStroke {
 
                 let new_angle = ref_angle + closet_round_angle + 90
                 this.b = Vec.add(this.a, Vec.polar(new_angle, cur_len))
-                this.hv_snap = true
+                this.angle_snap = true
+                this.angle_offset = closet_round_angle + 90
             }
         }
     }
@@ -123,7 +139,7 @@ class WetStroke {
         ctx.lineTo(this.b.x, this.b.y) 
         ctx.stroke()
 
-        if(this.hv_snap) {
+        if(this.h_snap || this.v_snap || this.angle_snap) {
             let projected_a = Vec.add(this.b, Vec.mulS(Vec.sub(this.a, this.b), 100))
             let projected_b = Vec.add(this.a, Vec.mulS(Vec.sub(this.b, this.a), 100))
     
@@ -134,24 +150,10 @@ class WetStroke {
             ctx.lineTo(projected_b.x, projected_b.y) 
             ctx.stroke()
         }
-        
 
-        
-
-        // snaps
-        // let offset = Vec.rotate90CW(Vec.mulS(Vec.normalize(Vec.sub(this.a, this.b)), 5))
-        // this.snaps.forEach(snap=>{
-        //     let snap_a = Vec.add(snap, offset)
-        //     let snap_b = Vec.sub(snap, offset)
-        //     ctx.beginPath()
-        //     ctx.moveTo(snap_a.x, snap_a.y)
-        //     ctx.lineTo(snap_b.x, snap_b.y)
-        //     ctx.stroke()
-        // })
-
-        if(this.b.snap) {
-            let projected_a = Vec.add(this.b, Vec.mulS(Vec.sub(this.b.snap.pos, this.b), 100))
-            let projected_b = Vec.add(this.b.snap.pos, Vec.mulS(Vec.sub(this.b, this.b.snap.pos), 100))
+        if(this.point_snap) {
+            let projected_a = Vec.add(this.b, Vec.mulS(Vec.sub(this.point_snap.snap.pos, this.b), 100))
+            let projected_b = Vec.add(this.point_snap.snap.pos, Vec.mulS(Vec.sub(this.b, this.point_snap.snap.pos), 100))
             ctx.lineWidth = 0.25
             ctx.strokeStyle = "#F81ED5"
             ctx.beginPath()
@@ -164,10 +166,14 @@ class WetStroke {
 
 class DrawSnap { 
     constructor(){
+        this.mode = "draw"
+
         this.wet_stroke = null
         this.ref_line = null
         this.points = []
         this.lines = []
+
+        this.constraints = []
     }
 
     find_point_near(pos) {
@@ -207,6 +213,18 @@ class DrawSnap {
         let l = new LineStroke(a, b)
         this.lines.push(l)
         
+
+        // record constraints
+        let ws = this.wet_stroke
+        if(ws.v_snap) {this.constraints.push({type: "vertical", a, b})}
+        if(ws.h_snap) {this.constraints.push({type: "horizontal", a, b})}
+        if(ws.point_snap && ws.point_snap.type != "coincident") {this.constraints.push({type: ws.point_snap.type, a:b, b:ws.point_snap.snap})}
+        if(ws.len_snap) {this.constraints.push({type: "length", a:l, b:ws.ref_line})}
+        if(ws.angle_snap) {this.constraints.push({type: "angle", a:l, b:ws.ref_line})}
+        if(ws.angle_snap) {this.constraints.push({type: "angle", a:l, b:ws.ref_line, angle: ws.angle_offset})}
+
+        console.log(this.constraints);
+
         this.wet_stroke = null
     }
     
@@ -214,15 +232,30 @@ class DrawSnap {
         // Handle input
         events.pencil.forEach(event=>{
             let pos = Vec(event.x, event.y)
-            if(event.type == "began") {
-                this.begin_stroke(pos)
+            if(this.mode == "draw") {
+                if(event.type == "began") {
+                    this.begin_stroke(pos)
+                }
+                if(event.type == "moved") {
+                    this.update_stroke(pos)
+                }
+                if(event.type == "ended") {
+                    this.end_stroke(pos)
+                }
+            } else if(this.mode == "move") {
+                if(event.type == "began") {
+                    this.dragging = this.find_point_near(pos)
+                }
+                if(event.type == "moved") {
+                    if(this.dragging) {
+                        this.dragging.pos = pos
+                    }
+                }
+                if(event.type == "ended") {
+                    this.dragging = false
+                }
             }
-            if(event.type == "moved") {
-                this.update_stroke(pos)
-            }
-            if(event.type == "ended") {
-                this.end_stroke(pos)
-            }
+            
         })
 
         Object.entries(events.touches).forEach(([touchId, events])=>{
@@ -232,6 +265,14 @@ class DrawSnap {
                     if(this.ref_line == null) {
                         this.ref_line = this.find_stroke_near(pos)
                         this.ref_line_id = touchId
+                    }
+
+                    if(Vec.dist(Vec(40,40), pos) < 20) {
+                        if(this.mode == "draw") {
+                            this.mode = "move"
+                        } else {
+                            this.mode = "draw"
+                        }
                     }
                 }
     
@@ -256,6 +297,17 @@ class DrawSnap {
         if(this.wet_stroke) {
             this.wet_stroke.render(ctx)
         }
+
+        // Draw toggle
+        ctx.beginPath()
+        ctx.ellipse(40, 40, 20, 20, 0, 0, Math.PI*2)
+        if(this.mode == "draw") {
+            ctx.fill()
+        } else {
+            ctx.stroke()
+        }
+
+        ctx.fillText(this.mode, 70, 40)
     }
 }
 
