@@ -130,7 +130,7 @@ class WetStroke {
                 this.b = Vec.add(this.a, Vec.polar(180 + new_angle, cur_len))
                 this.angle_snap = true
                 this.angle_offset = closest_round_angle
-                console.log('da', diff_angle, 'cra', closest_round_angle);
+                // console.log('da', diff_angle, 'cra', closest_round_angle);
             }
         }
     }
