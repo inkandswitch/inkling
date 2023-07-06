@@ -117,16 +117,20 @@ class WetStroke {
             // Snap Angles
             let my_vec = Vec.sub(this.a, this.b)
             let ref_vec = Vec.sub(ref_line.a.pos, ref_line.b.pos)
+
+            let my_angle = Vec.angle(my_vec)
             let ref_angle = Vec.angle(ref_vec)
-            let diff_angle = Vec.angleBetweenClockwise(my_vec, ref_vec)
 
-            let closet_round_angle = Math.round(diff_angle / 90) * 90
-            if(Math.abs(diff_angle - closet_round_angle) < 10) {
+            let diff_angle = (my_angle - ref_angle + 360) % 360
 
-                let new_angle = ref_angle + closet_round_angle + 90
-                this.b = Vec.add(this.a, Vec.polar(new_angle, cur_len))
+            let closest_round_angle = (Math.round(diff_angle / 90) * 90 + 360) % 360
+            if(Math.abs(diff_angle - closest_round_angle) < 10) {
+
+                let new_angle = ref_angle + closest_round_angle
+                this.b = Vec.add(this.a, Vec.polar(180 + new_angle, cur_len))
                 this.angle_snap = true
-                this.angle_offset = closet_round_angle + 90
+                this.angle_offset = closest_round_angle
+                console.log('da', diff_angle, 'cra', closest_round_angle);
             }
         }
     }
@@ -245,7 +249,7 @@ class DrawSnap {
         
 
         // record constraints
-        // this.constraints.push({type: 'minLength', a:l, b: 50});
+        this.constraints.push({type: 'minLength', a:l, b: 50});
         let ws = this.wet_stroke
         if(ws.v_snap) {this.constraints.push({type: "vertical", a, b})}
         if(ws.h_snap) {this.constraints.push({type: "horizontal", a, b})}

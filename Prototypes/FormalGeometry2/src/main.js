@@ -97,13 +97,13 @@ function addConstraints(r, c) {
     r.add(new MinLength(c.a.a.pos, c.a.b.pos, c.b));
   }
 
-  // if (c.type === 'angle') {
-  //   c.a.a.pos = toRPoint(c.a.a.pos);
-  //   c.a.b.pos = toRPoint(c.a.b.pos);
-  //   c.b.a.pos = toRPoint(c.b.a.pos);
-  //   c.b.b.pos = toRPoint(c.b.b.pos);
-  //   r.add(new Orientation(c.a.a.pos, c.a.b.pos, c.b.a.pos, c.b.b.pos, Math.PI * c.angle / 180));
-  // }
+  if (c.type === 'angle') {
+    c.a.a.pos = toRPoint(c.a.a.pos);
+    c.a.b.pos = toRPoint(c.a.b.pos);
+    c.b.a.pos = toRPoint(c.b.a.pos);
+    c.b.b.pos = toRPoint(c.b.b.pos);
+    r.add(new Orientation(c.a.a.pos, c.a.b.pos, c.b.a.pos, c.b.b.pos, Math.PI * c.angle / 180));
+  }
 }
 
 function toRPoint(p) {

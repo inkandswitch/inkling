@@ -999,8 +999,8 @@ export class Orientation extends FourPointConstraint {
     const a34 = Math.atan2(v34.y, v34.x);
     const m34 = this.p3.plus(this.p4).scaledBy(0.5);
 
-    const currTheta = a12 - a34;
-    const dTheta = this.theta - currTheta;
+    const currTheta = (a12 - a34 + 2 * Math.PI) % (2 * Math.PI);
+    const dTheta = (this.theta - currTheta) % (2 * Math.PI);
     // TODO: figure out why setting dTheta to 1/2 times this value (as shown in the paper
     // and seems to make sense) results in jumpy/unstable behavior.
 
