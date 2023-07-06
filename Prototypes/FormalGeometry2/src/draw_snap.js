@@ -161,6 +161,36 @@ class WetStroke {
             ctx.lineTo(projected_b.x, projected_b.y) 
             ctx.stroke()
         }
+
+        if(this.ref_line) {
+            let ref_len = Line.len(Line(this.ref_line.a.pos, this.ref_line.b.pos))
+
+            let normalized_line = Vec.normalize(Vec.sub(this.b, this.a))
+
+            let long_b = Vec.add(this.a, Vec.mulS(normalized_line, 10000))
+            let len_vec = Vec.mulS(normalized_line, ref_len)
+
+            ctx.lineWidth = 0.25
+            ctx.strokeStyle = "#F81ED5"
+
+            ctx.beginPath()
+            ctx.moveTo(this.a.x, this.a.y)
+            ctx.lineTo(long_b.x, long_b.y) 
+            ctx.stroke()
+
+            for (let i = 0; i < 10; i+=0.25) {
+                let size = i%1 == 0.0 ? 6 : 3
+                let perpendicular = Vec.mulS(Vec.rotate90CCW(normalized_line), size)
+
+                let snap_pt = Vec.add(this.a, Vec.mulS(len_vec, i))
+                let snap_perp_a = Vec.add(snap_pt, perpendicular)
+                let snap_perp_b = Vec.sub(snap_pt, perpendicular)
+                ctx.beginPath()
+                ctx.moveTo(snap_perp_a.x, snap_perp_a.y)
+                ctx.lineTo(snap_perp_b.x, snap_perp_b.y) 
+                ctx.stroke()
+            }
+        }
     }
 }
 
@@ -262,10 +292,16 @@ class DrawSnap {
             events.forEach(event=>{
                 let pos = Vec(event.x, event.y)
                 if(event.type == "began") {
-                    if(this.ref_line == null) {
-                        this.ref_line = this.find_stroke_near(pos)
+                        const found = this.find_stroke_near(pos)
+                        if(this.ref_line == found) {
+                            this.ref_line = null
+                        } else {
+                            this.ref_line = found
+                            this.finger_down_time = event.timestamp
+                        }
+                        
                         this.ref_line_id = touchId
-                    }
+                    //}
 
                     if(Vec.dist(Vec(40,40), pos) < 20) {
                         if(this.mode == "draw") {
@@ -277,9 +313,9 @@ class DrawSnap {
                 }
     
                 if(event.type == "ended") {
-                    //if(this.ref_line_id == touchId){
+                    if(event.timestamp - this.finger_down_time > 1.0) {
                         this.ref_line = null
-                    //}
+                    }
                 }
             })
             

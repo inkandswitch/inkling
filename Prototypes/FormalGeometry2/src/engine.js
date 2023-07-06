@@ -22,6 +22,7 @@ window.nativeEvent = (eventState, touches) => {
                     type: eventState,
                     x: point.x,
                     y: point.y,
+                    timestamp: point.timestamp
                 });
             }
         });
