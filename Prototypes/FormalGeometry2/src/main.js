@@ -32,7 +32,7 @@ function relax(events) {
     addConstraints(r, c);
   }
   addHandOfGodConstraints(r, events);
-  r.iterateForUpToMillis(10);
+  r.iterateForUpToMillis(15);
 }
 
 // TODO: get this right
