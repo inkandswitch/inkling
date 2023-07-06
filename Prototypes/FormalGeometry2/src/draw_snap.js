@@ -215,13 +215,13 @@ class DrawSnap {
         
 
         // record constraints
+        // this.constraints.push({type: 'minLength', a:l, b: 50});
         let ws = this.wet_stroke
         if(ws.v_snap) {this.constraints.push({type: "vertical", a, b})}
         if(ws.h_snap) {this.constraints.push({type: "horizontal", a, b})}
         if(ws.point_snap && ws.point_snap.type != "coincident") {this.constraints.push({type: ws.point_snap.type, a:b, b:ws.point_snap.snap})}
         if(ws.len_snap) {this.constraints.push({type: "length", a:l, b:ws.ref_line})}
-        if(ws.angle_snap) {this.constraints.push({type: "angle", a:l, b:ws.ref_line})}
-        if(ws.angle_snap) {this.constraints.push({type: "angle", a:l, b:ws.ref_line, angle: ws.angle_offset})}
+        if(ws.angle_snap && !ws.v_snap && !ws.h_snap) {this.constraints.push({type: "angle", a:l, b:ws.ref_line, angle: ws.angle_offset})}
 
         console.log(this.constraints);
 
