@@ -1,5 +1,5 @@
-import engine from "./engine";
-import Canvas from "./canvas";
+import engine from './engine';
+import Canvas from './canvas';
 import Relax, {
   FixedPoint,
   Horizontal,
@@ -9,9 +9,9 @@ import Relax, {
   Point as RPoint,
   Var,
   Vertical,
-} from "./lib/relax-pk";
+} from './lib/relax-pk';
 
-import DrawSnap from "./draw_snap";
+import DrawSnap from './draw_snap';
 
 const draw = new DrawSnap();
 
