@@ -22,50 +22,27 @@ const canvas = new Canvas(document.body, ctx => {
 
 engine((events) => {
   draw.update(events);
-  relax(events);
+  relax();
   canvas.render();
 });
 
-function relax(events) {
+function relax() {
   const r = new Relax();
+  addHandOfGodConstraint(r);
   for (const c of draw.constraints) {
     addConstraints(r, c);
   }
-  addHandOfGodConstraints(r, events);
   r.iterateForUpToMillis(15);
 }
 
-// TODO: get this right
-function addHandOfGodConstraints(r, events) {
-  if (draw.mode !== 'move') {
+function addHandOfGodConstraint(r) {
+  if (draw.mode !== 'move' || !draw.dragging) {
     return;
   }
 
-  const fixedPoints = new Set();
-
-  function addConstraint(event) {
-    const p = draw.find_point_near(event);
-    if (p == null || fixedPoints.has(p)) {
-      return;
-    }
-    p.pos = toRPoint(p.pos);
-    r.add(new FixedPoint(p.pos, new RPoint(event.x, event.y)));
-    fixedPoints.add(p);
-  }
-
-  for (let idx = events.pencil.length - 1; idx >= 0; idx--) {
-    const event = events.pencil[idx];
-    if (event.type === 'moved') {
-      addConstraint(event);
-    }
-  }
-
-  for (let idx = events.pencil.length - 1; idx >= 0; idx--) {
-    const event = events.pencil[idx];
-    if (event.type === 'began') {
-      addConstraint(event);
-    }
-  }
+  const p = toRPoint(draw.dragging.pos);
+  draw.dragging.pos = p;
+  r.add(new FixedPoint(p, new RPoint(p.x, p.y)));
 }
 
 function addConstraints(r, c) {
