@@ -276,9 +276,19 @@ class DrawSnap {
                 if(event.type == "ended") {
                     this.end_stroke(pos)
                 }
-            } else if(this.mode == "move") {
+            } else if(this.mode.startsWith("move")) {
                 if(event.type == "began") {
                     this.dragging = this.find_point_near(pos)
+                    if (this.dragging) {
+                        let fixedPointDistance = -Infinity;
+                        for (const p of this.points) {
+                            const distance = Vec.dist(this.dragging.pos, p.pos);
+                            if (distance > fixedPointDistance) {
+                                fixedPointDistance = distance;
+                                this.fixedPoint = p;
+                            }
+                        }
+                    }
                 }
                 if(event.type == "moved") {
                     if(this.dragging) {
@@ -287,6 +297,7 @@ class DrawSnap {
                 }
                 if(event.type == "ended") {
                     this.dragging = false
+                    this.fixedPoint = null;
                 }
             }
             
@@ -310,6 +321,8 @@ class DrawSnap {
                     if(Vec.dist(Vec(40,40), pos) < 20) {
                         if(this.mode == "draw") {
                             this.mode = "move"
+                        } else if(this.mode == "move") {
+                            this.mode = "move-v2"
                         } else {
                             this.mode = "draw"
                         }

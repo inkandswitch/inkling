@@ -28,21 +28,28 @@ engine((events) => {
 
 function relax() {
   const r = new Relax();
-  addHandOfGodConstraint(r);
+  addHandOfGodConstraints(r);
   for (const c of draw.constraints) {
     addConstraints(r, c);
   }
   r.iterateForUpToMillis(15);
 }
 
-function addHandOfGodConstraint(r) {
-  if (draw.mode !== 'move' || !draw.dragging) {
+function addHandOfGodConstraints(r) {
+  if (!draw.mode.startsWith('move') || !draw.dragging) {
     return;
   }
 
-  const p = toRPoint(draw.dragging.pos);
-  draw.dragging.pos = p;
-  r.add(new FixedPoint(p, new RPoint(p.x, p.y)));
+  function addFixedPointConstraint(dp) {
+    const p = toRPoint(dp.pos);
+    dp.pos = p;
+    r.add(new FixedPoint(p, new RPoint(p.x, p.y)));
+  }
+
+  addFixedPointConstraint(draw.dragging);
+  if (draw.mode === 'move-v2') {
+    addFixedPointConstraint(draw.fixedPoint);
+  }
 }
 
 function addConstraints(r, c) {
