@@ -8,9 +8,17 @@ window.nativeEvent = (eventState, touches) => {
   eventQueue.push({ eventState, touches });
 };
 
+let pointsInCurrentStroke = null;
+
 function onFrame(_ts) {
-  eventQueue.forEach(processEvent);
+  for (const event of eventQueue) {
+    processEvent(event);
+  }
   eventQueue.length = 0;
+
+  if (pointsInCurrentStroke != null) {
+    updateCurrentPath();
+  }
 
   requestAnimationFrame(onFrame);
 }
@@ -18,8 +26,6 @@ function onFrame(_ts) {
 requestAnimationFrame(onFrame);
 
 // ----- processing events -----
-
-let currentStrokePoints = null;
 
 function toStrokePoint(eventPoint) {
   return [
@@ -29,16 +35,6 @@ function toStrokePoint(eventPoint) {
   ];
 }
 
-function newStroke(p) {
-  currentStrokePoints = [toStrokePoint(p)];
-  appendNewPath();
-}
-
-function extendStroke(p) {
-  currentStrokePoints.push(toStrokePoint(p));
-  updateCurrentPath();
-}
-
 function processEvent(event) {
   for (const [_id, points] of Object.entries(event.touches)) {
     // only pay attention to pencil events for now
@@ -46,9 +42,14 @@ function processEvent(event) {
       continue;
     }
 
+    function extendStroke(p) {
+      pointsInCurrentStroke.push(toStrokePoint(p));
+    }
+
     switch (event.eventState) {
       case 'began': {
-        newStroke(points[0]);
+        pointsInCurrentStroke = [toStrokePoint(points[0])];
+        appendNewPath();
         break;
       }
       case 'moved': {
@@ -57,6 +58,9 @@ function processEvent(event) {
       }
       case 'ended': {
         extendStroke(points[0]);
+        updateCurrentPath();
+        console.log(pointsInCurrentStroke.length);
+        pointsInCurrentStroke = null;
         break;
       }
     }
@@ -68,7 +72,7 @@ function processEvent(event) {
 const svg = document.getElementById('svg');
 
 const getStrokeOptions = {
-  size: 1,
+  size: 1.5,
   thinning: 0.5,
   smoothing: 0.5,
   streamline: 0.5,
@@ -87,10 +91,11 @@ const getStrokeOptions = {
 };
 
 function appendNewPath() {
-  const stroke = getStroke(currentStrokePoints, getStrokeOptions);
+  const stroke = getStroke(pointsInCurrentStroke, getStrokeOptions);
   const pathData = toSvgPath(stroke);
   const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
   path.setAttributeNS(null, 'd', pathData);
+  // path.setAttributeNS(null, 'transform', 'rotate(30) translate(40, 50)');
   svg.appendChild(path);
 }
 
