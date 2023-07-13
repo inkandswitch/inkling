@@ -1,5 +1,6 @@
 import Vec from './lib/vec';
 import Line from './lib/line';
+import parse from './parser';
 
 // Monotonically incrementing id counter
 let nextId = 0;
@@ -20,10 +21,6 @@ class Point {
 function addInputElement() {
     const input = document.createElement('input');
     input.setAttribute('type', 'text');
-    if (Math.random() > 0.5) {
-        input.value = '2x';
-    }
-    input.style.setProperty('position', 'absolute');
     input.contentEditable = true;
     input.onchange = () => {
         input.value = input.value.toLowerCase();
@@ -386,12 +383,20 @@ class DrawSnap {
             for (const input of document.body.getElementsByTagName('input')) {
                 input.placeholder = '...';
             }
+            window.webkit.messageHandlers.messages.postMessage('mgr off');
         } else {
+            const parsed = [];
             for (const input of document.body.getElementsByTagName('input')) {
                 input.placeholder = '';
                 input.blur();
+                const p = parse(input.value);
+                if (p != null) {
+                    parsed.push(p);
+                }
             }
+            console.log(parsed);
             this.mode = 'draw';
+            window.webkit.messageHandlers.messages.postMessage('mgr on');
         }
         document.body.className = this.mode;
         return this.mode;

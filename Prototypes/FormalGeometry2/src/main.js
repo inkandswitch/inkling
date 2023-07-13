@@ -13,11 +13,26 @@ import Relax, {
 
 import DrawSnap from './draw_snap';
 
+// import numeric from 'numeric';
+// console.log(numeric.uncmin(vs => Math.pow(vs[0] - 5, 2) + Math.pow(vs[1] - 3, 2), [0, 0]));
+
 const draw = new DrawSnap();
 
 const canvas = new Canvas(document.body, ctx => {
   ctx.clearRect(0,0, window.innerWidth, window.innerHeight);
   draw.render(ctx);
+});
+
+canvas.canvas.addEventListener('touchstart', e => {
+  // Hokey way to detect a press of the mode button while the
+  // MultiGestureRecognizer is disabled.
+  if (
+    draw.mode === 'scribble' &&
+    e.pageX <= 50 &&
+    e.pageY <= 50
+  ) {
+    draw.toggleModes();
+  }
 });
 
 engine((events) => {
