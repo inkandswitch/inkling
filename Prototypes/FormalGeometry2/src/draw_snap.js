@@ -234,9 +234,6 @@ class DrawSnap {
         this.lines = [];
 
         this.constraints = [];
-
-        this.___addLine({ x: 100, y: 100 }, { x: 300, y: 200 });
-        this.___addLine({ x: 150, y: 150 }, { x: 150, y: 400 });
     }
 
     find_point_near(pos) {
@@ -260,14 +257,6 @@ class DrawSnap {
         if (this.wet_stroke) {
             this.wet_stroke.update(pos, this.points, this.ref_line);
         }
-    }
-
-    ___addLine(pos1, pos2) {
-        const p1 = new Point(pos1);
-        const p2 = new Point(pos2);
-        this.points.push(p1, p2);
-        const l = new LineStroke(p1, p2);
-        this.lines.push(l);
     }
 
     end_stroke(pos) {
@@ -302,7 +291,7 @@ class DrawSnap {
             this.constraints.push({ type: 'angle', a: l, b: ws.ref_line, angle: ws.angle_offset });
         }
 
-        // console.log(this.constraints);
+        console.log(this.constraints);
 
         this.wet_stroke = null
     }
