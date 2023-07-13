@@ -11,7 +11,7 @@ import WebKit
 
 class ViewController: UIViewController, WKScriptMessageHandler, WKUIDelegate, UIGestureRecognizerDelegate, UIScrollViewDelegate {
     let isBlockingScroll = true
-
+    var multiGestureRecognizer: MultiGestureRecognizer?
     var webView: WKWebView?
     var timer = Timer()
 
@@ -53,10 +53,10 @@ class ViewController: UIViewController, WKScriptMessageHandler, WKUIDelegate, UI
             webView!.scrollView.delegate = self
         }
 
-        let multiGestureRecognizer = MultiGestureRecognizer(target: nil, action: nil)
-        multiGestureRecognizer.webView = webView
-        multiGestureRecognizer.delegate = self
-        webView!.addGestureRecognizer(multiGestureRecognizer)
+        multiGestureRecognizer = MultiGestureRecognizer(target: nil, action: nil)
+        multiGestureRecognizer!.webView = webView
+        multiGestureRecognizer!.delegate = self
+        webView!.addGestureRecognizer(multiGestureRecognizer!)
 
         view.addSubview(webView!)
     }
@@ -76,7 +76,15 @@ class ViewController: UIViewController, WKScriptMessageHandler, WKUIDelegate, UI
 
     func userContentController(_: WKUserContentController, didReceive message: WKScriptMessage) {
       if let msg = message.body as? String {
-        Log.log(msg)
+          if msg == "mgr on" {
+              multiGestureRecognizer!.isEnabled = true
+              Log.log("turned on mgr");
+          } else if msg == "mgr off" {
+              multiGestureRecognizer!.isEnabled = false
+              Log.log("turned off mgr");
+          } else {
+              Log.log("huh? " + msg);
+          }
       }
     }
 }
