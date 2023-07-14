@@ -1,6 +1,7 @@
 import Vec from './lib/vec';
 import Line from './lib/line';
 import parse from './parser';
+import { Point as RPoint } from './lib/relax-pk';
 
 // Monotonically incrementing id counter
 let nextId = 0;
@@ -8,7 +9,7 @@ let nextId = 0;
 class Point {
     constructor(pos) {
         this.id = nextId++;
-        this.pos = pos || Vec();
+        this.pos = pos;
     }
 
     render(ctx) {
@@ -301,7 +302,7 @@ class DrawSnap {
     update(events) {
         // Handle input
         events.pencil.forEach(event => {
-            const pos = Vec(event.x, event.y);
+            const pos = new RPoint(event.x, event.y);
             if (this.mode === 'draw') {
                 if (event.type === 'began') {
                     this.begin_stroke(pos);
@@ -326,7 +327,8 @@ class DrawSnap {
                 }
                 if (event.type === 'moved') {
                     if (this.dragging) {
-                        this.dragging.pos = pos;
+                        this.dragging.pos.x = pos.x;
+                        this.dragging.pos.y = pos.y;
                     }
                 }
                 if (event.type === 'ended') {
@@ -338,7 +340,7 @@ class DrawSnap {
 
         Object.entries(events.touches).forEach(([touchId, events]) => {
             events.forEach(event => {
-                const pos = Vec(event.x, event.y);
+                const pos = new RPoint(event.x, event.y);
                 if (event.type === 'began') {
                     const found = this.find_stroke_near(pos);
                     if (this.ref_line === found) {
@@ -350,7 +352,7 @@ class DrawSnap {
 
                     this.ref_line_id = touchId;
 
-                    if (Vec.dist(Vec(40, 40), pos) < 20) {
+                    if (Vec.dist(new RPoint(40, 40), pos) < 20) {
                         this.toggleModes();
                     }
                 }

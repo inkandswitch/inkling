@@ -10,23 +10,18 @@ import Relax, {
   Point as RPoint,
   SpreadsheetCell,
   Var,
+  VarEquals,
   Vertical,
 } from './lib/relax-pk';
 
 import DrawSnap from './draw_snap';
 
-// import numeric from 'numeric';
-// console.log(numeric.uncmin(vs => Math.pow(vs[0] - 5, 2) + Math.pow(vs[1] - 3, 2), [0, 0]));
-
 const draw = new DrawSnap();
 window.draw = draw;
 
 const canvas = new Canvas(document.body, ctx => {
-  window.redraw = () => {
-    ctx.clearRect(0,0, window.innerWidth, window.innerHeight);
-    draw.render(ctx);
-  };
-  window.redraw();
+  ctx.clearRect(0,0, window.innerWidth, window.innerHeight);
+  draw.render(ctx);
 });
 
 canvas.canvas.addEventListener('touchstart', e => {
@@ -47,129 +42,128 @@ engine((events) => {
   canvas.render();
 });
 
-let nIterations;
+const r = new Relax();
+window.r = r;
 
 function relax() {
-  const r = new Relax();
-  addHandOfGodConstraints(r);
+  const hgcs = addHandOfGodConstraints(r);
   for (const c of draw.snapConstraints) {
     addSnapConstraints(r, c);
   }
+  draw.snapConstraints = [];
   addScribbleConstraints(r);
-  nIterations  = r.iterateForUpToMillis(150);
-  window.rrr = r;
+  r.iterateForUpToMillis(15);
+  hgcs.forEach(c => r.remove(c));
 }
-
-setInterval(
-  () => console.log('nIterations', nIterations),
-  1000
-);
 
 function addHandOfGodConstraints(r) {
   if (!draw.mode.startsWith('move') || !draw.dragging) {
-    return;
+    return [];
   }
 
+  const cs = [];
+  
   function addFixedPointConstraint(dp) {
-    const p = toRPoint(dp.pos);
-    dp.pos = p;
-    r.add(new FixedPoint(p, new RPoint(p.x, p.y)));
+    const p = dp.pos;
+    const c = new FixedPoint(p, new RPoint(p.x, p.y));
+    r.add(c);
+    cs.push(c);
   }
 
   addFixedPointConstraint(draw.dragging);
   if (draw.mode === 'move-v2') {
     addFixedPointConstraint(draw.fixedPoint);
   }
+
+  return cs;
 }
 
 function addSnapConstraints(r, c) {
   if (c.type === 'vertical') {
-    promotePointsInLine(c);
     r.add(new Vertical(c.a.pos, c.b.pos));
   } else if (c.type === 'horizontal') {
-    promotePointsInLine(c);
     r.add(new Horizontal(c.a.pos, c.b.pos));
   } else if (c.type === 'length') {
-    promotePointsInLine(c.a);
-    promotePointsInLine(c.b);
     const v = new Var(c.a.a.pos.distanceTo(c.a.b.pos));
     r.add(new Length(c.a.a.pos, c.a.b.pos, v));
     r.add(new Length(c.b.a.pos, c.b.b.pos, v));
     } else if (c.type === 'minLength') {
-    promotePointsInLine(c.a);
     r.add(new MinLength(c.a.a.pos, c.a.b.pos, c.b));
   } else if (c.type === 'angle') {
-    promotePointsInLine(c.a);
-    promotePointsInLine(c.b);
     r.add(new Orientation(c.a.a.pos, c.a.b.pos, c.b.a.pos, c.b.b.pos, Math.PI * c.angle / 180));
   } else {
     throw new Error('unsupported snap constraint ' + c.type);
   }
 }
 
+let cachedScribbleConstraints = [];
+let cachedRScribbleConstraints = [];
+
 function addScribbleConstraints(r) {
-  const vars = {};
-  const debug = false;
-  for (const c of draw.scribbleConstraints) {
+  if (draw.scribbleConstraints === cachedScribbleConstraints) {
+    return;
+  }
+
+  console.log('scribble constraints changed!');
+
+  cachedRScribbleConstraints.forEach(c => r.remove(c));
+  cachedRScribbleConstraints = [];
+
+  // length labels
+  const varsByName = {};
+  draw.scribbleConstraints.filter(c => c.type === 'lengthLabel').forEach(c => {
     const line = c.input.line;
-    promotePointsInLine(line);
-    if (c.type === 'lengthLabel') {
-      if (vars[c.name] == null) {
-        const v = new Var(line.a.pos.distanceTo(line.b.pos));
-        v.line = line;
-        vars[c.name] = v;
-        if (debug) console.log('var', c.name, v, 'for line', line, 'is initially', v.value);
-      }
+    const v = new Var(line.a.pos.distanceTo(line.b.pos));
+    v.line = line;
+    cachedRScribbleConstraints.push(new Length(line.a.pos, line.b.pos, v));
+    if (varsByName[c.name] == null) {
+      varsByName[c.name] = [];
+    }
+    varsByName[c.name].push(v);
+  });
+  for (const vars of Object.values(varsByName)) {
+    if (vars.length > 1) {
+      cachedRScribbleConstraints.push(new VarEquals(...vars));
     }
   }
-  for (const c of draw.scribbleConstraints) {
+
+  // length constants
+  draw.scribbleConstraints.filter(c => c.type === 'lengthConstant').forEach(c => {
     const line = c.input.line;
-    if (c.type === 'lengthLabel') {
-      const v = vars[c.name];
-      r.add(new Length(line.a.pos, line.b.pos, v));
-      if (debug) console.log('line', line, 'has length', c.name, v);
-    } else if (c.type === 'lengthConstant') {
-      const v = new Var(c.value);
-      r.add(new FixedVar(v, c.value));
-      r.add(new Length(line.a.pos, line.b.pos, v));
-    } else if (c.type === 'lengthFormula') {
-      const depVars = c.depNames.map(x => vars[x]);
-      if (depVars.some(e => e == null)) {
-        // ignore this constraint b/c not all of the variables referenced are bound
-        continue;
-      }
-      if (debug) console.log('la', line.a, 'lb', line.b);
-      if (debug) console.log('dla', depVars[0].line.a, 'dlb', depVars[0].line.b);
-      if (debug) console.log(line.a === depVars[0].line.a, line.b === depVars[0].line.b);
-      if (debug) console.log('dvs', depVars);
-      const ss = new SpreadsheetCell(
-        {
-          xs: [line.a.pos, line.b.pos, depVars[0].line.a.pos, depVars[0].line.b.pos],
-          ys: [line.a.pos, line.b.pos, depVars[0].line.a.pos, depVars[0].line.b.pos],
-          vars: depVars,
-        },
-        () => c.fn(vars)
-      );
-      if (debug) console.log(ss);
-      r.add(ss);
-      r.add(new Length(line.a.pos, line.b.pos, ss));
-      for (let idx = 0; idx < 1000; idx++) {
-        r.iterateForUpToMillis(15);
-      }
-      if (debug) window.redraw();
-      if (debug) console.log(r.things);
-      if (debug) throw new Error('pause');
-    } else {
-      throw new Error('unsupported scribble constraint ' + c.type);
+    const v = new Var(c.value);
+    cachedRScribbleConstraints.push(
+      new FixedVar(v, c.value),
+      new Length(line.a.pos, line.b.pos, v)
+    );
+  });
+
+  // length formulas
+  draw.scribbleConstraints.filter(c => c.type === 'lengthFormula').forEach(c => {
+    const line = c.input.line;
+    if (c.depNames.length !== 1) {
+      throw new Error('todo');
     }
-  }
-}
+    const varName = c.depNames[0];
+    const modifiableVars = varsByName[varName];
+    if (modifiableVars == null) {
+      // name is not bound yet, so ignore this constraint
+      return;
+    }
 
-function promotePointsInLine(l) {
-  l.a.pos = toRPoint(l.a.pos);
-  l.b.pos = toRPoint(l.b.pos);
-}
+    const modifiablePoints = [line.a, line.b];
+    const otherLines = modifiableVars.map(v => v.line);
+    otherLines.forEach(otherLine => modifiablePoints.push(otherLine.a, otherLine.b));
 
-function toRPoint(p) {
-  return p instanceof RPoint ? p : new RPoint(p.x, p.y);
+    const env = {};
+    env[varName] = modifiableVars[0];
+    const cell = new SpreadsheetCell(
+      { xs: modifiablePoints, ys: modifiablePoints, vars: modifiableVars },
+      () => c.fn(env)
+    );
+    cachedRScribbleConstraints.push(cell);
+    cachedRScribbleConstraints.push(new Length(line.a.pos, line.b.pos, cell));
+  });
+
+  cachedScribbleConstraints = draw.scribbleConstraints;
+  cachedRScribbleConstraints.forEach(c => r.add(c));
 }

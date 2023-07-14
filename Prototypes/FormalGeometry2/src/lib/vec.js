@@ -1,12 +1,13 @@
 // Vec
 // This is a port of (part of) Ivan's homemade CoffeeScript vector library.
 
+import { Point as RPoint } from './relax-pk';
 import { isZero, roundTo, clip } from "./math";
 
 // Constructors ///////////////////////////////////////////////////////////////
 
 const Vec = (x = 0, y = 0) => {
-  return { x, y };
+  return new RPoint(x, y);
 };
 export default Vec;
 

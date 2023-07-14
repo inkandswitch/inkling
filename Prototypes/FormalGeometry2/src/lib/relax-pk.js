@@ -11,7 +11,7 @@
  *   (would need to recompute it when a constraint changes, which could be messy)
  */
 
-const PROPAGATE_KNOWNS = false;
+const PROPAGATE_KNOWNS = true;
 
 // -------
 
@@ -459,40 +459,39 @@ export class FixedVar {
 }
 
 export class VarEquals {
-  constructor(v1, v2) {
-    this.v1 = v1;
-    this.v2 = v2;
+  constructor(...vs) {
+    this.vs = vs;
   }
 
   involves(thing) {
-    return thing === this.v1 || thing === this.v2;
+    return this.vs.includes(thing);
   }
 
   propagateKnowns(knowns) {
-    if (knowns.vars.has(this.v1) && !knowns.vars.has(this.v2)) {
-      this.v2.value = this.v1.value;
-      knowns.vars.add(this.v2);
-      return true;
-    } else if (knowns.vars.has(this.v2) && !knowns.vars.has(this.v1)) {
-      this.v1.value = this.v2.value;
-      knowns.vars.add(this.v1);
-      return true;
-    } else {
+    const kv = this.vs.find(v => knowns.vars.has(v));
+    if (kv == null) {
       return false;
     }
+
+    let ans = false;
+    for (const v of this.vs) {
+      if (!knowns.vars.has(v)) {
+        v.value = kv.value;
+        knowns.vars.add(v);
+        ans = true;
+      }
+    }
+    return ans;
   }
 
   calculateDeltas(_knowns) {
-    const diff = this.v2.value - this.v1.value;
-    return [
-      new VarDelta(this.v1, diff / 2, this),
-      new VarDelta(this.v2, -diff / 2, this)
-    ];
+    const m = avg(...this.vs.map(v => v.value));
+    return this.vs.map(v => new VarDelta(v, m - v.value, this));
   }
 
 
   toString() {
-    return `VarEquals(${this.v1}, ${this.v2})`;
+    return `VarEquals(${this.vs})`;
   }
 }
 
