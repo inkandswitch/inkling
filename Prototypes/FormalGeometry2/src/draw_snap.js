@@ -315,8 +315,24 @@ class DrawSnap {
                 if (event.type === 'began') {
                     this.dragging = this.find_point_near(pos);
                     if (this.dragging) {
+                        const reachablePoints = new Set([this.dragging]);
+                        while (true) {
+                            const oldSize = reachablePoints.size;
+                            for (const p of reachablePoints) {
+                                for (const l of this.lines) {
+                                    if (l.a === p) {
+                                        reachablePoints.add(l.b);
+                                    } else if (l.b === p) {
+                                        reachablePoints.add(l.a);
+                                    }
+                                }
+                            }
+                            if (reachablePoints.size === oldSize) {
+                                break;
+                            }
+                        }
                         let fixedPointDistance = -Infinity;
-                        for (const p of this.points) {
+                        for (const p of reachablePoints) {
                             const distance = Vec.dist(this.dragging.pos, p.pos);
                             if (distance > fixedPointDistance) {
                                 fixedPointDistance = distance;
