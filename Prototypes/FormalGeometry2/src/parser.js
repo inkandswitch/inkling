@@ -8,8 +8,9 @@ const g = ohm.grammar(String.raw`
 
     Expr = number ident -- times
 
-    number = digit+ ("." digit+)? -- wholeAndFrac
-           | "." digit+           -- onlyFrac
+    number = digit+ "'" (digit+ "\"")? -- feetAndInches
+           | digit+ ("." digit+)?      -- wholeAndFrac
+           | "." digit+                -- onlyFrac
 
     ident = letter alnum*
   }
@@ -43,7 +44,17 @@ const s = g.createSemantics().addOperation('parse', {
       depNames: [v],
     };
   },
-  number(_) {
+  number_feetAndInches(feet, _1, inches, _2) {
+    let n = parseInt(feet.sourceString);
+    if (inches.numChildren == 1) {
+      n += parseInt(inches.sourceString) / 12;
+    }
+    return n * 100;
+  },
+  number_wholeAndFrac(_1, _2, _3) {
+    return parseFloat(this.sourceString);
+  },
+  number_onlyFrac(_1, _2) {
     return parseFloat(this.sourceString);
   },
   ident(_1, _2) {
@@ -60,4 +71,5 @@ function parse(input) {
   }
 }
 
+window.parse = parse;
 export default parse;
