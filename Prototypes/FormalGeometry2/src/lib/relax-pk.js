@@ -11,7 +11,7 @@
  *   (would need to recompute it when a constraint changes, which could be messy)
  */
 
-const PROPAGATE_KNOWNS = true;
+const PROPAGATE_KNOWNS = false;
 
 // -------
 
@@ -428,7 +428,7 @@ export default class Relax {
 
 // -------
 
-class FixedVar {
+export class FixedVar {
   constructor(v, wanted) {
     this.v = v;
     this.wanted = wanted;
@@ -1319,8 +1319,8 @@ class PropertyPicker {
 
 // -------
 
-class SpreadsheetCell extends Var {
-  epsilon = 0.001;
+export class SpreadsheetCell extends Var {
+  epsilon = 0.1;
   tinyDelta = 0.000001;
   maxIterations = 100;
 

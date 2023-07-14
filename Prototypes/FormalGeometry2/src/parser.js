@@ -2,10 +2,11 @@ import * as ohm from 'ohm-js';
 
 const g = ohm.grammar(String.raw`
   Constraints {
-    Label = Expr | ident
+    Label = Expr   -- expr
+          | ident  -- ident
+          | number -- number
 
     Expr = number ident -- times
-         | number       -- const
 
     number = digit+ ("." digit+)? -- wholeAndFrac
            | "." digit+           -- onlyFrac
@@ -15,8 +16,32 @@ const g = ohm.grammar(String.raw`
 `);
 
 const s = g.createSemantics().addOperation('parse', {
+  Label_expr(e) {
+    return {
+      type: 'lengthFormula',
+      ...e.parse(),
+      label: this.sourceString
+    };
+  },
+  Label_ident(x) {
+    return {
+      type: 'lengthLabel',
+      name: x.parse()
+    };
+  },
+  Label_number(n) {
+    return {
+      type: 'lengthConstant',
+      value: n.parse()
+    };
+  },
   Expr_times(n, x) {
-    return { operator: '*', args: [n.parse(), x.parse()] };
+    const k = n.parse();
+    const v = x.parse();
+    return {
+      fn: (vars) => k * vars[v].value,
+      depNames: [v],
+    };
   },
   number(_) {
     return parseFloat(this.sourceString);

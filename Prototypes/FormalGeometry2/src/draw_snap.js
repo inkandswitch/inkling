@@ -18,7 +18,7 @@ class Point {
     }
 }
 
-function addInputElement() {
+function addInputElement(line) {
     const input = document.createElement('input');
     input.setAttribute('type', 'text');
     input.contentEditable = true;
@@ -31,6 +31,7 @@ function addInputElement() {
         input.style.setProperty('left', `${x - rect.width / 2}px`);
         input.style.setProperty('top', `${y - rect.height / 2}px`);
     };
+    input.line = line;
     document.body.appendChild(input);
     return input;
 }
@@ -40,7 +41,7 @@ class LineStroke {
         this.id = nextId++;
         this.a = a;
         this.b = b;
-        this.input = addInputElement();
+        this.input = addInputElement(this);
         this.updateInputPos();
     }
 
@@ -233,7 +234,8 @@ class DrawSnap {
         this.points = [];
         this.lines = [];
 
-        this.constraints = [];
+        this.snapConstraints = [];
+        this.scribbleConstraints = [];
     }
 
     find_point_near(pos) {
@@ -273,25 +275,25 @@ class DrawSnap {
         
 
         // record constraints
-        this.constraints.push({ type: 'minLength', a:l, b: 50 });
+        this.snapConstraints.push({ type: 'minLength', a:l, b: 50 });
         const ws = this.wet_stroke;
         if (ws.v_snap) {
-            this.constraints.push({ type: 'vertical', a, b });
+            this.snapConstraints.push({ type: 'vertical', a, b });
         }
         if (ws.h_snap) {
-            this.constraints.push({ type: 'horizontal', a, b });
+            this.snapConstraints.push({ type: 'horizontal', a, b });
         }
         if (ws.point_snap && ws.point_snap.type != 'coincident') {
-            this.constraints.push({ type: ws.point_snap.type, a: b, b: ws.point_snap.snap });
+            this.snapConstraints.push({ type: ws.point_snap.type, a: b, b: ws.point_snap.snap });
         }
         if (ws.len_snap) {
-            this.constraints.push({ type: 'length', a: l, b: ws.ref_line });
+            this.snapConstraints.push({ type: 'length', a: l, b: ws.ref_line });
         }
         if (ws.angle_snap && !ws.v_snap && !ws.h_snap) {
-            this.constraints.push({ type: 'angle', a: l, b: ws.ref_line, angle: ws.angle_offset });
+            this.snapConstraints.push({ type: 'angle', a: l, b: ws.ref_line, angle: ws.angle_offset });
         }
 
-        console.log(this.constraints);
+        console.log(this.snapConstraints);
 
         this.wet_stroke = null
     }
@@ -374,16 +376,17 @@ class DrawSnap {
             }
             window.webkit.messageHandlers.messages.postMessage('mgr off');
         } else {
-            const parsed = [];
+            this.scribbleConstraints = [];
             for (const input of document.body.getElementsByTagName('input')) {
                 input.placeholder = '';
                 input.blur();
-                const p = parse(input.value);
-                if (p != null) {
-                    parsed.push(p);
+                const c = parse(input.value);
+                if (c != null) {
+                    c.input = input;
+                    this.scribbleConstraints.push(c);
                 }
             }
-            console.log(parsed);
+            console.log(this.scribbleConstraints);
             this.mode = 'draw';
             window.webkit.messageHandlers.messages.postMessage('mgr on');
         }
