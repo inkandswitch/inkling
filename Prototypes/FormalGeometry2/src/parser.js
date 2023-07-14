@@ -9,6 +9,7 @@ const g = ohm.grammar(String.raw`
     Expr = number ident -- times
 
     number = digit+ "'" (digit+ "\"")? -- feetAndInches
+           | digit+ "\""               -- justInches
            | digit+ ("." digit+)?      -- wholeAndFrac
            | "." digit+                -- onlyFrac
 
@@ -50,6 +51,9 @@ const s = g.createSemantics().addOperation('parse', {
       n += parseInt(inches.sourceString) / 12;
     }
     return n * 100;
+  },
+  number_justInches(inches, _) {
+    return parseInt(inches.sourceString) * 100 / 12;
   },
   number_wholeAndFrac(_1, _2, _3) {
     return parseFloat(this.sourceString);
