@@ -402,6 +402,8 @@ class DrawSnap {
                 if (c != null) {
                     c.input = input;
                     this.scribbleConstraints.push(c);
+                } else {
+                    console.log('failed to parse:', input.value);
                 }
             }
             console.log(this.scribbleConstraints);
