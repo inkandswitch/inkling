@@ -6,6 +6,7 @@ import Page from "./Page";
 export default class App {
     constructor(){
         this.page = new Page();
+
         this.draw_tool = new DrawTool(this.page);
     }
 

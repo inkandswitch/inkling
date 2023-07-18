@@ -267,6 +267,26 @@ Vec.rotate90CCW = (v)=>{
   return Vec(-v.y, v.x);
 }
 
+// Rotate around
+Vec.rotateAround = (vector, point, angle) => {
+  // Convert angle to radians
+  const radians = (angle * Math.PI) / 180;
+
+  // Translate vector to the origin
+  const translatedVector = Vec.sub(vector, point)
+
+  // Perform rotation
+  const rotatedVector = Vec(
+    translatedVector.x * Math.cos(radians) - translatedVector.y * Math.sin(radians),
+    translatedVector.x * Math.sin(radians) + translatedVector.y * Math.cos(radians)
+  );
+
+  // Translate vector back to its original position
+  return Vec.add(rotatedVector, point)
+}
+
+
+
 Vec.angle = (v) =>{
   var angleInRadians = Math.atan2(v.y, v.x);
   var angleInDegrees = ((angleInRadians * 180) / Math.PI)
