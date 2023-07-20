@@ -46,7 +46,7 @@ const r = new Relax();
 window.r = r;
 
 draw.onYank = function(p, v) {
-  console.log('p', p, 'v', v);
+  // console.log('p', p, 'v', v);
 
   if (Math.abs(v.y) < 1) {
     console.log('remove vertical!');
