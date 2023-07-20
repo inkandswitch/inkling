@@ -66,6 +66,15 @@ draw.onYank = function(p, v) {
     }
   }
 
+  // TODO: try something more sophisticated for orientation constraints
+  // (this version is too loose)
+  for (const c of r.things) {
+    if (c instanceof Orientation && c.involves(p)) {
+      console.log('remove orientation!');
+      r.remove(c);
+    }
+  }
+
   const ANGLE_TOLERANCE = 20 * Math.PI / 180;
   const yankAngle1 = v.angleWithXAxis() + Math.PI; // puts it into (0, 2pi) range
   const yankAngle2 = v.scaledBy(-1).angleWithXAxis() + Math.PI; // same as above
@@ -81,6 +90,9 @@ draw.onYank = function(p, v) {
       r.remove(c);
     }
   }
+
+  // TODO: remove PointEquals constraints, too
+  // (will take more work b/c they're not reified ATM)
 };
 
 function relax() {
