@@ -75,7 +75,7 @@ draw.onYank = function(p, v) {
     }
   }
 
-  const ANGLE_TOLERANCE = 20 * Math.PI / 180;
+  const ANGLE_TOLERANCE = 35 * Math.PI / 180;
   const yankAngle1 = v.angleWithXAxis() + Math.PI; // puts it into (0, 2pi) range
   const yankAngle2 = v.scaledBy(-1).angleWithXAxis() + Math.PI; // same as above
   for (const c of r.things) {

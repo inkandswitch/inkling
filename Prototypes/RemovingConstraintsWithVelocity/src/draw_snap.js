@@ -12,9 +12,11 @@ class Point {
         this.pos = pos;
     }
 
-    render(ctx) {
+    render(ctx, isBeingMoved) {
+        ctx.fillStyle = isBeingMoved ? 'blue' : 'black';
+        const size = isBeingMoved ? 5 : 3;
         ctx.beginPath();
-        ctx.ellipse(this.pos.x, this.pos.y, 3, 3, 0, 0, Math.PI * 2);
+        ctx.ellipse(this.pos.x, this.pos.y, size, size, 0, 0, Math.PI * 2);
         ctx.fill();
     }
 }
@@ -342,7 +344,7 @@ class DrawSnap {
                     if (this.dragging) {
                         const v = pos.minus(this.prevDragPos);
                         const m = v.magnitude();
-                        if (m > 4) {
+                        if (m > 2) {
                             this.onYank(this.dragging.pos, v);
                         }
                         this.prevDragPos = pos;
@@ -423,7 +425,7 @@ class DrawSnap {
             line.render(ctx, line === this.ref_line);
         })
         this.points.forEach(point => {
-            point.render(ctx);
+            point.render(ctx, point === this.dragging);
         })
 
         if (this.wet_stroke) {
