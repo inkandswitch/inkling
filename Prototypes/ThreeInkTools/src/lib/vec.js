@@ -42,10 +42,9 @@ Vec.toA = (v) => {
 };
 
 Vec.polar = (angle, length) => {
-  const angleInRadians = (angle * Math.PI) / 180;
   return Vec(
-    length * Math.cos(angleInRadians),
-    length * Math.sin(angleInRadians)
+    length * Math.cos(angle),
+    length * Math.sin(angle)
   );
 }
 

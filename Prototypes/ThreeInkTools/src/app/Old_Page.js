@@ -54,6 +54,7 @@ export default class Page {
             //this.repeater.mid.points.forEach(pt=>this.selection.points[pt.id] = pt)
             //this.repeater.mid.strokes.forEach(st=>this.selection.strokes[st.id] = st)
 
+            console.log(this.selection);
             return
         }
         

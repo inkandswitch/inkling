@@ -1,6 +1,7 @@
 import Vec from "../lib/vec";
 import DrawTool from "./DrawTool";
 import GeometryTool from "./GeometryTool";
+import Selection from "./Selection";
 import Page from "./Page";
 
 
@@ -10,6 +11,8 @@ export default class App {
 
         this.draw_tool = new DrawTool(this.page);
         this.geometry_tool = new GeometryTool(this.page);
+
+        this.selection = new Selection(this.page);
     }
 
     update(events){
@@ -30,17 +33,18 @@ export default class App {
             events.forEach(event => {
                 const pos = Vec(event.x, event.y);
                 if (event.type === 'began') {
-                    this.page.touch_down(pos, touchId, event.timestamp);
+                    this.selection.touch_down(pos, touchId, event.timestamp);
                 } else if (event.type === 'moved') {
-                    this.page.touch_move(pos, touchId, event.timestamp);
+                    this.selection.touch_move(pos, touchId, event.timestamp);
                 } else if (event.type === 'ended') {
-                    this.page.touch_up(pos, touchId, event.timestamp);
+                    this.selection.touch_up(pos, touchId, event.timestamp);
                 }
             })
         })
     }
 
     render(ctx){
+        this.selection.render(ctx)
         this.geometry_tool.render(ctx)
         this.page.render(ctx)
     }
