@@ -314,6 +314,8 @@ class DrawSnap {
                     this.dragging = this.find_point_near(pos);
                     if (this.dragging) {
                         this.prevDragPos = pos;
+                        this.prevDragVelocity = new RPoint(0, 0);
+                        this.prevDragAcceleration = new RPoint(0, 0);
                         const reachablePoints = new Set([this.dragging]);
                         while (true) {
                             const oldSize = reachablePoints.size;
@@ -343,11 +345,14 @@ class DrawSnap {
                 if (event.type === 'moved') {
                     if (this.dragging) {
                         const v = pos.minus(this.prevDragPos);
-                        const m = v.magnitude();
-                        if (m > 2) {
-                            this.onYank(this.dragging.pos, v);
+                        const a = v.minus(this.prevDragVelocity);
+                        // console.log('a', a.magnitude(), 'v', v.magnitude());
+                        if (a.magnitude() > 2) {
+                            this.onYank(this.dragging.pos, v, a);
                         }
                         this.prevDragPos = pos;
+                        this.prevDragVelocity = v;
+                        this.prevDragAcceleration = a;
                         this.dragging.pos.x = pos.x;
                         this.dragging.pos.y = pos.y;
                     }

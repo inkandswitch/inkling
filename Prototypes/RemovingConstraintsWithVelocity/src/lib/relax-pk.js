@@ -19,6 +19,7 @@ const PROPAGATE_KNOWNS = true;
 //   curb(knowns: { xs, ys, vs }): void;
 //   isSignificant(epsilon: number): boolean;
 //   apply(rho: number): void;
+//   getAmount(): number;
 // }
 
 // -------
@@ -56,6 +57,10 @@ class VarDelta {
 
   apply(rho) {
     this.v.value += this.amount * rho;
+  }
+
+  getAmount() {
+    return this.amount;
   }
 
   draw(_rc) {
@@ -198,6 +203,10 @@ class PointDelta {
     const d = this.amount.scaledBy(rho);
     this.p.x += d.x;
     this.p.y += d.y;
+  }
+
+  getAmount() {
+    return this.amount.magnitude();
   }
 
   draw(rc) {

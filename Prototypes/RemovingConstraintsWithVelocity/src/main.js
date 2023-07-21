@@ -45,54 +45,30 @@ engine((events) => {
 const r = new Relax();
 window.r = r;
 
-draw.onYank = function(p, v) {
-  // console.log('p', p, 'v', v);
+draw.onYank = function(p, v, a) {
+  // console.log('p', p, 'v', v, 'a', a);
 
-  if (Math.abs(v.y) < 1) {
-    console.log('remove vertical!');
-    for (const c of r.things) {
-      if (c instanceof Vertical && c.involves(p)) {
-        r.remove(c);
-      }
-    }
-  }
-
-  if (Math.abs(v.x) < 1) {
-    console.log('remove horizontal!');
-    for (const c of r.things) {
-      if (c instanceof Horizontal && c.involves(p)) {
-        r.remove(c);
-      }
-    }
-  }
-
-  // TODO: try something more sophisticated for orientation constraints
-  // (this version is too loose)
+  const noKnowns = { xs: new Set(), ys: new Set(), vars: new Set() };
   for (const c of r.things) {
-    if (c instanceof Orientation && c.involves(p)) {
-      console.log('remove orientation!');
-      r.remove(c);
-    }
-  }
-
-  const ANGLE_TOLERANCE = 35 * Math.PI / 180;
-  const yankAngle1 = v.angleWithXAxis() + Math.PI; // puts it into (0, 2pi) range
-  const yankAngle2 = v.scaledBy(-1).angleWithXAxis() + Math.PI; // same as above
-  for (const c of r.things) {
-    if (!(c instanceof Length && c.involves(p))) {
-      continue;
-    }
-    const lineAngle = c.p2.minus(c.p1).angleWithXAxis() + Math.PI;
     if (
-      Math.abs(yankAngle1 - lineAngle) <= ANGLE_TOLERANCE ||
-      Math.abs(yankAngle2 - lineAngle) <= ANGLE_TOLERANCE
+      c.involves(p) &&
+      (
+        c instanceof Horizontal ||
+        c instanceof Vertical ||
+        c instanceof Length ||
+        c instanceof Orientation
+      )
     ) {
-      r.remove(c);
+      const ds = c.calculateDeltas(noKnowns);
+      const dAmounts = ds.map(d => d.getAmount());
+      const totalAmount = dAmounts.reduce((x, y) => x + y, 0);
+      console.log(c.toString(), totalAmount);
+      if (totalAmount > 4) {
+        r.remove(c);
+        console.log('removed!');
+      }
     }
   }
-
-  // TODO: remove PointEquals constraints, too
-  // (will take more work b/c they're not reified ATM)
 };
 
 function relax() {
