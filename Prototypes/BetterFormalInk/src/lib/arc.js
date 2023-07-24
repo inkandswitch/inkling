@@ -17,8 +17,6 @@ Arc.len = (arc) => {
     return length;
 }
 
-
-
 Arc.distToPointCircle = (circle, point) => {
     const distance = Vec.dist(circle.center, point);
     return Math.abs(distance - circle.radius);
@@ -52,4 +50,12 @@ Arc.directedInnerAngle = (arc)=>{
     }
 
     return difference
+}
+
+Arc.points = (arc)=>{
+    console.log(arc);
+    let start = Vec.add(arc.center, Vec.polar(arc.startAngle, arc.radius))
+    let end = Vec.add(arc.center, Vec.polar(arc.endAngle, arc.radius))
+
+    return { start, end }
 }

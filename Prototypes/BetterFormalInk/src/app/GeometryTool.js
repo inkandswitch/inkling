@@ -204,6 +204,20 @@ export default class GeometryTool {
         if(this.fit.type == "arc") {
             let arc = this.fit.arc
             
+            // Snap center
+            let start_pos = Vec.add(this.fit.arc.center, Vec.polar(this.fit.arc.startAngle, this.fit.arc.radius))
+            
+            // if(Math.abs(start_pos.x - arc.center.x) < 20) {
+            //     arc.center.x = start_pos.x
+            // }
+
+            if(Math.abs(start_pos.y - arc.center.y) < 20) {
+                arc.center.y = start_pos.y
+                arc.startAngle = Math.PI * (arc.clockwise ? -1 : 0)
+            }
+
+
+            
             const closest_round_start_angle = (Math.round(arc.startAngle / qua) * qua + phi) % phi;
             if(Math.abs(arc.startAngle - closest_round_start_angle) < 0.1) {
                 arc.startAngle = closest_round_start_angle

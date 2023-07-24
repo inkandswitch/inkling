@@ -2,6 +2,8 @@ import Point from "./Point";
 import LineStroke from "./LineStroke";
 import Vec from "../lib/vec";
 import Line from "../lib/line";
+import Arc from "../lib/arc";
+import ArcStroke from "./ArcStroke";
 
 export default class Page {
     constructor(){
@@ -29,6 +31,20 @@ export default class Page {
         this.points.push(a)
         this.points.push(b)
         this.strokes.push(new LineStroke(a, b))
+    }
+
+    add_arc(arc) {
+        let {start, end} = Arc.points(arc)
+
+        console.log(start, end);
+        let a = new Point(start)
+        let b = new Point(end)
+        let c = new Point(arc.center)
+        this.points.push(a)
+        this.points.push(b)
+        this.points.push(c)
+
+        this.strokes.push(new ArcStroke(a, b, c))
     }
 
     render(ctx){

@@ -3,11 +3,14 @@ import DrawTool from "./DrawTool";
 import GeometryTool from "./GeometryTool";
 import Selection from "./Selection";
 import Page from "./Page";
+import Arc from "../lib/arc";
 
 
 export default class App {
     constructor(){
         this.page = new Page();
+
+        //this.page.add_arc(Arc({x: 200, y: 200}, 100, Math.PI, 0))
 
         this.draw_tool = new DrawTool(this.page);
         this.geometry_tool = new GeometryTool(this.page);

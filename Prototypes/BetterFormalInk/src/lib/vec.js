@@ -287,12 +287,7 @@ Vec.rotateAround = (vector, point, angle) => {
 
 
 Vec.angle = (v) =>{
-  var angleInRadians = Math.atan2(v.y, v.x);
-  var angleInDegrees = ((angleInRadians * 180) / Math.PI)
-  if (angleInDegrees < 0) {
-    angleInDegrees += 360;
-  }
-  return angleInDegrees;
+  return Math.atan2(v.y, v.x);
 }
 
 Vec.angleBetween = (a, b) => {
