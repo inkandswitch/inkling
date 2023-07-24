@@ -49,7 +49,7 @@ class LineStroke {
     }
 
     render(ctx, highlight) {
-        ctx.lineWidth = 1.0;
+        ctx.lineWidth = 2.0;
         ctx.strokeStyle = highlight ? '#F81ED5' : '#000000';
         ctx.beginPath();
         ctx.moveTo(this.a.pos.x, this.a.pos.y);
@@ -159,7 +159,7 @@ class WetStroke {
     }
 
     render(ctx) {
-        ctx.lineWidth = 1.0;
+        ctx.lineWidth = 2.0;
         ctx.strokeStyle = this.len_snap ? '#F81ED5' : '#000000';
         ctx.beginPath();
         ctx.moveTo(this.a.x, this.a.y);
@@ -223,6 +223,7 @@ class WetStroke {
 class DrawSnap { 
     constructor() {
         this.mode = 'draw';
+        this.free_mode = false;
 
         this.wet_stroke = null;
         this.ref_line = null;
@@ -231,6 +232,8 @@ class DrawSnap {
 
         this.snapConstraints = [];
         this.scribbleConstraints = [];
+
+        this.persistentConstraints = [];
     }
 
     find_point_near(pos) {
@@ -274,9 +277,11 @@ class DrawSnap {
         const ws = this.wet_stroke;
         if (ws.v_snap) {
             this.snapConstraints.push({ type: 'vertical', a, b });
+            this.persistentConstraints.push({ type: 'vertical', a, b });
         }
         if (ws.h_snap) {
             this.snapConstraints.push({ type: 'horizontal', a, b });
+            this.persistentConstraints.push({ type: 'horizontal', a, b });
         }
         if (ws.point_snap && ws.point_snap.type != 'coincident') {
             this.snapConstraints.push({ type: ws.point_snap.type, a: b, b: ws.point_snap.snap });
@@ -355,6 +360,7 @@ class DrawSnap {
                         this.prevDragAcceleration = a;
                         this.dragging.pos.x = pos.x;
                         this.dragging.pos.y = pos.y;
+                        this.checkBrokenConstraints();
                     }
                 }
                 if (event.type === 'ended') {
@@ -379,8 +385,15 @@ class DrawSnap {
 
                     this.ref_line_id = touchId;
 
+
+                    // Toggle modes
                     if (Vec.dist(new RPoint(40, 40), pos) < 20) {
                         this.toggleModes();
+                    }
+
+                    // Toggle free_mode
+                    if (Vec.dist(new RPoint(40, window.innerHeight - 40), pos) < 20) {
+                        this.free_mode = true
                     }
                 }
     
@@ -388,6 +401,13 @@ class DrawSnap {
                     if (event.timestamp - this.finger_down_time > 1.0) {
                         this.ref_line = null;
                     }
+
+                    if(this.free_mode) {
+                        this.free_mode = false
+                        this.onYank(this.dragging.pos)
+                        this.removeBrokenConstraints()
+                    }
+                    
                 }
             }); 
         });
@@ -425,7 +445,40 @@ class DrawSnap {
         return this.mode;
     }
 
+    checkBrokenConstraints(){
+        this.persistentConstraints.forEach(constraint=>{
+            if(constraint.type == "horizontal") {
+                constraint.broken = Math.abs(constraint.a.pos.y - constraint.b.pos.y) > 10
+            }
+
+            if(constraint.type == "vertical") {
+                constraint.broken = Math.abs(constraint.a.pos.x - constraint.b.pos.x) > 10
+            }
+        })
+    }
+
+    removeBrokenConstraints(){
+        this.persistentConstraints = this.persistentConstraints.filter(c=>!c.broken)
+    }
+
     render(ctx) {
+        // Render constraints
+        this.persistentConstraints.forEach(constraint=>{
+            if(this.dragging && this.dragging == constraint.a || this.dragging == constraint.b) {
+                if((constraint.type == "horizontal" || constraint.type == "vertical") && !constraint.broken) {
+                    const projected_a = Vec.add(constraint.b.pos, Vec.mulS(Vec.sub(constraint.a.pos, constraint.b.pos), 100));
+                    const projected_b = Vec.add(constraint.a.pos, Vec.mulS(Vec.sub(constraint.b.pos, constraint.a.pos), 100));
+                    ctx.lineWidth = 1;
+                    ctx.strokeStyle ='#F81ED5';
+                    ctx.beginPath();
+                    ctx.moveTo(projected_a.x, projected_a.y);
+                    ctx.lineTo(projected_b.x, projected_b.y);
+                    ctx.stroke();
+                }
+            }
+        })
+
+
         this.lines.forEach(line => {
             line.render(ctx, line === this.ref_line);
         })
@@ -447,6 +500,12 @@ class DrawSnap {
         }
 
         ctx.fillText(this.mode, 70, 40);
+
+        ctx.beginPath();
+        ctx.ellipse(40, window.innerHeight-40, 20, 20, 0, 0, Math.PI * 2);
+        ctx.stroke();
+
+
     }
 }
 

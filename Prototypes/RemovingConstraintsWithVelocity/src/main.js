@@ -38,7 +38,10 @@ canvas.canvas.addEventListener('touchstart', e => {
 
 engine((events) => {
   draw.update(events);
-  relax();
+  if(!draw.free_mode) {
+    relax();
+  }
+  
   canvas.render();
 });
 
