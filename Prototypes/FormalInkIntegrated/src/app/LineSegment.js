@@ -2,17 +2,18 @@ let ids = 0
 
 const SIZE = 3
 
-export default class Point {
-    constructor(svg, position){
+export default class LineSegment {
+    constructor(svg, a, b){
         this.id = ids++
-        this.position = position
+        this.a = a
+        this.b = b
         this.dirty = true
         this.selected = false
         this.elements = {}
 
 
-        this.elements.normal = svg.addElement("circle", { cx: 0, cy: 0, r: 3, fill: "black" })
-        this.elements.selected = svg.addElement("circle", { cx: 0, cy: 0, r: 7, fill: "none" })
+        this.elements.normal = svg.addElement("line", { x1: this.a.position.x, y1: this.a.position.y, x2: this.b.position.x, y2: this.b.position.y, "stroke-width": 1, stroke: "black" })
+        this.elements.selected = svg.addElement("line", { x1: this.a.position.x, y1: this.a.position.y, x2: this.b.position.x, y2: this.b.position.y, "stroke-width": 7, stroke: "none" })
 
     }
 
@@ -32,14 +33,14 @@ export default class Point {
     }
 
     render(svg) {
-        if(this.dirty) {
+        if(this.a.dirty || this.b.dirty) {
             svg.updateElement(this.elements.normal, {
-                transform: `translate(${this.position.x} ${this.position.y})`,
+                x1: this.a.position.x, y1: this.a.position.y, x2: this.b.position.x, y2: this.b.position.y,
             })
 
             svg.updateElement(this.elements.selected, {
-                transform: `translate(${this.position.x} ${this.position.y})`,
-                fill: this.selected ? "rgba(180, 134, 255, 0.42)" : "none"
+                x1: this.a.position.x, y1: this.a.position.y, x2: this.b.position.x, y2: this.b.position.y,
+                stroke: this.selected ? "rgba(180, 134, 255, 0.42)" : "none"
             })
 
             this.dirty = false
