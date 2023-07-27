@@ -109,6 +109,10 @@ Line.getXforY = (line, y) => {
 
 
 Line.distToPoint = (line, point) => {
+    return Vec.dist(point, Line.closestPoint(line, point));
+};
+
+Line.closestPoint = (line, point, strict = true) => {
     const { a, b } = line;
 
     // Calculate vector AB and AP
@@ -119,15 +123,11 @@ Line.distToPoint = (line, point) => {
     const projection = Vec.dot(AP, AB) / Vec.dot(AB, AB);
   
     // Check if the projection is outside the line segment
-    if (projection <= 0) {
-        // Closest point is A
-        return Vec.len(AP);
-    } else if (projection >= 1) {
-        // Closest point is B
-        return Vec.dist(point, b);
+    if (strict && projection <= 0) {
+        return a;
+    } else if (strict && projection >= 1) {
+        return b;
     } else {
-        // Closest point is between A and B
-        const closestPoint = Vec.add(a, Vec.mulS(AB, projection));
-        return Vec.dist(point, closestPoint);
+        return Vec.add(a, Vec.mulS(AB, projection));
     }
-}
+};

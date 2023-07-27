@@ -1,30 +1,53 @@
 import Vec from './lib/vec';
 import Line from './lib/line';
 import parse from './parser';
-import { Point as RPoint } from './lib/relax-pk';
+import { Point } from './lib/relax-pk';
 
-// Monotonically incrementing id counter
-let nextId = 0;
+// Points
 
-class Point {
-    constructor(pos) {
-        this.id = nextId++;
-        this.pos = pos;
+Point.prototype.render = function(ctx, highlight) {
+    ctx.save();
+    ctx.fillStyle = highlight ? 'blue' : 'black';
+    const size = highlight ? 5 : 3;
+    ctx.beginPath();
+    ctx.ellipse(this.x, this.y, size, size, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+};
+
+// Lines
+
+class LineStroke {
+    constructor(a, b) {
+        this.a = a;
+        this.b = b;
+        this.input = addInputElement(this);
+        this.updateInputPos();
     }
 
-    render(ctx, isBeingMoved) {
-        ctx.fillStyle = isBeingMoved ? 'blue' : 'black';
-        const size = isBeingMoved ? 5 : 3;
+    render(ctx, highlight) {
+        ctx.save();
+        ctx.lineWidth = 2.0;
+        ctx.strokeStyle = highlight ? '#F81ED5' : '#000000';
         ctx.beginPath();
-        ctx.ellipse(this.pos.x, this.pos.y, size, size, 0, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.moveTo(this.a.x, this.a.y);
+        ctx.lineTo(this.b.x, this.b.y);
+        ctx.stroke();
+        ctx.restore();
+        this.updateInputPos();
+    }
+
+    updateInputPos() {
+        this.input.setPos(
+            (this.a.x + this.b.x) / 2,
+            (this.a.y + this.b.y) / 2
+        );
     }
 }
 
 function addInputElement(line) {
     const input = document.createElement('input');
     input.setAttribute('type', 'text');
-    input.contentEditable = true;
     input.onchange = () => {
         input.value = input.value.toLowerCase();
         input.blur();
@@ -39,288 +62,229 @@ function addInputElement(line) {
     return input;
 }
 
-class LineStroke {
-    constructor(a, b) {
-        this.id = nextId++;
-        this.a = a;
-        this.b = b;
-        this.input = addInputElement(this);
-        this.updateInputPos();
-    }
-
-    render(ctx, highlight) {
-        ctx.lineWidth = 2.0;
-        ctx.strokeStyle = highlight ? '#F81ED5' : '#000000';
-        ctx.beginPath();
-        ctx.moveTo(this.a.pos.x, this.a.pos.y);
-        ctx.lineTo(this.b.pos.x, this.b.pos.y);
-        ctx.stroke();
-        this.updateInputPos();
-    }
-
-    updateInputPos() {
-        this.input.setPos(
-            (this.a.pos.x + this.b.pos.x) / 2,
-            (this.a.pos.y + this.b.pos.y) / 2
-        );
-    }
-}
-
+// TODO: refactor, get rid of this class
+// (snapping behavior doesn't belong here b/c we want snaps when we move points
+// in existing lines, too)
 class WetStroke {
     constructor(pos) {
         this.a = pos;
-        this.b = Vec.clone(pos);
-
-        this.last_b = Vec.clone(pos);
-        this.velocity = 0;
+        this.b = pos.clone();
+        this.refLine = null;
+        this.snaps = [];
     }
 
-    update(pos, points, ref_line) {
-        this.b = pos;
-        let new_velocity = Vec.dist(this.last_b, this.b);
-        this.last_b = Vec.clone(this.b);
-        this.velocity = 0.05 * new_velocity + (1 - 0.05) * this.velocity; // Filter velocity
-        //console.log(this.velocity);
-
-        this.h_snap = false;
-        this.v_snap = false;
-
-        if (Math.abs(this.a.x - this.b.x) < 10) {
-            this.b.x = this.a.x;
-            this.v_snap = true;
+    maybeAddVertical(p) {
+        if (Math.abs(p.x - this.b.x) < 10) {
+            this.b.x = p.x;
+            this.snaps.push({ type: 'vertical', a: p, b: this.b });
         }
-    
-        if (Math.abs(this.a.y - this.b.y) < 10) {
-            this.b.y = this.a.y;
-            this.h_snap = true;
+    }
+
+    maybeAddHorizontal(p) {
+        if (Math.abs(p.y - this.b.y) < 10) {
+            this.b.y = p.y;
+            this.snaps.push({ type: 'horizontal', a: p, b: this.b });
+        }
+    }
+
+    update(pos, points, refLine) {
+        this.snaps = [];
+        const { a, b, snaps } = this;
+        b.moveTo(pos);
+
+        const coincidentPoint = points.find(p => p.distanceTo(b) < 10);
+        if (coincidentPoint != null) {
+            b.x = coincidentPoint.x;
+            b.y = coincidentPoint.y;
+            snaps.push({ type: 'coincident', a: coincidentPoint, b });
+        } else {
+            // TODO: also snap to any point that is "reachable" from this line
+            this.maybeAddVertical(a);
+            this.maybeAddHorizontal(a);
         }
         
-        const snaps = [];
-        if (this.velocity < 1.5) {
-            points.forEach(point => {
-                const sx = Line.getXforY(this, point.pos.y);
-                const sy = Line.getYforX(this, point.pos.x);
-                snaps.push(
-                    { type: 'horizontal', x: sx, y: point.pos.y, snap: point },
-                    { type: 'vertical', x: point.pos.x, y: sy, snap: point },
-                );
-            });
-
-            this.point_snap = false;
-            snaps.forEach(snap => {
-                if (Vec.dist(pos, snap) < 10) {
-                    this.b.x = snap.x;
-                    this.b.y = snap.y;
-                    this.point_snap = snap;
-                }
-            });
-        } 
-
-        // Snap to point
-        const point_snap = points.find(point => Vec.dist(point.pos, pos) < 10);
-        if (point_snap) {
-            this.b = point_snap.pos;
-            this.point_snap = { type: 'coincident', snap: point_snap };
+        this.refLine = refLine;
+        if (!refLine) {
+            return;
         }
 
-        
-        // Snap with reference point
-        this.len_snap = false;
-        this.angle_snap = false;
-        this.angle_offset = null;
-        if (ref_line) {
-            this.ref_line = ref_line;
-            // Snap lengths
-            const ref_len = Line.len(Line(ref_line.a.pos, ref_line.b.pos));
-            let cur_len = Line.len(Line(this.a, this.b));
-            if (Math.abs(ref_len - cur_len) < 10) {
-                this.b = Vec.add(this.a, Vec.mulS(Vec.normalize(Vec.sub(this.b, this.a)), ref_len));
-                this.len_snap = true;
-                cur_len = ref_len;
-            }
+        // snaps w/ reference line
 
-            // Snap Angles
-            const my_vec = Vec.sub(this.a, this.b);
-            const ref_vec = Vec.sub(ref_line.a.pos, ref_line.b.pos);
+        // vertical and horizontal
+        this.maybeAddVertical(refLine.a);
+        this.maybeAddVertical(refLine.b);
+        this.maybeAddHorizontal(refLine.a);
+        this.maybeAddHorizontal(refLine.b);
 
-            const my_angle = Vec.angle(my_vec);
-            const ref_angle = Vec.angle(ref_vec);
+        // lengths
+        const refLen = refLine.a.distanceTo(refLine.b);
+        let myLen = a.distanceTo(b);
+        if (Math.abs(refLen - myLen) < 10) {
+            b.moveTo(Vec.add(a, Vec.mulS(Vec.normalize(Vec.sub(b, a)), refLen)));
+            snaps.push({ type: 'length', a: this, b: refLine });
+            myLen = refLen;
+        }
 
-            const diff_angle = (my_angle - ref_angle + 360) % 360;
+        // angles
 
-            const closest_round_angle = (Math.round(diff_angle / 90) * 90 + 360) % 360;
-            if (Math.abs(diff_angle - closest_round_angle) < 10) {
-                const new_angle = ref_angle + closest_round_angle;
-                this.b = Vec.add(this.a, Vec.polar(180 + new_angle, cur_len));
-                this.angle_snap = true;
-                this.angle_offset = closest_round_angle;
+        function maybeAddAngle(vec) {
+            const p = Line.closestPoint({ a, b: a.plus(vec) }, b, false);
+            if (p.distanceTo(b) < 10) {
+                b.moveTo(p);
+                // TODO: add snap
             }
         }
+
+        const parallelVec = Vec.sub(refLine.b, refLine.a);
+        const perpendicularVec = new Point(-parallelVec.y, parallelVec.x);
+        maybeAddAngle(parallelVec);
+        maybeAddAngle(perpendicularVec);
     }
 
     render(ctx) {
+        const { a, b, snaps, refLine } = this;
+
+        ctx.fillText(this.msg ?? '', 300, 300);
+        ctx.save();
         ctx.lineWidth = 2.0;
-        ctx.strokeStyle = this.len_snap ? '#F81ED5' : '#000000';
+        ctx.strokeStyle = snaps.find(s => s.type === 'length') ? '#F81ED5' : '#000000';
         ctx.beginPath();
-        ctx.moveTo(this.a.x, this.a.y);
-        ctx.lineTo(this.b.x, this.b.y);
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
         ctx.stroke();
 
-        if (this.h_snap || this.v_snap || this.angle_snap) {
-            const projected_a = Vec.add(this.b, Vec.mulS(Vec.sub(this.a, this.b), 100));
-            const projected_b = Vec.add(this.a, Vec.mulS(Vec.sub(this.b, this.a), 100));
+        function drawGuideLine(p1, p2) {
+            const projectedP1 = Vec.add(p2, Vec.mulS(Vec.sub(p1, p2), 100));
+            const projectedP2 = Vec.add(p1, Vec.mulS(Vec.sub(p2, p1), 100));
             ctx.lineWidth = 0.25;
             ctx.strokeStyle = '#F81ED5';
             ctx.beginPath();
-            ctx.moveTo(projected_a.x, projected_a.y);
-            ctx.lineTo(projected_b.x, projected_b.y);
+            ctx.moveTo(projectedP1.x, projectedP1.y);
+            ctx.lineTo(projectedP2.x, projectedP2.y);
             ctx.stroke();
         }
 
-        if (this.point_snap) {
-            const projected_a = Vec.add(this.b, Vec.mulS(Vec.sub(this.point_snap.snap.pos, this.b), 100));
-            const projected_b = Vec.add(this.point_snap.snap.pos, Vec.mulS(Vec.sub(this.b, this.point_snap.snap.pos), 100));
-            ctx.lineWidth = 0.25;
-            ctx.strokeStyle = '#F81ED5';
-            ctx.beginPath();
-            ctx.moveTo(projected_a.x, projected_a.y);
-            ctx.lineTo(projected_b.x, projected_b.y);
-            ctx.stroke();
+        const hSnap = snaps.find(s => s.type === 'horizontal');
+        if (hSnap != null) {
+            drawGuideLine(hSnap.a, hSnap.b);
         }
 
-        if (this.ref_line) {
-            const ref_len = Line.len(Line(this.ref_line.a.pos, this.ref_line.b.pos));
+        const vSnap = snaps.find(s => s.type === 'vertical');
+        if (vSnap != null) {
+            drawGuideLine(vSnap.a, vSnap.b);
+        }
 
-            const normalized_line = Vec.normalize(Vec.sub(this.b, this.a));
+        const aSnap = snaps.find(s => s.type === 'angle');
+        if (aSnap != null) {
+            drawGuideLine(a, b);
+        }
 
-            const long_b = Vec.add(this.a, Vec.mulS(normalized_line, 10000));
-            const len_vec = Vec.mulS(normalized_line, ref_len);
+        if (refLine) {
+            const refLen = Line.len(Line(refLine.a, refLine.b));
+            const normalizedLine = Vec.normalize(Vec.sub(b, a));
+            const lenVec = Vec.mulS(normalizedLine, refLen);
+            const longB = Vec.add(this.a, Vec.mulS(normalizedLine, 10000));
 
             ctx.lineWidth = 0.25;
             ctx.strokeStyle = '#F81ED5';
 
             ctx.beginPath();
-            ctx.moveTo(this.a.x, this.a.y);
-            ctx.lineTo(long_b.x, long_b.y);
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(longB.x, longB.y);
             ctx.stroke();
 
             for (let i = 0; i < 10; i += 0.25) {
                 const size = i % 1 === 0.0 ? 6 : 3;
-                const perpendicular = Vec.mulS(Vec.rotate90CCW(normalized_line), size);
+                const perpendicular = Vec.mulS(Vec.rotate90CCW(normalizedLine), size);
 
-                const snap_pt = Vec.add(this.a, Vec.mulS(len_vec, i));
-                const snap_perp_a = Vec.add(snap_pt, perpendicular);
-                const snap_perp_b = Vec.sub(snap_pt, perpendicular);
+                const snapPoint = Vec.add(this.a, Vec.mulS(lenVec, i));
+                const snapPerpA = Vec.add(snapPoint, perpendicular);
+                const snapPerpB = Vec.sub(snapPoint, perpendicular);
                 ctx.beginPath();
-                ctx.moveTo(snap_perp_a.x, snap_perp_a.y);
-                ctx.lineTo(snap_perp_b.x, snap_perp_b.y);
+                ctx.moveTo(snapPerpA.x, snapPerpA.y);
+                ctx.lineTo(snapPerpB.x, snapPerpB.y);
                 ctx.stroke();
             }
         }
+
+        ctx.restore();
     }
 }
 
 class DrawSnap { 
     constructor() {
         this.mode = 'draw';
-        this.free_mode = false;
+        this.freeMode = false;
 
-        this.wet_stroke = null;
-        this.ref_line = null;
+        this.wetStroke = null;
+        this.refLine = null;
         this.points = [];
         this.lines = [];
 
         this.snapConstraints = [];
         this.scribbleConstraints = [];
-
-        this.persistentConstraints = [];
     }
 
-    find_point_near(pos) {
-        return this.points.find(point => Vec.dist(point.pos, pos) < 10);
+    removeBrokenConstraints() {
+        // meant to be overridden / monkey-patched by client
     }
 
-    find_stroke_near(pos) {
-        return this.lines.find(line=> {
-            const dist = Line.distToPoint(Line(line.a.pos, line.b.pos), pos);
-            return dist < 20;
-        })
+    findPointNear(pos) {
+        return this.points.find(point => Vec.dist(point, pos) < 10);
     }
 
-    begin_stroke(pos) {
-        const found = this.find_point_near(pos);
-        if (found) pos = found.pos;
-        this.wet_stroke = new WetStroke(pos);
+    findStrokeNear(pos) {
+        return this.lines.find(
+            line => Line.distToPoint(Line(line.a, line.b), pos) < 20
+        );
     }
 
-    update_stroke(pos) {
-        if (this.wet_stroke) {
-            this.wet_stroke.update(pos, this.points, this.ref_line);
+    beginStroke(pos) {
+        this.wetStroke = new WetStroke(this.findPointNear(pos) ?? pos);
+    }
+
+    updateStroke(pos) {
+        if (this.wetStroke) {
+            this.wetStroke.update(pos, this.points, this.refLine);
         }
     }
 
-    end_stroke(pos) {
-        let a = this.find_point_near(this.wet_stroke.a);
-        if (!a) a = new Point(this.wet_stroke.a);
-        this.points.push(a);
+    endStroke(_pos) {
+        let a = this.findPointNear(this.wetStroke.a);
+        if (!a) {
+            a = this.wetStroke.a;
+            this.points.push(a);
+        }
 
-        let b = this.find_point_near(this.wet_stroke.b);
-        if (!b) b = new Point(this.wet_stroke.b);
-        this.points.push(b);
+        let b = this.findPointNear(this.wetStroke.b);
+        if (!b) {
+            b = this.wetStroke.b;
+            this.points.push(b);
+        }
 
         const l = new LineStroke(a, b);
         this.lines.push(l);
         
-
-        // record constraints
-        this.snapConstraints.push({ type: 'minLength', a:l, b: 50 });
-        const ws = this.wet_stroke;
-        if (ws.v_snap) {
-            this.snapConstraints.push({ type: 'vertical', a, b });
-            this.persistentConstraints.push({ type: 'vertical', a, b });
-        }
-        if (ws.h_snap) {
-            this.snapConstraints.push({ type: 'horizontal', a, b });
-            this.persistentConstraints.push({ type: 'horizontal', a, b });
-        }
-        if (ws.point_snap && ws.point_snap.type != 'coincident') {
-            this.snapConstraints.push({ type: ws.point_snap.type, a: b, b: ws.point_snap.snap });
-        }
-        if (ws.len_snap) {
-            this.snapConstraints.push({ type: 'length', a: l, b: ws.ref_line });
-        }
-        if (ws.angle_snap && !ws.v_snap && !ws.h_snap) {
-            this.snapConstraints.push({ type: 'angle', a: l, b: ws.ref_line, angle: ws.angle_offset });
-        }
-
-        console.log(this.snapConstraints);
-
-        this.wet_stroke = null
+        this.snapConstraints = this.wetStroke.snaps;
+        this.wetStroke = null;
     }
     
-    onYank(p, v) {
-        // no op (client should override)
-    }
-
     update(events) {
         // Handle input
         events.pencil.forEach(event => {
-            const pos = new RPoint(event.x, event.y);
+            const pos = new Point(event.x, event.y);
             if (this.mode === 'draw') {
                 if (event.type === 'began') {
-                    this.begin_stroke(pos);
+                    this.beginStroke(pos);
                 } else if (event.type === 'moved') {
-                    this.update_stroke(pos);
+                    this.updateStroke(pos);
                 } else if (event.type === 'ended') {
-                    this.end_stroke(pos);
+                    this.endStroke(pos);
                 }
             } else if (this.mode.startsWith('move')) {
                 if (event.type === 'began') {
-                    this.dragging = this.find_point_near(pos);
+                    this.dragging = this.findPointNear(pos);
                     if (this.dragging) {
-                        this.prevDragPos = pos;
-                        this.prevDragVelocity = new RPoint(0, 0);
-                        this.prevDragAcceleration = new RPoint(0, 0);
                         const reachablePoints = new Set([this.dragging]);
                         while (true) {
                             const oldSize = reachablePoints.size;
@@ -339,7 +303,7 @@ class DrawSnap {
                         }
                         let fixedPointDistance = -Infinity;
                         for (const p of reachablePoints) {
-                            const distance = Vec.dist(this.dragging.pos, p.pos);
+                            const distance = Vec.dist(this.dragging, p);
                             if (distance > fixedPointDistance) {
                                 fixedPointDistance = distance;
                                 this.fixedPoint = p;
@@ -349,23 +313,11 @@ class DrawSnap {
                 }
                 if (event.type === 'moved') {
                     if (this.dragging) {
-                        const v = pos.minus(this.prevDragPos);
-                        const a = v.minus(this.prevDragVelocity);
-                        // console.log('a', a.magnitude(), 'v', v.magnitude());
-                        if (a.magnitude() > 2) {
-                            this.onYank(this.dragging.pos, v, a);
-                        }
-                        this.prevDragPos = pos;
-                        this.prevDragVelocity = v;
-                        this.prevDragAcceleration = a;
-                        this.dragging.pos.x = pos.x;
-                        this.dragging.pos.y = pos.y;
-                        this.checkBrokenConstraints();
+                        this.dragging.moveTo(pos);
                     }
                 }
                 if (event.type === 'ended') {
                     this.dragging = false;
-                    this.initialDragPos = null;
                     this.fixedPoint = null;
                 }
             }
@@ -373,39 +325,35 @@ class DrawSnap {
 
         Object.entries(events.touches).forEach(([touchId, events]) => {
             events.forEach(event => {
-                const pos = new RPoint(event.x, event.y);
+                const pos = new Point(event.x, event.y);
                 if (event.type === 'began') {
-                    const found = this.find_stroke_near(pos);
-                    if (this.ref_line === found) {
-                        this.ref_line = null;
+                    const found = this.findStrokeNear(pos);
+                    if (this.refLine === found) {
+                        this.refLine = null;
                     } else {
-                        this.ref_line = found;
-                        this.finger_down_time = event.timestamp;
+                        this.refLine = found;
+                        this.fingerDownTime = event.timestamp;
                     }
 
-                    this.ref_line_id = touchId;
-
-
                     // Toggle modes
-                    if (Vec.dist(new RPoint(40, 40), pos) < 20) {
+                    if (Vec.dist(new Point(40, 40), pos) < 20) {
                         this.toggleModes();
                     }
 
-                    // Toggle free_mode
-                    if (Vec.dist(new RPoint(40, window.innerHeight - 40), pos) < 20) {
-                        this.free_mode = true
+                    // Toggle freeMode
+                    if (Vec.dist(new Point(40, window.innerHeight - 40), pos) < 20) {
+                        this.freeMode = true
                     }
                 }
     
                 if (event.type == 'ended') {
-                    if (event.timestamp - this.finger_down_time > 1.0) {
-                        this.ref_line = null;
+                    if (event.timestamp - this.fingerDownTime > 1.0) {
+                        this.refLine = null;
                     }
 
-                    if(this.free_mode) {
-                        this.free_mode = false
-                        this.onYank(this.dragging.pos)
-                        this.removeBrokenConstraints()
+                    if (this.freeMode) {
+                        this.freeMode = false;
+                        this.removeBrokenConstraints();
                     }
                     
                 }
@@ -445,49 +393,15 @@ class DrawSnap {
         return this.mode;
     }
 
-    checkBrokenConstraints(){
-        this.persistentConstraints.forEach(constraint=>{
-            if(constraint.type == "horizontal") {
-                constraint.broken = Math.abs(constraint.a.pos.y - constraint.b.pos.y) > 10
-            }
-
-            if(constraint.type == "vertical") {
-                constraint.broken = Math.abs(constraint.a.pos.x - constraint.b.pos.x) > 10
-            }
-        })
-    }
-
-    removeBrokenConstraints(){
-        this.persistentConstraints = this.persistentConstraints.filter(c=>!c.broken)
-    }
-
     render(ctx) {
-        // Render constraints
-        this.persistentConstraints.forEach(constraint=>{
-            if(this.dragging && this.dragging == constraint.a || this.dragging == constraint.b) {
-                if((constraint.type == "horizontal" || constraint.type == "vertical") && !constraint.broken) {
-                    const projected_a = Vec.add(constraint.b.pos, Vec.mulS(Vec.sub(constraint.a.pos, constraint.b.pos), 100));
-                    const projected_b = Vec.add(constraint.a.pos, Vec.mulS(Vec.sub(constraint.b.pos, constraint.a.pos), 100));
-                    ctx.lineWidth = 1;
-                    ctx.strokeStyle ='#F81ED5';
-                    ctx.beginPath();
-                    ctx.moveTo(projected_a.x, projected_a.y);
-                    ctx.lineTo(projected_b.x, projected_b.y);
-                    ctx.stroke();
-                }
-            }
-        })
-
-
-        this.lines.forEach(line => {
-            line.render(ctx, line === this.ref_line);
-        })
-        this.points.forEach(point => {
+        for (const line of this.lines) {
+            line.render(ctx, line === this.refLine);
+        }
+        for (const point of this.points) {
             point.render(ctx, point === this.dragging);
-        })
-
-        if (this.wet_stroke) {
-            this.wet_stroke.render(ctx);
+        }
+        if (this.wetStroke != null) {
+            this.wetStroke.render(ctx);
         }
 
         // Draw toggle
@@ -502,10 +416,8 @@ class DrawSnap {
         ctx.fillText(this.mode, 70, 40);
 
         ctx.beginPath();
-        ctx.ellipse(40, window.innerHeight-40, 20, 20, 0, 0, Math.PI * 2);
+        ctx.ellipse(40, window.innerHeight - 40, 20, 20, 0, 0, Math.PI * 2);
         ctx.stroke();
-
-
     }
 }
 

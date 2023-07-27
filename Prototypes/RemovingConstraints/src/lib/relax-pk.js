@@ -128,7 +128,7 @@ export class Point {
   }
 
   rotatedBy(theta) {
-    const t = theta * Math.PI / 180;
+    const t = theta;
     const c = Math.cos(t);
     const s = Math.sin(t);
     return new Point(
@@ -142,11 +142,11 @@ export class Point {
   }
 
   angleWithXAxis() {
-    return Math.atan2(this.y, this.x) * 180 / Math.PI;
+    return Math.atan2(this.y, this.x);
   }
 
   angleWithYAxis() {
-    return this.angleWithXAxis() - 90;
+    return this.angleWithXAxis() - Math.PI / 2;
   }
 
   normalized() {
@@ -159,6 +159,11 @@ export class Point {
 
   clone() {
     return new Point(this.x, this.y);
+  }
+
+  moveTo(that) {
+    this.x = that.x;
+    this.y = that.y;
   }
 
   draw(rc) {
@@ -497,7 +502,6 @@ export class VarEquals {
     const m = avg(...this.vs.map(v => v.value));
     return this.vs.map(v => new VarDelta(v, m - v.value, this));
   }
-
 
   toString() {
     return `VarEquals(${this.vs})`;
@@ -896,7 +900,7 @@ export class MinLength extends TwoPointConstraint {
   }
 }
 
-class PointEquals extends TwoPointConstraint {
+export class PointEquals extends TwoPointConstraint {
   constructor(p1, p2) {
     super(p1, p2);
   }
@@ -984,6 +988,72 @@ class FourPointConstraint {
 
   toString() {
     return `${this.constructor.name}(${this.p1}, ${this.p2}, ${this.p3}, ${this.p4})`;
+  }
+}
+
+export class Angle extends TwoPointConstraint {
+  constructor(p1, p2, angle) {
+    super(p1, p2);
+    this.angle = angle;
+  }
+
+  propagateKnowns(knowns) {
+    if (
+      knowns.xs.has(this.p1) && knowns.ys.has(this.p1) &&
+      knowns.xs.has(this.p2) && knowns.ys.has(this.p2) &&
+      !knowns.vars.has(this.angle)
+    ) {
+      const v12 = this.p2.minus(this.p1);
+      const a12 = Math.atan2(v12.y, v12.x);
+      this.angle.value = a12;
+      return true;
+    }
+
+    if (knowns.vars.has(this.angle) && this.angle.value % Math.PI === 0) {
+      if (knowns.ys.has(this.p1) && !knowns.ys.has(this.p2)) {
+        this.p2.y = this.p1.y;
+        return true;
+      } else if (knowns.ys.has(this.p2) && !knowns.ys.has(this.p1)) {
+        this.p1.y = this.p2.y;
+        return true;
+      }
+    }
+
+    if (knowns.vars.has(this.angle) && Math.abs(this.angle.value % Math.PI) === Math.PI / 2) {
+      if (knowns.xs.has(this.p1) && !knowns.xs.has(this.p2)) {
+        this.p2.x = this.p1.x;
+        return true;
+      } else if (knowns.xs.has(this.p2) && !knowns.xs.has(this.p1)) {
+        this.p1.x = this.p2.x;
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  calculateDeltas(_knowns) {
+    if (this.p1.distanceTo(this.p2) < 30) {
+      return [];
+    }
+
+    const v12 = this.p2.minus(this.p1);
+    const a12 = Math.atan2(v12.y, v12.x);
+    const m12 = this.p1.plus(this.p2).scaledBy(0.5);
+
+    const wantedAngle = avg(a12, this.angle.value);
+    const dAngle = (wantedAngle - this.angle.value) / 2;
+    if (dAngle >= Math.PI) {
+      console.log('a12', a12);
+      console.log('wa', wantedAngle);
+      console.log('da', dAngle);
+      throw new Error('stop');
+    }
+    return [
+      new VarDelta(this.angle, dAngle / 2, this),
+      new PointDelta(this.p1, this.p1.rotatedAroundBy(m12, -dAngle / 2).minus(this.p1), this),
+      new PointDelta(this.p2, this.p2.rotatedAroundBy(m12, -dAngle / 2).minus(this.p2), this),
+    ];
   }
 }
 
