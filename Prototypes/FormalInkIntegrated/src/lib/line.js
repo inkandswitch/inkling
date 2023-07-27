@@ -1,23 +1,19 @@
 // Line
 // This is a collection of functions related to line segments written by Marcel with help of ChatGPT
 
-import Vec from "./vec"
+import Vec from "./vec";
 
-const Line = (a, b) =>{
-    return {a, b}
-}
-export default Line
+const Line = (a, b) => {
+    return { a, b };
+};
+export default Line;
 
-Line.len = (l)=>{
-    return Vec.dist(l.a, l.b)
-}
+Line.len = l => Vec.dist(l.a, l.b);
 
-Line.direction_vec = (l) => {
-    return Vec.normalize(Vec.sub(l.b, l.a))
-}
+Line.direction_vec = l => Vec.normalize(Vec.sub(l.b, l.a));
 
 // Returns intersection if the line segments overlap, or null if they don't
-Line.intersect = (l1, l2) =>{
+Line.intersect = (l1, l2) => {
     const { a: p1, b: p2 } = l1;
     const { a: q1, b: q2 } = l2;
 
@@ -27,7 +23,6 @@ Line.intersect = (l1, l2) =>{
     const dy2 = q2.y - q1.y;
 
     const determinant = dx1 * dy2 - dy1 * dx2;
-
     if (determinant === 0) {
         // The lines are parallel or coincident
         return null;
@@ -48,10 +43,10 @@ Line.intersect = (l1, l2) =>{
 
     // The segments do not intersect
     return null;
-}
+};
 
 // Always returns intersection point even if the line segments don't overlap
-Line.intersectAnywhere = (l1, l2) =>{
+Line.intersectAnywhere = (l1, l2) => {
     const { a: p1, b: p2 } = l1;
     const { a: q1, b: q2 } = l2;
   
@@ -77,9 +72,10 @@ Line.intersectAnywhere = (l1, l2) =>{
     const intersectionY = p1.y + t * dy1;
   
     return { x: intersectionX, y: intersectionY };
-}
+};
 
 // Get point along slope
+// TODO: make this work for vertical lines, too
 Line.getYforX = (line, x) => {
     // Extract the coordinates of points a and b
     const { a, b } = line;
@@ -93,9 +89,10 @@ Line.getYforX = (line, x) => {
     const y = slope * (x - x1) + y1;
     
     return y;
-}
+};
 
 // Get point along slope
+// TODO: make this work for vertical lines, too
 Line.getXforY = (line, y) => {
     // Extract the coordinates of points a and b
     const { a, b } = line;
@@ -109,8 +106,7 @@ Line.getXforY = (line, y) => {
     const x = (y - y1) / slope + x1;
 
     return x;
-}
-
+};
 
 Line.distToPoint = (line, point) => {
     const { a, b } = line;
@@ -134,14 +130,14 @@ Line.distToPoint = (line, point) => {
         const closestPoint = Vec.add(a, Vec.mulS(AB, projection));
         return Vec.dist(point, closestPoint);
     }
-}
+};
 
 Line.spreadPointsAlong = (line, n) => {
-    let seg_length = Line.len(line) / n
-    let offset_seg = Vec.mulS(Line.direction_vec(line), seg_length)
-    let points = []
+    const seg_length = Line.len(line) / n;
+    const offset_seg = Vec.mulS(Line.direction_vec(line), seg_length);
+    const points = [];
     for (let i = 0; i < n; i++) {
         points.push(Vec.add(line.a, Vec.mulS(offset_seg, i)))
     }
-    return points
-}
+    return points;
+};

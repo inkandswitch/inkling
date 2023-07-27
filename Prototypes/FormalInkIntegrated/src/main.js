@@ -3,7 +3,7 @@ import App from "./app/App";
 
 const app = new App();
 
-engine((events) => {
+engine(events => {
   app.update(events);
   app.render();
 });

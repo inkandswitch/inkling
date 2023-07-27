@@ -1,5 +1,5 @@
 //import Canvas from "./Canvas";
-import Page from "./Page"
+import Page from "./Page";
 import Selection from "./Selection";
 import SVG from "./Svg";
 import ToolPicker from "./ToolPicker";
@@ -8,7 +8,7 @@ import FreehandTool from "./tools/FreehandTool";
 import TextTool from "./tools/TextTool";
 
 export default class App {
-    constructor(){
+    constructor() {
         this.svg = new SVG();
         this.page = new Page(this.svg);
                 
@@ -40,14 +40,14 @@ export default class App {
         // this.page.addArcSegment(ca, cb, cc);
     }
 
-    update(events){
+    update(events) {
         this.tool_picker.update(events);
         this.tools[this.tool_picker.selected].update(events);
 
         this.selection.update(events);
     }
 
-    render(){
+    render() {
         this.tool_picker.render(this.svg);
         this.tools[this.tool_picker.selected].render(this.svg);
         this.page.render(this.svg);

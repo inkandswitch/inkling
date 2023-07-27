@@ -1,27 +1,27 @@
 import { generatePathFromPoints } from "../Svg";
 
 export default class FreehandTool {
-    constructor(page){
+    constructor(page) {
         this.page = page;
         this.points = null;
         this.element = null;
     }
 
-    update(events){
-        let pencil_down = events.did("pencil", "began");
-        if(pencil_down) {
-            this.points = [pencil_down.position];
+    update(events) {
+        const pencilDown = events.did('pencil', 'began');
+        if (pencilDown) {
+            this.points = [pencilDown.position];
             this.dirty = true;
         }
 
-        let pencil_moves = events.did_all("pencil", "moved");
-        pencil_moves.forEach(pencil_move=>{
-            this.points.push(pencil_move.position);
+        const pencilMoves = this.points == null ? [] : events.did_all('pencil', 'moved');
+        pencilMoves.forEach(pencilMove => {
+            this.points.push(pencilMove.position);
             this.dirty = true;
         })
 
-        let pencil_up = events.did("pencil", "ended");
-        if(pencil_up) {
+        const pencilUp = events.did('pencil', 'ended');
+        if (pencilUp) {
             this.page.addFreehandStroke(this.points);
             this.points = null;
             this.element.remove();
@@ -29,19 +29,29 @@ export default class FreehandTool {
         }
     }
 
-    render(svg){
-        //
-
-        if(this.dirty) {
-            if(this.points && !this.element) {
-                this.element = svg.addElement("path", {d: "", stroke: "darkgrey", "stroke-width": 2, fill: "none"});
-            }
-
-            if(this.element) {
-                let path = generatePathFromPoints(this.points)
-                svg.updateElement(this.element, {d: path});
-            }
+    render(svg) {
+        if (!this.dirty) {
+            return;
         }
-    }
 
+        if (this.points) {
+            if (!this.element) {
+                this.element =
+                svg.addElement(
+                    'path',
+                    {
+                        d: '',
+                        stroke: 'darkgrey',
+                        'stroke-width': 2,
+                        fill: 'none',
+                    }
+                );
+            }
+
+            const path = generatePathFromPoints(this.points);
+            svg.updateElement(this.element, { d: path });
+        }
+
+        // TODO(marcel): shouldn't we set dirty to `false` here?
+    }
 }

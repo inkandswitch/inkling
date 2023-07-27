@@ -1,5 +1,5 @@
-let ids = 0
+let nextId = 0;
 
-export default function generateId(){
-    return ids++
+export default function generateId() {
+    return nextId++;
 }
