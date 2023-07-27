@@ -22,3 +22,13 @@ export default class SVG {
         })
     }
 }
+
+export function generatePathFromPoints(points){
+    let path = `M ${points[0].x} ${points[0].y} `
+    for (let i = 1; i < points.length; i++) {
+        const point = points[i];
+        path += `L ${point.x} ${point.y} `    
+    }
+
+    return path
+}

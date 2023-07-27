@@ -60,7 +60,7 @@ export default class Selection {
 
         // If we're already holding down a finger, switch to pinch gesture
         if(this.selection_finger) {
-            let finger_move = events.did("finger", "moved", this.selection_finger.id)
+            let finger_move = events.did_last("finger", "moved", this.selection_finger.id)
             if(finger_move) {
                 this.selection_finger_moved = finger_move
                 this.transformSelection()
@@ -164,6 +164,7 @@ export default class Selection {
         let snap_points = this.page.points.filter(pt=>!this.points[pt.id])
 
         let found_translate = null
+        let snapped_point = null
         let translate_delta = Vec(0,0)
         for(let id in this.points) {
             let point = this.points[id]
@@ -174,7 +175,8 @@ export default class Selection {
                 // Get delta 
                 let delta = Vec.sub(found.position, point.position)
                 translate_delta = delta
-                found_translate  = Vec.clone(found.position)
+                found_translate  = found
+                snapped_point = point
                 snap_points = snap_points.filter(p=>p.id != found.id)
                 break;
                 
@@ -191,9 +193,9 @@ export default class Selection {
             
             let found = snap_points.find(other_point=>Vec.dist(other_point.position, point.position) < 20)
             if(found) {
-                let angleA = Vec.angle(Vec.sub(point.position, found_translate))
-                let angleB = Vec.angle(Vec.sub(found.position, found_translate))
-                let delta = angleA - angleB;
+                let angleA = Vec.angle(Vec.sub(point.position, found_translate.position))
+                let angleB = Vec.angle(Vec.sub(found.position, found_translate.position))
+                let delta = angleB - angleA;
 
                 rotate_delta = delta;
                 break;
@@ -201,21 +203,23 @@ export default class Selection {
         }
 
         let transform = new TransformationMatrix();
+        let found_old_position = this.points_down[snapped_point.id]
         
-        transform.translate(-found_translate.x, -found_translate.y);
-        transform.rotate(rotate_delta);
-        transform.translate(found_translate.x, found_translate.y);
 
         transform.translate(translate_delta.x, translate_delta.y);
+
+        // transform.translate(-snapped_point.position.x, -snapped_point.position.y);
+        // transform.rotate(rotate_delta);
+        // transform.translate(snapped_point.position.x, snapped_point.position.y);
         
         return transform
 
     }
 
     render(ctx) {
-        Object.values(this.points).forEach(point=>{
-            point.renderSelected(ctx)
-        })
+        // Object.values(this.points).forEach(point=>{
+        //     point.renderSelected(ctx)
+        // })
     }
 
 }

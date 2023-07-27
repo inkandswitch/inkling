@@ -1,19 +1,17 @@
-let ids = 0
+import generateId from "../generateId"
 
 const SIZE = 3
 
 export default class Point {
     constructor(svg, position){
-        this.id = ids++
+        this.id = generateId()
         this.position = position
         this.dirty = true
         this.selected = false
-        this.elements = {}
-
-
-        this.elements.normal = svg.addElement("circle", { cx: 0, cy: 0, r: 3, fill: "black" })
-        this.elements.selected = svg.addElement("circle", { cx: 0, cy: 0, r: 7, fill: "none" })
-
+        this.elements = {
+            normal: svg.addElement("circle", { cx: 0, cy: 0, r: 3, fill: "black" }),
+            selected: svg.addElement("circle", { cx: 0, cy: 0, r: 7, fill: "none" })
+        }
     }
 
     move(position) {
@@ -44,12 +42,5 @@ export default class Point {
 
             this.dirty = false
         }
-    }
-
-    renderSelected(ctx) {
-        // ctx.fillStyle = '#D2BBF9';
-        // ctx.beginPath();
-        // ctx.ellipse(this.position.x, this.position.y, SIZE+4, SIZE+4, 0, 0, Math.PI * 2);
-        // ctx.fill();
     }
 }

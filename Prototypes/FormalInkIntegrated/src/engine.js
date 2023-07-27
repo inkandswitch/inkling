@@ -10,6 +10,18 @@ class Events {
             return e.type == type && e.state == state && (id == null || e.id == id)
         })
     }
+    
+    did_all(type, state, id) {
+        return this.events.filter(e=>{
+            return e.type == type && e.state == state && (id == null || e.id == id)
+        })
+    }
+
+    did_last(type, state, id) {
+        return this.events.slice().reverse().find(e=>{
+            return e.type == type && e.state == state && (id == null || e.id == id)
+        })
+    }
 }
 
 
