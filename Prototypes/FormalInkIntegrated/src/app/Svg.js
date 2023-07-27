@@ -23,6 +23,7 @@ export default class SVG {
     }
 }
 
+// TODO: maybe this should live somewhere else, tbd
 export function generatePathFromPoints(points){
     let path = `M ${points[0].x} ${points[0].y} `
     for (let i = 1; i < points.length; i++) {

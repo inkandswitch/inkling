@@ -1,9 +1,8 @@
 import { generatePathFromPoints } from "../Svg";
 
 export default class FreehandTool {
-    constructor(page, svg){
+    constructor(page){
         this.page = page;
-        this.svg = svg;
         this.points = null;
         this.element = null;
     }
@@ -35,7 +34,7 @@ export default class FreehandTool {
 
         if(this.dirty) {
             if(this.points && !this.element) {
-                this.element = this.svg.addElement("path", {d: "", stroke: "darkgrey", "stroke-width": 2, fill: "none"});
+                this.element = svg.addElement("path", {d: "", stroke: "darkgrey", "stroke-width": 2, fill: "none"});
             }
 
             if(this.element) {
