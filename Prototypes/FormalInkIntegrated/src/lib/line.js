@@ -10,7 +10,7 @@ export default Line;
 
 Line.len = l => Vec.dist(l.a, l.b);
 
-Line.direction_vec = l => Vec.normalize(Vec.sub(l.b, l.a));
+Line.directionVec = l => Vec.normalize(Vec.sub(l.b, l.a));
 
 // Returns intersection if the line segments overlap, or null if they don't
 Line.intersect = (l1, l2) => {
@@ -133,11 +133,11 @@ Line.distToPoint = (line, point) => {
 };
 
 Line.spreadPointsAlong = (line, n) => {
-    const seg_length = Line.len(line) / n;
-    const offset_seg = Vec.mulS(Line.direction_vec(line), seg_length);
+    const segLength = Line.len(line) / n;
+    const offsetSeg = Vec.mulS(Line.directionVec(line), segLength);
     const points = [];
     for (let i = 0; i < n; i++) {
-        points.push(Vec.add(line.a, Vec.mulS(offset_seg, i)))
+        points.push(Vec.add(line.a, Vec.mulS(offsetSeg, i)))
     }
     return points;
 };

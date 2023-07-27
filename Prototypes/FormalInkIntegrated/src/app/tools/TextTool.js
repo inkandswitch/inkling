@@ -12,13 +12,13 @@ export default class TextTool {
             this.points = [pencilDown.position];
         }
 
-        const pencil_move = events.did('pencil', 'moved');
-        if (pencil_move) {
-            this.points.push(pencil_move.position);
+        const pencilMove = events.did('pencil', 'moved');
+        if (pencilMove) {
+            this.points.push(pencilMove.position);
         }
 
-        const pencil_up = events.did('pencil', 'ended');
-        if (pencil_up) {
+        const pencilUp = events.did('pencil', 'ended');
+        if (pencilUp) {
  
         }
     }

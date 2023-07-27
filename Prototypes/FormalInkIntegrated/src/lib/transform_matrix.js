@@ -7,8 +7,8 @@
 
 import Vec from "./vec";
 
-const deg_to_rad = Math.PI / 180;
-const rad_to_deg = 180 / Math.PI;
+const DEGREES_TO_RADIANS = Math.PI / 180;
+const RADIANS_TO_DEGREES = 180 / Math.PI;
 
 export default class TransformationMatrix {
   constructor() {
@@ -51,8 +51,8 @@ export default class TransformationMatrix {
     return this;
   }
 
-  rotate_degrees(angle) {
-		this.rotate(angle * deg_to_rad);
+  rotateDegrees(angle) {
+		this.rotate(angle * DEGREES_TO_RADIANS);
 		return this;
 	}
 
@@ -71,12 +71,12 @@ export default class TransformationMatrix {
     return this;
   }
 
-  flip_x() {
+  flipX() {
     this.transform(-1, 0, 0, 1, 0, 0);
 		return this;
   }
 
-  flip_y() {
+  flipY() {
     this.transform(1, 0, 0, -1, 0, 0);
 		return this;
   }
@@ -99,7 +99,7 @@ export default class TransformationMatrix {
 
   // GETTERS
 
-  get_inverse() {
+  getInverse() {
     const { a, b, c, d, e, f } = this;
 
     const m = new TransformationMatrix();
@@ -115,11 +115,11 @@ export default class TransformationMatrix {
     return m;
   }
 
-  get_position() {
+  getPosition() {
     return { x: this.e, y: this.f };
   }
 
-  get_rotation() {
+  getRotation() {
     const E = (this.a + this.d) / 2;
     const F = (this.a - this.d) / 2;
     const G = (this.c + this.b) / 2;
@@ -129,10 +129,10 @@ export default class TransformationMatrix {
     const a2 = Math.atan2(H, E);
 
     const phi = (a2 + a1) / 2;
-    return -phi * rad_to_deg;
+    return -phi * RADIANS_TO_DEGREES;
   }
 
-  get_scale() {
+  getScale() {
     const E = (this.a + this.d) / 2;
     const F = (this.a - this.d) / 2;
     const G = (this.c + this.b) / 2;
@@ -142,14 +142,14 @@ export default class TransformationMatrix {
     const R = Math.sqrt(F * F + G * G);
 
     return {
-      scale_x: Q + R,
-      scale_y: Q - R,
+      scaleX: Q + R,
+      scaleY: Q - R,
     };
   }
 
   // TRANSFORM OTHER THINGS
 
-  transform_matrix(m2) {
+  transformMatrix(m2) {
     const { a: a1, b: b1, c: c1, d: d1, e: e1, f: f1 } = this;
 
     const a2 = m2.a;
@@ -170,7 +170,7 @@ export default class TransformationMatrix {
     return m;
   }
 
-  transform_point(p) {
+  transformPoint(p) {
     const { x, y } = p;
     const { a, b, c, d, e, f } = this;
 
@@ -180,14 +180,14 @@ export default class TransformationMatrix {
     );
   }
 
-  transform_line(l2) {
+  transformLine(l2) {
     return {
-      a: this.transform_point(l2.a),
-      b: this.transform_point(l2.b),
+      a: this.transformPoint(l2.a),
+      b: this.transformPoint(l2.b),
     };
   }
 
-  from_line(a, b) {
+  fromLine(a, b) {
     const line = Vec.sub(b, a);
 
     this.translate(a.x, a.y);

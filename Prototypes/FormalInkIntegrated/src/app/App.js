@@ -13,7 +13,7 @@ export default class App {
         this.page = new Page(this.svg);
                 
         this.selection = new Selection(this.page);
-        this.tool_picker = new ToolPicker(this.svg);
+        this.toolPicker = new ToolPicker(this.svg);
 
         this.tools = [
             new FreehandTool(this.page),
@@ -41,15 +41,15 @@ export default class App {
     }
 
     update(events) {
-        this.tool_picker.update(events);
-        this.tools[this.tool_picker.selected].update(events);
+        this.toolPicker.update(events);
+        this.tools[this.toolPicker.selected].update(events);
 
         this.selection.update(events);
     }
 
     render() {
-        this.tool_picker.render(this.svg);
-        this.tools[this.tool_picker.selected].render(this.svg);
+        this.toolPicker.render(this.svg);
+        this.tools[this.toolPicker.selected].render(this.svg);
         this.page.render(this.svg);
     }
 }

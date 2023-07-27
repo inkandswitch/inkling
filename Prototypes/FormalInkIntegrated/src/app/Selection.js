@@ -5,32 +5,31 @@ export default class Selection {
     constructor(page) {
         this.page = page;
         this.points = {};
-        this.points_down = {};
+        this.pointsDown = {};
 
         // gesture state
-        this.tapped_on = null;
+        this.tappedOn = null;
 
-        this.selection_finger = null;
-        this.selection_finger_moved = null;
-        this.transform_finger = null;
-        this.transform_finger_moved = null;
+        this.selectionFinger = null;
+        this.selectionFingerMoved = null;
+        this.transformFinger = null;
+        this.transformFingerMoved = null;
     }
 
     update(events) {
         const fingerDown = events.did('finger', 'began');
         if (fingerDown) {
-            
             // If we weren't already holding down a finger
-            if (!this.selection_finger) { 
-                this.selection_finger = fingerDown;
-                this.selection_finger_moved = fingerDown;
+            if (!this.selectionFinger) { 
+                this.selectionFinger = fingerDown;
+                this.selectionFingerMoved = fingerDown;
 
                 const point = this.page.findPointNear(fingerDown.position);
                 if (point) {    
                     this.selectPoint(point);
-                    this.tapped_on = point;
+                    this.tappedOn = point;
                 } else {
-                    this.tapped_on = null;
+                    this.tappedOn = null;
                 }
 
                 // Set initial offset transform
@@ -38,76 +37,76 @@ export default class Selection {
                 const p = fingerDown.position;
                 transform.translate(p.x, p.y).inverse();
                 Object.entries(this.points).forEach(([id, point]) => {
-                    this.points_down[id] = transform.transform_point(point.position);
+                    this.pointsDown[id] = transform.transformPoint(point.position);
                 });
             } else { // Two fingers, go into full transform mode
-                this.transform_finger = fingerDown;
-                this.transform_finger_moved = fingerDown;
+                this.transformFinger = fingerDown;
+                this.transformFingerMoved = fingerDown;
 
                 // Set initial offset transform
                 
                 const transform = new TransformationMatrix();
-                const a = Vec.divS(Vec.add(this.selection_finger_moved.position, this.transform_finger.position), 2);
-                const b = this.transform_finger.position;
-                transform.from_line(a, b).inverse();
+                const a = Vec.divS(Vec.add(this.selectionFingerMoved.position, this.transformFinger.position), 2);
+                const b = this.transformFinger.position;
+                transform.fromLine(a, b).inverse();
 
                 Object.entries(this.points).forEach(([id, point]) => {
-                    this.points_down[id] = transform.transform_point(point.position);
+                    this.pointsDown[id] = transform.transformPoint(point.position);
                 });
             }
         }
 
         // If we're already holding down a finger, switch to pinch gesture
-        if (this.selection_finger) {
-            const fingerMove = events.did_last('finger', 'moved', this.selection_finger.id);
+        if (this.selectionFinger) {
+            const fingerMove = events.didLast('finger', 'moved', this.selectionFinger.id);
             if (fingerMove) {
-                this.selection_finger_moved = fingerMove;
+                this.selectionFingerMoved = fingerMove;
                 this.transformSelection();
             }
 
-            const fingerUp = events.did('finger', 'ended', this.selection_finger.id);
+            const fingerUp = events.did('finger', 'ended', this.selectionFinger.id);
             if (fingerUp) {
                 // If it was a short tap
-                if (fingerUp.timestamp - this.selection_finger.timestamp < 0.2) {
+                if (fingerUp.timestamp - this.selectionFinger.timestamp < 0.2) {
 
                     // If we tapped on empty space
-                    if (this.tapped_on == null) {
+                    if (this.tappedOn == null) {
                         this.clearSelection();
                     }
                 }
 
                 
-                this.selection_finger = null;
-                this.selection_finger_moved = null;
+                this.selectionFinger = null;
+                this.selectionFingerMoved = null;
 
                 // TODO: this could be done better
-                this.transform_finger = null;
-                this.transform_finger_moved = null;
+                this.transformFinger = null;
+                this.transformFingerMoved = null;
             }
         }
 
-        if (this.transform_finger) {
-            const fingerMove = events.did('finger', 'moved', this.transform_finger.id);
+        if (this.transformFinger) {
+            const fingerMove = events.did('finger', 'moved', this.transformFinger.id);
             if (fingerMove) {
-                this.transform_finger_moved = fingerMove;
+                this.transformFingerMoved = fingerMove;
                 this.transformSelection();
             }
 
-            let fingerTwoUp = events.did('finger', 'ended', this.transform_finger.id);
+            let fingerTwoUp = events.did('finger', 'ended', this.transformFinger.id);
             if (fingerTwoUp) {
-                this.transform_finger = null;
-                this.transform_finger_moved = null;
+                this.transformFinger = null;
+                this.transformFingerMoved = null;
 
                 // TODO: this could be done better
-                this.selection_finger = null;
-                this.selection_finger_moved = null;
+                this.selectionFinger = null;
+                this.selectionFingerMoved = null;
             }
         }
     }
 
     selectPoint(point) {
         this.points[point.id] = point;
-        this.tapped_on = point;
+        this.tappedOn = point;
         point.select();
 
         this.page.linesegments.forEach(ls => {
@@ -127,82 +126,82 @@ export default class Selection {
 
     transformSelection() {
         let transform = new TransformationMatrix();
-        if (this.selection_finger_moved && this.transform_finger_moved) {
-            const a = Vec.divS(Vec.add(this.selection_finger_moved.position, this.transform_finger_moved.position), 2);
-            const b = this.transform_finger_moved.position;
-            transform.from_line(a, b);
+        if (this.selectionFingerMoved && this.transformFingerMoved) {
+            const a = Vec.divS(Vec.add(this.selectionFingerMoved.position, this.transformFingerMoved.position), 2);
+            const b = this.transformFingerMoved.position;
+            transform.fromLine(a, b);
         } else {
-            const p = this.selection_finger_moved.position;
+            const p = this.selectionFingerMoved.position;
             transform.translate(p.x, p.y);
         }
 
         Object.entries(this.points).forEach(([id, point]) => {
-            const old_pos = this.points_down[id];
-            const new_pos = transform.transform_point(old_pos);
-            point.move(new_pos);
+            const oldPos = this.pointsDown[id];
+            const newPos = transform.transformPoint(oldPos);
+            point.move(newPos);
         })
 
         const snap = this.transformSnap(transform);
-        transform = snap.transform_matrix(transform);
+        transform = snap.transformMatrix(transform);
 
         Object.entries(this.points).forEach(([id, point]) => {
-            const old_pos = this.points_down[id];
-            const new_pos = transform.transform_point(old_pos);
-            point.move(new_pos);
+            const oldPos = this.pointsDown[id];
+            const newPos = transform.transformPoint(oldPos);
+            point.move(newPos);
         });
     }
 
     transformSnap() {
         let snapPoints = this.page.points.filter(p => !this.points[p.id]);
 
-        let found_translate = null;
-        let snapped_point = null;
-        let translate_delta = Vec(0,0);
+        let foundTranslate = null;
+        let snappedPoint = null;
+        let translateDelta = Vec(0,0);
         for (let id in this.points) {
             const point = this.points[id];
             // Find snap point
             
-            const found = snapPoints.find(other_point=>Vec.dist(other_point.position, point.position) < 10);
+            const found = snapPoints.find(otherPoint=>Vec.dist(otherPoint.position, point.position) < 10);
             if (found) {
                 // Get delta 
                 const delta = Vec.sub(found.position, point.position);
-                translate_delta = delta;
-                found_translate  = found;
-                snapped_point = point;
+                translateDelta = delta;
+                foundTranslate  = found;
+                snappedPoint = point;
                 snapPoints = snapPoints.filter(p => p.id != found.id);
                 break;
             }
         }
-        if (!found_translate) {
+        if (!foundTranslate) {
             return new TransformationMatrix();
         }
 
         // TODO figure this out, it's not working
-        let rotate_delta = 0;
+        let rotateDelta = 0;
         for (let id in this.points) {
             const point = this.points[id];
             // Find snap point
             
-            const found = snapPoints.find(other_point=>Vec.dist(other_point.position, point.position) < 20);
+            const found = snapPoints.find(otherPoint=>Vec.dist(otherPoint.position, point.position) < 20);
             if (found) {
-                const angleA = Vec.angle(Vec.sub(point.position, found_translate.position));
-                const angleB = Vec.angle(Vec.sub(found.position, found_translate.position));
+                const angleA = Vec.angle(Vec.sub(point.position, foundTranslate.position));
+                const angleB = Vec.angle(Vec.sub(found.position, foundTranslate.position));
                 const delta = angleB - angleA;
 
-                rotate_delta = delta;
+                rotateDelta = delta;
                 break;
             }
         }
 
         const transform = new TransformationMatrix();
-        const found_old_position = this.points_down[snapped_point.id];
+        const foundOldPosition = this.pointsDown[snappedPoint.id];
         
 
-        transform.translate(translate_delta.x, translate_delta.y);
+        transform.translate(translateDelta.x, translateDelta.y);
 
-        // transform.translate(-snapped_point.position.x, -snapped_point.position.y);
-        // transform.rotate(rotate_delta);
-        // transform.translate(snapped_point.position.x, snapped_point.position.y);
+        // transform.translate(-snappedPoint.position.x, -snappedPoint.position.y);
+        // transform.rotate(rotateDelta);
+        // transform.translate(snappedPoint.position.x, snappedPoint.position.y);
         
         return transform;
     }

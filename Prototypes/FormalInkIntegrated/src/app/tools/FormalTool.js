@@ -12,14 +12,14 @@ export default class FormalTool {
         this.element = null;
 
         // Data for guessing
-        this.input_points = null;
-        this.ideal_points = null;
-        this.render_points = null;
+        this.inputPoints = null;
+        this.idealPoints = null;
+        this.renderPoints = null;
 
         // Speed (not velocity, lol)
         this.speed = 0;
-        this.max_speed = 0;
-        this.previous_position = null;
+        this.maxSpeed = 0;
+        this.previousPosition = null;
 
         // Curve fitting
         this.mode = 'unknown'; // unknown, guess, can still change, fixed
@@ -30,51 +30,51 @@ export default class FormalTool {
         // PENCIL DOWN
         const pencilDown = events.did('pencil', 'began');
         if (pencilDown) {
-            this.input_points = [pencilDown.position];
-            this.render_points = [Vec.clone(pencilDown.position)];
+            this.inputPoints = [pencilDown.position];
+            this.renderPoints = [Vec.clone(pencilDown.position)];
 
             this.speed = 0;
-            this.max_speed = 0;
-            this.previous_position = pencilDown.position;
+            this.maxSpeed = 0;
+            this.previousPosition = pencilDown.position;
 
             this.state = 'unknown';
             this.dirty = true;
         }
 
         // PENCIL MOVE
-        const pencilMoves = events.did_all('pencil', 'moved');
-        pencilMoves.forEach(pencil_move => {
+        const pencilMoves = events.didAll('pencil', 'moved');
+        pencilMoves.forEach(pencilMove => {
             // Compute speed
-            const new_speed = Vec.dist(this.previous_position, pencil_move.position);
+            const newSpeed = Vec.dist(this.previousPosition, pencilMove.position);
             const alpha = 0.05; // Filter speed to get rid of spikes
-            this.speed = alpha * new_speed + (1 - alpha) * this.speed;
-            this.max_speed = Math.max(this.max_speed, this.speed);
-            this.previous_position = pencil_move.position;
+            this.speed = alpha * newSpeed + (1 - alpha) * this.speed;
+            this.maxSpeed = Math.max(this.maxSpeed, this.speed);
+            this.previousPosition = pencilMove.position;
 
             // Guessing system
             // STATES
             if (this.mode != 'fixed') {
-                // if (Vec.dist(this.input_points[this.input_points.length - 1], pos) > 1) {
+                // if (Vec.dist(this.inputPoints[this.inputPoints.length - 1], pos) > 1) {
                     // Add point to input buffer
-                    this.input_points.push(pencil_move.position);
-                    this.render_points.push(Vec.clone(pencil_move.position));
+                    this.inputPoints.push(pencilMove.position);
+                    this.renderPoints.push(Vec.clone(pencilMove.position));
                 // }
             }
 
             if (this.state == 'guess') {
-                this.do_fit();
+                this.doFit();
             }
 
             // STATE TRANSITIONS
 
             // If the stroke is long enough, show feedback of inital guess
-            if (this.mode == 'unknown' && this.input_points.length > 100) {
+            if (this.mode == 'unknown' && this.inputPoints.length > 100) {
                 this.state = 'guess';
             }
 
             // If the user slows down, and the stroke is long enough, switch to fixed
-            if (this.state != 'fixed' && this.input_points.length > 10 && this.velocity < 1 && this.velocity < this.max_velocity) {
-                this.do_fit();
+            if (this.state != 'fixed' && this.inputPoints.length > 10 && this.speed < 1 && this.speed < this.maxSpeed) {
+                this.doFit();
                 // this.state = 'fixed';
             }
             this.dirty = true
@@ -83,7 +83,7 @@ export default class FormalTool {
         // PENCIL UP
         const pencilUp = events.did('pencil', 'ended');
         if (pencilUp) {
-            this.do_fit();
+            this.doFit();
             // this.state = 'fixed';
             if (this.fit.type === 'line') {
                 const a = this.page.addPoint(this.fit.line.a);
@@ -98,55 +98,55 @@ export default class FormalTool {
             }
 
             // Data for guessing
-            this.input_points = null;
-            this.ideal_points = null;
-            this.render_points = null;
+            this.inputPoints = null;
+            this.idealPoints = null;
+            this.renderPoints = null;
             this.element.remove();
             this.element = null;
             // this.dirty = true;
         }
 
         //Interpolate animation render points
-        if (this.ideal_points && this.render_points.length === this.ideal_points.length) {
-            for (let i = 0; i < this.ideal_points.length; i++) {
-                this.render_points[i] = Vec.lerp(this.ideal_points[i], this.render_points[i], 0.8);
+        if (this.idealPoints && this.renderPoints.length === this.idealPoints.length) {
+            for (let i = 0; i < this.idealPoints.length; i++) {
+                this.renderPoints[i] = Vec.lerp(this.idealPoints[i], this.renderPoints[i], 0.8);
             }
         }
     }
 
-    do_fit(){
-        const line_fit = Fit.line(this.input_points);
-        const arc_fit = Fit.arc(this.input_points);
-        const circle_fit = Fit.circle(this.input_points);
+    doFit(){
+        const lineFit = Fit.line(this.inputPoints);
+        const arcFit = Fit.arc(this.inputPoints);
+        const circleFit = Fit.circle(this.inputPoints);
 
-        this.arc_fit = arc_fit;
-        this.line_fit = line_fit;
-        this.circle_fit = circle_fit;
+        this.arcFit = arcFit;
+        this.lineFit = lineFit;
+        this.circleFit = circleFit;
 
-        this.fit = line_fit;
-        if (arc_fit && Math.abs(Arc.directedInnerAngle(arc_fit.arc)) > 0.4 * Math.PI && arc_fit.fitness < line_fit.fitness) {
-            this.fit = arc_fit;
+        this.fit = lineFit;
+        if (arcFit && Math.abs(Arc.directedInnerAngle(arcFit.arc)) > 0.4 * Math.PI && arcFit.fitness < lineFit.fitness) {
+            this.fit = arcFit;
 
-            if (Math.abs(Arc.directedInnerAngle(arc_fit.arc)) > 1.5 * Math.PI) {
-                if (circle_fit && circle_fit.circle.radius < 500 && circle_fit.fitness < arc_fit.fitness) {
-                    this.fit = circle_fit;
+            if (Math.abs(Arc.directedInnerAngle(arcFit.arc)) > 1.5 * Math.PI) {
+                if (circleFit && circleFit.circle.radius < 500 && circleFit.fitness < arcFit.fitness) {
+                    this.fit = circleFit;
                 }
             }
         }
         
         if (this.fit) {
-            // this.do_snap();
-            this.update_ideal();
+            // this.doSnap();
+            this.updateIdeal();
         }
     }
 
-    update_ideal() {
+    updateIdeal() {
         if (this.fit.type == 'line') {
-            this.ideal_points = Line.spreadPointsAlong(this.fit.line, this.input_points.length);
+            this.idealPoints = Line.spreadPointsAlong(this.fit.line, this.inputPoints.length);
         } else if(this.fit.type == 'arc') {
-            this.ideal_points = Arc.spreadPointsAlong(this.fit.arc, this.input_points.length);
+            this.idealPoints = Arc.spreadPointsAlong(this.fit.arc, this.inputPoints.length);
         } else if(this.fit.type == 'circle') {
-            this.ideal_points = Arc.spreadPointsAlong(this.fit.circle, this.input_points.length);
+            this.idealPoints = Arc.spreadPointsAlong(this.fit.circle, this.inputPoints.length);
         }
     }
 
@@ -155,7 +155,7 @@ export default class FormalTool {
             return;
         }
 
-        if (this.render_points) {
+        if (this.renderPoints) {
             if (!this.element) {
                 this.element =
                     svg.addElement(
@@ -168,7 +168,7 @@ export default class FormalTool {
                     );
             }
 
-            const path = generatePathFromPoints(this.render_points);
+            const path = generatePathFromPoints(this.renderPoints);
             svg.updateElement(this.element, { d: path });
         }
 

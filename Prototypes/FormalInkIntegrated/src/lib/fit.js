@@ -12,18 +12,18 @@ Fit.line = stroke => {
 
     const line = Line(Vec.clone(stroke[0]), Vec.clone(stroke[stroke.length - 1]));
 
-    let total_dist = 0;
+    let totalDist = 0;
     for (let i = 1; i < stroke.length - 1; i++) {
-        total_dist += Line.distToPoint(line, stroke[i]);
+        totalDist += Line.distToPoint(line, stroke[i]);
     }
 
-    const line_len = Line.len(line);
+    const lineLen = Line.len(line);
     
     return {
         type: 'line',
         line,
-        fitness: total_dist / line_len,
-        length: line_len,
+        fitness: totalDist / lineLen,
+        length: lineLen,
     };
 }
 
@@ -59,18 +59,18 @@ Fit.arc = points => {
     const arc = Arc(Vec(centerX, centerY), radius, startAngle, endAngle, clockwise);
 
     // Compute fitness
-    const arc_dist = Arc.len(arc);
+    const arcDist = Arc.len(arc);
     
-    let total_dist = 0;
+    let totalDist = 0;
     for (const p of points) {
-        total_dist += Arc.distToPointCircle(arc, p);
+        totalDist += Arc.distToPointCircle(arc, p);
     }
 
     return {
         type: 'arc',
         arc,
-        fitness: total_dist / arc_dist,
-        length: arc_dist,
+        fitness: totalDist / arcDist,
+        length: arcDist,
     };
 }
 
@@ -150,9 +150,9 @@ Fit.circle = points => {
     const circle  = { center, radius, startAngle, endAngle, clockwise };
 
     // check fitness
-    let total_dist = 0
+    let totalDist = 0
     for (const p of points) {
-        total_dist += Arc.distToPointCircle(circle, p);
+        totalDist += Arc.distToPointCircle(circle, p);
     }
 
     const circumference = 2 * Math.PI * radius;
@@ -160,6 +160,6 @@ Fit.circle = points => {
     return { 
         type: 'circle',
         circle,
-        fitness: total_dist / circumference,
+        fitness: totalDist / circumference,
     };
 };

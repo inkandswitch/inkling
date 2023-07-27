@@ -11,9 +11,9 @@ export default class ArcSegment {
         this.selected = false;
 
         this.radius = Vec.dist(this.a.position, this.c.position);
-        this.is_large_arc = 0; // more than 180
+        this.isLargeArc = 0; // more than 180
         this.clockwise = 1; // clockwise or counterclockwise
-        this.x_axis_rotation = 0;
+        this.xAxisRotation = 0;
         
         this.updatePath();
 
@@ -39,7 +39,7 @@ export default class ArcSegment {
 
     updatePath() {
         //           M   start_x              start_y            A   radius_x        radius_y       x-axis-rotation,        more-than-180        clockwise         end_x                end_y
-        this.path = `M ${this.a.position.x} ${this.a.position.y} A ${this.radius}  ${this.radius} ${this.x_axis_rotation} ${this.is_large_arc} ${this.clockwise} ${this.b.position.x} ${this.b.position.y}`;
+        this.path = `M ${this.a.position.x} ${this.a.position.y} A ${this.radius}  ${this.radius} ${this.xAxisRotation} ${this.isLargeArc} ${this.clockwise} ${this.b.position.x} ${this.b.position.y}`;
     }
 
     move(position) {
@@ -60,9 +60,9 @@ export default class ArcSegment {
     render(svg) {
         if (this.a.dirty || this.b.dirty || this.c.dirty) {
             this.radius = Vec.dist(this.a.position, this.c.position);
-            this.is_large_arc = 0; // more than 180
+            this.isLargeArc = 0; // more than 180
             this.clockwise = 1; // clockwise or counterclockwise
-            this.x_axis_rotation = 0;
+            this.xAxisRotation = 0;
 
             this.updatePath();
             const normalAttributes = { d: this.path };

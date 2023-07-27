@@ -14,7 +14,7 @@ export default class FreehandTool {
             this.dirty = true;
         }
 
-        const pencilMoves = this.points == null ? [] : events.did_all('pencil', 'moved');
+        const pencilMoves = this.points == null ? [] : events.didAll('pencil', 'moved');
         pencilMoves.forEach(pencilMove => {
             this.points.push(pencilMove.position);
             this.dirty = true;

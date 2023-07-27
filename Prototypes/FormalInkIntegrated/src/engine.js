@@ -1,8 +1,8 @@
 class Events {
     constructor() {
         this.events = [];
-        this.active_pencil = null;
-        this.active_fingers = {};
+        this.activePencil = null;
+        this.activeFingers = {};
     }
 
     did(type, state, id) {
@@ -11,13 +11,13 @@ class Events {
         );
     }
     
-    did_all(type, state, id) {
+    didAll(type, state, id) {
         return this.events.filter(e =>
             e.type === type && e.state === state && (id == null || e.id === id)
         );
     }
 
-    did_last(type, state, id) {
+    didLast(type, state, id) {
         return this.events.findLast(e =>
             e.type === type && e.state === state && (id == null || e.id === id)
         );
@@ -39,15 +39,15 @@ window.nativeEvent = (eventState, touches) => {
             });
     
             if (point.type === 'pencil') {
-                events.active_pencil =
+                events.activePencil =
                     eventState !== 'ended' ?
                         { x: point.x, y: point.y } :
                         null;
             } else {
                 if (eventState !== 'ended') {
-                    events.active_fingers[touchId] = { x: point.x, y: point.y };
+                    events.activeFingers[touchId] = { x: point.x, y: point.y };
                 } else {
-                    delete events.active_fingers[touchId];
+                    delete events.activeFingers[touchId];
                 }
             }
         });
