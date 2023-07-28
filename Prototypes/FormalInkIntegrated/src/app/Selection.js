@@ -5,6 +5,9 @@ export default class Selection {
     constructor(page) {
         this.page = page;
         this.points = new Set();
+        // TODO(marcel): does this really need to be an instance variable?
+        // ... or can we make it a local variable in update(), and
+        // pass it to transformSelection()?
         this.origPosition = new Map(); // point -> position
         this.snapVectors = new Map();
 
