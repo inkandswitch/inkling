@@ -4,12 +4,12 @@ import Vec from "../lib/vec";
 export default class Selection {
     constructor(page) {
         this.page = page;
-        this.points = {};
-        this.pointsDown = {};
+        this.points = new Set();
+        this.origPosition = new Map(); // point -> position
         this.snapVectors = new Map();
 
         // gesture state
-        this.tappedOn = null; // a point
+        this.tappedOn = null; // point
         this.selectionFinger = null;
         this.selectionFingerMoved = null;
         this.transformFinger = null;
@@ -36,23 +36,21 @@ export default class Selection {
                 const transform = new TransformationMatrix();
                 const p = fingerDown.position;
                 transform.translate(p.x, p.y).inverse();
-                Object.entries(this.points).forEach(([id, point]) => {
-                    this.pointsDown[id] = transform.transformPoint(point.position);
-                });
+                for (const point of this.points) {
+                    this.origPosition.set(point, transform.transformPoint(point.position));
+                }
             } else { // Two fingers, go into full transform mode
                 this.transformFinger = fingerDown;
                 this.transformFingerMoved = fingerDown;
 
                 // Set initial offset transform
-                
                 const transform = new TransformationMatrix();
                 const a = Vec.divS(Vec.add(this.selectionFingerMoved.position, this.transformFinger.position), 2);
                 const b = this.transformFinger.position;
                 transform.fromLine(a, b).inverse();
-
-                Object.entries(this.points).forEach(([id, point]) => {
-                    this.pointsDown[id] = transform.transformPoint(point.position);
-                });
+                for (const point of this.points) {
+                    this.origPosition.set(point, transform.transformPoint(point.position));
+                }
             }
         }
 
@@ -105,12 +103,12 @@ export default class Selection {
     }
 
     selectPoint(point) {
-        this.points[point.id] = point;
+        this.points.add(point);
         this.tappedOn = point;
         point.select();
 
         this.page.lineSegments.forEach(ls => {
-            if (this.points[ls.a.id] && this.points[ls.b.id]) {
+            if (this.points.has(ls.a) && this.points.has(ls.b)) {
                 ls.select();
             } else {
                 ls.deselect();
@@ -119,9 +117,15 @@ export default class Selection {
     }
 
     clearSelection() {
-        Object.values(this.points).forEach(point => point.deselect());
-        this.points = {};
-        this.page.lineSegments.forEach(ls => ls.deselect());
+        for (const point of this.points) {
+            point.deselect();
+        }
+        this.points = new Set();
+        this.origPosition = new Map();
+
+        for (const ls of this.page.lineSegments) {
+            ls.deselect();
+        }
     }
 
     transformSelection() {
@@ -136,7 +140,14 @@ export default class Selection {
 
         const transform = new TransformationMatrix();
         if (this.selectionFingerMoved && this.transformFingerMoved) {
-            const a = Vec.divS(Vec.add(this.selectionFingerMoved.position, this.transformFingerMoved.position), 2);
+            const a =
+                Vec.divS(
+                    Vec.add(
+                        this.selectionFingerMoved.position,
+                        this.transformFingerMoved.position
+                    ),
+                    2
+                );
             const b = this.transformFingerMoved.position;
             transform.fromLine(a, b);
         } else {
@@ -144,20 +155,11 @@ export default class Selection {
             transform.translate(p.x, p.y);
         }
 
-        Object.entries(this.points).forEach(([id, point]) => {
-            const oldPos = this.pointsDown[id];
+        for (const point of this.points) {
+            const oldPos = this.origPosition.get(point);
             const newPos = transform.transformPoint(oldPos);
             point.move(newPos);
-        })
-
-        // const snap = this.transformSnap(transform);
-        // transform = snap.transformMatrix(transform);
-
-        Object.entries(this.points).forEach(([id, point]) => {
-            const oldPos = this.pointsDown[id];
-            const newPos = transform.transformPoint(oldPos);
-            point.move(newPos);
-        });
+        }
 
         this.computeSnapVectors();
         for (const [point, vs] of this.snapVectors) {
@@ -173,8 +175,8 @@ export default class Selection {
     computeSnapVectors() {
         this.snapVectors = new Map();
 
-        const snapPoints = this.page.points.filter(p => !this.points[p.id]);
-        for (const point of Object.values(this.points)) {
+        const snapPoints = this.page.points.filter(p => !this.points.has(p.id));
+        for (const point of this.points) {
             const snaps = [];
 
             // snap to point
@@ -214,61 +216,9 @@ export default class Selection {
         }
     }
 
-    _transformSnap() {
-        let snapPoints = this.page.points.filter(p => !this.points[p.id]);
-
-        let foundTranslate = null;
-        let snappedPoint = null;
-        let translateDelta = Vec(0,0);
-        for (let id in this.points) {
-            const point = this.points[id];
-            // Find snap point
-            
-            const found = snapPoints.find(otherPoint => Vec.dist(otherPoint.position, point.position) < 10);
-            if (found) {
-                // Get delta
-                const delta = Vec.sub(found.position, point.position);
-                translateDelta = delta;
-                foundTranslate  = found;
-                snappedPoint = point;
-                snapPoints = snapPoints.filter(p => p.id != found.id);
-                break;
-            }
-        }
-        if (!foundTranslate) {
-            return new TransformationMatrix();
-        }
-
-        // TODO figure this out, it's not working
-        let rotateDelta = 0;
-        for (let id in this.points) {
-            const point = this.points[id];
-            // Find snap point
-            
-            const found = snapPoints.find(otherPoint=>Vec.dist(otherPoint.position, point.position) < 20);
-            if (found) {
-                const angleA = Vec.angle(Vec.sub(point.position, foundTranslate.position));
-                const angleB = Vec.angle(Vec.sub(found.position, foundTranslate.position));
-                const delta = angleB - angleA;
-
-                rotateDelta = delta;
-                break;
-            }
-        }
-
-        const transform = new TransformationMatrix();
-        const foundOldPosition = this.pointsDown[snappedPoint.id];
-        
-        transform.translate(translateDelta.x, translateDelta.y);
-
-        // transform.translate(-snappedPoint.position.x, -snappedPoint.position.y);
-        // transform.rotate(rotateDelta);
-        // transform.translate(snappedPoint.position.x, snappedPoint.position.y);
-        
-        return transform;
-    }
-
     render(ctx) {
-        // Object.values(this.points).forEach(p => p.renderSelected(ctx));
+        // for (const point of this.points) {
+        //     point.renderSelected(ctx);
+        // }
     }
 }
