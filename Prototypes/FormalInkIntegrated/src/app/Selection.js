@@ -73,7 +73,16 @@ export default class Selection {
                     if (tappedOnEmptySpace) {
                         this.clearSelection();
                     }
+                } else {
+                    if(this.tappedOn != null && this.points.size == 1) {
+                        this.clearSelection();
+                    }
                 }
+
+                for(const point of this.points) {
+                    this.page.mergePoint(point)
+                }
+                
                 
                 this.firstFinger = null;
                 this.firstFingerMoved = null;

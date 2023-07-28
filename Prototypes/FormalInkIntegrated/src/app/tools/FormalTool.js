@@ -106,6 +106,12 @@ export default class FormalTool {
                 this.clearGuess();
             }
 
+            this.page.mergePoint(this.fixedStroke.a)
+            this.page.mergePoint(this.fixedStroke.b)
+            
+            this.fixedStroke = null;
+            this.mode = 'unknown';
+
             this.snaps.clear();
         }
 

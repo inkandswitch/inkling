@@ -44,6 +44,36 @@ export default class Page {
         return this.points.find(p => Vec.dist(p.position, position) < dist);
     }
 
+    findPointExact(position) {
+        return this.points.find(p => p.position == position);
+    }
+
+    mergePoint(point) {
+        let mergable = this.points.filter(p => {
+            return p != point && Vec.dist(p.position, point.position) == 0
+        })
+        let mergableIds = mergable.map(p=>p.id)
+
+        console.log(point, mergable);
+
+        this.lineSegments.forEach(ls=>{
+            if(mergableIds.indexOf(ls.a.id) > -1) {
+                ls.a = point
+            }
+            if(mergableIds.indexOf(ls.b.id) > -1) {
+                ls.b = point
+            }
+            if(ls.c && mergableIds.indexOf(ls.c.id) > -1) {
+                ls.c = point
+            }
+        })
+
+        mergable.forEach(other=>{
+            other.remove()
+            this.points = this.points.filter(p=>p!=other)
+        })
+    }
+
     render(svg) {
         this.lineSegments.forEach(line => line.render(svg));
 
