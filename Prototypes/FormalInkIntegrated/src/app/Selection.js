@@ -109,7 +109,7 @@ export default class Selection {
         this.tappedOn = point;
         point.select();
 
-        this.page.linesegments.forEach(ls => {
+        this.page.lineSegments.forEach(ls => {
             if (this.points[ls.a.id] && this.points[ls.b.id]) {
                 ls.select();
             } else {
@@ -121,7 +121,7 @@ export default class Selection {
     clearSelection() {
         Object.values(this.points).forEach(point => point.deselect());
         this.points = {};
-        this.page.linesegments.forEach(ls => ls.deselect());
+        this.page.lineSegments.forEach(ls => ls.deselect());
     }
 
     transformSelection() {

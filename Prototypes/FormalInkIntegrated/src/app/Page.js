@@ -12,8 +12,8 @@ export default class Page {
 
         // TODO figure out a better model for how to store different kinds of strokes
         // For now just keep them separate, until we have a better idea of what freehand strokes look like
-        this.linesegments = [];
-        this.freehandstrokes = [];
+        this.lineSegments = [];
+        this.freehandStrokes = [];
     }
 
     addPoint(position) {
@@ -24,19 +24,19 @@ export default class Page {
 
     addLineSegment(a, b) {
         const ls = new LineSegment(this.svg, a, b);
-        this.linesegments.push(ls);
+        this.lineSegments.push(ls);
         return ls;
     }
 
     addArcSegment(a, b, c) {
         const as = new ArcSegment(this.svg, a, b, c);
-        this.linesegments.push(as);
+        this.lineSegments.push(as);
         return as;
     }
 
     addFreehandStroke(points) {
         const s = new FreehandStroke(this.svg, points);
-        this.freehandstrokes.push(s)
+        this.freehandStrokes.push(s)
         return s;
     }
 
@@ -45,9 +45,9 @@ export default class Page {
     }
 
     render(svg) {
-        this.linesegments.forEach(line => line.render(svg));
+        this.lineSegments.forEach(line => line.render(svg));
 
-        this.freehandstrokes.forEach(stroke => stroke.render(svg));
+        this.freehandStrokes.forEach(stroke => stroke.render(svg));
 
         this.points.forEach(point => point.render(svg));
     }
