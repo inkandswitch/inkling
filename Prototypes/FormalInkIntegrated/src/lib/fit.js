@@ -6,7 +6,7 @@ const Fit = {};
 export default Fit;
 
 Fit.line = stroke => {
-    if (stroke.length < 3) {
+    if (stroke.length === 0) {
         return null;
     }
 
@@ -22,10 +22,10 @@ Fit.line = stroke => {
     return {
         type: 'line',
         line,
-        fitness: totalDist / lineLen,
+        fitness: lineLen === 0 ? 1 : totalDist / lineLen,
         length: lineLen,
     };
-}
+};
 
 Fit.arc = points => {
     if (points.length < 3) {
