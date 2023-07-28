@@ -57,17 +57,17 @@ export default class FormalTool {
 
             // Guessing system
             // STATES
-            if (this.mode != 'fixed') {
+            if (this.mode !== 'fixed') {
                 // Add point to input buffer
                 this.inputPoints.push(pencilMove.position);
                 this.renderPoints.push(Vec.clone(pencilMove.position));
 
-                // Do a guess
-                if (this.mode == 'guess') {
+                // Make a guess
+                if (this.mode === 'guess') {
                     this.doFit();
                 }
             } else {
-                let updatedPosition = pencilMove.position
+                let updatedPosition = pencilMove.position;
                 
                 let pointPositions = new Map();
 
@@ -82,32 +82,36 @@ export default class FormalTool {
 
             // STATE TRANSITIONS
             // If the stroke is long enough, show feedback of inital guess
-            if (this.mode == 'unknown' && this.inputPoints.length > 100) {
+            if (this.mode === 'unknown' && this.inputPoints.length > 100) {
                 this.mode = 'guess';
             }
 
             // If the user slows down, and the stroke is long enough, switch to fixed mode
-            if (this.mode != 'fixed' && this.inputPoints.length > 10 && this.speed < 1 && this.speed < this.maxSpeed) {
+            if (
+                this.mode !== 'fixed' &&
+                this.inputPoints.length > 10 &&
+                this.speed < Math.min(1, this.maxSpeed)
+            ) {
                 this.doFit();
                 this.createStroke();
                 this.clearGuess();
                 this.mode = 'fixed';
             }
 
-            this.dirty = true
+            this.dirty = true;
         })
 
         // PENCIL UP
         const pencilUp = events.did('pencil', 'ended');
         if (pencilUp) {
-            if(this.mode != 'fixed') {
+            if (this.mode !== 'fixed') {
                 this.doFit();
                 this.createStroke();
                 this.clearGuess();
             }
 
-            this.page.mergePoint(this.fixedStroke.a)
-            this.page.mergePoint(this.fixedStroke.b)
+            this.page.mergePoint(this.fixedStroke.a);
+            this.page.mergePoint(this.fixedStroke.b);
             
             this.fixedStroke = null;
             this.mode = 'unknown';
@@ -115,7 +119,7 @@ export default class FormalTool {
             this.snaps.clear();
         }
 
-        //Interpolate animation render points
+        // Interpolate animation render points
         if (this.idealPoints && this.renderPoints.length === this.idealPoints.length) {
             for (let i = 0; i < this.idealPoints.length; i++) {
                 this.renderPoints[i] = Vec.lerp(this.idealPoints[i], this.renderPoints[i], 0.8);
@@ -123,40 +127,42 @@ export default class FormalTool {
         }
     }
 
-    doFit(){
+    doFit() {
         const lineFit = Fit.line(this.inputPoints);
         const arcFit = Fit.arc(this.inputPoints);
         const circleFit = Fit.circle(this.inputPoints);
 
-        this.arcFit = arcFit;
-        this.lineFit = lineFit;
-        this.circleFit = circleFit;
-
         this.fit = lineFit;
-        if (arcFit && Math.abs(Arc.directedInnerAngle(arcFit.arc)) > 0.4 * Math.PI && arcFit.fitness < lineFit.fitness) {
+        if (
+            arcFit != null &&
+            Math.abs(Arc.directedInnerAngle(arcFit.arc)) > 0.4 * Math.PI &&
+            (lineFit == null || arcFit.fitness < lineFit.fitness)
+        ) {
             this.fit = arcFit;
 
-            if (Math.abs(Arc.directedInnerAngle(arcFit.arc)) > 1.5 * Math.PI) {
-                if (circleFit && circleFit.circle.radius < 500 && circleFit.fitness < arcFit.fitness) {
-                    this.fit = circleFit;
-                }
+            if (
+                circleFit != null &&
+                Math.abs(Arc.directedInnerAngle(arcFit.arc)) > 1.5 * Math.PI &&
+                circleFit.circle.radius < 500 &&
+                circleFit.fitness < arcFit.fitness
+            ) {
+                this.fit = circleFit;
             }
         }
         
-        if (this.fit) {
-            // this.doSnap();
+        if (this.fit != null) {
             this.updateIdeal();
         }
     }
 
     // Use fitted shape to create a stroke
     createStroke() {
-        if(this.fit.type == 'line') {
+        if (this.fit.type === 'line') {
             const a = this.page.addPoint(this.fit.line.a);
             const b = this.page.addPoint(this.fit.line.b);
             const stroke = this.page.addLineSegment(a, b);
             this.fixedStroke = stroke;
-        } else if(this.fit.type == 'arc') {
+        } else if (this.fit.type === 'arc') {
             const {start, end} = Arc.points(this.fit.arc)
             const a = this.page.addPoint(start);
             const b = this.page.addPoint(end);
@@ -166,7 +172,7 @@ export default class FormalTool {
         }
     }
 
-    clearGuess(){
+    clearGuess() {
         this.inputPoints = null;
         this.idealPoints = null;
         this.renderPoints = null;
@@ -176,16 +182,16 @@ export default class FormalTool {
 
     // Smooth animation
     updateIdeal() {
-        if (this.fit.type == 'line') {
+        if (this.fit.type === 'line') {
             this.idealPoints = Line.spreadPointsAlong(this.fit.line, this.inputPoints.length);
-        } else if(this.fit.type == 'arc') {
+        } else if (this.fit.type === 'arc') {
             this.idealPoints = Arc.spreadPointsAlong(this.fit.arc, this.inputPoints.length);
-        } else if(this.fit.type == 'circle') {
+        } else if (this.fit.type === 'circle') {
             this.idealPoints = Arc.spreadPointsAlong(this.fit.circle, this.inputPoints.length);
         }
     }
 
-    render(svg){
+    render(svg) {
         if (!this.dirty) {
             return;
         }
