@@ -2,11 +2,12 @@ import TransformationMatrix from "../lib/transform_matrix";
 import Vec from "../lib/vec";
 
 export default class Selection {
-    constructor(page) {
+    constructor(page, snaps) {
         this.page = page;
+        this.snaps = snaps
+
         this.points = new Set();
         this.origPosition = new Map(); // point -> position
-        this.snaps = [];
 
 
         // gesture state
@@ -15,6 +16,7 @@ export default class Selection {
         this.firstFingerMoved = null;
         this.secondFinger = null;
         this.secondFingerMoved = null;
+
     }
 
     update(events) {
@@ -79,6 +81,8 @@ export default class Selection {
                 // TODO: this could be done better
                 this.secondFinger = null;
                 this.secondFingerMoved = null;
+
+                this.snaps.clear();
             }
         }
 
@@ -162,7 +166,7 @@ export default class Selection {
             transformedPositions.set(point, newPos);
         }
 
-        const snapVectors = this.computeSnapVectors(transformedPositions);
+        const snapVectors = this.snaps.computeSnapVectors(transformedPositions);
         for (const point of this.points) {
             let vs = snapVectors.get(point)
             const snappedPos =
@@ -172,55 +176,5 @@ export default class Selection {
                 );
             point.setPosition(snappedPos);
         }
-    }
-
-    computeSnapVectors(transformedPositions) {
-        let snapVectors = new Map();
-
-        const snapPoints = this.page.points.filter(p => !this.points.has(p));
-        for (const point of this.points) {
-            const transformedPosition = transformedPositions.get(point);
-
-            const snaps = [];
-
-            // snap to point
-            for (const snapPoint of snapPoints) {
-                const v = Vec.sub(snapPoint.position, transformedPosition);
-                if (Vec.len(v) < 10) {
-                    snaps.push(v);
-                    break;
-                }
-            }
-
-            if (snaps.length === 0) {
-                // vertical alignment
-                for (const snapPoint of snapPoints) {
-                    const dx = snapPoint.position.x - transformedPosition.x;
-                    if (Math.abs(dx) < 10) {
-                        const v = Vec(dx, 0);
-                        snaps.push(v);
-                        break;
-                    }
-                }
-
-                // horizontal alignment
-                for (const snapPoint of snapPoints) {
-                    const dy = snapPoint.position.y - transformedPosition.y;
-                    if (Math.abs(dy) < 10) {
-                        const v = Vec(0, dy);
-                        snaps.push(v);
-                        break;
-                    }
-                }
-            }
-
-            if (snaps.length > 0) {
-                snapVectors.set(point, snaps);
-            } else {
-                snapVectors.set(point, []);
-            }
-        }
-
-        return snapVectors
     }
 }

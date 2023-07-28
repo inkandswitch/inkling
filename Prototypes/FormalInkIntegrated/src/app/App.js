@@ -1,6 +1,7 @@
 //import Canvas from "./Canvas";
 import Page from "./Page";
 import Selection from "./Selection";
+import Snaps from "./Snaps";
 import SVG from "./Svg";
 import ToolPicker from "./ToolPicker";
 import FormalTool from "./tools/FormalTool";
@@ -12,7 +13,9 @@ export default class App {
         this.svg = new SVG();
         this.page = new Page(this.svg);
                 
-        this.selection = new Selection(this.page);
+        this.snaps = new Snaps(this.page);
+
+        this.selection = new Selection(this.page, this.snaps);
         this.toolPicker = new ToolPicker(this.svg);
 
         this.tools = [
@@ -50,6 +53,7 @@ export default class App {
     render() {
         this.toolPicker.render(this.svg);
         this.tools[this.toolPicker.selected].render(this.svg);
+        this.snaps.render(this.svg);
         this.page.render(this.svg);
     }
 }
