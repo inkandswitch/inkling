@@ -10,7 +10,7 @@ export default class Page {
         this.svg = svg;
         this.points = [];
 
-        // TODO figure out a better model for how to store different kinds of strokes
+        // TODO: figure out a better model for how to store different kinds of strokes
         // For now just keep them separate, until we have a better idea of what freehand strokes look like
         this.lineSegments = [];
         this.freehandStrokes = [];

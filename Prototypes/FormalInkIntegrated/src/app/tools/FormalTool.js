@@ -172,6 +172,6 @@ export default class FormalTool {
             svg.updateElement(this.element, { d: path });
         }
 
-        // TODO(marcel): set dirty to `false`?
+        this.dirty = false;
     }
 }

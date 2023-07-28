@@ -42,11 +42,6 @@ export default class ArcSegment {
         this.path = `M ${this.a.position.x} ${this.a.position.y} A ${this.radius}  ${this.radius} ${this.xAxisRotation} ${this.isLargeArc} ${this.clockwise} ${this.b.position.x} ${this.b.position.y}`;
     }
 
-    move(position) {
-        this.dirty = true;
-        this.position = position;
-    }
-
     select() {
         this.dirty = true;
         this.selected = true;
@@ -58,7 +53,7 @@ export default class ArcSegment {
     }
 
     render(svg) {
-        if (this.a.dirty || this.b.dirty || this.c.dirty) {
+        if (this.dirty || this.a.dirty || this.b.dirty || this.c.dirty) {
             this.radius = Vec.dist(this.a.position, this.c.position);
             this.isLargeArc = 0; // more than 180
             this.clockwise = 1; // clockwise or counterclockwise
@@ -75,7 +70,6 @@ export default class ArcSegment {
                 }
             );
 
-            // TODO(marcel): should this move outside the `if`?
             this.dirty = false;
         }
     }

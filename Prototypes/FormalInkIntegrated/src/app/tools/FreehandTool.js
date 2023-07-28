@@ -52,6 +52,6 @@ export default class FreehandTool {
             svg.updateElement(this.element, { d: path });
         }
 
-        // TODO(marcel): shouldn't we set dirty to `false` here?
+        this.dirty = false;
     }
 }

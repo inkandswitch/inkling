@@ -30,11 +30,6 @@ export default class LineSegment {
 
     }
 
-    move(position) {
-        this.dirty = true;
-        this.position = position;
-    }
-
     select() {
         this.dirty = true;
         this.selected = true;
@@ -46,7 +41,7 @@ export default class LineSegment {
     }
 
     render(svg) {
-        if (this.a.dirty || this.b.dirty) {
+        if (this.dirty || this.a.dirty || this.b.dirty) {
             const normalAttributes = {
                 x1: this.a.position.x,
                 y1: this.a.position.y,
@@ -62,7 +57,6 @@ export default class LineSegment {
                 }
             );
 
-            // TODO(marcel): should this move outside the `if`?
             this.dirty = false;
         }
     }

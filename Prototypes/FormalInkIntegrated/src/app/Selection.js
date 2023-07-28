@@ -13,19 +13,19 @@ export default class Selection {
 
         // gesture state
         this.tappedOn = null; // point
-        this.selectionFinger = null;
-        this.selectionFingerMoved = null;
-        this.transformFinger = null;
-        this.transformFingerMoved = null;
+        this.firstFinger = null;
+        this.firstFingerMoved = null;
+        this.secondFinger = null;
+        this.secondFingerMoved = null;
     }
 
     update(events) {
         const fingerDown = events.did('finger', 'began');
         if (fingerDown) {
             // If we weren't already holding down a finger
-            if (!this.selectionFinger) { 
-                this.selectionFinger = fingerDown;
-                this.selectionFingerMoved = fingerDown;
+            if (!this.firstFinger) { 
+                this.firstFinger = fingerDown;
+                this.firstFingerMoved = fingerDown;
 
                 const point = this.page.findPointNear(fingerDown.position);
                 if (point) {    
@@ -43,13 +43,13 @@ export default class Selection {
                     this.origPosition.set(point, transform.transformPoint(point.position));
                 }
             } else { // Two fingers, go into full transform mode
-                this.transformFinger = fingerDown;
-                this.transformFingerMoved = fingerDown;
+                this.secondFinger = fingerDown;
+                this.secondFingerMoved = fingerDown;
 
                 // Set initial offset transform
                 const transform = new TransformationMatrix();
-                const a = Vec.divS(Vec.add(this.selectionFingerMoved.position, this.transformFinger.position), 2);
-                const b = this.transformFinger.position;
+                const a = Vec.divS(Vec.add(this.firstFingerMoved.position, this.secondFinger.position), 2);
+                const b = this.secondFinger.position;
                 transform.fromLine(a, b).inverse();
                 for (const point of this.points) {
                     this.origPosition.set(point, transform.transformPoint(point.position));
@@ -58,16 +58,16 @@ export default class Selection {
         }
 
         // If we're already holding down a finger, switch to pinch gesture
-        if (this.selectionFinger) {
-            const fingerMove = events.didLast('finger', 'moved', this.selectionFinger.id);
+        if (this.firstFinger) {
+            const fingerMove = events.didLast('finger', 'moved', this.firstFinger.id);
             if (fingerMove) {
-                this.selectionFingerMoved = fingerMove;
+                this.firstFingerMoved = fingerMove;
                 this.transformSelection();
             }
 
-            const fingerUp = events.did('finger', 'ended', this.selectionFinger.id);
+            const fingerUp = events.did('finger', 'ended', this.firstFinger.id);
             if (fingerUp) {
-                const shortTap = fingerUp.timestamp - this.selectionFinger.timestamp < 0.2;
+                const shortTap = fingerUp.timestamp - this.firstFinger.timestamp < 0.2;
                 if (shortTap) {
                     const tappedOnEmptySpace = this.tappedOn == null;
                     if (tappedOnEmptySpace) {
@@ -75,30 +75,30 @@ export default class Selection {
                     }
                 }
                 
-                this.selectionFinger = null;
-                this.selectionFingerMoved = null;
+                this.firstFinger = null;
+                this.firstFingerMoved = null;
 
                 // TODO: this could be done better
-                this.transformFinger = null;
-                this.transformFingerMoved = null;
+                this.secondFinger = null;
+                this.secondFingerMoved = null;
             }
         }
 
-        if (this.transformFinger) {
-            const fingerMove = events.did('finger', 'moved', this.transformFinger.id);
+        if (this.secondFinger) {
+            const fingerMove = events.did('finger', 'moved', this.secondFinger.id);
             if (fingerMove) {
-                this.transformFingerMoved = fingerMove;
+                this.secondFingerMoved = fingerMove;
                 this.transformSelection();
             }
 
-            let fingerTwoUp = events.did('finger', 'ended', this.transformFinger.id);
+            let fingerTwoUp = events.did('finger', 'ended', this.secondFinger.id);
             if (fingerTwoUp) {
-                this.transformFinger = null;
-                this.transformFingerMoved = null;
+                this.secondFinger = null;
+                this.secondFingerMoved = null;
 
                 // TODO: this could be done better
-                this.selectionFinger = null;
-                this.selectionFingerMoved = null;
+                this.firstFinger = null;
+                this.firstFingerMoved = null;
             }
         }
     }
@@ -140,19 +140,19 @@ export default class Selection {
         }
 
         const transform = new TransformationMatrix();
-        if (this.selectionFingerMoved && this.transformFingerMoved) {
+        if (this.firstFingerMoved && this.secondFingerMoved) {
             const a =
                 Vec.divS(
                     Vec.add(
-                        this.selectionFingerMoved.position,
-                        this.transformFingerMoved.position
+                        this.firstFingerMoved.position,
+                        this.secondFingerMoved.position
                     ),
                     2
                 );
-            const b = this.transformFingerMoved.position;
+            const b = this.secondFingerMoved.position;
             transform.fromLine(a, b);
         } else {
-            const p = this.selectionFingerMoved.position;
+            const p = this.firstFingerMoved.position;
             transform.translate(p.x, p.y);
         }
 
@@ -215,11 +215,5 @@ export default class Selection {
                 this.snapVectors.set(point, snaps);
             }
         }
-    }
-
-    render(ctx) {
-        // for (const point of this.points) {
-        //     point.renderSelected(ctx);
-        // }
     }
 }
