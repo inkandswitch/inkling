@@ -64,15 +64,13 @@ export default class Selection {
 
             const fingerUp = events.did('finger', 'ended', this.selectionFinger.id);
             if (fingerUp) {
-                // If it was a short tap
-                if (fingerUp.timestamp - this.selectionFinger.timestamp < 0.2) {
-
-                    // If we tapped on empty space
-                    if (this.tappedOn == null) {
+                const shortTap = fingerUp.timestamp - this.selectionFinger.timestamp < 0.2;
+                if (shortTap) {
+                    const tappedOnEmptySpace = this.tappedOn == null;
+                    if (tappedOnEmptySpace) {
                         this.clearSelection();
                     }
                 }
-
                 
                 this.selectionFinger = null;
                 this.selectionFingerMoved = null;
