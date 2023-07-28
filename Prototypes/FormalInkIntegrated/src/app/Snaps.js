@@ -16,7 +16,7 @@ export default class Snaps {
         const snapPositions = new Map();
         const snapPoints = this.page.points.filter(p => !transformedPositions.has(p));
         const selectedPoints = Array.from(transformedPositions.keys());
-        const snapPointsIncludingSelection = [...snapPoints, ...selectedPoints];
+        const connectedPoints = this.page.pointsReachableFrom(selectedPoints);
 
         for (const [point, transformedPosition] of transformedPositions) {
             if (snaps.some(s => s.snapPoint === point)) {
@@ -40,7 +40,7 @@ export default class Snaps {
 
             if (snapVectors.length === 0) {
                 // vertical alignment
-                for (const snapPoint of snapPointsIncludingSelection) {
+                for (const snapPoint of connectedPoints) {
                     if (snapPoint === point) {
                         continue;
                     }
@@ -54,7 +54,7 @@ export default class Snaps {
                 }
 
                 // horizontal alignment
-                for (const snapPoint of snapPointsIncludingSelection) {
+                for (const snapPoint of connectedPoints) {
                     if (snapPoint === point) {
                         continue;
                     }
