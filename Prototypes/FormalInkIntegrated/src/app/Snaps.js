@@ -15,8 +15,17 @@ export default class Snaps {
         const snaps = [];
         const snapPositions = new Map();
         const snapPoints = this.page.points.filter(p => !transformedPositions.has(p));
+        const selectedPoints = Array.from(transformedPositions.keys());
+        const snapPointsIncludingSelection = [...snapPoints, ...selectedPoints];
 
         for (const [point, transformedPosition] of transformedPositions) {
+            if (snaps.some(s => s.snapPoint === point)) {
+                // This point is already being used as a snap.
+                // If we move it (by snapping it to another point), the UI feels shaky.
+                snapPositions.set(point, transformedPosition);
+                continue;
+            }
+
             const snapVectors = [];
 
             // snap to point
@@ -31,7 +40,10 @@ export default class Snaps {
 
             if (snapVectors.length === 0) {
                 // vertical alignment
-                for (const snapPoint of snapPoints) {
+                for (const snapPoint of snapPointsIncludingSelection) {
+                    if (snapPoint === point) {
+                        continue;
+                    }
                     const dx = snapPoint.position.x - transformedPosition.x;
                     if (Math.abs(dx) < 10) {
                         const v = Vec(dx, 0);
@@ -42,7 +54,10 @@ export default class Snaps {
                 }
 
                 // horizontal alignment
-                for (const snapPoint of snapPoints) {
+                for (const snapPoint of snapPointsIncludingSelection) {
+                    if (snapPoint === point) {
+                        continue;
+                    }
                     const dy = snapPoint.position.y - transformedPosition.y;
                     if (Math.abs(dy) < 10) {
                         const v = Vec(0, dy);
