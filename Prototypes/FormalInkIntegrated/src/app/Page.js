@@ -85,6 +85,25 @@ export default class Page {
         this.points = this.points.filter(p => !pointsToMerge.has(p));
     }
 
+    pointsReachableFrom(startPoints) {
+        const reachablePoints = new Set(startPoints);
+        while (true) {
+            const oldSize = reachablePoints.size;
+            for (const ls of this.lineSegments) {
+                if (reachablePoints.has(ls.a)) {
+                    reachablePoints.add(ls.b);
+                }
+                if (reachablePoints.has(ls.b)) {
+                    reachablePoints.add(ls.a);
+                }
+            }
+            if (reachablePoints.size === oldSize) {
+                break;
+            }
+        }
+        return reachablePoints;
+    }
+
     render(svg) {
         const renderIt = it => it.render(svg);
         this.lineSegments.forEach(renderIt);
