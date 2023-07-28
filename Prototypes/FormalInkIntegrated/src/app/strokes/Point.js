@@ -12,7 +12,7 @@ export default class Point {
         };
     }
 
-    move(position) {
+    setPosition(position) {
         this.dirty = true;
         this.position = position;
     }

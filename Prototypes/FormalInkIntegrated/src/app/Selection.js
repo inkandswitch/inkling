@@ -105,16 +105,15 @@ export default class Selection {
 
     selectPoint(point) {
         this.points.add(point);
-        this.tappedOn = point;
         point.select();
 
-        this.page.lineSegments.forEach(ls => {
+        for (const ls of this.page.lineSegments) {
             if (this.points.has(ls.a) && this.points.has(ls.b)) {
                 ls.select();
             } else {
                 ls.deselect();
             }
-        });
+        }
     }
 
     clearSelection() {
@@ -136,7 +135,7 @@ export default class Selection {
                     (p, v) => Vec.sub(p, v),
                     point.position
                 );
-            point.move(unsnappedPos);
+            point.setPosition(unsnappedPos);
         }
 
         const transform = new TransformationMatrix();
@@ -159,7 +158,7 @@ export default class Selection {
         for (const point of this.points) {
             const oldPos = this.origPosition.get(point);
             const newPos = transform.transformPoint(oldPos);
-            point.move(newPos);
+            point.setPosition(newPos);
         }
 
         this.computeSnapVectors();
@@ -169,7 +168,7 @@ export default class Selection {
                     (p, v) => Vec.add(p, v),
                     point.position
                 );
-            point.move(snappedPos);
+            point.setPosition(snappedPos);
         }
     }
 
