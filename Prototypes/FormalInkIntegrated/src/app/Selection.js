@@ -5,11 +5,9 @@ export default class Selection {
     constructor(page) {
         this.page = page;
         this.points = new Set();
-        // TODO(marcel): does this really need to be an instance variable?
-        // ... or can we make it a local variable in update(), and
-        // pass it to transformSelection()?
         this.origPosition = new Map(); // point -> position
-        this.snapVectors = new Map();
+        this.snaps = [];
+
 
         // gesture state
         this.tappedOn = null; // point
@@ -129,14 +127,16 @@ export default class Selection {
     }
 
     transformSelection() {
-        for (const [point, vs] of this.snapVectors) {
-            const unsnappedPos =
-                vs.reduce(
-                    (p, v) => Vec.sub(p, v),
-                    point.position
-                );
-            point.setPosition(unsnappedPos);
-        }
+
+        // TODO(alex): Why do we need to do this?
+        // for (const [point, vs] of this.snapVectors) {
+        //     const unsnappedPos =
+        //         vs.reduce(
+        //             (p, v) => Vec.sub(p, v),
+        //             point.position
+        //         );
+        //     point.setPosition(unsnappedPos);
+        // }
 
         const transform = new TransformationMatrix();
         if (this.firstFingerMoved && this.secondFingerMoved) {
@@ -155,33 +155,37 @@ export default class Selection {
             transform.translate(p.x, p.y);
         }
 
+        const transformedPositions = new Map()
         for (const point of this.points) {
             const oldPos = this.origPosition.get(point);
             const newPos = transform.transformPoint(oldPos);
-            point.setPosition(newPos);
+            transformedPositions.set(point, newPos);
         }
 
-        this.computeSnapVectors();
-        for (const [point, vs] of this.snapVectors) {
+        const snapVectors = this.computeSnapVectors(transformedPositions);
+        for (const point of this.points) {
+            let vs = snapVectors.get(point)
             const snappedPos =
                 vs.reduce(
                     (p, v) => Vec.add(p, v),
-                    point.position
+                    transformedPositions.get(point)
                 );
             point.setPosition(snappedPos);
         }
     }
 
-    computeSnapVectors() {
-        this.snapVectors = new Map();
+    computeSnapVectors(transformedPositions) {
+        let snapVectors = new Map();
 
-        const snapPoints = this.page.points.filter(p => !this.points.has(p.id));
+        const snapPoints = this.page.points.filter(p => !this.points.has(p));
         for (const point of this.points) {
+            const transformedPosition = transformedPositions.get(point);
+
             const snaps = [];
 
             // snap to point
             for (const snapPoint of snapPoints) {
-                const v = Vec.sub(snapPoint.position, point.position);
+                const v = Vec.sub(snapPoint.position, transformedPosition);
                 if (Vec.len(v) < 10) {
                     snaps.push(v);
                     break;
@@ -191,7 +195,7 @@ export default class Selection {
             if (snaps.length === 0) {
                 // vertical alignment
                 for (const snapPoint of snapPoints) {
-                    const dx = snapPoint.position.x - point.position.x;
+                    const dx = snapPoint.position.x - transformedPosition.x;
                     if (Math.abs(dx) < 10) {
                         const v = Vec(dx, 0);
                         snaps.push(v);
@@ -201,7 +205,7 @@ export default class Selection {
 
                 // horizontal alignment
                 for (const snapPoint of snapPoints) {
-                    const dy = snapPoint.position.y - point.position.y;
+                    const dy = snapPoint.position.y - transformedPosition.y;
                     if (Math.abs(dy) < 10) {
                         const v = Vec(0, dy);
                         snaps.push(v);
@@ -211,8 +215,12 @@ export default class Selection {
             }
 
             if (snaps.length > 0) {
-                this.snapVectors.set(point, snaps);
+                snapVectors.set(point, snaps);
+            } else {
+                snapVectors.set(point, []);
             }
         }
+
+        return snapVectors
     }
 }
