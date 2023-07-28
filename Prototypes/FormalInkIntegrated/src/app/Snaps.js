@@ -12,12 +12,12 @@ export default class Snaps {
         this.dirty = false;
     }
 
-    computeSnapVectors(transformedPositions) {
+    snapPositions(positions) { // point -> new position
         this.activeSnaps = [];
-        let snapVectors = new Map();
-
-        const snapPoints = this.page.points.filter(p => !transformedPositions.has(p));
-        for (const [point, transformedPosition] of transformedPositions) {
+        
+        let snapPositions = new Map();
+        const snapPoints = this.page.points.filter(p => !positions.has(p));
+        for (const [point, transformedPosition] of positions) {
 
             const snaps = [];
 
@@ -55,11 +55,16 @@ export default class Snaps {
                 }
             }
 
-            snapVectors.set(point, snaps);
+            const snappedPos = snaps.reduce(
+                (p, v) => Vec.add(p, v),
+                transformedPosition
+            );
+
+            snapPositions.set(point, snappedPos);
         }
 
         this.dirty = true;
-        return snapVectors
+        return snapPositions;
     }
 
     clear(){

@@ -20,7 +20,7 @@ export default class App {
 
         this.tools = [
             new FreehandTool(this.page),
-            new FormalTool(this.page),
+            new FormalTool(this.page, this.snaps),
             new TextTool(this.page),
         ];
 

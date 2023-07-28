@@ -166,15 +166,9 @@ export default class Selection {
             transformedPositions.set(point, newPos);
         }
 
-        const snapVectors = this.snaps.computeSnapVectors(transformedPositions);
+        const snappedPositions = this.snaps.snapPositions(transformedPositions);
         for (const point of this.points) {
-            let vs = snapVectors.get(point)
-            const snappedPos =
-                vs.reduce(
-                    (p, v) => Vec.add(p, v),
-                    transformedPositions.get(point)
-                );
-            point.setPosition(snappedPos);
+            point.setPosition(snappedPositions.get(point));
         }
     }
 }

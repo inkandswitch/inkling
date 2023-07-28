@@ -5,10 +5,11 @@ import Vec from "../../lib/vec.js";
 import { generatePathFromPoints } from "../Svg.js";
 
 export default class FormalTool {
-    constructor(page, svg) {
+    constructor(page, snaps) {
         this.page = page;
-        
-        this.svg = svg;
+        this.snaps = snaps;
+
+        // Svg rendering
         this.element = null;
 
         // Data for guessing
@@ -24,6 +25,9 @@ export default class FormalTool {
         // Curve fitting
         this.mode = 'unknown'; // unknown, guess, can still change, fixed
         this.fit = null;
+
+        // Fixed mode
+        this.fixedStroke = null;
     }
 
     update(events) {
@@ -37,7 +41,7 @@ export default class FormalTool {
             this.maxSpeed = 0;
             this.previousPosition = pencilDown.position;
 
-            this.state = 'unknown';
+            this.mode = 'unknown';
             this.dirty = true;
         }
 
@@ -54,56 +58,55 @@ export default class FormalTool {
             // Guessing system
             // STATES
             if (this.mode != 'fixed') {
-                // if (Vec.dist(this.inputPoints[this.inputPoints.length - 1], pos) > 1) {
-                    // Add point to input buffer
-                    this.inputPoints.push(pencilMove.position);
-                    this.renderPoints.push(Vec.clone(pencilMove.position));
-                // }
-            }
+                // Add point to input buffer
+                this.inputPoints.push(pencilMove.position);
+                this.renderPoints.push(Vec.clone(pencilMove.position));
 
-            if (this.state == 'guess') {
-                this.doFit();
+                // Do a guess
+                if (this.mode == 'guess') {
+                    this.doFit();
+                }
+            } else {
+                let updatedPosition = pencilMove.position
+                
+                let pointPositions = new Map();
+
+                pointPositions.set(this.fixedStroke.a, this.fixedStroke.a.position);
+                pointPositions.set(this.fixedStroke.b, updatedPosition);
+                
+                let snappedPositions = this.snaps.snapPositions(pointPositions);
+
+                this.fixedStroke.a.setPosition(snappedPositions.get(this.fixedStroke.a));
+                this.fixedStroke.b.setPosition(snappedPositions.get(this.fixedStroke.b));
             }
 
             // STATE TRANSITIONS
-
             // If the stroke is long enough, show feedback of inital guess
             if (this.mode == 'unknown' && this.inputPoints.length > 100) {
-                this.state = 'guess';
+                this.mode = 'guess';
             }
 
-            // If the user slows down, and the stroke is long enough, switch to fixed
-            if (this.state != 'fixed' && this.inputPoints.length > 10 && this.speed < 1 && this.speed < this.maxSpeed) {
+            // If the user slows down, and the stroke is long enough, switch to fixed mode
+            if (this.mode != 'fixed' && this.inputPoints.length > 10 && this.speed < 1 && this.speed < this.maxSpeed) {
                 this.doFit();
-                // this.state = 'fixed';
+                this.createStroke();
+                this.clearGuess();
+                this.mode = 'fixed';
             }
+
             this.dirty = true
         })
 
         // PENCIL UP
         const pencilUp = events.did('pencil', 'ended');
         if (pencilUp) {
-            this.doFit();
-            // this.state = 'fixed';
-            if (this.fit.type === 'line') {
-                const a = this.page.addPoint(this.fit.line.a);
-                const b = this.page.addPoint(this.fit.line.b);
-                this.page.addLineSegment(a, b);
-            } else if(this.fit.type === 'arc') {
-                const {start, end} = Arc.points(this.fit.arc);
-                const a = this.page.addPoint(start);
-                const b = this.page.addPoint(end);
-                const c = this.page.addPoint(this.fit.arc.center);
-                this.page.addArcSegment(a, b, c);
+            if(this.mode != 'fixed') {
+                this.doFit();
+                this.createStroke();
+                this.clearGuess();
             }
 
-            // Data for guessing
-            this.inputPoints = null;
-            this.idealPoints = null;
-            this.renderPoints = null;
-            this.element.remove();
-            this.element = null;
-            // this.dirty = true;
+            this.snaps.clear();
         }
 
         //Interpolate animation render points
@@ -140,6 +143,25 @@ export default class FormalTool {
         }
     }
 
+    // Use fitted shape to create a stroke
+    createStroke() {
+        if(this.fit.type == 'line') {
+            const a = this.page.addPoint(this.fit.line.a);
+            const b = this.page.addPoint(this.fit.line.b);
+            const line = this.page.addLineSegment(a, b);
+            this.fixedStroke = line;
+        }
+    }
+
+    clearGuess(){
+        this.inputPoints = null;
+        this.idealPoints = null;
+        this.renderPoints = null;
+        this.element.remove();
+        this.element = null;
+    }
+
+    // Smooth animation
     updateIdeal() {
         if (this.fit.type == 'line') {
             this.idealPoints = Line.spreadPointsAlong(this.fit.line, this.inputPoints.length);
