@@ -56,36 +56,39 @@ export default class Page {
     }
 
     mergePoint(point) {
-        const mergeable = this.points.filter(
-            p => p !== point && Vec.dist(p.position, point.position) === 0
-        );
-        const mergeableIds = mergeable.map(p => p.id);
+        const pointsToMerge =
+            new Set(
+                this.points.filter(
+                    p => p !== point && Vec.dist(p.position, point.position) === 0
+                )
+            );
 
-        console.log(point, mergeable);
+        if (pointsToMerge.size === 0) {
+            return; // avoid iterating over lines
+        }
 
-        this.lineSegments.forEach(ls => {
-            if (mergeableIds.indexOf(ls.a.id) > -1) {
+        for (const ls of this.lineSegments) {
+            if (pointsToMerge.has(ls.a)) {
                 ls.a = point;
             }
-            if (mergeableIds.indexOf(ls.b.id) > -1) {
+            if (pointsToMerge.has(ls.b)) {
                 ls.b = point;
             }
-            if (ls.c && mergeableIds.indexOf(ls.c.id) > -1) {
+            if (pointsToMerge.has(ls.c)) {
                 ls.c = point;
             }
-        })
+        }
 
-        mergeable.forEach(other => {
-            other.remove();
-            this.points = this.points.filter(p => p !== other);
-        });
+        for (const mergedPoint of pointsToMerge) {
+            mergedPoint.remove();
+        }
+        this.points = this.points.filter(p => !pointsToMerge.has(p));
     }
 
     render(svg) {
-        this.lineSegments.forEach(line => line.render(svg));
-
-        this.freehandStrokes.forEach(stroke => stroke.render(svg));
-
-        this.points.forEach(point => point.render(svg));
+        const renderIt = it => it.render(svg);
+        this.lineSegments.forEach(renderIt);
+        this.freehandStrokes.forEach(renderIt);
+        this.points.forEach(renderIt);
     }
 }
