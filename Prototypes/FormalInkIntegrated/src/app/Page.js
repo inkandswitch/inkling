@@ -41,11 +41,18 @@ export default class Page {
     }
 
     findPointNear(position, dist = 20) {
-        return this.points.find(p => Vec.dist(p.position, position) < dist);
-    }
+        let closestPoint = null
+        let closestDistance = dist
 
-    findPointExact(position) {
-        return this.points.find(p => p.position == position);
+        for(const point of this.points) {
+            let d = Vec.dist(point.position, position)
+            if(d < closestDistance) {
+                closestDistance = d
+                closestPoint = point
+            }
+        }
+        
+        return closestPoint
     }
 
     mergePoint(point) {
