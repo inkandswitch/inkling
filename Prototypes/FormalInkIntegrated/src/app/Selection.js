@@ -125,8 +125,12 @@ export default class Selection {
     }
 
     transformSelection() {
-        for (const [point, snapVector] of this.snapVectors) {
-            const unsnappedPos = Vec.sub(point.position, snapVector);
+        for (const [point, vs] of this.snapVectors) {
+            const unsnappedPos =
+                vs.reduce(
+                    (p, v) => Vec.sub(p, v),
+                    point.position
+                );
             point.move(unsnappedPos);
         }
 
@@ -156,22 +160,56 @@ export default class Selection {
         });
 
         this.computeSnapVectors();
-        for (const [point, snapVector] of this.snapVectors) {
-            const newPos = Vec.add(point.position, snapVector);
-            point.move(newPos);
+        for (const [point, vs] of this.snapVectors) {
+            const snappedPos =
+                vs.reduce(
+                    (p, v) => Vec.add(p, v),
+                    point.position
+                );
+            point.move(snappedPos);
         }
     }
 
     computeSnapVectors() {
         this.snapVectors = new Map();
+
         const snapPoints = this.page.points.filter(p => !this.points[p.id]);
         for (const point of Object.values(this.points)) {
+            const snaps = [];
+
+            // snap to point
             for (const snapPoint of snapPoints) {
                 const v = Vec.sub(snapPoint.position, point.position);
                 if (Vec.len(v) < 10) {
-                    this.snapVectors.set(point, v);
+                    snaps.push(v);
                     break;
                 }
+            }
+
+            if (snaps.length === 0) {
+                // vertical alignment
+                for (const snapPoint of snapPoints) {
+                    const dx = snapPoint.position.x - point.position.x;
+                    if (Math.abs(dx) < 10) {
+                        const v = Vec(dx, 0);
+                        snaps.push(v);
+                        break;
+                    }
+                }
+
+                // horizontal alignment
+                for (const snapPoint of snapPoints) {
+                    const dy = snapPoint.position.y - point.position.y;
+                    if (Math.abs(dy) < 10) {
+                        const v = Vec(0, dy);
+                        snaps.push(v);
+                        break;
+                    }
+                }
+            }
+
+            if (snaps.length > 0) {
+                this.snapVectors.set(point, snaps);
             }
         }
     }
@@ -188,7 +226,7 @@ export default class Selection {
             
             const found = snapPoints.find(otherPoint => Vec.dist(otherPoint.position, point.position) < 10);
             if (found) {
-                // Get delta 
+                // Get delta
                 const delta = Vec.sub(found.position, point.position);
                 translateDelta = delta;
                 foundTranslate  = found;
