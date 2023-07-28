@@ -148,8 +148,15 @@ export default class FormalTool {
         if(this.fit.type == 'line') {
             const a = this.page.addPoint(this.fit.line.a);
             const b = this.page.addPoint(this.fit.line.b);
-            const line = this.page.addLineSegment(a, b);
-            this.fixedStroke = line;
+            const stroke = this.page.addLineSegment(a, b);
+            this.fixedStroke = stroke;
+        } else if(this.fit.type == 'arc') {
+            const {start, end} = Arc.points(this.fit.arc)
+            const a = this.page.addPoint(start);
+            const b = this.page.addPoint(end);
+            const c = this.page.addPoint(this.fit.arc.center);
+            const stroke = this.page.addArcSegment(a, b, c);
+            this.fixedStroke = stroke;
         }
     }
 
