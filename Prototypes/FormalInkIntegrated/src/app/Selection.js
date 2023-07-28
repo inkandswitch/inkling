@@ -4,11 +4,10 @@ import Vec from "../lib/vec";
 export default class Selection {
     constructor(page, snaps) {
         this.page = page;
-        this.snaps = snaps
+        this.snaps = snaps;
 
         this.points = new Set();
         this.origPosition = new Map(); // point -> position
-
 
         // gesture state
         this.tappedOn = null; // point
@@ -28,7 +27,7 @@ export default class Selection {
                 this.firstFingerMoved = fingerDown;
 
                 const point = this.page.findPointNear(fingerDown.position);
-                if (point) {    
+                if (point) {
                     this.selectPoint(point);
                     this.tappedOn = point;
                 } else {
@@ -74,12 +73,12 @@ export default class Selection {
                         this.clearSelection();
                     }
                 } else {
-                    if(this.tappedOn != null && this.points.size == 1) {
+                    if (this.tappedOn != null && this.points.size === 1) {
                         this.clearSelection();
                     }
                 }
 
-                for(const point of this.points) {
+                for (const point of this.points) {
                     this.page.mergePoint(point)
                 }
                 
@@ -168,7 +167,7 @@ export default class Selection {
             transform.translate(p.x, p.y);
         }
 
-        const transformedPositions = new Map()
+        const transformedPositions = new Map();
         for (const point of this.points) {
             const oldPos = this.origPosition.get(point);
             const newPos = transform.transformPoint(oldPos);

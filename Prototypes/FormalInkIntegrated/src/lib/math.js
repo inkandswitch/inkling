@@ -22,7 +22,7 @@ export const lerpN = (input, outputMin = 0, outputMax = 1, doClip = false) => {
 // Prettier really screwed this one up, alas.
 // The args should be: input, inputMin, inputMax, outputMin, outputMax, doClip
 export const lerp = (i, im = 0, iM = 1, om = 0, oM = 1, doClip = true) => {
-  if (im == iM) {
+  if (im === iM) {
     return om; // Avoids a divide by zero
   }
   if (im > iM) {

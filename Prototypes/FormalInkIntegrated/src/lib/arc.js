@@ -46,7 +46,7 @@ Arc.directedInnerAngle = arc => {
     const difference = arc.endAngle - arc.startAngle;
     if (arc.clockwise && difference < 0) {
         return 2 * Math.PI - Math.abs(difference);
-    } else if(!arc.clockwise && difference > 0) {
+    } else if (!arc.clockwise && difference > 0) {
         return -2 * Math.PI + Math.abs(difference);
     } else {
         return difference;

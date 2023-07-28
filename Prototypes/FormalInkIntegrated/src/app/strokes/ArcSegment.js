@@ -38,7 +38,7 @@ export default class ArcSegment {
     }
 
     updatePath() {
-        //           M   start_x              start_y            A   radius_x        radius_y       x-axis-rotation,        more-than-180        clockwise         end_x                end_y
+        //           M   start_x              start_y            A   radius_x        radius_y       x-axis-rotation,      more-than-180      clockwise         end_x                end_y
         this.path = `M ${this.a.position.x} ${this.a.position.y} A ${this.radius}  ${this.radius} ${this.xAxisRotation} ${this.isLargeArc} ${this.clockwise} ${this.b.position.x} ${this.b.position.y}`;
     }
 

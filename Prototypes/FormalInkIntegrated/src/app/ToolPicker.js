@@ -19,7 +19,7 @@ export default class ToolPicker {
         }
 
         const selected = ([30, 80, 130]).findIndex(y => Vec.dist(Vec(30, y), fingerDown.position) < 20);
-        if (selected != -1) {
+        if (selected !== -1) {
             this.selected = selected;
             this.dirty = true;
         }
@@ -33,7 +33,7 @@ export default class ToolPicker {
                 svg.updateElement(
                     button,
                     {
-                        fill: this.selected == i ? 'black' : 'lightgrey',
+                        fill: this.selected === i ? 'black' : 'lightgrey',
                     }
                 )
             );

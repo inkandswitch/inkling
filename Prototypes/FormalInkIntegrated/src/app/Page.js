@@ -41,44 +41,44 @@ export default class Page {
     }
 
     findPointNear(position, dist = 20) {
-        let closestPoint = null
-        let closestDistance = dist
+        let closestPoint = null;
+        let closestDistance = dist;
 
-        for(const point of this.points) {
-            let d = Vec.dist(point.position, position)
-            if(d < closestDistance) {
-                closestDistance = d
-                closestPoint = point
+        for (const point of this.points) {
+            const d = Vec.dist(point.position, position);
+            if (d < closestDistance) {
+                closestDistance = d;
+                closestPoint = point;
             }
         }
         
-        return closestPoint
+        return closestPoint;
     }
 
     mergePoint(point) {
-        let mergable = this.points.filter(p => {
-            return p != point && Vec.dist(p.position, point.position) == 0
-        })
-        let mergableIds = mergable.map(p=>p.id)
+        const mergeable = this.points.filter(
+            p => p !== point && Vec.dist(p.position, point.position) === 0
+        );
+        const mergeableIds = mergeable.map(p => p.id);
 
-        console.log(point, mergable);
+        console.log(point, mergeable);
 
-        this.lineSegments.forEach(ls=>{
-            if(mergableIds.indexOf(ls.a.id) > -1) {
-                ls.a = point
+        this.lineSegments.forEach(ls => {
+            if (mergeableIds.indexOf(ls.a.id) > -1) {
+                ls.a = point;
             }
-            if(mergableIds.indexOf(ls.b.id) > -1) {
-                ls.b = point
+            if (mergeableIds.indexOf(ls.b.id) > -1) {
+                ls.b = point;
             }
-            if(ls.c && mergableIds.indexOf(ls.c.id) > -1) {
-                ls.c = point
+            if (ls.c && mergeableIds.indexOf(ls.c.id) > -1) {
+                ls.c = point;
             }
         })
 
-        mergable.forEach(other=>{
-            other.remove()
-            this.points = this.points.filter(p=>p!=other)
-        })
+        mergeable.forEach(other => {
+            other.remove();
+            this.points = this.points.filter(p => p !== other);
+        });
     }
 
     render(svg) {

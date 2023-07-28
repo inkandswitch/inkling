@@ -27,9 +27,9 @@ export default class Point {
         this.selected = false;
     }
 
-    remove(){
-        this.elements.normal.remove()
-        this.elements.selected.remove()
+    remove() {
+        this.elements.normal.remove();
+        this.elements.selected.remove();
     }
 
     render(svg) {
