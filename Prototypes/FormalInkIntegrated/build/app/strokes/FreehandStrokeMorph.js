@@ -1,10 +1,11 @@
-import { generatePathFromPoints } from "../Svg";
-import generateId from "../generateId";
+import { generatePathFromPoints } from "../Svg.js";
+import generateId from "../generateId.js";
 
-export default class FreehandStroke {
+export default class FreehandStrokeMorph {
     constructor(svg, points) {
         this.id = generateId();
         this.points = points;
+        this.points_morphed = points;
         this.dirty = true;
         this.selected = false;
 

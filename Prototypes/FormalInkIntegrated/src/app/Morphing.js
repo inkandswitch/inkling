@@ -1,0 +1,85 @@
+import Vec from "../lib/vec";
+
+export default class Morphing {
+    constructor(page) {
+        this.page = page;
+
+        
+        // gesture state
+        this.firstFinger = null;
+        this.firstFingerMoved = null;
+
+        this.secondFinger = null;
+        this.secondFingerMoved = null;
+
+        this.draggingMorph = null;
+        this.draggingAngle = null;
+    }
+
+    update(events) {
+        let fingerDown = events.did("finger", "began")
+        if(fingerDown) {
+            if(!this.firstFinger) {
+                this.firstFinger = fingerDown
+                let found = this.page.findMorphPointNear(fingerDown.position)
+                if(found) {
+                    this.draggingMorph = found
+                    this.draggingAngle = this.draggingMorph.angle
+                }
+    
+    
+                window.setTimeout(_=>{
+                    if(!this.firstFinger || this.draggingMorph) return
+                    if(!this.firstFingerMoved || Vec.dist(this.firstFinger.position, this.firstFingerMoved.position) < 15) {
+                        // Long Press
+                        console.log("Long Press");
+                        this.draggingMorph = this.page.addMorphPoint(this.firstFinger.position)
+                    }
+                }, 500)
+            } else if(!this.secondFinger && this.draggingMorph) {
+                this.secondFinger = fingerDown
+                this.draggingAngle = this.draggingMorph.angle
+            }
+            
+        }
+
+        if(this.firstFinger) {
+            let fingerMove = events.didLast("finger", "moved", this.firstFinger.id)
+            if(fingerMove) {
+                this.firstFingerMoved = fingerMove
+                if(this.draggingMorph) {
+                    this.draggingMorph.setPosition(fingerMove.position)
+                    this.page.freehandStrokes.forEach(str=>str.applyMorphs(this.page.morphPoints))
+                }
+            }
+
+            let fingerUp = events.did("finger", "ended", this.firstFinger.id)
+            if(fingerUp) {
+                this.firstFinger = null
+                this.firstFingerMoved = null
+                this.draggingMorph = null
+            }
+        }
+
+        if(this.firstFinger && this.secondFinger && this.firstFingerMoved && this.draggingMorph) {
+            let fingerMove = events.didLast("finger", "moved", this.secondFinger.id)
+            if(fingerMove) {
+                this.secondFingerMoved = fingerMove
+                let initialAngle = Vec.angle(Vec.sub(this.secondFinger.position, this.firstFinger.position))
+                let movedAngle = Vec.angle(Vec.sub(this.secondFingerMoved.position, this.firstFingerMoved.position))
+                let deltaAngle = movedAngle - initialAngle
+                this.draggingMorph.angle = this.draggingAngle + deltaAngle
+                this.page.freehandStrokes.forEach(str=>str.applyMorphs(this.page.morphPoints))
+            }
+
+        }
+
+        if(this.secondFinger) {
+            let fingerUp = events.did("finger", "ended", this.secondFinger.id)
+            if(fingerUp) {
+                this.secondFinger = null
+                this.secondFingerMoved = null
+            }
+        }
+    }
+}

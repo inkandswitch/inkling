@@ -1,14 +1,16 @@
 import Vec from "../lib/vec";
 import ArcSegment from "./strokes/ArcSegment";
 import LineSegment from "./strokes/LineSegment";
-import FreehandStroke from "./strokes/FreehandStroke";
+import FreehandStroke from "./strokes/FreehandStrokeMorph";
 
 import Point from "./strokes/Point";
+import MorphPoint from "./strokes/MorphPoint";
 
 export default class Page {
     constructor(svg) {
         this.svg = svg;
         this.points = [];
+        this.morphPoints = [];
 
         // TODO: figure out a better model for how to store different kinds of strokes
         // For now just keep them separate, until we have a better idea of what freehand strokes look like
@@ -34,6 +36,12 @@ export default class Page {
         return as;
     }
 
+    addMorphPoint(position) {
+        const p = new MorphPoint(this.svg, position);
+        this.morphPoints.push(p);
+        return p;
+    }
+
     addFreehandStroke(points) {
         const s = new FreehandStroke(this.svg, points);
         this.freehandStrokes.push(s)
@@ -45,6 +53,21 @@ export default class Page {
         let closestDistance = dist;
 
         for (const point of this.points) {
+            const d = Vec.dist(point.position, position);
+            if (d < closestDistance) {
+                closestDistance = d;
+                closestPoint = point;
+            }
+        }
+        
+        return closestPoint;
+    }
+
+    findMorphPointNear(position, dist = 20) {
+        let closestPoint = null;
+        let closestDistance = dist;
+
+        for (const point of this.morphPoints) {
             const d = Vec.dist(point.position, position);
             if (d < closestDistance) {
                 closestDistance = d;
@@ -109,5 +132,6 @@ export default class Page {
         this.lineSegments.forEach(renderIt);
         this.freehandStrokes.forEach(renderIt);
         this.points.forEach(renderIt);
+        this.morphPoints.forEach(renderIt);
     }
 }

@@ -151,19 +151,20 @@ Vec.rotate90CW = (v) => Vec(v.y, -v.x);
 // 90 degrees counter clockwise
 Vec.rotate90CCW = (v) => Vec(-v.y, v.x);
 
+Vec.rotate = (v, angle) =>{
+  return Vec(
+    v.x * Math.cos(angle) - v.y * Math.sin(angle),
+    v.x * Math.sin(angle) + v.y * Math.cos(angle)
+  );
+}
+
 // Rotate around
 Vec.rotateAround = (vector, point, angle) => {
-  // Convert angle to radians
-  const radians = (angle * Math.PI) / 180;
 
   // Translate vector to the origin
   const translatedVector = Vec.sub(vector, point);
-
-  // Perform rotation
-  const rotatedVector = Vec(
-    translatedVector.x * Math.cos(radians) - translatedVector.y * Math.sin(radians),
-    translatedVector.x * Math.sin(radians) + translatedVector.y * Math.cos(radians)
-  );
+  
+  const rotatedVector = Vec.rotate(translatedVector, angle);
 
   // Translate vector back to its original position
   return Vec.add(rotatedVector, point);

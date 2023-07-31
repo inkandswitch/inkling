@@ -1,4 +1,5 @@
 //import Canvas from "./Canvas";
+import Morphing from "./Morphing";
 import Page from "./Page";
 import Selection from "./Selection";
 import Snaps from "./Snaps";
@@ -15,7 +16,11 @@ export default class App {
                 
         this.snaps = new Snaps(this.page);
 
-        this.selection = new Selection(this.page, this.snaps);
+
+        //this.selection = new Selection(this.page, this.snaps);
+
+        this.morphing = new Morphing(this.page);
+
         this.toolPicker = new ToolPicker(this.svg);
 
         this.tools = [
@@ -47,7 +52,8 @@ export default class App {
         this.toolPicker.update(events);
         this.tools[this.toolPicker.selected].update(events);
 
-        this.selection.update(events);
+        this.morphing.update(events);
+        //this.selection.update(events);
     }
 
     render() {
