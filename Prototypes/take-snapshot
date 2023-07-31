@@ -1,0 +1,17 @@
+#!/bin/bash
+
+if [[ $# -ne 3 ]]; then
+  echo "usage: $0 commit-hash source-dir dest-dir" >&2
+  echo "example:"
+  echo "./take-snapshot b963db1850e6ea82b7ebab25c9e885bb341c6a63 FormalInkIntegrated FormalInkIntegrated-jul-28-23"
+  exit 2
+fi
+
+echo "Commit: $1";
+echo "SourceDir: $2";
+echo "DestDir: $3";
+
+git checkout $1 && \
+  cp -R $2 $3 && \
+  git switch -
+
