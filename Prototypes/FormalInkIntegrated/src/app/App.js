@@ -17,14 +17,14 @@ export default class App {
         this.snaps = new Snaps(this.page);
 
 
-        //this.selection = new Selection(this.page, this.snaps);
+        // this.selection = new Selection(this.page, this.snaps);
 
         this.morphing = new Morphing(this.page);
 
         this.toolPicker = new ToolPicker(this.svg);
 
         this.tools = [
-            new FreehandTool(this.page),
+            new FreehandTool(this.page, this.svg),
             new FormalTool(this.page, this.snaps),
             new TextTool(this.page),
         ];

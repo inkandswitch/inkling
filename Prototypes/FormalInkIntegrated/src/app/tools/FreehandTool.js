@@ -1,11 +1,20 @@
 import { generatePathFromPoints } from "../Svg";
 
 export default class FreehandTool {
-    constructor(page) {
+    constructor(page, svg) {
         this.page = page;
         this.points = null;
-        this.element = null;
-        this.dirty = true; // to finish initializing this object in render()
+        this.element =
+            svg.addElement(
+                'path',
+                {
+                    d: '',
+                    stroke: 'darkgrey',
+                    'stroke-width': 2,
+                    fill: 'none',
+                }
+            );
+        this.dirty = false;
     }
 
     update(events) {
@@ -46,19 +55,6 @@ export default class FreehandTool {
     render(svg) {
         if (!this.dirty) {
             return;
-        }
-
-        if (this.element == null) {
-            this.element =
-                svg.addElement(
-                    'path',
-                    {
-                        d: '',
-                        stroke: 'darkgrey',
-                        'stroke-width': 2,
-                        fill: 'none',
-                    }
-                );
         }
 
         const path = this.points == null ? '' : generatePathFromPoints(this.points);
