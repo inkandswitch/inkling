@@ -5,28 +5,42 @@ export default class FreehandTool {
         this.page = page;
         this.points = null;
         this.element = null;
+        this.dirty = true; // to finish initializing this object in render()
     }
 
     update(events) {
         const pencilDown = events.did('pencil', 'began');
-        if (pencilDown) {
-            this.points = [pencilDown.position];
-            this.dirty = true;
+        if (pencilDown != null) {
+            this.startStroke(pencilDown.position);
         }
 
-        const pencilMoves = this.points == null ? [] : events.didAll('pencil', 'moved');
-        pencilMoves.forEach(pencilMove => {
-            this.points.push(pencilMove.position);
-            this.dirty = true;
-        })
+        if (this.points == null) {
+            return;
+        }
+
+        const pencilMoves = events.didAll('pencil', 'moved');
+        pencilMoves.forEach(pencilMove => this.extendStroke(pencilMove.position));
 
         const pencilUp = events.did('pencil', 'ended');
-        if (pencilUp) {
-            this.page.addFreehandStroke(this.points);
-            this.points = null;
-            this.element.remove();
-            this.element = null;
+        if (pencilUp != null) {
+            this.endStroke();
         }
+    }
+
+    startStroke(position) {
+        this.points = [position];
+        this.dirty = true;
+    }
+
+    extendStroke(position) {
+        this.points.push(position);
+        this.dirty = true;
+    }
+
+    endStroke() {
+        this.page.addFreehandStroke(this.points);
+        this.points = null;
+        this.dirty = true;
     }
 
     render(svg) {
@@ -34,9 +48,8 @@ export default class FreehandTool {
             return;
         }
 
-        if (this.points) {
-            if (!this.element) {
-                this.element =
+        if (this.element == null) {
+            this.element =
                 svg.addElement(
                     'path',
                     {
@@ -46,11 +59,10 @@ export default class FreehandTool {
                         fill: 'none',
                     }
                 );
-            }
-
-            const path = generatePathFromPoints(this.points);
-            svg.updateElement(this.element, { d: path });
         }
+
+        const path = this.points == null ? '' : generatePathFromPoints(this.points);
+        svg.updateElement(this.element, { d: path });
 
         this.dirty = false;
     }
