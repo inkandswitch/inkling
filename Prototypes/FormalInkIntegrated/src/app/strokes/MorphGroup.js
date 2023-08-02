@@ -19,18 +19,40 @@ export default class MorphGroup {
     computeConnectivityGraph(){
         // Iterate over each pair of strokes and get connectivity
         this.connectivity = []
+        // for (let i = 0; i < this.strokes.length; i++) {
+        //     const a = this.strokes[i];
+        //     for (let j = i+1; j < this.strokes.length; j++) {
+        //         const b = this.strokes[j];
+        //         let pairs = findClosestPairOfPoints(a.points, b.points)
+        //         if(pairs.dist < 20) {
+        //             this.connectivity.push({
+        //                 a: i, b: j, indexA: pairs.a, indexB: pairs.b
+        //             })
+        //         }
+        //     }
+        // }
+
         for (let i = 0; i < this.strokes.length; i++) {
             const a = this.strokes[i];
-            for (let j = i+1; j < this.strokes.length; j++) {
+            let a_points = [a.points[0], a.points[a.points.length-1]];
+            for (let j = 0; j < this.strokes.length; j++) {
+                if(i == j) continue;
                 const b = this.strokes[j];
-                let pairs = findClosestPairOfPoints(a.points, b.points)
-                if(pairs.dist < 20) {
-                    this.connectivity.push({
-                        a: i, b: j, indexA: pairs.a, indexB: pairs.b
-                    })
+
+                for (let k = 0; k < a_points.length; k++) {
+                    const point = a_points[k];
+                    let closest_point = findClosestPointTo(point, b.points);
+                    console.log(closest_point);
+                    if(closest_point.dist < 20) {
+                        this.connectivity.push({
+                            a: i, b: j, indexA: k==0?0:a.points.length-1, indexB: closest_point.index
+                        })
+                    } 
                 }
             }
         }
+
+        console.log(this.connectivity);
     }
 
     render(svg){
@@ -49,6 +71,21 @@ export default class MorphGroup {
 
         this.dirty = false;
     }
+}
+
+function findClosestPointTo(point, stroke) {
+    let minDist = Vec.dist(point, stroke[0]);
+    let index = 0;
+
+    for (let i = 0; i < stroke.length; i++) {
+        let dist = Vec.dist(point, stroke[i]);
+        if(dist < minDist) {
+            minDist = dist;
+            index = i;
+        }
+    }
+
+    return {dist: minDist, index}
 }
 
 
