@@ -9,6 +9,8 @@ import FormalTool from "./tools/FormalTool";
 import FreehandTool from "./tools/FreehandTool";
 import TextTool from "./tools/TextTool";
 
+import MorphPhysics from "./MorphPhysics";
+
 export default class App {
     constructor() {
         this.svg = new SVG();
@@ -28,6 +30,8 @@ export default class App {
             new FormalTool(this.page, this.snaps),
             new TextTool(this.page),
         ];
+
+        //this.morphPhysics = new MorphPhysics(this.svg);
 
         // Setup text canvas
         // let a = this.page.addPoint({x: 100, y: 100});
@@ -54,6 +58,7 @@ export default class App {
 
         this.morphing.update(events);
         //this.selection.update(events);
+        //this.morphPhysics.update(events);
     }
 
     render() {
@@ -61,5 +66,7 @@ export default class App {
         this.tools[this.toolPicker.selected].render(this.svg);
         this.snaps.render(this.svg);
         this.page.render(this.svg);
+
+        //this.morphPhysics.render(this.svg);
     }
 }

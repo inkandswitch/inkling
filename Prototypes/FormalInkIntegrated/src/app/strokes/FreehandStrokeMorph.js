@@ -70,7 +70,7 @@ export default class FreehandStrokeMorph {
                 const multiplyer = dists[i];
                 const translation = Vec.mulS(morph.morphVector, multiplyer);
 
-                const rotated = Vec.rotateAround(pt, morph.firstPosition, morph.angle*multiplyer*multiplyer);
+                const rotated = Vec.rotateAround(pt, morph.firstPosition, morph.angle*multiplyer);
                 const rotationDelta = Vec.sub(rotated, pt);
 
 

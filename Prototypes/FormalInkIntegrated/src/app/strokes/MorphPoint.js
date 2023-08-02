@@ -12,10 +12,10 @@ export default class MorphPoint {
         this.dirty = true;
         this.selected = false;
         this.elements = {
-            normal: svg.addElement('circle', { cx: 0, cy: 0, r: 30, fill: 'none', stroke: 'lightgrey' }),
-            ghost: svg.addElement('circle', { cx: 0, cy: 0, r: 30, fill: 'none', stroke: 'lightgrey' }),
-            line: svg.addElement('line', { x1: 0, y1: 0, x2: 0, y2: 0, stroke: 'lightgrey' }),
-            rotationLine: svg.addElement('line', { x1: 0, y1: 0, x2: 0, y2: 0, stroke: 'lightgrey' }),
+            normal: svg.addElement('circle', { cx: 0, cy: 0, r: 30, fill: 'none', stroke: 'grey' }),
+            //ghost: svg.addElement('circle', { cx: 0, cy: 0, r: 30, fill: 'none', stroke: 'lightgrey' }),
+            //line: svg.addElement('line', { x1: 0, y1: 0, x2: 0, y2: 0, stroke: 'lightgrey' }),
+            rotationLine: svg.addElement('line', { x1: 0, y1: 0, x2: 0, y2: 0, stroke: 'grey' }),
         };
     }
 
@@ -58,28 +58,28 @@ export default class MorphPoint {
             this.elements.rotationLine,
             {
                 x1: this.position.x,
-                y1:this.position.y,
+                y1: this.position.y,
                 x2: rotationOffset.x,
-                y2:rotationOffset.y,
+                y2: rotationOffset.y,
             }
         )
 
-        svg.updateElement(
-            this.elements.ghost,
-            {
-                transform: `translate(${this.firstPosition.x} ${this.firstPosition.y})`,
-            }
-        );
+        // svg.updateElement(
+        //     this.elements.ghost,
+        //     {
+        //         transform: `translate(${this.firstPosition.x} ${this.firstPosition.y})`,
+        //     }
+        // );
 
-        svg.updateElement(
-            this.elements.line,
-            {
-                x1: this.position.x,
-                y1: this.position.y,
-                x2: this.firstPosition.x,
-                y2:this.firstPosition.y,
-            }
-        );
+        // svg.updateElement(
+        //     this.elements.line,
+        //     {
+        //         x1: this.position.x,
+        //         y1: this.position.y,
+        //         x2: this.firstPosition.x,
+        //         y2: this.firstPosition.y,
+        //     }
+        // );
 
         this.dirty = false;
     }

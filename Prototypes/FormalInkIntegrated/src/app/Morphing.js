@@ -51,7 +51,8 @@ export default class Morphing {
                 this.firstFingerMoved = fingerMove;
                 if (this.draggingMorph) {
                     this.draggingMorph.setPosition(fingerMove.position);
-                    this.page.freehandStrokes.forEach(str => str.applyMorphs(this.page.morphPoints));
+                    
+                    this.page.updateMorphs()
                 }
             }
 
@@ -71,7 +72,7 @@ export default class Morphing {
                 const movedAngle = Vec.angle(Vec.sub(this.secondFingerMoved.position, this.firstFingerMoved.position));
                 const deltaAngle = movedAngle - initialAngle;
                 this.draggingMorph.angle = this.draggingAngle + deltaAngle;
-                this.page.freehandStrokes.forEach(str => str.applyMorphs(this.page.morphPoints));
+                this.page.updateMorphs();
             }
 
         }

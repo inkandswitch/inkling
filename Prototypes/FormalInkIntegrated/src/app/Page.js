@@ -5,6 +5,7 @@ import FreehandStroke from "./strokes/FreehandStrokeMorph";
 
 import Point from "./strokes/Point";
 import MorphPoint from "./strokes/MorphPoint";
+import MorphGroup from "./strokes/MorphGroup";
 
 export default class Page {
     constructor(svg) {
@@ -16,6 +17,8 @@ export default class Page {
         // For now just keep them separate, until we have a better idea of what freehand strokes look like
         this.lineSegments = [];
         this.freehandStrokes = [];
+
+        this.morphGroup = new MorphGroup();
     }
 
     addPoint(position) {
@@ -45,6 +48,7 @@ export default class Page {
     addFreehandStroke(points) {
         const s = new FreehandStroke(this.svg, points);
         this.freehandStrokes.push(s)
+        this.morphGroup.addStroke(s);
         return s;
     }
 
@@ -127,11 +131,45 @@ export default class Page {
         return reachablePoints;
     }
 
+    updateMorphs(){
+        //update rotations
+        if(this.morphPoints.length < 2) return 
+        for (let i = 0; i < this.morphPoints.length; i++) {
+            const point = this.morphPoints[i];
+
+            let delta = 0;
+            let factor = 0;
+            if(i < this.morphPoints.length-1) {
+                let oldAngle = Vec.angle(Vec.sub(this.morphPoints[i+1].firstPosition, this.morphPoints[i].firstPosition))
+                let newAngle = Vec.angle(Vec.sub(this.morphPoints[i+1].position, this.morphPoints[i].position))
+                delta += newAngle - oldAngle;
+                factor +=1;
+            }
+
+            if(i > 0) {
+                let oldAngle = Vec.angle(Vec.sub(this.morphPoints[i-1].firstPosition, this.morphPoints[i].firstPosition))
+                let newAngle = Vec.angle(Vec.sub(this.morphPoints[i-1].position, this.morphPoints[i].position))
+                delta += newAngle - oldAngle
+                factor +=1;
+            }
+
+            if(factor == 2) {
+                delta = delta / 2
+            }
+
+            this.morphPoints[i].angle = delta
+            this.morphPoints[i].dirty = true
+        }
+
+        this.freehandStrokes.forEach(stroke => stroke.applyMorphs(this.morphPoints));
+    }
+
     render(svg) {
         const renderIt = it => it.render(svg);
         this.lineSegments.forEach(renderIt);
         this.freehandStrokes.forEach(renderIt);
         this.points.forEach(renderIt);
         this.morphPoints.forEach(renderIt);
+        this.morphGroup.render(svg);
     }
 }
