@@ -47,6 +47,9 @@ class ViewController: UIViewController, WKScriptMessageHandler, WKUIDelegate, UI
       
         // Disable magnifying glass
         webView!.configuration.preferences.isTextInteractionEnabled = false
+        
+        // Enable remote inspection via Safari — required as of iOS 16.4
+        webView!.isInspectable = true
 
         if isBlockingScroll {
             webView!.scrollView.isScrollEnabled = false
