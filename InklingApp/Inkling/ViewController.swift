@@ -49,7 +49,9 @@ class ViewController: UIViewController, WKScriptMessageHandler, WKUIDelegate, UI
         webView!.configuration.preferences.isTextInteractionEnabled = false
         
         // Enable remote inspection via Safari — required as of iOS 16.4
-        webView!.isInspectable = true
+        if webView!.responds(to: Selector(("setInspectable:"))) {
+            webView!.perform(Selector(("setInspectable:")), with: true)
+        }
 
         if isBlockingScroll {
             webView!.scrollView.isScrollEnabled = false
