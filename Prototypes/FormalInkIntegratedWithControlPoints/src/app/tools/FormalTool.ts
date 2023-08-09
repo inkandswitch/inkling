@@ -2,10 +2,13 @@ import Arc from "../../lib/arc.js";
 import Fit from "../../lib/fit.js";
 import Line from "../../lib/line.js";
 import Vec from "../../lib/vec.js";
-import { generatePathFromPoints } from "../Svg.js";
+import SVG, { generatePathFromPoints } from "../Svg.js";
+import { Tool } from "./Tool.js";
 
-export default class FormalTool {
-    constructor(page, snaps) {
+export default class FormalTool extends Tool {
+    constructor(svg: SVG, buttonX: number, buttonY: number, page, snaps) {
+        super(svg, buttonX, buttonY);
+
         this.page = page;
         this.snaps = snaps;
 

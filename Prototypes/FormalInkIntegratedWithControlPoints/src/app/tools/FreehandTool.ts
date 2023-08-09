@@ -1,24 +1,28 @@
-import { generatePathFromPoints } from "../Svg";
+import { Events, PencilEvent, TouchId } from "../../engine";
+import Page from "../Page";
+import SVG, { generatePathFromPoints } from "../Svg";
 import { strokeSvgProperties } from "../strokes/FreehandStroke";
+import { Tool } from "./Tool";
 
-export default class FreehandTool {
-    constructor(page, svg) {
-        this.page = page;
-        this.points = null;
-        this.element =
-            svg.addElement(
-                'path',
-                {
-                    d: '',
-                    ...strokeSvgProperties,
-                }
-            );
-        this.pencilIsDown = false;
-        this.fingerId = null;
-        this.dirty = false;
+interface PositionWithPressure {
+    x: number;
+    y: number;
+    pressure: number;
+}
+
+export default class FreehandTool extends Tool {
+    points?: (PositionWithPressure | null)[];
+    fingerId?: TouchId;
+    element: any;
+    pencilIsDown = false;
+    dirty = false;
+
+    constructor(svg: SVG, buttonX: number, buttonY: number, public page: Page) {
+        super(svg, buttonX, buttonY);
+        this.element = svg.addElement('path', { d: '', ...strokeSvgProperties });
     }
 
-    update(events) {
+    update(events: Events) {
         const fingerDown = events.did('finger', 'began');
         if (fingerDown != null) {
             if (this.fingerId == null) {
@@ -34,13 +38,13 @@ export default class FreehandTool {
         for (const fingerUp of events.didAll('finger', 'ended')) {
             if (fingerUp.id === this.fingerId) {
                 console.log(fingerUp.id, 'up');
-                this.fingerId = null;
+                this.fingerId = undefined;
             } else {
                 console.log(fingerUp.id, '(up)');
             }
         }
 
-        const pencilDown = events.did('pencil', 'began');
+        const pencilDown = events.did('pencil', 'began') as PencilEvent | undefined;
         if (pencilDown != null) {
             this.pencilIsDown = true;
             if (this.points == null) {
@@ -55,7 +59,7 @@ export default class FreehandTool {
             return;
         }
 
-        const pencilMoves = events.didAll('pencil', 'moved');
+        const pencilMoves = events.didAll('pencil', 'moved') as PencilEvent[];
         pencilMoves.forEach(pencilMove => {
             this.extendStroke({ ...pencilMove.position, pressure: pencilMove.pressure });
         });
@@ -70,34 +74,29 @@ export default class FreehandTool {
         }
     }
 
-    startStroke(pointWithPressure) {
-        this.points = [pointWithPressure];
+    startStroke(point: PositionWithPressure) {
+        this.points = [point];
         this.dirty = true;
     }
 
-    extendStroke(pointWithPressure) {
-        this.points.push(pointWithPressure);
+    extendStroke(point: PositionWithPressure | null) {
+        this.points!.push(point);
         this.dirty = true;
     }
 
     endStroke() {
         this.page.addFreehandStroke(this.points);
-        this.points = null;
+        this.points = undefined;
         this.dirty = true;
     }
 
-    render(svg) {
+    render(svg: SVG) {
         if (!this.dirty) {
             return;
         }
 
-        try {
-            const path = this.points == null ? '' : generatePathFromPoints(this.points);
-            svg.updateElement(this.element, { d: path });
-        } catch (e) {
-            console.log('offending', this.points);
-            throw e;
-        }
+        const path = this.points == null ? '' : generatePathFromPoints(this.points);
+        svg.updateElement(this.element, { d: path });
 
         this.dirty = false;
     }

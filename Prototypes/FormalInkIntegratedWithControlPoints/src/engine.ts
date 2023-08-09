@@ -15,12 +15,12 @@ interface AEvent {
     timestamp: number;
 }
 
-interface PencilEvent extends AEvent {
+export interface PencilEvent extends AEvent {
     type: 'pencil';
     pressure: number;
 }
 
-interface FingerEvent extends AEvent {
+export interface FingerEvent extends AEvent {
     type: 'finger';
 }
 

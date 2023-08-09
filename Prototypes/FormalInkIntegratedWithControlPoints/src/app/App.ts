@@ -1,5 +1,4 @@
-//import Canvas from "./Canvas";
-import Morphing from "./Morphing";
+import { Events } from "../engine";
 import Page from "./Page";
 import Selection from "./Selection";
 import Snaps from "./Snaps";
@@ -8,57 +7,42 @@ import ToolPicker from "./ToolPicker";
 import FormalTool from "./tools/FormalTool";
 import FreehandTool from "./tools/FreehandTool";
 import TextTool from "./tools/TextTool";
+import { Tool } from "./tools/Tool";
 
 export default class App {
+    svg: SVG;
+    page: Page;
+    snaps: Snaps;
+    selection: Selection;
+    tools: Tool[];
+    toolPicker: ToolPicker;
+
     constructor() {
         this.svg = new SVG();
         this.page = new Page(this.svg);
-                
         this.snaps = new Snaps(this.page);
-
 
         this.selection = new Selection(this.page, this.snaps);
 
-        // this.morphing = new Morphing(this.page);
-
         this.tools = [
-            new FreehandTool(this.page, this.svg),
-            new FormalTool(this.page, this.snaps),
-            new TextTool(this.page),
+            new FreehandTool(this.svg, 30, 30, this.page),
+            new FormalTool(this.svg, 30, 80, this.page, this.snaps),
+            new TextTool(this.svg, 30, 130, this.page),
         ];
 
-        this.toolPicker = new ToolPicker(this.svg, this.tools);
-
-        // Setup text canvas
-        // let a = this.page.addPoint({x: 100, y: 100});
-        // let b = this.page.addPoint({x: 200, y: 200});
-        // let c = this.page.addPoint({x: 200, y: 100});
-        // this.page.addPoint({x: 300, y: 300});
-        // this.page.addPoint({x: 400, y: 400});
-
-        // this.page.addLineSegment(a, b);
-        // this.page.addLineSegment(b, c);
-        // this.page.addLineSegment(c, a);
-
-        
-        // let ca = this.page.addPoint({x: 600, y: 100});
-        // let cb = this.page.addPoint({x: 500, y: 200});
-        // let cc = this.page.addPoint({x: 500, y: 100});
-
-        // this.page.addArcSegment(ca, cb, cc);
+        this.toolPicker = new ToolPicker(this.tools);
     }
 
-    update(events) {
+    update(events: Events) {
         this.toolPicker.update(events);
-        this.toolPicker.selected.update(events);
+        this.toolPicker.selected?.update(events);
 
         // this.morphing.update(events);
         this.selection.update(events);
     }
 
     render() {
-        this.toolPicker.render(this.svg);
-        this.tools[this.toolPicker.selectedIdx].render(this.svg);
+        this.toolPicker.selected?.render(this.svg);
         this.snaps.render(this.svg);
         this.page.render(this.svg);
     }

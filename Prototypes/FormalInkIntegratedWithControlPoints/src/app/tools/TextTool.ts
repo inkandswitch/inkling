@@ -1,7 +1,13 @@
-export default class TextTool {
-    constructor(page, svg) {
-        this.page = page;
-        this.svg = svg;
+import Page from "../Page";
+import SVG from "../Svg";
+import { Tool } from "./Tool";
+
+export default class TextTool extends Tool {
+    points: any[];
+    element: any;
+
+    constructor(public svg: SVG, buttonX: number, buttonY: number, public page: Page) {
+        super(svg, buttonX, buttonY);
         this.points = [];
         this.element = null;
     }
