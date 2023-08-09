@@ -5,8 +5,8 @@ export class Tool {
   button: any;
   isSelected = false;
 
-  constructor(svg: SVG, public x: number, public y: number) {
-    this.button = svg.addElement('circle', { cx: x, cy: y, r: 20 });
+  constructor(svg: SVG, public buttonX: number, public buttonY: number) {
+    this.button = svg.addElement('circle', { cx: buttonX, cy: buttonY, r: 20 });
     this.refreshButton();
   }
 

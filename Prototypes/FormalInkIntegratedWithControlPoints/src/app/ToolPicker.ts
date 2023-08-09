@@ -14,7 +14,7 @@ export default class ToolPicker {
         }
 
         const newSelected = this.tools.find(tool => {
-            const center = Vec(tool.x, tool.y);
+            const center = Vec(tool.buttonX, tool.buttonY);
             return Vec.dist(center, fingerDown.position) < 20;
         });
 
