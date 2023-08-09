@@ -18,16 +18,19 @@ export default class ToolPicker {
             return Vec.dist(center, fingerDown.position) < 20;
         });
 
-        if (newSelected == null || newSelected == this.selected) {
-            return;
-        }
-
-        this.selected = newSelected;
-        for (const tool of this.tools) {
-            if (tool === newSelected) {
-                tool.onSelected();
-            } else {
-                tool.onDeselected();
+        if (newSelected == null) {
+            // the user's finger is not on one of the tool buttons,
+            // so do nothing
+        } else if (newSelected === this.selected) {
+            this.selected.onAction();
+        } else {
+            this.selected = newSelected;
+            for (const tool of this.tools) {
+                if (tool === newSelected) {
+                    tool.onSelected();
+                } else {
+                    tool.onDeselected();
+                }
             }
         }
     }
