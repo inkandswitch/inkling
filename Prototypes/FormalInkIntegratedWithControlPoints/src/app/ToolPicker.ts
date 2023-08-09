@@ -21,16 +21,23 @@ export default class ToolPicker {
         if (newSelected == null) {
             // the user's finger is not on one of the tool buttons,
             // so do nothing
-        } else if (newSelected === this.selected) {
-            this.selected.onAction();
         } else {
-            this.selected = newSelected;
-            for (const tool of this.tools) {
-                if (tool === newSelected) {
-                    tool.onSelected();
-                } else {
-                    tool.onDeselected();
-                }
+            this.select(newSelected);
+        }
+    }
+
+    select(t: Tool) {
+        if (t === this.selected) {
+            t.onAction();
+            return;
+        }
+
+        this.selected = t;
+        for (const tool of this.tools) {
+            if (tool === this.selected) {
+                tool.onSelected();
+            } else {
+                tool.onDeselected();
             }
         }
     }
