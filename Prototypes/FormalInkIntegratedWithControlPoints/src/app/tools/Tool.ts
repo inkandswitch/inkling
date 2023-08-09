@@ -1,3 +1,4 @@
+import { Events } from "../../engine";
 import SVG from "../Svg";
 
 export class Tool {
