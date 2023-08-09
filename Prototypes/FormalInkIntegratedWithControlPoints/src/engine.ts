@@ -1,23 +1,53 @@
-class Events {
-    constructor() {
-        this.events = [];
-        this.activePencil = null;
-        this.activeFingers = {};
+export type Event = PencilEvent | FingerEvent;
+export type EventType = Event['type'];
+export type EventState = 'began' | 'moved' | 'ended';
+export type TouchId = string;
+
+interface Position {
+    x: number;
+    y: number;
+}
+
+interface AEvent {
+    state: EventState;
+    id: TouchId;
+    position: Position;
+    timestamp: number;
+}
+
+interface PencilEvent extends AEvent {
+    type: 'pencil';
+    pressure: number;
+}
+
+interface FingerEvent extends AEvent {
+    type: 'finger';
+}
+
+export class Events {
+    events: Event[] = [];
+    activePencil?: Position;
+    activeFingers: { [key: TouchId]: Position } = {};
+
+    constructor() {}
+
+    add(event: Event) {
+        this.events.push(event);
     }
 
-    did(type, state, id) {
+    did(type: EventType, state: EventState, id?: TouchId) {
         return this.events.find(e =>
             e.type === type && e.state === state && (id == null || e.id === id)
         );
     }
     
-    didAll(type, state, id) {
+    didAll(type: EventType, state: EventState, id?: TouchId) {
         return this.events.filter(e =>
             e.type === type && e.state === state && (id == null || e.id === id)
         );
     }
 
-    didLast(type, state, id) {
+    didLast(type: EventType, state: EventState, id?: TouchId) {
         return this.events.findLast(e =>
             e.type === type && e.state === state && (id == null || e.id === id)
         );
@@ -27,43 +57,52 @@ class Events {
 const events = new Events();
 
 // Attach event listeners
-window.nativeEvent = (eventState, touches) => {
-    Object.entries(touches).forEach(([touchId, points]) => {
+window.nativeEvent = (state: EventState, touches: { [key: TouchId]: any[] }) => {
+    Object.entries(touches).forEach(([id, points]) => {
         points.forEach(point => {
-            events.events.push({
-                type: point.type === 'pencil' ? 'pencil': 'finger',
-                state: eventState,
-                id: touchId,
-                position: { x: point.x, y: point.y },
-                pressure: point.force,
-                timestamp: point.timestamp,
-            });
+            const sharedProperties = {
+                state,
+                id,
+                position: { x: point.x as number, y: point.y as number },
+                timestamp: point.timestamp as number,
+            };
+            const event: Event = point.type === 'pencil' ?
+                {
+                    ...sharedProperties,
+                    type: 'pencil',
+                    pressure: point.force as number,
+                } :
+                {
+                    ...sharedProperties,
+                    type: 'finger',
+                };
     
-            if (point.type === 'pencil') {
-                events.activePencil =
-                    eventState !== 'ended' ?
-                        { x: point.x, y: point.y } :
-                        null;
+            events.add(event);
+
+            if (event.type === 'pencil') {
+                events.activePencil = state === 'ended' ? event.position : undefined;
             } else {
-                if (eventState !== 'ended') {
-                    events.activeFingers[touchId] = { x: point.x, y: point.y };
+                if (state !== 'ended') {
+                    events.activeFingers[event.id] = event.position;
                 } else {
-                    delete events.activeFingers[touchId];
+                    delete events.activeFingers[event.id];
                 }
             }
         });
     });
 };
 
-let callback = null;
+type Callback = (events: Events) => void;
+
+let callback: Callback | null = null;
 
 function frame() {
-    callback(events);
+    callback!(events);
     events.events = [];
     window.requestAnimationFrame(frame);
 }
 
-export default function engine(cb) {
+export default function engine(cb: Callback) {
     callback = cb;
     window.requestAnimationFrame(frame);
 }
