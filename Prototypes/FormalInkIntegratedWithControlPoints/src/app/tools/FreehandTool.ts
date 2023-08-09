@@ -10,9 +10,11 @@ interface PositionWithPressure {
     pressure: number;
 }
 
+type Mode = 'unistroke' | 'multistroke';
+
 export default class FreehandTool extends Tool {
+    mode: Mode = 'unistroke';
     points?: (PositionWithPressure | null)[];
-    fingerId?: TouchId;
     element: any;
     pencilIsDown = false;
     dirty = false;
@@ -23,27 +25,6 @@ export default class FreehandTool extends Tool {
     }
 
     update(events: Events) {
-        const fingerDown = events.did('finger', 'began');
-        if (fingerDown != null) {
-            if (this.fingerId == null) {
-                console.log(fingerDown.id, 'down');
-                if (this.points == null) {
-                    this.fingerId = fingerDown.id;
-                }
-            } else {
-                console.log(fingerDown.id, '(down)');
-            }
-        }
-        
-        for (const fingerUp of events.didAll('finger', 'ended')) {
-            if (fingerUp.id === this.fingerId) {
-                console.log(fingerUp.id, 'up');
-                this.fingerId = undefined;
-            } else {
-                console.log(fingerUp.id, '(up)');
-            }
-        }
-
         const pencilDown = events.did('pencil', 'began') as PencilEvent | undefined;
         if (pencilDown != null) {
             this.pencilIsDown = true;
@@ -69,7 +50,7 @@ export default class FreehandTool extends Tool {
             this.pencilIsDown = false;
         }
 
-        if (this.fingerId == null && !this.pencilIsDown) {
+        if (!this.pencilIsDown && this.mode === 'unistroke') {
             this.endStroke();
         }
     }
@@ -88,6 +69,16 @@ export default class FreehandTool extends Tool {
         this.page.addFreehandStroke(this.points);
         this.points = undefined;
         this.dirty = true;
+    }
+
+    onAction() {
+        this.mode = this.mode === 'unistroke' ? 'multistroke' : 'unistroke';
+        console.log('toggled modes to', this.mode);
+    }
+
+    onDeselected() {
+        super.onDeselected();
+        this.mode = 'unistroke';
     }
 
     render(svg: SVG) {
