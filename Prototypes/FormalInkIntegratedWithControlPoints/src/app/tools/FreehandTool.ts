@@ -15,13 +15,14 @@ type Mode = 'unistroke' | 'multistroke';
 export default class FreehandTool extends Tool {
     mode: Mode = 'unistroke';
     points?: (PositionWithPressure | null)[];
-    element: any;
+    strokeElement: any;
+    multistrokeModeDotElement?: any;
     pencilIsDown = false;
     dirty = false;
 
-    constructor(svg: SVG, buttonX: number, buttonY: number, public page: Page) {
+    constructor(private svg: SVG, buttonX: number, buttonY: number, private page: Page) {
         super(svg, buttonX, buttonY);
-        this.element = svg.addElement('path', { d: '', ...strokeSvgProperties });
+        this.strokeElement = svg.addElement('path', { d: '', ...strokeSvgProperties });
     }
 
     update(events: Events) {
@@ -72,8 +73,15 @@ export default class FreehandTool extends Tool {
     }
 
     onAction() {
-        this.mode = this.mode === 'unistroke' ? 'multistroke' : 'unistroke';
-        console.log('toggled modes to', this.mode);
+        if (this.mode === 'unistroke') {
+            this.mode = 'multistroke';
+            this.multistrokeModeDotElement =
+                this.svg.addElement('circle', { cx: this.buttonX, cy: this.buttonY, r: 10, fill: 'white' });
+        } else {
+            this.mode = 'unistroke';
+            this.multistrokeModeDotElement!.remove();
+            this.multistrokeModeDotElement = undefined;
+        }
     }
 
     onDeselected() {
@@ -97,6 +105,6 @@ export default class FreehandTool extends Tool {
 
     updatePath() {
         const path = this.points == null ? '' : generatePathFromPoints(this.points);
-        this.element.setAttribute('d', path);
+        this.strokeElement.setAttribute('d', path);
     }
 }
