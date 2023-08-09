@@ -31,6 +31,7 @@ export default class App {
         ];
 
         this.toolPicker = new ToolPicker(this.tools);
+        this.toolPicker.select(this.tools[0]);
     }
 
     update(events: Events) {
