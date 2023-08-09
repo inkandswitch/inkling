@@ -77,18 +77,26 @@ export default class FreehandTool extends Tool {
     }
 
     onDeselected() {
+        if (this.points != undefined) {
+            this.endStroke();
+            this.updatePath();
+        }
+
         super.onDeselected();
         this.mode = 'unistroke';
     }
 
-    render(svg: SVG) {
+    render(_svg: SVG) {
         if (!this.dirty) {
             return;
         }
 
-        const path = this.points == null ? '' : generatePathFromPoints(this.points);
-        svg.updateElement(this.element, { d: path });
-
+        this.updatePath();
         this.dirty = false;
+    }
+
+    updatePath() {
+        const path = this.points == null ? '' : generatePathFromPoints(this.points);
+        this.element.setAttribute('d', path);
     }
 }
