@@ -1,50 +1,38 @@
-import { Events } from "../engine";
-import Page from "./Page";
-import Selection from "./Selection";
-import Snaps from "./Snaps";
-import SVG from "./Svg";
-import ToolPicker from "./ToolPicker";
-import FormalTool from "./tools/FormalTool";
-import FreehandTool from "./tools/FreehandTool";
-import TextTool from "./tools/TextTool";
-import { Tool } from "./tools/Tool";
+import EveryFrame from "./EveryFrame"
+import Events from "./NativeEvents"
+import Page from "./Page"
+import Selection from "./Selection"
+import Snaps from "./Snaps"
+import SVG from "./Svg"
+import ToolPicker from "./ToolPicker"
+import FormalTool from "./tools/FormalTool"
+import FreehandTool from "./tools/FreehandTool"
+import TextTool from "./tools/TextTool"
 
-export default class App {
-    svg: SVG;
-    page: Page;
-    snaps: Snaps;
-    selection: Selection;
-    tools: Tool[];
-    toolPicker: ToolPicker;
+const svg = new SVG()
+const page = new Page(svg)
+const snaps = new Snaps(page)
+const selection = new Selection(page, snaps)
 
-    constructor() {
-        this.svg = new SVG();
-        this.page = new Page(this.svg);
-        this.snaps = new Snaps(this.page);
+const tools = [
+  new FreehandTool(svg, 30, 30, page),
+  new FormalTool(svg, 30, 80, page, snaps),
+  new TextTool(svg, 30, 130, page),
+]
 
-        this.selection = new Selection(this.page, this.snaps);
+const toolPicker = new ToolPicker(tools)
 
-        this.tools = [
-            new FreehandTool(this.svg, 30, 30, this.page),
-            new FormalTool(this.svg, 30, 80, this.page, this.snaps),
-            new TextTool(this.svg, 30, 130, this.page),
-        ];
+toolPicker.select(tools[0])
 
-        this.toolPicker = new ToolPicker(this.tools);
-        this.toolPicker.select(this.tools[0]);
-    }
+EveryFrame((dt: number, time: number) => {
+  toolPicker.update(Events)
+  toolPicker.selected?.update(Events)
+  // morphing.update(Events);
+  selection.update(Events)
 
-    update(events: Events) {
-        this.toolPicker.update(events);
-        this.toolPicker.selected?.update(events);
+  toolPicker.selected?.render(svg)
+  snaps.render(svg)
+  page.render(svg)
 
-        // this.morphing.update(events);
-        this.selection.update(events);
-    }
-
-    render() {
-        this.toolPicker.selected?.render(this.svg);
-        this.snaps.render(this.svg);
-        this.page.render(this.svg);
-    }
-}
+  Events.clear()
+})
