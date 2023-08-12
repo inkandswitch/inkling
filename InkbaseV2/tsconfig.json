@@ -1,8 +1,17 @@
 {
   "compilerOptions": {
-    "lib": [
-      "ES2023",
-    ],
-    "strictNullChecks": true,
-  }
+    "allowJs": true,
+    "baseUrl": "src",
+    "checkJs": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "noImplicitAny": false,
+    "strict": true,
+    "target": "esnext"
+  },
+  "include": [
+    "src/**/*.d.ts",
+    "src/**/*.ts",
+    "src/**/*.js"
+  ]
 }

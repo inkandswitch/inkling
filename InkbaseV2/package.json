@@ -1,5 +1,5 @@
 {
-  "name": "yagt",
+  "name": "inkbase2",
   "version": "1.0.0",
   "description": "",
   "main": "",
@@ -14,5 +14,10 @@
   },
   "dependencies": {
     "perfect-freehand": "^1.2.0"
+  },
+  "prettier": {
+    "tabWidth": 2,
+    "semi": false,
+    "printWidth": 100
   }
 }
