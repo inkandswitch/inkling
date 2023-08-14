@@ -1,39 +1,39 @@
-import EveryFrame from "./EveryFrame"
-import Events from "./NativeEvents"
-import Page from "./Page"
-import Selection from "./Selection"
-import Snaps from "./Snaps"
-import SVG from "./Svg"
-import ToolPicker from "./ToolPicker"
-import FormalTool from "./tools/FormalTool"
-import FreehandTool from "./tools/FreehandTool"
-import TextTool from "./tools/TextTool"
+import EveryFrame from "./EveryFrame";
+import Events from "./NativeEvents";
+import Page from "./Page";
+import Selection from "./Selection";
+import Snaps from "./Snaps";
+import SVG from "./Svg";
+import ToolPicker from "./ToolPicker";
+import FormalTool from "./tools/FormalTool";
+import FreehandTool from "./tools/FreehandTool";
+import TextTool from "./tools/TextTool";
 
-const root = document.querySelector("svg") as SVGSVGElement
+const root = document.querySelector("svg") as SVGSVGElement;
 
-const events = new Events()
-const svg = new SVG(root)
-const page = new Page(svg)
-const snaps = new Snaps(page)
-const selection = new Selection(page, snaps)
+const events = new Events();
+const svg = new SVG(root);
+const page = new Page(svg);
+const snaps = new Snaps(page);
+const selection = new Selection(page, snaps);
 
 const tools = [
   new FreehandTool(svg, 30, 30, page),
   new FormalTool(svg, 30, 80, page, snaps),
   new TextTool(svg, 30, 130, page),
-]
+];
 
-const toolPicker = new ToolPicker(tools)
-toolPicker.select(tools[0])
+const toolPicker = new ToolPicker(tools);
+toolPicker.select(tools[0]);
 
-EveryFrame((dt: number, time: number) => {
-  toolPicker.update(events)
-  toolPicker.selected?.update(events)
+EveryFrame((dt, time) => {
+  toolPicker.update(events);
+  toolPicker.selected?.update(events);
   // morphing.update(events);
-  selection.update(events)
-  events.clear()
+  selection.update(events);
+  events.clear();
 
-  toolPicker.selected?.render(svg)
-  snaps.render(svg)
-  page.render(svg)
-})
+  toolPicker.selected?.render(svg);
+  snaps.render(svg);
+  page.render(svg);
+});

@@ -1,20 +1,20 @@
-import Vec from "../../lib/vec"
-import { generatePathFromPoints } from "../Svg"
-import generateId from "../generateId"
+import Vec from "../../lib/vec";
+import { generatePathFromPoints } from "../Svg";
+import generateId from "../generateId";
 
 export default class FreehandStrokeMorph {
-  id = generateId()
-  pointsMorphed
-  dirty = true
-  selected = false
-  elements
-  position
+  id = generateId();
+  pointsMorphed;
+  dirty = true;
+  selected = false;
+  elements;
+  position;
 
   constructor(svg, private points) {
-    this.id
-    this.pointsMorphed = points
+    this.id;
+    this.pointsMorphed = points;
 
-    const path = generatePathFromPoints(this.pointsMorphed)
+    const path = generatePathFromPoints(this.pointsMorphed);
     this.elements = {
       normal: svg.addElement("path", {
         d: path,
@@ -34,7 +34,7 @@ export default class FreehandStrokeMorph {
       //             stroke: 'none',
       //         }
       //     ),
-    }
+    };
   }
 
   applyMorphs(morphPoints) {
@@ -58,26 +58,26 @@ export default class FreehandStrokeMorph {
 
       // INTERPOLATION MORPHING 2
       let dists = morphPoints.map((morph) => {
-        const d = Vec.dist(morph.firstPosition, pt)
-        return 1 / Math.pow(d, 2)
-      })
+        const d = Vec.dist(morph.firstPosition, pt);
+        return 1 / Math.pow(d, 2);
+      });
 
-      const totalDist = dists.reduce((acc, d) => acc + d, 0)
-      dists = dists.map((d) => d / totalDist)
+      const totalDist = dists.reduce((acc, d) => acc + d, 0);
+      dists = dists.map((d) => d / totalDist);
 
       const vecs = morphPoints.map((morph, i) => {
-        const multiplyer = dists[i]
-        const translation = Vec.mulS(morph.morphVector, multiplyer)
+        const multiplyer = dists[i];
+        const translation = Vec.mulS(morph.morphVector, multiplyer);
 
         const rotated = Vec.rotateAround(
           pt,
           morph.firstPosition,
           morph.angle * multiplyer * multiplyer
-        )
-        const rotationDelta = Vec.sub(rotated, pt)
+        );
+        const rotationDelta = Vec.sub(rotated, pt);
 
-        return Vec.add(translation, rotationDelta)
-      })
+        return Vec.add(translation, rotationDelta);
+      });
 
       // FALLOFF MORPHING
       // const vecs = morphPoints.map((morph, i) => {
@@ -98,34 +98,34 @@ export default class FreehandStrokeMorph {
       //     return Vec.mulS(morph.morphVector, multiplier);
       // })
 
-      const totalVec = vecs.reduce((acc, v) => Vec.add(acc, v), Vec(0, 0))
-      return Vec.add(pt, totalVec)
-    })
-    this.dirty = true
+      const totalVec = vecs.reduce((acc, v) => Vec.add(acc, v), Vec(0, 0));
+      return Vec.add(pt, totalVec);
+    });
+    this.dirty = true;
   }
 
   move(position) {
-    this.dirty = true
-    this.position = position
+    this.dirty = true;
+    this.position = position;
   }
 
   select() {
-    this.dirty = true
-    this.selected = true
+    this.dirty = true;
+    this.selected = true;
   }
 
   deselect() {
-    this.dirty = true
-    this.selected = false
+    this.dirty = true;
+    this.selected = false;
   }
 
   render(svg) {
     if (!this.dirty) {
-      return
+      return;
     }
 
-    const path = generatePathFromPoints(this.pointsMorphed)
-    svg.updateElement(this.elements.normal, { d: path })
-    this.dirty = false
+    const path = generatePathFromPoints(this.pointsMorphed);
+    svg.updateElement(this.elements.normal, { d: path });
+    this.dirty = false;
   }
 }

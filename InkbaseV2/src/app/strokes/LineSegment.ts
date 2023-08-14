@@ -1,10 +1,10 @@
-import generateId from "../generateId"
+import generateId from "../generateId";
 
 export default class LineSegment {
-  id = generateId()
-  dirty = true
-  selected = false
-  elements
+  id = generateId();
+  dirty = true;
+  selected = false;
+  elements;
 
   constructor(svg, public a, public b) {
     const normalAttributes = {
@@ -14,7 +14,7 @@ export default class LineSegment {
       y2: this.b.position.y,
       "stroke-width": 1,
       stroke: "black",
-    }
+    };
     this.elements = {
       normal: svg.addElement("line", normalAttributes),
       selected: svg.addElement("line", {
@@ -22,17 +22,17 @@ export default class LineSegment {
         "stroke-width": 7,
         stroke: "none",
       }),
-    }
+    };
   }
 
   select() {
-    this.dirty = true
-    this.selected = true
+    this.dirty = true;
+    this.selected = true;
   }
 
   deselect() {
-    this.dirty = true
-    this.selected = false
+    this.dirty = true;
+    this.selected = false;
   }
 
   render(svg) {
@@ -42,14 +42,14 @@ export default class LineSegment {
         y1: this.a.position.y,
         x2: this.b.position.x,
         y2: this.b.position.y,
-      }
-      svg.updateElement(this.elements.normal, normalAttributes)
+      };
+      svg.updateElement(this.elements.normal, normalAttributes);
       svg.updateElement(this.elements.selected, {
         ...normalAttributes,
         stroke: this.selected ? "rgba(180, 134, 255, 0.42)" : "none",
-      })
+      });
 
-      this.dirty = false
+      this.dirty = false;
     }
   }
 }

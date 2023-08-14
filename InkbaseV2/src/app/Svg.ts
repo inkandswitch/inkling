@@ -4,14 +4,14 @@ export default class SVG {
   constructor(private root: SVGSVGElement) {}
 
   addElement(type: string, attributes: Record<string, any>) {
-    const elem: SVGElement = document.createElementNS("http://www.w3.org/2000/svg", type)
-    this.updateElement(elem, attributes)
-    this.root.appendChild(elem)
-    return elem
+    const elem: SVGElement = document.createElementNS("http://www.w3.org/2000/svg", type);
+    this.updateElement(elem, attributes);
+    this.root.appendChild(elem);
+    return elem;
   }
 
   updateElement(elem: SVGElement, attributes: Record<string, any>) {
-    Object.entries(attributes).forEach(([key, value]) => elem.setAttribute(key, value))
+    Object.entries(attributes).forEach(([key, value]) => elem.setAttribute(key, value));
   }
 }
 
@@ -32,25 +32,25 @@ const GET_STROKE_OPTIONS = {
     cap: true,
   },
   simulatePressure: false,
-}
+};
 
 function toSvgPath(stroke) {
-  console.log("s", stroke)
+  console.log("s", stroke);
   const d = stroke.reduce(
     (acc, [x0, y0], i, arr) => {
-      const [x1, y1] = arr[(i + 1) % arr.length]
-      acc.push(x0, y0, (x0 + x1) / 2, (y0 + y1) / 2)
-      return acc
+      const [x1, y1] = arr[(i + 1) % arr.length];
+      acc.push(x0, y0, (x0 + x1) / 2, (y0 + y1) / 2);
+      return acc;
     },
     ["M", ...stroke[0], "Q"]
-  )
-  d.push("Z")
-  return d.join(" ")
+  );
+  d.push("Z");
+  return d.join(" ");
 }
 
 // TODO: maybe this should live somewhere else, tbd
 export function generatePathFromPoints(points) {
-  return pointsToPath(points)
+  return pointsToPath(points);
 
   // if (points[0]?.pressure == null) {
   //     return pointsToPath(points);
@@ -75,16 +75,16 @@ export function generatePathFromPoints(points) {
 // }
 
 function pointsToPath(points) {
-  const parts: string[] = []
-  let nextCommand = "M"
+  const parts: string[] = [];
+  let nextCommand = "M";
   for (const p of points) {
     if (p == null) {
-      nextCommand = "M"
-      continue
+      nextCommand = "M";
+      continue;
     }
 
-    parts.push(`${nextCommand} ${p.x} ${p.y}`)
-    nextCommand = "L"
+    parts.push(`${nextCommand} ${p.x} ${p.y}`);
+    nextCommand = "L";
   }
-  return parts.filter((part) => part != null).join(" ")
+  return parts.filter((part) => part != null).join(" ");
 }

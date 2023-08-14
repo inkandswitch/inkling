@@ -1,30 +1,30 @@
-export type Event = PencilEvent | FingerEvent
-export type EventType = Event["type"]
-export type EventState = "began" | "moved" | "cancelled" | "ended"
-export type TouchId = string
+export type Event = PencilEvent | FingerEvent;
+export type EventType = Event["type"];
+export type EventState = "began" | "moved" | "cancelled" | "ended";
+export type TouchId = string;
 
 interface Position {
-  x: number
-  y: number
+  x: number;
+  y: number;
 }
 
 interface AEvent {
-  state: EventState
-  id: TouchId
-  position: Position
-  timestamp: number
-  radius: number
+  state: EventState;
+  id: TouchId;
+  position: Position;
+  timestamp: number;
+  radius: number;
 }
 
 export interface PencilEvent extends AEvent {
-  type: "pencil"
-  pressure: number
-  altitude: number
-  azimuth: number
+  type: "pencil";
+  pressure: number;
+  altitude: number;
+  azimuth: number;
 }
 
 export interface FingerEvent extends AEvent {
-  type: "finger"
+  type: "finger";
 }
 
 // If we fixed the following inconsistencies, we could delete most of nativeEvent:
@@ -34,58 +34,58 @@ export interface FingerEvent extends AEvent {
 // • .force -> .pressure
 
 type TouchPoint = {
-  type: "pencil" | "touch" | "stylus"
-  altitude: number
-  azimuth: number
-  force: number
-  radius: number
-  timestamp: number
-  x: number
-  y: number
-}
+  type: "pencil" | "touch" | "stylus";
+  altitude: number;
+  azimuth: number;
+  force: number;
+  radius: number;
+  timestamp: number;
+  x: number;
+  y: number;
+};
 
 export default class Events {
-  events: Event[] = []
+  events: Event[] = [];
 
   // These are unused, so Ivan commented them out as a precursor to deleting them.
   // activePencil?: Position
   // activeFingers: { [key: TouchId]: Position } = {}
 
   constructor() {
-    this.setupNativeEventHandler()
+    this.setupNativeEventHandler();
   }
 
   clear() {
-    this.events = []
+    this.events = [];
   }
 
   add(event: Event) {
-    this.events.push(event)
+    this.events.push(event);
   }
 
   did(type: EventType, state: EventState, id?: TouchId) {
     return this.events.find(
       (e) => e.type === type && e.state === state && (id == null || e.id === id)
-    )
+    );
   }
 
   didAll(type: EventType, state: EventState, id?: TouchId) {
     return this.events.filter(
       (e) => e.type === type && e.state === state && (id == null || e.id === id)
-    )
+    );
   }
 
   didLast(type: EventType, state: EventState, id?: TouchId) {
     return this.events.findLast(
       (e) => e.type === type && e.state === state && (id == null || e.id === id)
-    )
+    );
   }
 
   private setupNativeEventHandler() {
-    ;(window as any).nativeEvent = (state: EventState, touches: Record<TouchId, TouchPoint[]>) => {
+    (window as any).nativeEvent = (state: EventState, touches: Record<TouchId, TouchPoint[]>) => {
       for (let id in touches) {
         for (let point of touches[id]) {
-          let { type, timestamp, radius, force, altitude, azimuth, x, y } = point
+          let { type, timestamp, radius, force, altitude, azimuth, x, y } = point;
 
           const sharedProperties = {
             state,
@@ -93,7 +93,7 @@ export default class Events {
             position: { x, y },
             timestamp,
             radius,
-          }
+          };
 
           const event: Event =
             type == "touch"
@@ -107,9 +107,9 @@ export default class Events {
                   altitude,
                   azimuth,
                   ...sharedProperties,
-                }
+                };
 
-          this.add(event)
+          this.add(event);
 
           // This code is unused, so Ivan commented it out as a precursor to deleting it.
           // if (event.type === "pencil") {
@@ -123,6 +123,6 @@ export default class Events {
           // }
         }
       }
-    }
+    };
   }
 }

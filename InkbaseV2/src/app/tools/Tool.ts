@@ -1,21 +1,21 @@
-import Events from "../NativeEvents"
-import SVG from "../Svg"
+import Events from "../NativeEvents";
+import SVG from "../Svg";
 
 export class Tool {
-  button: any
-  isSelected = false
+  button: any;
+  isSelected = false;
 
   constructor(svg: SVG, public buttonX: number, public buttonY: number) {
-    this.button = svg.addElement("circle", { cx: buttonX, cy: buttonY, r: 20 })
-    this.refreshButton()
+    this.button = svg.addElement("circle", { cx: buttonX, cy: buttonY, r: 20 });
+    this.refreshButton();
   }
 
   onSelected() {
     if (this.isSelected) {
-      this.onAction()
+      this.onAction();
     } else {
-      this.isSelected = true
-      this.refreshButton()
+      this.isSelected = true;
+      this.refreshButton();
     }
   }
 
@@ -24,8 +24,8 @@ export class Tool {
   }
 
   onDeselected() {
-    this.isSelected = false
-    this.refreshButton()
+    this.isSelected = false;
+    this.refreshButton();
   }
 
   update(_events: Events) {
@@ -37,6 +37,6 @@ export class Tool {
   }
 
   private refreshButton() {
-    this.button.setAttribute("fill", this.isSelected ? "black" : "lightgrey")
+    this.button.setAttribute("fill", this.isSelected ? "black" : "lightgrey");
   }
 }

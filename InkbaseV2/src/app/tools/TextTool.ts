@@ -1,27 +1,27 @@
-import Page from "../Page"
-import SVG from "../Svg"
-import { Tool } from "./Tool"
+import Page from "../Page";
+import SVG from "../Svg";
+import { Tool } from "./Tool";
 
 export default class TextTool extends Tool {
-  points: any[] = []
-  element: any
+  points: any[] = [];
+  element: any;
 
   constructor(public svg: SVG, buttonX: number, buttonY: number, public page: Page) {
-    super(svg, buttonX, buttonY)
+    super(svg, buttonX, buttonY);
   }
 
   update(events) {
-    const pencilDown = events.did("pencil", "began")
+    const pencilDown = events.did("pencil", "began");
     if (pencilDown) {
-      this.points = [pencilDown.position]
+      this.points = [pencilDown.position];
     }
 
-    const pencilMove = events.did("pencil", "moved")
+    const pencilMove = events.did("pencil", "moved");
     if (pencilMove) {
-      this.points.push(pencilMove.position)
+      this.points.push(pencilMove.position);
     }
 
-    const pencilUp = events.did("pencil", "ended")
+    const pencilUp = events.did("pencil", "ended");
     if (pencilUp) {
     }
   }

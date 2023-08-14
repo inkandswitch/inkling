@@ -2,63 +2,69 @@ import Vec from "../../lib/vec";
 
 // A connection between two strokes
 interface Connection {
-  position: any,
-  strokes: any[],
-  indexes: Number[],
-  aligned: Boolean // True if roughly aligned, false if roughly perpendicular
+  position: any;
+  strokes: any[];
+  indexes: Number[];
+  aligned: Boolean; // True if roughly aligned, false if roughly perpendicular
 }
 
 // Stroke Graph is the datastructure responsible for holding information about groupings of strokes
 export default class StrokeGraph {
-  strokes: any[] = []
-  groups: any[] = []
-  connections: Connection[] = []
-  
-  dirty = false
-  elements: any[] = []
+  strokes: any[] = [];
+  groups: any[] = [];
+  connections: Connection[] = [];
 
-  addStroke(stroke){
+  dirty = false;
+  elements: any[] = [];
+
+  addStroke(stroke) {
     // Generate closest strokes for this stroke
-    for(const otherStroke of this.strokes) {
+    for (const otherStroke of this.strokes) {
       const closestPoint = closestPointsBetweenStrokes(stroke.points, otherStroke.points);
-      if(closestPoint.dist < 20) {
-        const midPoint = Vec.mulS(Vec.add(stroke.points[closestPoint.indexA], otherStroke.points[closestPoint.indexB]), 0.5);
-        
+      if (closestPoint.dist < 20) {
+        const midPoint = Vec.mulS(
+          Vec.add(stroke.points[closestPoint.indexA], otherStroke.points[closestPoint.indexB]),
+          0.5
+        );
+
         // Determine alignment at connection point
         let dirA = getDirectionAtStrokePoint(stroke.points, closestPoint.indexA);
         let dirB = getDirectionAtStrokePoint(otherStroke.points, closestPoint.indexB);
-        let alignment = Math.abs(Vec.cross(dirA, dirB))
+        let alignment = Math.abs(Vec.cross(dirA, dirB));
         let aligned = alignment < 0.3;
 
         this.connections.push({
-          position: midPoint, 
-          strokes: [stroke, otherStroke], 
-          indexes: [closestPoint.indexA, closestPoint.indexB], 
-          aligned
+          position: midPoint,
+          strokes: [stroke, otherStroke],
+          indexes: [closestPoint.indexA, closestPoint.indexB],
+          aligned,
         });
       }
-    }    
-    this.strokes.push(stroke)
+    }
+    this.strokes.push(stroke);
 
-    this.dirty = true
+    this.dirty = true;
   }
 
   render(svg) {
-    if(!this.dirty) {
-      return
+    if (!this.dirty) {
+      return;
     }
 
-    this.elements.forEach(elem=>elem.remove());
+    this.elements.forEach((elem) => elem.remove());
 
-    this.elements = this.connections.map(c=>{
-      return svg.addElement('circle', { cx: c.position.x, cy: c.position.y, r: 3, fill: c.aligned ? 'pink': 'green' })
-    })
+    this.elements = this.connections.map((c) => {
+      return svg.addElement("circle", {
+        cx: c.position.x,
+        cy: c.position.y,
+        r: 3,
+        fill: c.aligned ? "pink" : "green",
+      });
+    });
 
     this.dirty = false;
   }
- 
 }
-
 
 function closestPointsBetweenStrokes(strokeA, strokeB) {
   let minDist = Vec.dist(strokeA[0], strokeB[0]);
@@ -67,10 +73,10 @@ function closestPointsBetweenStrokes(strokeA, strokeB) {
 
   for (let i = 0; i < strokeA.length; i++) {
     for (let j = 0; j < strokeB.length; j++) {
-      if(strokeA[i] == null ||  strokeB[j] == null) continue
+      if (strokeA[i] == null || strokeB[j] == null) continue;
 
       const dist = Vec.dist(strokeA[i], strokeB[j]);
-      if(dist < minDist) {
+      if (dist < minDist) {
         minDist = dist;
         indexA = i;
         indexB = j;
@@ -78,18 +84,18 @@ function closestPointsBetweenStrokes(strokeA, strokeB) {
     }
   }
 
-  return {dist: minDist, indexA, indexB}
+  return { dist: minDist, indexA, indexB };
 }
 
-function getDirectionAtStrokePoint(stroke, index){
+function getDirectionAtStrokePoint(stroke, index) {
   let backwardIndex = index - 10;
-  if(backwardIndex < 0) {
+  if (backwardIndex < 0) {
     backwardIndex = 0;
   }
 
   let forwardIndex = index + 10;
-  if(forwardIndex > stroke.length-1) {
-    forwardIndex = stroke.length-1;
+  if (forwardIndex > stroke.length - 1) {
+    forwardIndex = stroke.length - 1;
   }
 
   return Vec.normalize(Vec.sub(stroke[backwardIndex], stroke[forwardIndex]));

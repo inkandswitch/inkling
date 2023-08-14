@@ -1,51 +1,51 @@
-import SVG from "../Svg"
-import generateId from "../generateId"
+import SVG from "../Svg";
+import generateId from "../generateId";
 
 export default class Point {
-  id = generateId()
-  dirty = true
-  selected = false
-  elements: Record<string, SVGElement>
+  id = generateId();
+  dirty = true;
+  selected = false;
+  elements: Record<string, SVGElement>;
 
   constructor(private svg: SVG, public position: { x: number; y: number }) {
     this.elements = {
       normal: svg.addElement("circle", { cx: 0, cy: 0, r: 3, fill: "black" }),
       selected: svg.addElement("circle", { cx: 0, cy: 0, r: 7, fill: "none" }),
-    }
+    };
   }
 
   setPosition(position) {
-    this.dirty = true
-    this.position = position
+    this.dirty = true;
+    this.position = position;
   }
 
   select() {
-    this.dirty = true
-    this.selected = true
+    this.dirty = true;
+    this.selected = true;
   }
 
   deselect() {
-    this.dirty = true
-    this.selected = false
+    this.dirty = true;
+    this.selected = false;
   }
 
   remove() {
-    this.elements.normal.remove()
-    this.elements.selected.remove()
+    this.elements.normal.remove();
+    this.elements.selected.remove();
   }
 
   render(svg) {
     if (this.dirty) {
       svg.updateElement(this.elements.normal, {
         transform: `translate(${this.position.x} ${this.position.y})`,
-      })
+      });
 
       svg.updateElement(this.elements.selected, {
         transform: `translate(${this.position.x} ${this.position.y})`,
         fill: this.selected ? "rgba(180, 134, 255, 0.42)" : "none",
-      })
+      });
 
-      this.dirty = false
+      this.dirty = false;
     }
   }
 }
