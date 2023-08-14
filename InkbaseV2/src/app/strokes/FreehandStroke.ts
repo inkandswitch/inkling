@@ -33,8 +33,6 @@ export default class FreehandStroke {
     this.points = points
     
     // Store normalised point data based on control points
-    console.log(cp1Pos, cp2Pos);
-    
     let transform = new TransformationMatrix().fromLine(cp1Pos, cp2Pos).inverse()
     this.pointData = points.map(p=>{
       if(p === null) {
