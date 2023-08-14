@@ -180,7 +180,7 @@ export default class TransformationMatrix {
     }
   }
 
-  fromLine(a, b) {
+  fromLineTranslateRotate(a, b) {
     const line = Vec.sub(b, a)
 
     this.translate(a.x, a.y)
@@ -189,7 +189,7 @@ export default class TransformationMatrix {
     return this
   }
 
-  fromLineWithScale(a, b) {
+  fromLine(a, b) {
     const line = Vec.sub(b, a)
     const length = Vec.len(line);
 

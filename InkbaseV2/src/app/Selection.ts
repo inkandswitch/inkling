@@ -46,7 +46,7 @@ export default class Selection {
         const transform = new TransformationMatrix()
         const a = Vec.divS(Vec.add(this.firstFingerMoved.position, this.secondFinger.position), 2)
         const b = this.secondFinger.position
-        transform.fromLine(a, b).inverse()
+        transform.fromLineTranslateRotate(a, b).inverse()
         for (const point of this.points) {
           this.origPosition.set(point, transform.transformPoint(point.position))
         }
@@ -152,7 +152,7 @@ export default class Selection {
         2
       )
       const b = this.secondFingerMoved.position
-      transform.fromLine(a, b)
+      transform.fromLineTranslateRotate(a, b)
     } else {
       const p = this.firstFingerMoved.position
       transform.translate(p.x, p.y)

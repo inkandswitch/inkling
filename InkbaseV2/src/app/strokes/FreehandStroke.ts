@@ -20,7 +20,6 @@ export default class FreehandStroke {
   pointData
   element
   dirty = true
-  transform
 
   constructor(svg, points, cp1, cp2) {
     const [cp1Pos, cp2Pos] = farthestPair(points.filter((p) => p != null))
@@ -34,8 +33,13 @@ export default class FreehandStroke {
     this.points = points
     
     // Store normalised point data based on control points
-    let transform = new TransformationMatrix().fromLineWithScale(cp1Pos, cp2Pos).inverse()
+    console.log(cp1Pos, cp2Pos);
+    
+    let transform = new TransformationMatrix().fromLine(cp1Pos, cp2Pos).inverse()
     this.pointData = points.map(p=>{
+      if(p === null) {
+        return null
+      }
       let np = transform.transformPoint(p)
       return {...np, pressure: p.pressure }
     })
@@ -51,16 +55,15 @@ export default class FreehandStroke {
   }
 
   updatePath(svg) {
-    let transform = new TransformationMatrix().fromLineWithScale(this.controlPoints[0].position, this.controlPoints[1].position)
+    let transform = new TransformationMatrix().fromLine(this.controlPoints[0].position, this.controlPoints[1].position)
 
-    this.points = this.pointData.map((pd) =>
-      pd == null
-        ? null
-        : ((p) => {
-          let np = transform.transformPoint(p)
+    this.points = this.pointData.map((p) => {
+      if(p === null) {
+        return null
+      }
+      let np = transform.transformPoint(p)
           return {...np, pressure: p.pressure }
-          })(pd)
-    )
+    })
     const path = generatePathFromPoints(this.points)
     svg.updateElement(this.element, { d: path })
   }
