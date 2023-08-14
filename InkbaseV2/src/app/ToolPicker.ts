@@ -1,5 +1,5 @@
 import Vec from "../lib/vec"
-import { Events } from "./NativeEvents"
+import Events from "./NativeEvents"
 import { Tool } from "./tools/Tool"
 
 export default class ToolPicker {

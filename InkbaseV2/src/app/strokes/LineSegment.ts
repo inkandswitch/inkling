@@ -1,12 +1,12 @@
 import generateId from "../generateId"
 
 export default class LineSegment {
-  constructor(svg, a, b) {
-    this.id = generateId()
-    this.a = a
-    this.b = b
-    this.dirty = true
-    this.selected = false
+  id = generateId()
+  dirty = true
+  selected = false
+  elements
+
+  constructor(svg, public a, public b) {
     const normalAttributes = {
       x1: this.a.position.x,
       y1: this.a.position.y,

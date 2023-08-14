@@ -9,7 +9,10 @@ import FormalTool from "./tools/FormalTool"
 import FreehandTool from "./tools/FreehandTool"
 import TextTool from "./tools/TextTool"
 
-const svg = new SVG()
+const root = document.querySelector("svg") as SVGSVGElement
+
+const events = new Events()
+const svg = new SVG(root)
 const page = new Page(svg)
 const snaps = new Snaps(page)
 const selection = new Selection(page, snaps)
@@ -25,14 +28,13 @@ const toolPicker = new ToolPicker(tools)
 toolPicker.select(tools[0])
 
 EveryFrame((dt: number, time: number) => {
-  toolPicker.update(Events)
-  toolPicker.selected?.update(Events)
-  // morphing.update(Events);
-  selection.update(Events)
+  toolPicker.update(events)
+  toolPicker.selected?.update(events)
+  // morphing.update(events);
+  selection.update(events)
+  events.clear()
 
   toolPicker.selected?.render(svg)
   snaps.render(svg)
   page.render(svg)
-
-  Events.clear()
 })

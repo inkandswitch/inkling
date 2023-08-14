@@ -10,14 +10,12 @@ const DEGREES_TO_RADIANS = Math.PI / 180
 const RADIANS_TO_DEGREES = 180 / Math.PI
 
 export default class TransformationMatrix {
-  constructor() {
-    this.a = 1
-    this.b = 0
-    this.c = 0
-    this.d = 1
-    this.e = 0
-    this.f = 0
-  }
+  a = 1
+  b = 0
+  c = 0
+  d = 1
+  e = 0
+  f = 0
 
   reset() {
     this.a = 1

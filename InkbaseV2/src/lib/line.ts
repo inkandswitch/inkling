@@ -133,7 +133,7 @@ Line.closestPoint = (line, point, strict = true) => {
 Line.spreadPointsAlong = (line, n) => {
   const segLength = Line.len(line) / n
   const offsetSeg = Vec.mulS(Line.directionVec(line), segLength)
-  const points = []
+  const points: any = []
   for (let i = 0; i < n; i++) {
     points.push(Vec.add(line.a, Vec.mulS(offsetSeg, i)))
   }

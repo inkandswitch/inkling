@@ -2,7 +2,7 @@ import Arc from "./arc"
 import Line from "./line"
 import Vec from "./vec"
 
-const Fit = {}
+const Fit: { [name: string]: Function } = {}
 export default Fit
 
 Fit.line = (stroke) => {

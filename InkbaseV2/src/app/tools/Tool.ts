@@ -1,4 +1,4 @@
-import { Events } from "../NativeEvents"
+import Events from "../NativeEvents"
 import SVG from "../Svg"
 
 export class Tool {

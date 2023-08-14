@@ -11,9 +11,13 @@ export const strokeSvgProperties = {
 }
 
 export default class FreehandStroke {
-  constructor(svg, points, cp1, cp2) {
-    this.id = generateId()
+  id = generateId()
+  controlPoints: any[]
+  pointData
+  element
+  dirty = true
 
+  constructor(svg, points, cp1, cp2) {
     const [cp1Pos, cp2Pos] = farthestPair(points.filter((p) => p != null))
     cp1.setPosition(cp1Pos)
     cp2.setPosition(cp2Pos)
@@ -35,8 +39,6 @@ export default class FreehandStroke {
       d: "",
       ...strokeSvgProperties,
     })
-
-    this.dirty = true
   }
 
   currentAngle() {
@@ -50,7 +52,7 @@ export default class FreehandStroke {
       pd == null
         ? null
         : (({ lengthMultiplier, angleOffset, pressure }) => {
-            const p = Vec.add(
+            const p: any = Vec.add(
               this.controlPoints[0].position,
               Vec.polar(angle + angleOffset, length * lengthMultiplier)
             )

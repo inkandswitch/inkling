@@ -1,18 +1,17 @@
 import Vec from "../lib/vec"
 
 export default class Snaps {
-  constructor(page) {
-    this.page = page
-    this.activeSnaps = []
+  activeSnaps: any[] = []
 
-    // rendering
-    this.snapSvgElementById = new Map()
-    this.dirty = false
-  }
+  // rendering
+  snapSvgElementById = new Map<any, any>()
+  dirty = false
+
+  constructor(private page) {}
 
   // returns Map<Point, snap position>
   snapPositions(transformedPositions) {
-    const snaps = []
+    const snaps: any[] = []
     const snapPositions = new Map()
     const snapPoints = this.page.points.filter((p) => !transformedPositions.has(p))
     const selectedPoints = Array.from(transformedPositions.keys())
@@ -26,7 +25,7 @@ export default class Snaps {
         continue
       }
 
-      const snapVectors = []
+      const snapVectors: any[] = []
 
       // snap to point
       for (const snapPoint of snapPoints) {
@@ -123,9 +122,9 @@ export default class Snaps {
 }
 
 class Snap {
-  constructor(point, snapPoint) {
-    this.point = point
-    this.snapPoint = snapPoint
+  id: string
+
+  constructor(protected point, protected snapPoint) {
     this.id = `${point.id}.${snapPoint.id}.${this.constructor.name}`
   }
 

@@ -2,34 +2,25 @@ import generateId from "../generateId"
 import Vec from "../../lib/vec"
 
 export default class ArcSegment {
-  constructor(svg, a, b, c) {
-    this.id = generateId()
-    this.a = a
-    this.b = b
-    this.c = c
-    this.dirty = true
-    this.selected = false
+  id = generateId()
+  dirty = true
+  selected = false
+  isLargeArc = 0 // more than 180
+  clockwise = 1 // clockwise or counterclockwise
+  xAxisRotation = 0
+  radius: number
+  path: string = ""
+  elements: { normal: any; selected: any }
 
-    this.radius = Vec.dist(this.a.position, this.c.position)
-    this.isLargeArc = 0 // more than 180
-    this.clockwise = 1 // clockwise or counterclockwise
-    this.xAxisRotation = 0
+  constructor(private svg, public a, public b, public c) {
+    this.radius = Vec.dist(a.position, c.position)
 
     this.updatePath()
 
-    const normalAttributes = {
-      d: this.path,
-      "stroke-width": 1,
-      stroke: "black",
-      fill: "none",
-    }
+    const attrs = { d: this.path, fill: "none" }
     this.elements = {
-      normal: svg.addElement("path", normalAttributes),
-      selected: svg.addElement("path", {
-        ...normalAttributes,
-        "stroke-width": 7,
-        stroke: "none",
-      }),
+      normal: svg.addElement("path", { ...attrs, "stroke-width": 1, stroke: "black" }),
+      selected: svg.addElement("path", { ...attrs, "stroke-width": 7, stroke: "none" }),
     }
   }
 

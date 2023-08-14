@@ -1,3 +1,4 @@
+import SVG from "./Svg"
 import Vec from "../lib/vec"
 import ArcSegment from "./strokes/ArcSegment"
 import LineSegment from "./strokes/LineSegment"
@@ -8,16 +9,15 @@ import ControlPoint from "./strokes/ControlPoint"
 import MorphPoint from "./strokes/MorphPoint"
 
 export default class Page {
-  constructor(svg) {
-    this.svg = svg
-    this.points = []
-    this.morphPoints = []
+  points: Point[] = []
+  morphPoints: MorphPoint[] = []
 
-    // TODO: figure out a better model for how to store different kinds of strokes
-    // For now just keep them separate, until we have a better idea of what freehand strokes look like
-    this.lineSegments = []
-    this.freehandStrokes = []
-  }
+  // TODO: figure out a better model for how to store different kinds of strokes
+  // For now just keep them separate, until we have a better idea of what freehand strokes look like
+  lineSegments: Array<LineSegment | ArcSegment> = []
+  freehandStrokes: FreehandStroke[] = []
+
+  constructor(private svg: SVG) {}
 
   addPoint(position) {
     const p = new Point(this.svg, position)
@@ -25,7 +25,7 @@ export default class Page {
     return p
   }
 
-  addControlPoint(position, parent) {
+  addControlPoint(position, parent?) {
     const p = new ControlPoint(this.svg, position, parent)
     this.points.push(p)
     return p
@@ -60,7 +60,7 @@ export default class Page {
   }
 
   findPointNear(position, dist = 20) {
-    let closestPoint = null
+    let closestPoint: Point | null = null
     let closestDistance = dist
 
     for (const point of this.points) {
@@ -75,7 +75,7 @@ export default class Page {
   }
 
   findMorphPointNear(position, dist = 20) {
-    let closestPoint = null
+    let closestPoint: MorphPoint | null = null
     let closestDistance = dist
 
     for (const point of this.morphPoints) {
@@ -109,7 +109,7 @@ export default class Page {
       if (pointsToMerge.has(ls.b)) {
         ls.b = point
       }
-      if (pointsToMerge.has(ls.c)) {
+      if (ls instanceof ArcSegment && pointsToMerge.has(ls.c)) {
         ls.c = point
       }
     }

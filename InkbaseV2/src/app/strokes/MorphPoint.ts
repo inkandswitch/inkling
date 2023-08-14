@@ -2,15 +2,16 @@ import Vec from "../../lib/vec"
 import generateId from "../generateId"
 
 export default class MorphPoint {
-  constructor(svg, position) {
-    this.id = generateId()
-    this.firstPosition = position
-    this.position = position
-    this.morphVector = Vec(0, 0)
-    this.angle = 0
+  id = generateId()
+  firstPosition
+  morphVector = Vec(0, 0)
+  angle = 0
+  dirty = true
+  selected = false
+  elements
 
-    this.dirty = true
-    this.selected = false
+  constructor(svg, public position) {
+    this.firstPosition = position
     this.elements = {
       normal: svg.addElement("circle", { cx: 0, cy: 0, r: 30, fill: "none", stroke: "lightgrey" }),
       ghost: svg.addElement("circle", { cx: 0, cy: 0, r: 30, fill: "none", stroke: "lightgrey" }),

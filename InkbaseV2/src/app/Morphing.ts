@@ -3,19 +3,14 @@ import Vec from "../lib/vec"
 // TODO(alex): figure out how to make this only one of the interaction models
 // for freehand strokes (code architecture-wise)
 export default class Morphing {
-  constructor(page) {
-    this.page = page
+  firstFinger: any
+  firstFingerMoved: any
+  secondFinger: any
+  secondFingerMoved: any
+  draggingMorph: any
+  draggingAngle: any
 
-    // gesture state
-    this.firstFinger = null
-    this.firstFingerMoved = null
-
-    this.secondFinger = null
-    this.secondFingerMoved = null
-
-    this.draggingMorph = null
-    this.draggingAngle = null
-  }
+  constructor(private page) {}
 
   update(events) {
     const fingerDown = events.did("finger", "began")

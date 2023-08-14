@@ -24,7 +24,7 @@ Arc.distToPointCircle = (circle, point) => {
 }
 
 Arc.spreadPointsAlong = (arc, n) => {
-  const points = []
+  const points: any = []
 
   const innerAngle = Arc.directedInnerAngle(arc)
   const angleStep = innerAngle / (n - 1)

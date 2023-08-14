@@ -6,31 +6,24 @@ import SVG, { generatePathFromPoints } from "../Svg.js"
 import { Tool } from "./Tool.js"
 
 export default class FormalTool extends Tool {
-  constructor(svg: SVG, buttonX: number, buttonY: number, page, snaps) {
+  element
+  // Data for guessing
+  inputPoints
+  idealPoints
+  renderPoints
+  // Speed (not velocity, lol)
+  speed = 0
+  maxSpeed = 0
+  previousPosition
+  // Curve fitting
+  mode = "unknown" // unknown, guess, can still change, fixed
+  fit
+  // Fixed mode
+  fixedStroke
+  dirty
+
+  constructor(svg: SVG, buttonX: number, buttonY: number, private page, private snaps) {
     super(svg, buttonX, buttonY)
-
-    this.page = page
-    this.snaps = snaps
-
-    // Svg rendering
-    this.element = null
-
-    // Data for guessing
-    this.inputPoints = null
-    this.idealPoints = null
-    this.renderPoints = null
-
-    // Speed (not velocity, lol)
-    this.speed = 0
-    this.maxSpeed = 0
-    this.previousPosition = null
-
-    // Curve fitting
-    this.mode = "unknown" // unknown, guess, can still change, fixed
-    this.fit = null
-
-    // Fixed mode
-    this.fixedStroke = null
   }
 
   update(events) {

@@ -2,20 +2,17 @@ import TransformationMatrix from "../lib/transform_matrix"
 import Vec from "../lib/vec"
 
 export default class Selection {
-  constructor(page, snaps) {
-    this.page = page
-    this.snaps = snaps
+  points = new Set<any>()
+  origPosition = new Map() // point -> position
 
-    this.points = new Set()
-    this.origPosition = new Map() // point -> position
+  // gesture state
+  tappedOn // point
+  firstFinger
+  firstFingerMoved
+  secondFinger
+  secondFingerMoved
 
-    // gesture state
-    this.tappedOn = null // point
-    this.firstFinger = null
-    this.firstFingerMoved = null
-    this.secondFinger = null
-    this.secondFingerMoved = null
-  }
+  constructor(private page, private snaps) {}
 
   update(events) {
     const fingerDown = events.did("finger", "began")

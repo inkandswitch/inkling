@@ -1,11 +1,13 @@
+import SVG from "../Svg"
 import generateId from "../generateId"
 
 export default class Point {
-  constructor(svg, position) {
-    this.id = generateId()
-    this.position = position
-    this.dirty = true
-    this.selected = false
+  id = generateId()
+  dirty = true
+  selected = false
+  elements: Record<string, SVGElement>
+
+  constructor(private svg: SVG, public position: { x: number; y: number }) {
     this.elements = {
       normal: svg.addElement("circle", { cx: 0, cy: 0, r: 3, fill: "black" }),
       selected: svg.addElement("circle", { cx: 0, cy: 0, r: 7, fill: "none" }),

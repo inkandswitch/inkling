@@ -3,13 +3,11 @@ import SVG from "../Svg"
 import { Tool } from "./Tool"
 
 export default class TextTool extends Tool {
-  points: any[]
+  points: any[] = []
   element: any
 
   constructor(public svg: SVG, buttonX: number, buttonY: number, public page: Page) {
     super(svg, buttonX, buttonY)
-    this.points = []
-    this.element = null
   }
 
   update(events) {

@@ -3,12 +3,16 @@ import { generatePathFromPoints } from "../Svg"
 import generateId from "../generateId"
 
 export default class FreehandStrokeMorph {
-  constructor(svg, points) {
-    this.id = generateId()
-    this.points = points
+  id = generateId()
+  pointsMorphed
+  dirty = true
+  selected = false
+  elements
+  position
+
+  constructor(svg, private points) {
+    this.id
     this.pointsMorphed = points
-    this.dirty = true
-    this.selected = false
 
     const path = generatePathFromPoints(this.pointsMorphed)
     this.elements = {

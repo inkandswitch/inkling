@@ -1,4 +1,4 @@
-import { Events, PencilEvent, TouchId } from "../NativeEvents"
+import Events, { PencilEvent, TouchId } from "../NativeEvents"
 import Page from "../Page"
 import SVG, { generatePathFromPoints } from "../Svg"
 import { strokeSvgProperties } from "../strokes/FreehandStroke"
