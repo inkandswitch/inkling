@@ -1,5 +1,5 @@
 import Vec from "../../lib/vec";
-import { generatePathFromPoints } from "../Svg";
+import SVG, { generatePathFromPoints, updateSvgElement } from "../Svg";
 import generateId from "../generateId";
 
 export default class FreehandStrokeMorph {
@@ -10,7 +10,7 @@ export default class FreehandStrokeMorph {
   elements;
   position;
 
-  constructor(svg, private points) {
+  constructor(svg: SVG, private points) {
     this.id;
     this.pointsMorphed = points;
 
@@ -119,13 +119,13 @@ export default class FreehandStrokeMorph {
     this.selected = false;
   }
 
-  render(svg) {
+  render(svg: SVG) {
     if (!this.dirty) {
       return;
     }
 
     const path = generatePathFromPoints(this.pointsMorphed);
-    svg.updateElement(this.elements.normal, { d: path });
+    updateSvgElement(this.elements.normal, { d: path });
     this.dirty = false;
   }
 }

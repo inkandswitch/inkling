@@ -1,3 +1,4 @@
+import SVG, { updateSvgElement } from "../Svg";
 import generateId from "../generateId";
 
 export default class LineSegment {
@@ -6,7 +7,7 @@ export default class LineSegment {
   selected = false;
   elements;
 
-  constructor(svg, public a, public b) {
+  constructor(svg: SVG, public a, public b) {
     const normalAttributes = {
       x1: this.a.position.x,
       y1: this.a.position.y,
@@ -35,7 +36,7 @@ export default class LineSegment {
     this.selected = false;
   }
 
-  render(svg) {
+  render() {
     if (this.dirty || this.a.dirty || this.b.dirty) {
       const normalAttributes = {
         x1: this.a.position.x,
@@ -43,8 +44,8 @@ export default class LineSegment {
         x2: this.b.position.x,
         y2: this.b.position.y,
       };
-      svg.updateElement(this.elements.normal, normalAttributes);
-      svg.updateElement(this.elements.selected, {
+      updateSvgElement(this.elements.normal, normalAttributes);
+      updateSvgElement(this.elements.selected, {
         ...normalAttributes,
         stroke: this.selected ? "rgba(180, 134, 255, 0.42)" : "none",
       });

@@ -1,5 +1,6 @@
 import generateId from "../generateId";
 import Vec from "../../lib/vec";
+import SVG, { updateSvgElement } from "../Svg";
 
 export default class ArcSegment {
   id = generateId();
@@ -12,7 +13,7 @@ export default class ArcSegment {
   path: string = "";
   elements: { normal: any; selected: any };
 
-  constructor(private svg, public a, public b, public c) {
+  constructor(private svg: SVG, public a, public b, public c) {
     this.radius = Vec.dist(a.position, c.position);
 
     this.updatePath();
@@ -48,8 +49,8 @@ export default class ArcSegment {
 
       this.updatePath();
       const normalAttributes = { d: this.path };
-      svg.updateElement(this.elements.normal, normalAttributes);
-      svg.updateElement(this.elements.selected, {
+      updateSvgElement(this.elements.normal, normalAttributes);
+      updateSvgElement(this.elements.selected, {
         ...normalAttributes,
         stroke: this.selected ? "rgba(180, 134, 255, 0.42)" : "none",
       });

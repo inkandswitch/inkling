@@ -1,4 +1,4 @@
-import SVG from "../Svg";
+import SVG, { updateSvgElement } from "../Svg";
 import generateId from "../generateId";
 
 export default class Point {
@@ -7,7 +7,7 @@ export default class Point {
   selected = false;
   elements: Record<string, SVGElement>;
 
-  constructor(private svg: SVG, public position: { x: number; y: number }) {
+  constructor(svg: SVG, public position: { x: number; y: number }) {
     this.elements = {
       normal: svg.addElement("circle", { cx: 0, cy: 0, r: 3, fill: "black" }),
       selected: svg.addElement("circle", { cx: 0, cy: 0, r: 7, fill: "none" }),
@@ -34,13 +34,13 @@ export default class Point {
     this.elements.selected.remove();
   }
 
-  render(svg) {
+  render() {
     if (this.dirty) {
-      svg.updateElement(this.elements.normal, {
+      updateSvgElement(this.elements.normal, {
         transform: `translate(${this.position.x} ${this.position.y})`,
       });
 
-      svg.updateElement(this.elements.selected, {
+      updateSvgElement(this.elements.selected, {
         transform: `translate(${this.position.x} ${this.position.y})`,
         fill: this.selected ? "rgba(180, 134, 255, 0.42)" : "none",
       });

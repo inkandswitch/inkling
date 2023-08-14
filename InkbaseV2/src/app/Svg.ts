@@ -5,14 +5,14 @@ export default class SVG {
 
   addElement(type: string, attributes: Record<string, any>) {
     const elem: SVGElement = document.createElementNS("http://www.w3.org/2000/svg", type);
-    this.updateElement(elem, attributes);
+    updateSvgElement(elem, attributes);
     this.root.appendChild(elem);
     return elem;
   }
+}
 
-  updateElement(elem: SVGElement, attributes: Record<string, any>) {
-    Object.entries(attributes).forEach(([key, value]) => elem.setAttribute(key, value));
-  }
+export function updateSvgElement(elem: SVGElement, attributes: Record<string, any>) {
+  Object.entries(attributes).forEach(([key, value]) => elem.setAttribute(key, value));
 }
 
 const GET_STROKE_OPTIONS = {

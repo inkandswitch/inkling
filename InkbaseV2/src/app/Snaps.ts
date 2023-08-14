@@ -1,4 +1,5 @@
 import Vec from "../lib/vec";
+import SVG, { updateSvgElement } from "./Svg";
 
 export default class Snaps {
   activeSnaps: any[] = [];
@@ -95,7 +96,7 @@ export default class Snaps {
     this.setActiveSnaps([]);
   }
 
-  render(svg) {
+  render(svg: SVG) {
     if (!this.dirty) {
       return;
     }
@@ -113,7 +114,7 @@ export default class Snaps {
         });
         this.snapSvgElementById.set(id, svgElem);
       } else {
-        svg.updateElement(svgElem, shapeData);
+        updateSvgElement(svgElem, shapeData);
       }
     }
 

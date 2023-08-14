@@ -1,7 +1,7 @@
 import Vec from "../../lib/vec";
 import TransformationMatrix from "../../lib/transform_matrix";
 
-import { generatePathFromPoints } from "../Svg";
+import SVG, { generatePathFromPoints, updateSvgElement } from "../Svg";
 import generateId from "../generateId";
 
 export const strokeSvgProperties = {
@@ -21,7 +21,7 @@ export default class FreehandStroke {
   element;
   dirty = true;
 
-  constructor(svg, points, cp1, cp2) {
+  constructor(svg: SVG, points, cp1, cp2) {
     const [cp1Pos, cp2Pos] = farthestPair(points.filter((p) => p != null));
     cp1.setPosition(cp1Pos);
     cp2.setPosition(cp2Pos);
@@ -66,14 +66,14 @@ export default class FreehandStroke {
       return { ...np, pressure: p.pressure };
     });
     const path = generatePathFromPoints(this.points);
-    svg.updateElement(this.element, { d: path });
+    updateSvgElement(this.element, { d: path });
   }
 
   onControlPointMove(_controlPoint) {
     this.dirty = true;
   }
 
-  render(svg) {
+  render(svg: SVG) {
     if (!this.dirty) {
       return;
     }

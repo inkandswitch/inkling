@@ -2,7 +2,7 @@ import Arc from "../../lib/arc.js";
 import Fit from "../../lib/fit.js";
 import Line from "../../lib/line.js";
 import Vec from "../../lib/vec.js";
-import SVG, { generatePathFromPoints } from "../Svg.js";
+import SVG, { generatePathFromPoints, updateSvgElement } from "../Svg.js";
 import { Tool } from "./Tool.js";
 
 export default class FormalTool extends Tool {
@@ -192,7 +192,7 @@ export default class FormalTool extends Tool {
     }
   }
 
-  render(svg) {
+  render(svg: SVG) {
     if (!this.dirty) {
       return;
     }
@@ -207,7 +207,7 @@ export default class FormalTool extends Tool {
       }
 
       const path = generatePathFromPoints(this.renderPoints);
-      svg.updateElement(this.element, { d: path });
+      updateSvgElement(this.element, { d: path });
     }
 
     this.dirty = false;
