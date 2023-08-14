@@ -1,6 +1,6 @@
 import Events, { PencilEvent, TouchId } from "../NativeEvents";
 import Page from "../Page";
-import SVG, { generatePathFromPoints } from "../Svg";
+import SVG, { generatePathFromPoints, updateSvgElement } from "../Svg";
 import { strokeSvgProperties } from "../strokes/FreehandStroke";
 import { Tool } from "./Tool";
 
@@ -109,6 +109,6 @@ export default class FreehandTool extends Tool {
 
   updatePath() {
     const path = this.points == null ? "" : generatePathFromPoints(this.points);
-    this.strokeElement.setAttribute("d", path);
+    updateSvgElement(this.strokeElement, { d: path });
   }
 }

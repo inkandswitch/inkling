@@ -52,7 +52,7 @@ export default class FreehandStroke {
     return Vec.angle(Vec.sub(this.controlPoints[1].position, this.controlPoints[0].position));
   }
 
-  updatePath(svg) {
+  updatePath() {
     let transform = new TransformationMatrix().fromLine(
       this.controlPoints[0].position,
       this.controlPoints[1].position

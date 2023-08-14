@@ -1,5 +1,5 @@
 import Events from "../NativeEvents";
-import SVG from "../Svg";
+import SVG, { updateSvgElement } from "../Svg";
 
 export class Tool {
   button: any;
@@ -32,11 +32,11 @@ export class Tool {
     // no op by default, but can be overridden by subclass
   }
 
-  render(_svg: SVG) {
+  render() {
     // no op by default, but can be overridden by subclass
   }
 
   private refreshButton() {
-    this.button.setAttribute("fill", this.isSelected ? "black" : "lightgrey");
+    updateSvgElement(this.button, { fill: this.isSelected ? "black" : "lightgrey" });
   }
 }
