@@ -6,11 +6,14 @@ import FreehandStroke from "./strokes/FreehandStroke"
 
 import Point from "./strokes/Point"
 import ControlPoint from "./strokes/ControlPoint"
-import MorphPoint from "./strokes/MorphPoint"
+
+import StrokeGraph from "./strokes/StrokeGraph"
+
+
 
 export default class Page {
   points: Point[] = []
-  morphPoints: MorphPoint[] = []
+  graph = new StrokeGraph()
 
   // TODO: figure out a better model for how to store different kinds of strokes
   // For now just keep them separate, until we have a better idea of what freehand strokes look like
@@ -43,11 +46,6 @@ export default class Page {
     return as
   }
 
-  addMorphPoint(position) {
-    const p = new MorphPoint(this.svg, position)
-    this.morphPoints.push(p)
-    return p
-  }
 
   addFreehandStroke(points) {
     const cp1 = this.addControlPoint(points[0])
@@ -56,6 +54,7 @@ export default class Page {
     cp1.parent = s
     cp2.parent = s
     this.freehandStrokes.push(s)
+    this.graph.addStroke(s);
     return s
   }
 
@@ -74,45 +73,30 @@ export default class Page {
     return closestPoint
   }
 
-  findMorphPointNear(position, dist = 20) {
-    let closestPoint: MorphPoint | null = null
-    let closestDistance = dist
-
-    for (const point of this.morphPoints) {
-      const d = Vec.dist(point.position, position)
-      if (d < closestDistance) {
-        closestDistance = d
-        closestPoint = point
-      }
-    }
-
-    return closestPoint
-  }
-
   // TODO: this is a bad idea -- it breaks too much of the stuff that I want to do.
   // consider removing, or at least disabling for my experiments.
   mergePoint(point) {
     return
 
-    const pointsToMerge = new Set(
-      this.points.filter((p) => p !== point && Vec.dist(p.position, point.position) === 0)
-    )
+    // const pointsToMerge = new Set(
+    //   this.points.filter((p) => p !== point && Vec.dist(p.position, point.position) === 0)
+    // )
 
-    if (pointsToMerge.size === 0) {
-      return // avoid iterating over lines
-    }
+    // if (pointsToMerge.size === 0) {
+    //   return // avoid iterating over lines
+    // }
 
-    for (const ls of this.lineSegments) {
-      if (pointsToMerge.has(ls.a)) {
-        ls.a = point
-      }
-      if (pointsToMerge.has(ls.b)) {
-        ls.b = point
-      }
-      if (ls instanceof ArcSegment && pointsToMerge.has(ls.c)) {
-        ls.c = point
-      }
-    }
+    // for (const ls of this.lineSegments) {
+    //   if (pointsToMerge.has(ls.a)) {
+    //     ls.a = point
+    //   }
+    //   if (pointsToMerge.has(ls.b)) {
+    //     ls.b = point
+    //   }
+    //   if (ls instanceof ArcSegment && pointsToMerge.has(ls.c)) {
+    //     ls.c = point
+    //   }
+    // }
 
     // for (const s of this.freehandStrokes) {
     //     if (pointsToMerge.has(s.controlPoints[0])) {
@@ -125,10 +109,10 @@ export default class Page {
     //     }
     // }
 
-    for (const mergedPoint of pointsToMerge) {
-      mergedPoint.remove()
-    }
-    this.points = this.points.filter((p) => !pointsToMerge.has(p))
+    // for (const mergedPoint of pointsToMerge) {
+    //   mergedPoint.remove()
+    // }
+    // this.points = this.points.filter((p) => !pointsToMerge.has(p))
   }
 
   pointsReachableFrom(startPoints) {
@@ -166,6 +150,7 @@ export default class Page {
     this.lineSegments.forEach(renderIt)
     this.freehandStrokes.forEach(renderIt)
     this.points.forEach(renderIt)
-    this.morphPoints.forEach(renderIt)
+
+    this.graph.render(svg)
   }
 }
