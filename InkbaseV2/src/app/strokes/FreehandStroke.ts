@@ -1,4 +1,6 @@
 import Vec from "../../lib/vec"
+import TransformationMatrix from "../../lib/transform_matrix"
+
 import { generatePathFromPoints } from "../Svg"
 import generateId from "../generateId"
 
@@ -13,9 +15,12 @@ export const strokeSvgProperties = {
 export default class FreehandStroke {
   id = generateId()
   controlPoints: any[]
+  //pointData
+  points
   pointData
   element
   dirty = true
+  transform
 
   constructor(svg, points, cp1, cp2) {
     const [cp1Pos, cp2Pos] = farthestPair(points.filter((p) => p != null))
@@ -25,15 +30,15 @@ export default class FreehandStroke {
 
     const length = Vec.dist(cp1Pos, cp2Pos)
     const angle = this.currentAngle()
-    this.pointData = points.map((p) =>
-      p == null
-        ? p
-        : {
-            lengthMultiplier: Vec.dist(cp1Pos, p) / length,
-            angleOffset: Vec.angle(Vec.sub(p, cp1Pos)) - angle,
-            pressure: p.pressure,
-          }
-    )
+
+    this.points = points
+    
+    // Store normalised point data based on control points
+    let transform = new TransformationMatrix().fromLineWithScale(cp1Pos, cp2Pos).inverse()
+    this.pointData = points.map(p=>{
+      let np = transform.transformPoint(p)
+      return {...np, pressure: p.pressure }
+    })
 
     this.element = svg.addElement("path", {
       d: "",
@@ -46,21 +51,17 @@ export default class FreehandStroke {
   }
 
   updatePath(svg) {
-    const length = Vec.dist(this.controlPoints[0].position, this.controlPoints[1].position)
-    const angle = this.currentAngle()
-    const points = this.pointData.map((pd) =>
+    let transform = new TransformationMatrix().fromLineWithScale(this.controlPoints[0].position, this.controlPoints[1].position)
+
+    this.points = this.pointData.map((pd) =>
       pd == null
         ? null
-        : (({ lengthMultiplier, angleOffset, pressure }) => {
-            const p: any = Vec.add(
-              this.controlPoints[0].position,
-              Vec.polar(angle + angleOffset, length * lengthMultiplier)
-            )
-            p.pressure = pressure
-            return p
+        : ((p) => {
+          let np = transform.transformPoint(p)
+          return {...np, pressure: p.pressure }
           })(pd)
     )
-    const path = generatePathFromPoints(points)
+    const path = generatePathFromPoints(this.points)
     svg.updateElement(this.element, { d: path })
   }
 

@@ -188,4 +188,15 @@ export default class TransformationMatrix {
 
     return this
   }
+
+  fromLineWithScale(a, b) {
+    const line = Vec.sub(b, a)
+    const length = Vec.len(line);
+
+    this.translate(a.x, a.y);
+    this.rotate(Vec.angle(line));
+    this.scale(length, length);
+
+    return this
+  }
 }
