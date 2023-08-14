@@ -32,7 +32,7 @@ export class Tool {
     // no op by default, but can be overridden by subclass
   }
 
-  render() {
+  render(_svg: SVG) {
     // no op by default, but can be overridden by subclass
   }
 

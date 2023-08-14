@@ -98,7 +98,7 @@ export default class FreehandTool extends Tool {
     this.mode = "unistroke";
   }
 
-  render(_svg: SVG) {
+  render() {
     if (!this.dirty) {
       return;
     }
