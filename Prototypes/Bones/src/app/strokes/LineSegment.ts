@@ -1,13 +1,14 @@
 import SVG, { updateSvgElement } from "../Svg";
 import generateId from "../generateId";
+import Point from "./Point";
 
 export default class LineSegment {
   id = generateId();
   dirty = true;
   selected = false;
-  elements;
+  elements: { normal: SVGElement; selected: SVGElement };
 
-  constructor(svg: SVG, public a, public b) {
+  constructor(svg: SVG, public a: Point, public b: Point) {
     const normalAttributes = {
       x1: this.a.position.x,
       y1: this.a.position.y,
@@ -37,20 +38,22 @@ export default class LineSegment {
   }
 
   render() {
-    if (this.dirty || this.a.dirty || this.b.dirty) {
-      const normalAttributes = {
-        x1: this.a.position.x,
-        y1: this.a.position.y,
-        x2: this.b.position.x,
-        y2: this.b.position.y,
-      };
-      updateSvgElement(this.elements.normal, normalAttributes);
-      updateSvgElement(this.elements.selected, {
-        ...normalAttributes,
-        stroke: this.selected ? "rgba(180, 134, 255, 0.42)" : "none",
-      });
-
-      this.dirty = false;
+    if (!(this.dirty || this.a.dirty || this.b.dirty)) {
+      return;
     }
+
+    const normalAttributes = {
+      x1: this.a.position.x,
+      y1: this.a.position.y,
+      x2: this.b.position.x,
+      y2: this.b.position.y,
+    };
+    updateSvgElement(this.elements.normal, normalAttributes);
+    updateSvgElement(this.elements.selected, {
+      ...normalAttributes,
+      stroke: this.selected ? "rgba(180, 134, 255, 0.42)" : "none",
+    });
+
+    this.dirty = false;
   }
 }

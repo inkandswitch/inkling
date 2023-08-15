@@ -1,17 +1,17 @@
 {
+  "extends": "./node_modules/gts/tsconfig-google.json",
   "compilerOptions": {
-    "allowJs": true,
-    "baseUrl": "src",
-    "checkJs": true,
-    "forceConsistentCasingInFileNames": true,
-    "noEmit": true,
-    "noImplicitAny": false,
-    "strict": true,
-    "target": "esnext"
+    "rootDir": ".",
+    "outDir": "build",
+    "lib": [
+      "ES2018",
+      "DOM",
+    ],
   },
   "include": [
-    "src/**/*.d.ts",
+    "src/*.ts",
     "src/**/*.ts",
-    "src/**/*.js"
+    "test/*.ts",
+    "test/**/*.ts"
   ]
 }

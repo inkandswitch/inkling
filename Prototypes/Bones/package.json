@@ -5,12 +5,22 @@
   "main": "",
   "scripts": {
     "dev": "snowpack dev",
-    "build": "snowpack build"
+    "build": "snowpack build",
+    "check": "gts check",
+    "clean": "gts clean",
+    "compile": "tsc -p .",
+    "fix": "gts fix",
+    "prepare": "npm run compile",
+    "pretest": "npm run compile",
+    "posttest": "npm run check"
   },
   "keywords": [],
   "license": "MIT",
   "devDependencies": {
-    "snowpack": "^3.8.8"
+    "gtx": "^0.6.1",
+    "snowpack": "^3.8.8",
+    "gts": "^0.9.0",
+    "typescript": "~3.1.0"
   },
   "dependencies": {
     "perfect-freehand": "^1.2.0"

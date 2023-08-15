@@ -4,7 +4,7 @@ import { Position } from "./types";
 import Vec from "./vec";
 
 interface Arc {
-  center: number;
+  center: Position;
   radius: number;
   startAngle: number;
   endAngle: number;
@@ -12,7 +12,7 @@ interface Arc {
 }
 
 function Arc(
-  center: number,
+  center: Position,
   radius: number,
   startAngle: number,
   endAngle: number,

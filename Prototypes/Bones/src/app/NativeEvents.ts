@@ -79,6 +79,7 @@ export default class Events {
   }
 
   private setupNativeEventHandler() {
+    // tslint:disable-next-line:no-any
     (window as any).nativeEvent = (state: EventState, touches: Record<TouchId, TouchPoint[]>) => {
       for (const id in touches) {
         if (!touches.hasOwnProperty(id)) {

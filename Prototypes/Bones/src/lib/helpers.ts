@@ -7,8 +7,16 @@ export function debugTable(obj: {}, clear = true) {
 }
 
 // My kingdom for a standard library that includes a key-sorted Map.
-export function objectWithSortedKeys(obj: {}) {
-  return Object.keys(obj)
-    .sort()
-    .reduce((acc, k) => ({ ...acc, [k]: obj[k] }), {});
+// tslint:disable:no-any
+export function objectWithSortedKeys(obj: Record<string, any>) {
+  const newObj: Record<string, any> = {};
+  for (const k of Object.keys(obj).sort()) {
+    newObj[k] = obj[k];
+  }
+  return newObj;
+}
+// tslint:enable
+
+export function notNull<T>(x: T | null): x is T {
+  return x != null;
 }

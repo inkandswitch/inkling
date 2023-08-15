@@ -1,6 +1,9 @@
 import TransformationMatrix from "../lib/transform_matrix";
 import { Position } from "../lib/types";
 import Vec from "../lib/vec";
+import Events, { Event } from "./NativeEvents";
+import Page from "./Page";
+import Snaps from "./Snaps";
 import Point from "./strokes/Point";
 
 export default class Selection {
@@ -8,15 +11,15 @@ export default class Selection {
   origPosition = new Map<Point, Position>(); // point -> position
 
   // gesture state
-  tappedOn: Point | null;
-  firstFinger;
-  firstFingerMoved;
-  secondFinger;
-  secondFingerMoved;
+  tappedOn?: Point;
+  firstFinger?: Event;
+  firstFingerMoved?: Event;
+  secondFinger?: Event;
+  secondFingerMoved?: Event;
 
-  constructor(private page, private snaps) {}
+  constructor(private page: Page, private snaps: Snaps) {}
 
-  update(events) {
+  update(events: Events) {
     const fingerDown = events.did("finger", "began");
     if (fingerDown != null) {
       // If we weren't already holding down a finger
@@ -25,11 +28,11 @@ export default class Selection {
         this.firstFingerMoved = fingerDown;
 
         const point = this.page.findPointNear(fingerDown.position);
-        if (point) {
+        if (point != null) {
           this.selectPoint(point);
           this.tappedOn = point;
         } else {
-          this.tappedOn = null;
+          this.tappedOn = undefined;
         }
 
         // Set initial offset transform
@@ -46,7 +49,7 @@ export default class Selection {
 
         // Set initial offset transform
         const transform = new TransformationMatrix();
-        const a = Vec.divS(Vec.add(this.firstFingerMoved.position, this.secondFinger.position), 2);
+        const a = Vec.divS(Vec.add(this.firstFingerMoved!.position, this.secondFinger.position), 2);
         const b = this.secondFinger.position;
         transform.fromLineTranslateRotate(a, b).inverse();
         for (const point of this.points) {
@@ -81,12 +84,12 @@ export default class Selection {
           this.page.mergePoint(point);
         }
 
-        this.firstFinger = null;
-        this.firstFingerMoved = null;
+        this.firstFinger = undefined;
+        this.firstFingerMoved = undefined;
 
         // TODO: this could be done better
-        this.secondFinger = null;
-        this.secondFingerMoved = null;
+        this.secondFinger = undefined;
+        this.secondFingerMoved = undefined;
 
         this.snaps.clear();
       }
@@ -101,12 +104,12 @@ export default class Selection {
 
       const fingerTwoUp = events.did("finger", "ended", this.secondFinger.id);
       if (fingerTwoUp != null) {
-        this.secondFinger = null;
-        this.secondFingerMoved = null;
+        this.secondFinger = undefined;
+        this.secondFingerMoved = undefined;
 
         // TODO: this could be done better
-        this.firstFinger = null;
-        this.firstFingerMoved = null;
+        this.firstFinger = undefined;
+        this.firstFingerMoved = undefined;
       }
     }
   }
@@ -156,7 +159,7 @@ export default class Selection {
       const b = this.secondFingerMoved.position;
       transform.fromLineTranslateRotate(a, b);
     } else {
-      const p = this.firstFingerMoved.position;
+      const p = this.firstFingerMoved!.position;
       transform.translate(p.x, p.y);
     }
 
@@ -169,7 +172,7 @@ export default class Selection {
 
     const snappedPositions = this.snaps.snapPositions(transformedPositions);
     for (const point of this.points) {
-      point.setPosition(snappedPositions.get(point));
+      point.setPosition(snappedPositions.get(point)!);
     }
   }
 }

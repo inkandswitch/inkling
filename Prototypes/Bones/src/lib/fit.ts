@@ -1,11 +1,18 @@
 import Arc from "./arc";
 import Line from "./line";
+import { Position } from "./types";
 import Vec from "./vec";
 
-const Fit: { [name: string]: Function } = {};
-export default Fit;
+// tslint:disable:variable-name
 
-Fit.line = (stroke) => {
+export interface LineFit {
+  type: "line";
+  line: Line;
+  fitness: number;
+  length: number;
+}
+
+function line(stroke: Position[]): LineFit | null {
   if (stroke.length === 0) {
     return null;
   }
@@ -17,22 +24,29 @@ Fit.line = (stroke) => {
     totalDist += Line.distToPoint(line, stroke[i]);
   }
 
-  const lineLen = Line.len(line);
+  const length = Line.len(line);
 
   return {
     type: "line",
     line,
-    fitness: lineLen === 0 ? 1 : totalDist / lineLen,
-    length: lineLen,
+    length,
+    fitness: length === 0 ? 1 : totalDist / length,
   };
-};
+}
 
-Fit.arc = (points) => {
+export interface ArcFit {
+  type: "arc";
+  arc: Arc;
+  fitness: number;
+  length: number;
+}
+
+function arc(points: Position[]): ArcFit | null {
   if (points.length < 3) {
     return null;
   }
 
-  const simplified = Fit.innerTriangle(points);
+  const simplified = innerTriangle(points);
   const [a, b, c] = simplified;
 
   if (!b) {
@@ -80,9 +94,9 @@ Fit.arc = (points) => {
     fitness: totalDist / arcDist,
     length: arcDist,
   };
-};
+}
 
-Fit.innerTriangle = (points) => {
+function innerTriangle(points: Position[]): [Position, Position, Position] {
   const start = points[0];
   const end = points[points.length - 1];
 
@@ -99,9 +113,23 @@ Fit.innerTriangle = (points) => {
   }
 
   return [start, points[farthestIndex], end];
-};
+}
 
-Fit.circle = (points) => {
+interface Circle {
+  center: Position;
+  radius: number;
+  startAngle: number;
+  endAngle: number;
+  clockwise: boolean;
+}
+
+export interface CircleFit {
+  type: "circle";
+  circle: Circle;
+  fitness: number;
+}
+
+function circle(points: Position[]): CircleFit | null {
   if (points.length < 3) {
     return null;
   }
@@ -165,12 +193,14 @@ Fit.circle = (points) => {
   for (const p of points) {
     totalDist += Arc.distToPointCircle(circle, p);
   }
-
   const circumference = 2 * Math.PI * radius;
+  const fitness = totalDist / circumference;
 
-  return {
-    type: "circle",
-    circle,
-    fitness: totalDist / circumference,
-  };
+  return { type: "circle", circle, fitness };
+}
+
+export default {
+  line,
+  arc,
+  circle,
 };

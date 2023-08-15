@@ -4,14 +4,16 @@
 import { Position } from "./types";
 import Vec from "./vec";
 
-export interface Line {
+interface Line {
   a: Position;
   b: Position;
 }
 
-export default function Line(a: Position, b: Position): Line {
+function Line(a: Position, b: Position): Line {
   return { a, b };
 }
+
+export default Line;
 
 Line.len = (l: Line) => Vec.dist(l.a, l.b);
 

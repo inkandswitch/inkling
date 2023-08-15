@@ -1,6 +1,7 @@
 import generateId from "../generateId";
 import Vec from "../../lib/vec";
 import SVG, { updateSvgElement } from "../Svg";
+import Point from "./Point";
 
 export default class ArcSegment {
   id = generateId();
@@ -13,7 +14,7 @@ export default class ArcSegment {
   path = "";
   elements: { normal: SVGElement; selected: SVGElement };
 
-  constructor(private svg: SVG, public a, public b, public c) {
+  constructor(svg: SVG, public a: Point, public b: Point, public c: Point) {
     this.radius = Vec.dist(a.position, c.position);
 
     this.updatePath();
@@ -40,22 +41,24 @@ export default class ArcSegment {
     this.selected = false;
   }
 
-  render(svg) {
-    if (this.dirty || this.a.dirty || this.b.dirty || this.c.dirty) {
-      this.radius = Vec.dist(this.a.position, this.c.position);
-      this.isLargeArc = 0; // more than 180
-      this.clockwise = 1; // clockwise or counterclockwise
-      this.xAxisRotation = 0;
-
-      this.updatePath();
-      const normalAttributes = { d: this.path };
-      updateSvgElement(this.elements.normal, normalAttributes);
-      updateSvgElement(this.elements.selected, {
-        ...normalAttributes,
-        stroke: this.selected ? "rgba(180, 134, 255, 0.42)" : "none",
-      });
-
-      this.dirty = false;
+  render() {
+    if (!(this.dirty || this.a.dirty || this.b.dirty || this.c.dirty)) {
+      return;
     }
+
+    this.radius = Vec.dist(this.a.position, this.c.position);
+    this.isLargeArc = 0; // more than 180
+    this.clockwise = 1; // clockwise or counterclockwise
+    this.xAxisRotation = 0;
+
+    this.updatePath();
+    const normalAttributes = { d: this.path };
+    updateSvgElement(this.elements.normal, normalAttributes);
+    updateSvgElement(this.elements.selected, {
+      ...normalAttributes,
+      stroke: this.selected ? "rgba(180, 134, 255, 0.42)" : "none",
+    });
+
+    this.dirty = false;
   }
 }
