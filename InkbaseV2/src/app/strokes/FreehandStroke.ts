@@ -78,7 +78,7 @@ export default class FreehandStroke {
     updateSvgElement(this.element, { d: path });
   }
 
-  onControlPointMove() {
+  onControlPointMoved() {
     this.dirty = true;
   }
 

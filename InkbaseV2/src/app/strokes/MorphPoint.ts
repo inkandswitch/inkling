@@ -1,6 +1,7 @@
 import SVG, { updateSvgElement } from "../Svg";
 import Vec from "../../lib/vec";
 import generateId from "../generateId";
+import { Position } from "../../lib/types";
 
 export default class MorphPoint {
   id = generateId();
@@ -11,7 +12,7 @@ export default class MorphPoint {
   selected = false;
   elements;
 
-  constructor(svg: SVG, public position) {
+  constructor(svg: SVG, public position: Position) {
     this.firstPosition = position;
     this.elements = {
       normal: svg.addElement("circle", { cx: 0, cy: 0, r: 30, fill: "none", stroke: "lightgrey" }),
@@ -21,7 +22,7 @@ export default class MorphPoint {
     };
   }
 
-  setPosition(position) {
+  setPosition(position: Position) {
     this.dirty = true;
     this.position = position;
     this.morphVector = Vec.sub(this.position, this.firstPosition);

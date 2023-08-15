@@ -1,3 +1,4 @@
+import { Position } from "../../lib/types";
 import Vec from "../../lib/vec";
 import SVG, { generatePathFromPoints, updateSvgElement } from "../Svg";
 import generateId from "../generateId";
@@ -7,10 +8,10 @@ export default class FreehandStrokeMorph {
   pointsMorphed;
   dirty = true;
   selected = false;
-  elements;
-  position;
+  elements: { normal: SVGElement };
+  position?: Position;
 
-  constructor(svg: SVG, private points) {
+  constructor(svg: SVG, private points: Position[]) {
     this.id;
     this.pointsMorphed = points;
 
@@ -62,7 +63,7 @@ export default class FreehandStrokeMorph {
         return 1 / Math.pow(d, 2);
       });
 
-      const totalDist = dists.reduce((acc, d) => acc + d, 0);
+      const totalDist = dists.reduce((acc: number, d: number) => acc + d, 0);
       dists = dists.map((d) => d / totalDist);
 
       const vecs = morphPoints.map((morph, i) => {
@@ -104,7 +105,7 @@ export default class FreehandStrokeMorph {
     this.dirty = true;
   }
 
-  move(position) {
+  move(position: Position) {
     this.dirty = true;
     this.position = position;
   }
@@ -119,7 +120,7 @@ export default class FreehandStrokeMorph {
     this.selected = false;
   }
 
-  render(svg: SVG) {
+  render() {
     if (!this.dirty) {
       return;
     }
