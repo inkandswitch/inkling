@@ -26,7 +26,7 @@ const tools = [
 const toolPicker = new ToolPicker(tools);
 toolPicker.select(tools[0]);
 
-EveryFrame((dt, time) => {
+EveryFrame(() => {
   toolPicker.update(events);
   toolPicker.selected?.update(events);
   // morphing.update(events);
