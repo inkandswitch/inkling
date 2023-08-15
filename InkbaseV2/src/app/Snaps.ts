@@ -2,70 +2,70 @@ import { Position } from "../lib/types";
 import Vec from "../lib/vec";
 import Page from "./Page";
 import SVG, { updateSvgElement } from "./Svg";
-import Point from "./strokes/Point";
+import Handle from "./strokes/Handle";
 
 export default class Snaps {
-  activeSnaps: Snap[] = [];
+  private activeSnaps: Snap[] = [];
 
   // rendering
-  snapSvgElementById = new Map<string, SVGElement>();
-  dirty = false;
+  private snapSvgElementById = new Map<string, SVGElement>();
+  private needsRerender = false;
 
   constructor(private page: Page) {}
 
   // returns Map<Point, snap position>
-  snapPositions(transformedPositions: Map<Point, Position>) {
+  snapPositions(transformedPositions: Map<Handle, Position>) {
     const snaps: Snap[] = [];
-    const snapPositions = new Map<Point, Position>();
-    const snapPoints = this.page.points.filter((p) => !transformedPositions.has(p));
-    const selectedPoints = Array.from(transformedPositions.keys());
-    const connectedPoints = this.page.pointsReachableFrom(selectedPoints);
+    const snapPositions = new Map<Handle, Position>();
+    const snapHandles = Array.from(Handle.all).filter((h) => !transformedPositions.has(h));
+    const selectedHandles = Array.from(transformedPositions.keys());
+    const connectedHandles = this.page.handlesReachableFrom(selectedHandles);
 
-    for (const [point, transformedPosition] of transformedPositions) {
-      if (snaps.some((s) => s.snapPoint === point)) {
-        // This point is already being used as a snap.
-        // If we move it (by snapping it to another point), the UI feels shaky.
-        snapPositions.set(point, transformedPosition);
+    for (const [handle, transformedPosition] of transformedPositions) {
+      if (snaps.some((s) => s.snapHandle === handle)) {
+        // This handle is already being used as a snap.
+        // If we move it (by snapping it to another handle), the UI feels shaky.
+        snapPositions.set(handle, transformedPosition);
         continue;
       }
 
       const snapVectors: Position[] = [];
 
       // snap to point
-      for (const snapPoint of snapPoints) {
-        const v = Vec.sub(snapPoint.position, transformedPosition);
+      for (const snapHandle of snapHandles) {
+        const v = Vec.sub(snapHandle.position, transformedPosition);
         if (Vec.len(v) < 10) {
           snapVectors.push(v);
-          snaps.push(new PointSnap(point, snapPoint));
+          snaps.push(new PointSnap(handle, snapHandle));
           break;
         }
       }
 
       if (snapVectors.length === 0) {
         // vertical alignment
-        for (const snapPoint of connectedPoints) {
-          if (snapPoint === point) {
+        for (const snapHandle of connectedHandles) {
+          if (snapHandle === handle) {
             continue;
           }
-          const dx = snapPoint.position.x - transformedPosition.x;
+          const dx = snapHandle.position.x - transformedPosition.x;
           if (Math.abs(dx) < 10) {
             const v = Vec(dx, 0);
             snapVectors.push(v);
-            snaps.push(new AlignmentSnap(point, snapPoint));
+            snaps.push(new AlignmentSnap(handle, snapHandle));
             break;
           }
         }
 
         // horizontal alignment
-        for (const snapPoint of connectedPoints) {
-          if (snapPoint === point) {
+        for (const snapHandle of connectedHandles) {
+          if (snapHandle === handle) {
             continue;
           }
-          const dy = snapPoint.position.y - transformedPosition.y;
+          const dy = snapHandle.position.y - transformedPosition.y;
           if (Math.abs(dy) < 10) {
             const v = Vec(0, dy);
             snapVectors.push(v);
-            snaps.push(new AlignmentSnap(point, snapPoint));
+            snaps.push(new AlignmentSnap(handle, snapHandle));
             break;
           }
         }
@@ -73,7 +73,7 @@ export default class Snaps {
 
       const snappedPos = snapVectors.reduce((p, v) => Vec.add(p, v), transformedPosition);
 
-      snapPositions.set(point, snappedPos);
+      snapPositions.set(handle, snappedPos);
     }
 
     this.setActiveSnaps(snaps);
@@ -83,7 +83,7 @@ export default class Snaps {
 
   setActiveSnaps(activeSnaps: Snap[]) {
     this.activeSnaps = activeSnaps;
-    this.dirty = true;
+    this.needsRerender = true;
 
     // Delete the svg elements associated w/ snaps that went away
     const activeSnapIds = new Set(activeSnaps.map((snap) => snap.id));
@@ -100,7 +100,7 @@ export default class Snaps {
   }
 
   render(svg: SVG) {
-    if (!this.dirty) {
+    if (!this.needsRerender) {
       return;
     }
 
@@ -121,7 +121,7 @@ export default class Snaps {
       }
     }
 
-    this.dirty = false;
+    this.needsRerender = false;
   }
 }
 
@@ -149,8 +149,8 @@ interface LineShape {
 class Snap {
   id: string;
 
-  constructor(public point: Point, public snapPoint: Point) {
-    this.id = `${point.id}.${snapPoint.id}.${this.constructor.name}`;
+  constructor(public handle: Handle, public snapHandle: Handle) {
+    this.id = `${handle.id}.${snapHandle.id}.${this.constructor.name}`;
   }
 
   getShape(): Shape {
@@ -159,16 +159,16 @@ class Snap {
 }
 
 class PointSnap extends Snap {
-  constructor(point: Point, snapPoint: Point) {
-    super(point, snapPoint);
+  constructor(handle: Handle, snapHandle: Handle) {
+    super(handle, snapHandle);
   }
 
   getShape(): CircleShape {
     return {
       shapeType: "circle",
       shapeData: {
-        cx: this.point.position.x,
-        cy: this.point.position.y,
+        cx: this.handle.position.x,
+        cy: this.handle.position.y,
         r: 7,
       },
     };
@@ -176,18 +176,18 @@ class PointSnap extends Snap {
 }
 
 class AlignmentSnap extends Snap {
-  constructor(point: Point, snapPoint: Point) {
-    super(point, snapPoint);
+  constructor(handle: Handle, snapHandle: Handle) {
+    super(handle, snapHandle);
   }
 
   getShape(): LineShape {
     return {
       shapeType: "line",
       shapeData: {
-        x1: this.point.position.x,
-        y1: this.point.position.y,
-        x2: this.snapPoint.position.x,
-        y2: this.snapPoint.position.y,
+        x1: this.handle.position.x,
+        y1: this.handle.position.y,
+        x2: this.snapHandle.position.x,
+        y2: this.snapHandle.position.y,
       },
     };
   }

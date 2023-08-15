@@ -3,9 +3,9 @@ import TransformationMatrix from "../../lib/transform_matrix";
 
 import SVG, { generatePathFromPoints, updateSvgElement } from "../Svg";
 import generateId from "../generateId";
-import ControlPoint from "./ControlPoint";
-import { Position, PositionWithPressure } from "../../lib/types";
-import { notNull } from "../../lib/helpers";
+import { PositionWithPressure } from "../../lib/types";
+import { farthestPair, notNull } from "../../lib/helpers";
+import Handle from "./Handle";
 
 export const strokeSvgProperties = {
   stroke: "rgba(0, 0, 0, .5)",
@@ -16,28 +16,23 @@ export const strokeSvgProperties = {
 };
 
 export default class FreehandStroke {
-  id = generateId();
-  controlPoints: ControlPoint[];
-  points: Array<PositionWithPressure | null>;
-  pointData: Array<PositionWithPressure | null>;
-  element: SVGElement;
-  dirty = true;
+  readonly id = generateId();
+  private readonly pointData: Array<PositionWithPressure | null>;
+  private readonly element: SVGElement;
+  private needsRerender = true;
 
   constructor(
     svg: SVG,
-    points: Array<PositionWithPressure | null>,
-    cp1: ControlPoint,
-    cp2: ControlPoint
+    public points: Array<PositionWithPressure | null>,
+    private aId: number,
+    private bId: number
   ) {
-    const [cp1Pos, cp2Pos] = farthestPair(points.filter(notNull));
-    cp1.setPosition(cp1Pos);
-    cp2.setPosition(cp2Pos);
-    this.controlPoints = [cp1, cp2];
-
-    this.points = points;
+    const [aPos, bPos] = farthestPair(this.points.filter(notNull));
+    this.a.setPosition(aPos);
+    this.b.setPosition(bPos);
 
     // Store normalised point data based on control points
-    const transform = new TransformationMatrix().fromLine(cp1Pos, cp2Pos).inverse();
+    const transform = new TransformationMatrix().fromLine(aPos, bPos).inverse();
     this.pointData = points.map((p) => {
       if (p === null) {
         return null;
@@ -53,15 +48,20 @@ export default class FreehandStroke {
     });
   }
 
+  get a() {
+    return Handle.get(this.aId);
+  }
+
+  get b() {
+    return Handle.get(this.bId);
+  }
+
   currentAngle() {
-    return Vec.angle(Vec.sub(this.controlPoints[1].position, this.controlPoints[0].position));
+    return Vec.angle(Vec.sub(this.b.position, this.a.position));
   }
 
   updatePath() {
-    const transform = new TransformationMatrix().fromLine(
-      this.controlPoints[0].position,
-      this.controlPoints[1].position
-    );
+    const transform = new TransformationMatrix().fromLine(this.a.position, this.b.position);
 
     this.points = this.pointData.map((p) => {
       if (p === null) {
@@ -74,36 +74,20 @@ export default class FreehandStroke {
     updateSvgElement(this.element, { d: path });
   }
 
-  onControlPointMoved() {
-    this.dirty = true;
+  onHandleMoved() {
+    this.needsRerender = true;
+  }
+
+  onHandleRemoved() {
+    // no op
   }
 
   render() {
-    if (!this.dirty) {
+    if (!this.needsRerender) {
       return;
     }
 
     this.updatePath();
-    this.dirty = false;
+    this.needsRerender = false;
   }
-}
-
-// this is O(n^2), but there is a O(n * log(n)) solution
-// that we can use if this ever becomes a bottleneck
-// https://www.baeldung.com/cs/most-distant-pair-of-points
-function farthestPair(points: Position[]): [Position, Position] {
-  let maxDist = -Infinity;
-  let mdp1: Position | null = null;
-  let mdp2: Position | null = null;
-  for (const p1 of points) {
-    for (const p2 of points) {
-      const d = Vec.dist(p1, p2);
-      if (d > maxDist) {
-        mdp1 = p1;
-        mdp2 = p2;
-        maxDist = d;
-      }
-    }
-  }
-  return [mdp1!, mdp2!];
 }

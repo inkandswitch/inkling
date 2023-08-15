@@ -3,23 +3,21 @@ import Vec from "../../lib/vec";
 import SVG from "../Svg";
 import FreehandStroke from "./FreehandStroke";
 
-// tslint:disable:no-any
-
 // A connection between two strokes
 interface Connection {
   position: Position;
   strokes: FreehandStroke[];
   indexes: number[];
-  aligned: boolean; // True if roughly aligned, false if roughly perpendicular
+  aligned: boolean; // true if roughly aligned, false if roughly perpendicular
 }
 
 // Stroke Graph is the datastructure responsible for holding information about groupings of strokes
 export default class StrokeGraph {
   strokes: FreehandStroke[] = [];
   connections: Connection[] = [];
-
-  dirty = false;
   elements: SVGElement[] = [];
+
+  private needsRerender = false;
 
   // Alex commented out this instance variable b/c it wasn't used anywhere
   // groups: any[] = [];
@@ -50,11 +48,11 @@ export default class StrokeGraph {
     }
     this.strokes.push(stroke);
 
-    this.dirty = true;
+    this.needsRerender = true;
   }
 
   render(svg: SVG) {
-    if (!this.dirty) {
+    if (!this.needsRerender) {
       return;
     }
 
@@ -71,7 +69,7 @@ export default class StrokeGraph {
       });
     });
 
-    this.dirty = false;
+    this.needsRerender = false;
   }
 }
 

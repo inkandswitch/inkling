@@ -9,30 +9,32 @@ import { Tool } from "./Tool.js";
 import Events from "../NativeEvents";
 import { Position } from "../../lib/types.js";
 import LineSegment from "../strokes/LineSegment.js";
+import ArcSegment from "../strokes/ArcSegment.js";
+import Handle from "../strokes/Handle.js";
 
 export default class FormalTool extends Tool {
-  element: SVGElement;
-  dirty = false;
+  private element: SVGElement;
+  private needsRerender = false;
 
   // Data for guessing
-  inputPoints?: Position[];
-  idealPoints?: Position[];
-  renderPoints?: Position[];
+  private inputPoints?: Position[];
+  private idealPoints?: Position[];
+  private renderPoints?: Position[];
 
   // Speed (not velocity, lol)
-  speed = 0;
-  maxSpeed = 0;
-  previousPosition?: Position;
+  private speed = 0;
+  private maxSpeed = 0;
+  private previousPosition?: Position;
 
   // Curve fitting
-  mode: "unknown" | "guess" | "fixed" = "unknown"; // unknown, guess (can still change), fixed
-  fit: LineFit | ArcFit | CircleFit | null = null;
+  private mode: "unknown" | "guess" | "fixed" = "unknown"; // unknown, guess (can still change), fixed
+  private fit: LineFit | ArcFit | CircleFit | null = null;
 
   // Fixed mode
-  fixedStroke?: LineSegment;
+  private fixedStroke?: LineSegment | ArcSegment;
 
   constructor(
-    svg: SVG,
+    private svg: SVG,
     buttonX: number,
     buttonY: number,
     private page: Page,
@@ -51,7 +53,7 @@ export default class FormalTool extends Tool {
   update(events: Events) {
     // PENCIL DOWN
     const pencilDown = events.did("pencil", "began");
-    if (pencilDown) {
+    if (pencilDown != null) {
       this.inputPoints = [pencilDown.position];
       this.renderPoints = [Vec.clone(pencilDown.position)];
 
@@ -60,7 +62,7 @@ export default class FormalTool extends Tool {
       this.previousPosition = pencilDown.position;
 
       this.mode = "unknown";
-      this.dirty = true;
+      this.needsRerender = true;
     }
 
     // PENCIL MOVE
@@ -125,7 +127,7 @@ export default class FormalTool extends Tool {
         this.mode = "fixed";
       }
 
-      this.dirty = true;
+      this.needsRerender = true;
     });
 
     // PENCIL UP
@@ -137,8 +139,8 @@ export default class FormalTool extends Tool {
         this.clearGuess();
       }
 
-      this.page.mergePoint(this.fixedStroke!.a);
-      this.page.mergePoint(this.fixedStroke!.b);
+      this.fixedStroke!.a.absorbNearby();
+      this.fixedStroke!.b.absorbNearby();
 
       this.fixedStroke = undefined;
       this.mode = "unknown";
@@ -189,16 +191,16 @@ export default class FormalTool extends Tool {
     }
 
     if (this.fit.type === "line") {
-      const a = this.page.addPoint(this.fit.line.a);
-      const b = this.page.addPoint(this.fit.line.b);
-      const stroke = this.page.addLineSegment(a, b);
+      const aId = Handle.create(this.svg, "formal", this.fit.line.a);
+      const bId = Handle.create(this.svg, "formal", this.fit.line.b);
+      const stroke = this.page.addLineSegment(aId, bId);
       this.fixedStroke = stroke;
     } else if (this.fit.type === "arc") {
       const { start, end } = Arc.points(this.fit.arc);
-      const a = this.page.addPoint(start);
-      const b = this.page.addPoint(end);
-      const c = this.page.addPoint(this.fit.arc.center);
-      const stroke = this.page.addArcSegment(a, b, c);
+      const aId = Handle.create(this.svg, "formal", start);
+      const bId = Handle.create(this.svg, "formal", end);
+      const cId = Handle.create(this.svg, "formal", this.fit.arc.center);
+      const stroke = this.page.addArcSegment(aId, bId, cId);
       this.fixedStroke = stroke;
     }
   }
@@ -233,7 +235,7 @@ export default class FormalTool extends Tool {
   }
 
   render() {
-    if (!this.dirty) {
+    if (!this.needsRerender) {
       return;
     }
 
@@ -242,6 +244,6 @@ export default class FormalTool extends Tool {
       updateSvgElement(this.element, { d: path });
     }
 
-    this.dirty = false;
+    this.needsRerender = false;
   }
 }

@@ -4,14 +4,14 @@ import Vec from "../lib/vec";
 import Events, { Event } from "./NativeEvents";
 import Page from "./Page";
 import Snaps from "./Snaps";
-import Point from "./strokes/Point";
+import Handle from "./strokes/Handle";
 
 export default class Selection {
-  points = new Set<Point>();
-  origPosition = new Map<Point, Position>(); // point -> position
+  handles = new Set<Handle>();
+  origPosition = new Map<Handle, Position>();
 
   // gesture state
-  tappedOn?: Point;
+  tappedOn?: Handle;
   firstFinger?: Event;
   firstFingerMoved?: Event;
   secondFinger?: Event;
@@ -27,20 +27,20 @@ export default class Selection {
         this.firstFinger = fingerDown;
         this.firstFingerMoved = fingerDown;
 
-        const point = this.page.findPointNear(fingerDown.position);
-        if (point != null) {
-          this.selectPoint(point);
-          this.tappedOn = point;
+        const handle = this.page.findHandleNear(fingerDown.position);
+        if (handle != null) {
+          this.selectHandle(handle);
+          this.tappedOn = handle;
         } else {
           this.tappedOn = undefined;
         }
 
         // Set initial offset transform
         const transform = new TransformationMatrix();
-        const p = fingerDown.position;
-        transform.translate(p.x, p.y).inverse();
-        for (const point of this.points) {
-          this.origPosition.set(point, transform.transformPoint(point.position));
+        const pos = fingerDown.position;
+        transform.translate(pos.x, pos.y).inverse();
+        for (const handle of this.handles) {
+          this.origPosition.set(handle, transform.transformPoint(handle.position));
         }
       } else {
         // Two fingers, go into full transform mode
@@ -52,8 +52,8 @@ export default class Selection {
         const a = Vec.divS(Vec.add(this.firstFingerMoved!.position, this.secondFinger.position), 2);
         const b = this.secondFinger.position;
         transform.fromLineTranslateRotate(a, b).inverse();
-        for (const point of this.points) {
-          this.origPosition.set(point, transform.transformPoint(point.position));
+        for (const handle of this.handles) {
+          this.origPosition.set(handle, transform.transformPoint(handle.position));
         }
       }
     }
@@ -75,13 +75,13 @@ export default class Selection {
             this.clearSelection();
           }
         } else {
-          if (this.tappedOn != null && this.points.size === 1) {
+          if (this.tappedOn != null && this.handles.size === 1) {
             this.clearSelection();
           }
         }
 
-        for (const point of this.points) {
-          this.page.mergePoint(point);
+        for (const handle of this.handles) {
+          // TODO: merge handle w/ nearby handles
         }
 
         this.firstFinger = undefined;
@@ -114,12 +114,12 @@ export default class Selection {
     }
   }
 
-  selectPoint(point: Point) {
-    this.points.add(point);
-    point.select();
+  selectHandle(handle: Handle) {
+    this.handles.add(handle);
+    handle.select();
 
     for (const ls of this.page.lineSegments) {
-      if (this.points.has(ls.a) && this.points.has(ls.b)) {
+      if (this.handles.has(ls.a) && this.handles.has(ls.b)) {
         ls.select();
       } else {
         ls.deselect();
@@ -128,10 +128,10 @@ export default class Selection {
   }
 
   clearSelection() {
-    for (const point of this.points) {
-      point.deselect();
+    for (const handle of this.handles) {
+      handle.deselect();
     }
-    this.points = new Set();
+    this.handles = new Set();
     this.origPosition = new Map();
 
     for (const ls of this.page.lineSegments) {
@@ -140,16 +140,6 @@ export default class Selection {
   }
 
   transformSelection() {
-    // TODO(alex): Why do we need to do this?
-    // for (const [point, vs] of this.snapVectors) {
-    //     const unsnappedPos =
-    //         vs.reduce(
-    //             (p, v) => Vec.sub(p, v),
-    //             point.position
-    //         );
-    //     point.setPosition(unsnappedPos);
-    // }
-
     const transform = new TransformationMatrix();
     if (this.firstFingerMoved != null && this.secondFingerMoved != null) {
       const a = Vec.divS(
@@ -164,15 +154,15 @@ export default class Selection {
     }
 
     const transformedPositions = new Map();
-    for (const point of this.points) {
-      const oldPos = this.origPosition.get(point);
+    for (const handle of this.handles) {
+      const oldPos = this.origPosition.get(handle);
       const newPos = transform.transformPoint(oldPos);
-      transformedPositions.set(point, newPos);
+      transformedPositions.set(handle, newPos);
     }
 
     const snappedPositions = this.snaps.snapPositions(transformedPositions);
-    for (const point of this.points) {
-      point.setPosition(snappedPositions.get(point)!);
+    for (const handle of this.handles) {
+      handle.setPosition(snappedPositions.get(handle)!);
     }
   }
 }

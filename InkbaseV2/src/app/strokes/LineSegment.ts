@@ -1,14 +1,18 @@
 import SVG, { updateSvgElement } from "../Svg";
 import generateId from "../generateId";
-import Point from "./Point";
+import Handle from "./Handle";
 
 export default class LineSegment {
   id = generateId();
-  dirty = true;
   selected = false;
   elements: { normal: SVGElement; selected: SVGElement };
 
-  constructor(svg: SVG, public a: Point, public b: Point) {
+  private needsRerender = true;
+
+  constructor(svg: SVG, private aId: number, private bId: number) {
+    this.a.listeners.add(this);
+    this.b.listeners.add(this);
+
     const normalAttributes = {
       x1: this.a.position.x,
       y1: this.a.position.y,
@@ -27,26 +31,44 @@ export default class LineSegment {
     };
   }
 
+  get a() {
+    return Handle.get(this.aId);
+  }
+
+  get b() {
+    return Handle.get(this.bId);
+  }
+
+  onHandleMoved() {
+    this.needsRerender = true;
+  }
+
+  onHandleRemoved() {
+    // no-op
+  }
+
   select() {
-    this.dirty = true;
+    this.needsRerender = true;
     this.selected = true;
   }
 
   deselect() {
-    this.dirty = true;
+    this.needsRerender = true;
     this.selected = false;
   }
 
   render() {
-    if (!(this.dirty || this.a.dirty || this.b.dirty)) {
+    if (!this.needsRerender) {
       return;
     }
 
+    const a = this.a; // cache these so that we don't...
+    const b = this.b; // ... do a look-up every time
     const normalAttributes = {
-      x1: this.a.position.x,
-      y1: this.a.position.y,
-      x2: this.b.position.x,
-      y2: this.b.position.y,
+      x1: a.position.x,
+      y1: a.position.y,
+      x2: b.position.x,
+      y2: b.position.y,
     };
     updateSvgElement(this.elements.normal, normalAttributes);
     updateSvgElement(this.elements.selected, {
@@ -54,6 +76,6 @@ export default class LineSegment {
       stroke: this.selected ? "rgba(180, 134, 255, 0.42)" : "none",
     });
 
-    this.dirty = false;
+    this.needsRerender = false;
   }
 }

@@ -8,12 +8,12 @@ import { Tool } from "./Tool";
 type Mode = "unistroke" | "multistroke";
 
 export default class FreehandTool extends Tool {
-  mode: Mode = "unistroke";
-  points?: Array<PositionWithPressure | null>;
-  strokeElement: SVGElement;
-  multistrokeModeDotElement?: SVGElement;
-  pencilIsDown = false;
-  dirty = false;
+  private mode: Mode = "unistroke";
+  private points?: Array<PositionWithPressure | null>;
+  private strokeElement: SVGElement;
+  private multistrokeModeDotElement?: SVGElement;
+  private pencilIsDown = false;
+  private needsRerender = false;
 
   constructor(private svg: SVG, buttonX: number, buttonY: number, private page: Page) {
     super(svg, buttonX, buttonY);
@@ -53,18 +53,18 @@ export default class FreehandTool extends Tool {
 
   startStroke(point: PositionWithPressure) {
     this.points = [point];
-    this.dirty = true;
+    this.needsRerender = true;
   }
 
   extendStroke(point: PositionWithPressure | null) {
     this.points!.push(point);
-    this.dirty = true;
+    this.needsRerender = true;
   }
 
   endStroke() {
     this.page.addFreehandStroke(this.points!);
     this.points = undefined;
-    this.dirty = true;
+    this.needsRerender = true;
   }
 
   onAction() {
@@ -94,12 +94,12 @@ export default class FreehandTool extends Tool {
   }
 
   render() {
-    if (!this.dirty) {
+    if (!this.needsRerender) {
       return;
     }
 
     this.updatePath();
-    this.dirty = false;
+    this.needsRerender = false;
   }
 
   updatePath() {

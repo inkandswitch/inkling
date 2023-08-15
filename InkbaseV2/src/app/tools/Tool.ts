@@ -2,8 +2,8 @@ import Events from "../NativeEvents";
 import SVG, { updateSvgElement } from "../Svg";
 
 export class Tool {
-  button: SVGElement;
-  isSelected = false;
+  private button: SVGElement;
+  private isSelected = false;
 
   constructor(svg: SVG, public buttonX: number, public buttonY: number) {
     this.button = svg.addElement("circle", { cx: buttonX, cy: buttonY, r: 20 });

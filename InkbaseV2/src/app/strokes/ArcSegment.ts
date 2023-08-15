@@ -1,11 +1,10 @@
 import generateId from "../generateId";
 import Vec from "../../lib/vec";
 import SVG, { updateSvgElement } from "../Svg";
-import Point from "./Point";
+import Handle from "./Handle";
 
 export default class ArcSegment {
   id = generateId();
-  dirty = true;
   selected = false;
   isLargeArc = 0; // more than 180
   clockwise = 1; // clockwise or counterclockwise
@@ -13,9 +12,14 @@ export default class ArcSegment {
   radius: number;
   path = "";
   elements: { normal: SVGElement; selected: SVGElement };
+  private needsRerender = true;
 
-  constructor(svg: SVG, public a: Point, public b: Point, public c: Point) {
-    this.radius = Vec.dist(a.position, c.position);
+  constructor(svg: SVG, private aId: number, private bId: number, private cId: number) {
+    this.a.listeners.add(this);
+    this.b.listeners.add(this);
+    this.c.listeners.add(this);
+
+    this.radius = Vec.dist(this.a.position, this.c.position);
 
     this.updatePath();
 
@@ -26,23 +30,43 @@ export default class ArcSegment {
     };
   }
 
+  get a() {
+    return Handle.get(this.aId);
+  }
+
+  get b() {
+    return Handle.get(this.bId);
+  }
+
+  get c() {
+    return Handle.get(this.cId);
+  }
+
   updatePath() {
     //           M   start_x              start_y            A   radius_x        radius_y       x-axis-rotation,      more-than-180      clockwise         end_x                end_y
     this.path = `M ${this.a.position.x} ${this.a.position.y} A ${this.radius}  ${this.radius} ${this.xAxisRotation} ${this.isLargeArc} ${this.clockwise} ${this.b.position.x} ${this.b.position.y}`;
   }
 
   select() {
-    this.dirty = true;
     this.selected = true;
+    this.needsRerender = true;
   }
 
   deselect() {
-    this.dirty = true;
     this.selected = false;
+    this.needsRerender = true;
+  }
+
+  onHandleMoved() {
+    this.needsRerender = true;
+  }
+
+  onHandleRemoved() {
+    // no op
   }
 
   render() {
-    if (!(this.dirty || this.a.dirty || this.b.dirty || this.c.dirty)) {
+    if (!this.needsRerender) {
       return;
     }
 
@@ -59,6 +83,6 @@ export default class ArcSegment {
       stroke: this.selected ? "rgba(180, 134, 255, 0.42)" : "none",
     });
 
-    this.dirty = false;
+    this.needsRerender = false;
   }
 }

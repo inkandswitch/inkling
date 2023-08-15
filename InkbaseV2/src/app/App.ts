@@ -5,6 +5,7 @@ import Selection from "./Selection";
 import Snaps from "./Snaps";
 import SVG from "./Svg";
 import ToolPicker from "./ToolPicker";
+import Handle from "./strokes/Handle";
 import FormalTool from "./tools/FormalTool";
 import FreehandTool from "./tools/FreehandTool";
 
@@ -29,4 +30,8 @@ EveryFrame(() => {
   toolPicker.selected?.render(svg);
   snaps.render(svg);
   page.render(svg);
+
+  for (const handle of Handle.all) {
+    handle.render();
+  }
 });
