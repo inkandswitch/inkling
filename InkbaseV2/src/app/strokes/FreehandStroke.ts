@@ -5,6 +5,7 @@ import SVG, { generatePathFromPoints, updateSvgElement } from "../Svg";
 import generateId from "../generateId";
 import ControlPoint from "./ControlPoint";
 import { Position, PositionWithPressure } from "../../lib/types";
+import { notNull } from "../../lib/helpers";
 
 export const strokeSvgProperties = {
   stroke: "rgba(0, 0, 0, .5)",
@@ -13,11 +14,6 @@ export const strokeSvgProperties = {
   fill: "none",
   "stroke-width": 2,
 };
-
-// TODO: move this somewhere we can use it again.
-function notNull<T>(x: T | null): x is T {
-  return x != null;
-}
 
 export default class FreehandStroke {
   id = generateId();

@@ -16,3 +16,7 @@ export function objectWithSortedKeys(obj: Record<string, any>) {
   return newObj;
 }
 // tslint:enable
+
+export function notNull<T>(x: T | null): x is T {
+  return x != null;
+}
