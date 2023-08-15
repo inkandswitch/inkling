@@ -28,10 +28,10 @@ export default class StrokeGraph {
         );
 
         // Determine alignment at connection point
-        let dirA = getDirectionAtStrokePoint(stroke.points, closestPoint.indexA);
-        let dirB = getDirectionAtStrokePoint(otherStroke.points, closestPoint.indexB);
-        let alignment = Math.abs(Vec.cross(dirA, dirB));
-        let aligned = alignment < 0.3;
+        const dirA = getDirectionAtStrokePoint(stroke.points, closestPoint.indexA);
+        const dirB = getDirectionAtStrokePoint(otherStroke.points, closestPoint.indexB);
+        const alignment = Math.abs(Vec.cross(dirA, dirB));
+        const aligned = alignment < 0.3;
 
         this.connections.push({
           position: midPoint,

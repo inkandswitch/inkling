@@ -33,12 +33,12 @@ export default class FreehandStroke {
     this.points = points;
 
     // Store normalised point data based on control points
-    let transform = new TransformationMatrix().fromLine(cp1Pos, cp2Pos).inverse();
+    const transform = new TransformationMatrix().fromLine(cp1Pos, cp2Pos).inverse();
     this.pointData = points.map((p) => {
       if (p === null) {
         return null;
       }
-      let np = transform.transformPoint(p);
+      const np = transform.transformPoint(p);
       return { ...np, pressure: p.pressure };
     });
 
@@ -53,7 +53,7 @@ export default class FreehandStroke {
   }
 
   updatePath() {
-    let transform = new TransformationMatrix().fromLine(
+    const transform = new TransformationMatrix().fromLine(
       this.controlPoints[0].position,
       this.controlPoints[1].position
     );
@@ -62,7 +62,7 @@ export default class FreehandStroke {
       if (p === null) {
         return null;
       }
-      let np = transform.transformPoint(p);
+      const np = transform.transformPoint(p);
       return { ...np, pressure: p.pressure };
     });
     const path = generatePathFromPoints(this.points);

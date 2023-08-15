@@ -63,9 +63,9 @@ export default class FormalTool extends Tool {
           this.doFit();
         }
       } else {
-        let updatedPosition = pencilMove.position;
+        const updatedPosition = pencilMove.position;
 
-        let pointPositions = new Map();
+        const pointPositions = new Map();
 
         // TODO(marcel): sometimes there's no fixedStroke.
         // E.g., if you just tap on the screen so that the start and end points
@@ -75,7 +75,7 @@ export default class FormalTool extends Tool {
         pointPositions.set(this.fixedStroke.a, this.fixedStroke.a.position);
         pointPositions.set(this.fixedStroke.b, updatedPosition);
 
-        let snappedPositions = this.snaps.snapPositions(pointPositions);
+        const snappedPositions = this.snaps.snapPositions(pointPositions);
 
         this.fixedStroke.a.setPosition(snappedPositions.get(this.fixedStroke.a));
         this.fixedStroke.b.setPosition(snappedPositions.get(this.fixedStroke.b));

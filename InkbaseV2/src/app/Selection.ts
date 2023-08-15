@@ -97,7 +97,7 @@ export default class Selection {
         this.transformSelection();
       }
 
-      let fingerTwoUp = events.did("finger", "ended", this.secondFinger.id);
+      const fingerTwoUp = events.did("finger", "ended", this.secondFinger.id);
       if (fingerTwoUp) {
         this.secondFinger = null;
         this.secondFingerMoved = null;

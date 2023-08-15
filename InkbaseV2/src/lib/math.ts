@@ -42,7 +42,7 @@ export const randInt = (min, max) => Math.round(rand(min, max));
 
 export const roundTo = (input, precision) => {
   // Using the reciprocal avoids floating point errors. Eg: 3/10 is fine, but 3*0.1 is wrong.
-  let p = 1 / precision;
+  const p = 1 / precision;
   return Math.round(input * p) / p;
 };
 

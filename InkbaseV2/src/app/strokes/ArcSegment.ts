@@ -10,7 +10,7 @@ export default class ArcSegment {
   clockwise = 1; // clockwise or counterclockwise
   xAxisRotation = 0;
   radius: number;
-  path: string = "";
+  path = "";
   elements: { normal: any; selected: any };
 
   constructor(private svg: SVG, public a, public b, public c) {
