@@ -5,7 +5,9 @@ import { Tool } from "./tools/Tool";
 export default class ToolPicker {
   selected?: Tool;
 
-  constructor(private tools: Tool[]) {}
+  constructor(private tools: Tool[]) {
+    this.select(tools[0]);
+  }
 
   update(events: Events) {
     const fingerDown = events.did("finger", "began");

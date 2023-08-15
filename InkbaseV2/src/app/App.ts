@@ -24,7 +24,6 @@ const tools = [
 ];
 
 const toolPicker = new ToolPicker(tools);
-toolPicker.select(tools[0]);
 
 EveryFrame(() => {
   toolPicker.update(events);
