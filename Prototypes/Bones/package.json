@@ -1,0 +1,23 @@
+{
+  "name": "inkbase2",
+  "version": "1.0.0",
+  "description": "",
+  "main": "",
+  "scripts": {
+    "dev": "snowpack dev",
+    "build": "snowpack build"
+  },
+  "keywords": [],
+  "license": "MIT",
+  "devDependencies": {
+    "snowpack": "^3.8.8"
+  },
+  "dependencies": {
+    "perfect-freehand": "^1.2.0"
+  },
+  "prettier": {
+    "tabWidth": 2,
+    "semi": true,
+    "printWidth": 100
+  }
+}
