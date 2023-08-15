@@ -1,8 +1,10 @@
 import Vec from "../../lib/vec";
+import SVG from "../Svg";
+import { Position } from "./Point";
 
 // A connection between two strokes
 interface Connection {
-  position: any;
+  position: Position;
   strokes: any[];
   indexes: number[];
   aligned: boolean; // True if roughly aligned, false if roughly perpendicular
@@ -15,7 +17,7 @@ export default class StrokeGraph {
   connections: Connection[] = [];
 
   dirty = false;
-  elements: any[] = [];
+  elements: SVGElement[] = [];
 
   addStroke(stroke) {
     // Generate closest strokes for this stroke
@@ -46,12 +48,14 @@ export default class StrokeGraph {
     this.dirty = true;
   }
 
-  render(svg) {
+  render(svg: SVG) {
     if (!this.dirty) {
       return;
     }
 
-    this.elements.forEach((elem) => elem.remove());
+    for (const elem of this.elements) {
+      elem.remove();
+    }
 
     this.elements = this.connections.map((c) => {
       return svg.addElement("circle", {
@@ -87,7 +91,7 @@ function closestPointsBetweenStrokes(strokeA, strokeB) {
   return { dist: minDist, indexA, indexB };
 }
 
-function getDirectionAtStrokePoint(stroke, index) {
+function getDirectionAtStrokePoint(stroke, index: number) {
   let backwardIndex = index - 10;
   if (backwardIndex < 0) {
     backwardIndex = 0;

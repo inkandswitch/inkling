@@ -1,12 +1,13 @@
 import TransformationMatrix from "../lib/transform_matrix";
 import Vec from "../lib/vec";
+import Point from "./strokes/Point";
 
 export default class Selection {
-  points = new Set<any>();
-  origPosition = new Map(); // point -> position
+  points = new Set<Point>();
+  origPosition = new Map<Point, Position>(); // point -> position
 
   // gesture state
-  tappedOn; // point
+  tappedOn: Point | null;
   firstFinger;
   firstFingerMoved;
   secondFinger;
@@ -16,9 +17,9 @@ export default class Selection {
 
   update(events) {
     const fingerDown = events.did("finger", "began");
-    if (fingerDown) {
+    if (fingerDown != null) {
       // If we weren't already holding down a finger
-      if (!this.firstFinger) {
+      if (this.firstFinger == null) {
         this.firstFinger = fingerDown;
         this.firstFingerMoved = fingerDown;
 
@@ -54,15 +55,15 @@ export default class Selection {
     }
 
     // If we're already holding down a finger, switch to pinch gesture
-    if (this.firstFinger) {
+    if (this.firstFinger != null) {
       const fingerMove = events.didLast("finger", "moved", this.firstFinger.id);
-      if (fingerMove) {
+      if (fingerMove != null) {
         this.firstFingerMoved = fingerMove;
         this.transformSelection();
       }
 
       const fingerUp = events.did("finger", "ended", this.firstFinger.id);
-      if (fingerUp) {
+      if (fingerUp != null) {
         const shortTap = fingerUp.timestamp - this.firstFinger.timestamp < 0.2;
         if (shortTap) {
           const tappedOnEmptySpace = this.tappedOn == null;
@@ -90,15 +91,15 @@ export default class Selection {
       }
     }
 
-    if (this.secondFinger) {
+    if (this.secondFinger != null) {
       const fingerMove = events.did("finger", "moved", this.secondFinger.id);
-      if (fingerMove) {
+      if (fingerMove != null) {
         this.secondFingerMoved = fingerMove;
         this.transformSelection();
       }
 
       const fingerTwoUp = events.did("finger", "ended", this.secondFinger.id);
-      if (fingerTwoUp) {
+      if (fingerTwoUp != null) {
         this.secondFinger = null;
         this.secondFingerMoved = null;
 
@@ -109,7 +110,7 @@ export default class Selection {
     }
   }
 
-  selectPoint(point) {
+  selectPoint(point: Point) {
     this.points.add(point);
     point.select();
 
@@ -146,7 +147,7 @@ export default class Selection {
     // }
 
     const transform = new TransformationMatrix();
-    if (this.firstFingerMoved && this.secondFingerMoved) {
+    if (this.firstFingerMoved != null && this.secondFingerMoved != null) {
       const a = Vec.divS(
         Vec.add(this.firstFingerMoved.position, this.secondFingerMoved.position),
         2

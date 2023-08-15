@@ -4,7 +4,7 @@ import ArcSegment from "./strokes/ArcSegment";
 import LineSegment from "./strokes/LineSegment";
 import FreehandStroke from "./strokes/FreehandStroke";
 
-import Point from "./strokes/Point";
+import Point, { Position } from "./strokes/Point";
 import ControlPoint from "./strokes/ControlPoint";
 
 import StrokeGraph from "./strokes/StrokeGraph";
@@ -20,13 +20,13 @@ export default class Page {
 
   constructor(private svg: SVG) {}
 
-  addPoint(position) {
+  addPoint(position: Position) {
     const p = new Point(this.svg, position);
     this.points.push(p);
     return p;
   }
 
-  addControlPoint(position, parent?) {
+  addControlPoint(position: Position, parent?) {
     const p = new ControlPoint(this.svg, position, parent);
     this.points.push(p);
     return p;
@@ -44,7 +44,7 @@ export default class Page {
     return as;
   }
 
-  addFreehandStroke(points) {
+  addFreehandStroke(points: Point[]) {
     const cp1 = this.addControlPoint(points[0]);
     const cp2 = this.addControlPoint(points[points.length - 1]);
     const s = new FreehandStroke(this.svg, points, cp1, cp2);
@@ -55,7 +55,7 @@ export default class Page {
     return s;
   }
 
-  findPointNear(position, dist = 20) {
+  findPointNear(position: Position, dist = 20) {
     let closestPoint: Point | null = null;
     let closestDistance = dist;
 
@@ -72,7 +72,7 @@ export default class Page {
 
   // TODO: this is a bad idea -- it breaks too much of the stuff that I want to do.
   // consider removing, or at least disabling for my experiments.
-  mergePoint(point) {
+  mergePoint(_point: Point) {
     return;
 
     // const pointsToMerge = new Set(
@@ -112,7 +112,7 @@ export default class Page {
     // this.points = this.points.filter((p) => !pointsToMerge.has(p))
   }
 
-  pointsReachableFrom(startPoints) {
+  pointsReachableFrom(startPoints: Point[]) {
     const reachablePoints = new Set(startPoints);
     while (true) {
       const oldSize = reachablePoints.size;
@@ -142,11 +142,10 @@ export default class Page {
     return reachablePoints;
   }
 
-  render(svg) {
-    const renderIt = (it) => it.render(svg);
-    this.lineSegments.forEach(renderIt);
-    this.freehandStrokes.forEach(renderIt);
-    this.points.forEach(renderIt);
+  render(svg: SVG) {
+    this.lineSegments.forEach((ls) => ls.render(svg));
+    this.freehandStrokes.forEach((s) => s.render(svg));
+    this.points.forEach((p) => p.render(svg));
 
     this.graph.render(svg);
   }

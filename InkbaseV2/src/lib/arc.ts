@@ -1,14 +1,29 @@
 // Arc, defined by angles in radians
 
+import { Position } from "../app/strokes/Point";
 import Vec from "./vec";
 
-function Arc(center, radius, startAngle, endAngle, clockwise = true) {
+interface Arc {
+  center: number;
+  radius: number;
+  startAngle: number;
+  endAngle: number;
+  clockwise: boolean;
+}
+
+function Arc(
+  center: number,
+  radius: number,
+  startAngle: number,
+  endAngle: number,
+  clockwise = true
+): Arc {
   return { center, radius, startAngle, endAngle, clockwise };
 }
 
 export default Arc;
 
-Arc.len = (arc) => {
+Arc.len = (arc: Arc) => {
   const { radius, startAngle, endAngle } = arc;
 
   // Calculate the arc length using the formula: arc length = radius * angle
@@ -18,13 +33,19 @@ Arc.len = (arc) => {
   return length;
 };
 
-Arc.distToPointCircle = (circle, point) => {
+// TODO: Position should be declared in lib, not /app/strokes/Point
+interface Circle {
+  center: Position;
+  radius: number;
+}
+
+Arc.distToPointCircle = (circle: Circle, point: Position) => {
   const distance = Vec.dist(circle.center, point);
   return Math.abs(distance - circle.radius);
 };
 
-Arc.spreadPointsAlong = (arc, n) => {
-  const points: any = [];
+Arc.spreadPointsAlong = (arc: Arc, n: number) => {
+  const points: Position[] = [];
 
   const innerAngle = Arc.directedInnerAngle(arc);
   const angleStep = innerAngle / (n - 1);
@@ -39,7 +60,7 @@ Arc.spreadPointsAlong = (arc, n) => {
 };
 
 // Computes the inner angle moving in correct direction (positive if clockwise, negative if counter clockwise)
-Arc.directedInnerAngle = (arc) => {
+Arc.directedInnerAngle = (arc: Arc) => {
   const difference = arc.endAngle - arc.startAngle;
   if (arc.clockwise && difference < 0) {
     return 2 * Math.PI - Math.abs(difference);
@@ -50,7 +71,7 @@ Arc.directedInnerAngle = (arc) => {
   }
 };
 
-Arc.points = (arc) => {
+Arc.points = (arc: Arc) => {
   console.log(arc);
 
   const start = Vec.add(arc.center, Vec.polar(arc.startAngle, arc.radius));

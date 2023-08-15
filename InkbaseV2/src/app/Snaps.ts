@@ -1,19 +1,21 @@
 import Vec from "../lib/vec";
+import Page from "./Page";
 import SVG, { updateSvgElement } from "./Svg";
+import Point, { Position } from "./strokes/Point";
 
 export default class Snaps {
-  activeSnaps: any[] = [];
+  activeSnaps: Snap[] = [];
 
   // rendering
-  snapSvgElementById = new Map<any, any>();
+  snapSvgElementById = new Map<string, SVGElement>();
   dirty = false;
 
-  constructor(private page) {}
+  constructor(private page: Page) {}
 
   // returns Map<Point, snap position>
-  snapPositions(transformedPositions) {
-    const snaps: any[] = [];
-    const snapPositions = new Map();
+  snapPositions(transformedPositions: Map<Point, Position>) {
+    const snaps: Snap[] = [];
+    const snapPositions = new Map<Point, Position>();
     const snapPoints = this.page.points.filter((p) => !transformedPositions.has(p));
     const selectedPoints = Array.from(transformedPositions.keys());
     const connectedPoints = this.page.pointsReachableFrom(selectedPoints);
@@ -26,7 +28,7 @@ export default class Snaps {
         continue;
       }
 
-      const snapVectors: any[] = [];
+      const snapVectors: Position[] = [];
 
       // snap to point
       for (const snapPoint of snapPoints) {
@@ -78,7 +80,7 @@ export default class Snaps {
     return snapPositions;
   }
 
-  setActiveSnaps(activeSnaps) {
+  setActiveSnaps(activeSnaps: Snap[]) {
     this.activeSnaps = activeSnaps;
     this.dirty = true;
 
@@ -122,24 +124,45 @@ export default class Snaps {
   }
 }
 
+type Shape = CircleShape | LineShape;
+
+interface CircleShape {
+  shapeType: "circle";
+  shapeData: {
+    cx: number;
+    cy: number;
+    r: number;
+  };
+}
+
+interface LineShape {
+  shapeType: "line";
+  shapeData: {
+    x1: number;
+    y1: number;
+    x2: number;
+    y2: number;
+  };
+}
+
 class Snap {
   id: string;
 
-  constructor(protected point, protected snapPoint) {
+  constructor(protected point: Point, protected snapPoint: Point) {
     this.id = `${point.id}.${snapPoint.id}.${this.constructor.name}`;
   }
 
-  getShape() {
+  getShape(): Shape {
     throw new Error("subclass responsibility!");
   }
 }
 
 class PointSnap extends Snap {
-  constructor(point, snapPoint) {
+  constructor(point: Point, snapPoint: Point) {
     super(point, snapPoint);
   }
 
-  getShape() {
+  getShape(): CircleShape {
     return {
       shapeType: "circle",
       shapeData: {
@@ -152,11 +175,11 @@ class PointSnap extends Snap {
 }
 
 class AlignmentSnap extends Snap {
-  constructor(point, snapPoint) {
+  constructor(point: Point, snapPoint: Point) {
     super(point, snapPoint);
   }
 
-  getShape() {
+  getShape(): LineShape {
     return {
       shapeType: "line",
       shapeData: {

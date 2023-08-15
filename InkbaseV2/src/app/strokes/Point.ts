@@ -1,20 +1,26 @@
 import SVG, { updateSvgElement } from "../Svg";
 import generateId from "../generateId";
 
+// TODO: figure out where this declaration should live
+export interface Position {
+  x: number;
+  y: number;
+}
+
 export default class Point {
   id = generateId();
   dirty = true;
   selected = false;
   elements: Record<string, SVGElement>;
 
-  constructor(svg: SVG, public position: { x: number; y: number }) {
+  constructor(svg: SVG, public position: Position) {
     this.elements = {
       normal: svg.addElement("circle", { cx: 0, cy: 0, r: 3, fill: "black" }),
       selected: svg.addElement("circle", { cx: 0, cy: 0, r: 7, fill: "none" }),
     };
   }
 
-  setPosition(position) {
+  setPosition(position: Position) {
     this.dirty = true;
     this.position = position;
   }
