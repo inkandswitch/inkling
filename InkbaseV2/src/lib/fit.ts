@@ -2,6 +2,8 @@ import Arc from "./arc";
 import Line from "./line";
 import Vec from "./vec";
 
+// tslint:disable:variable-name
+
 const Fit: { [name: string]: Function } = {};
 export default Fit;
 

@@ -1,3 +1,5 @@
+// tslint:disable:variable-name
+
 // Vec
 // This is a port of (part of) Ivan's homemade CoffeeScript vector library.
 

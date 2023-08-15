@@ -2,6 +2,8 @@ import { Position } from "../../lib/types";
 import Vec from "../../lib/vec";
 import SVG from "../Svg";
 
+// tslint:disable:no-any
+
 // A connection between two strokes
 interface Connection {
   position: Position;

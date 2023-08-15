@@ -1,5 +1,7 @@
 import Vec from "../lib/vec";
 
+// tslint:disable:no-any
+
 // TODO(alex): figure out how to make this only one of the interaction models
 // for freehand strokes (code architecture-wise)
 export default class Morphing {
