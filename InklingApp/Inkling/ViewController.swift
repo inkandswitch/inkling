@@ -9,7 +9,7 @@ import CoreData
 import UIKit
 import WebKit
 
-class ViewController: UIViewController, WKScriptMessageHandler, WKUIDelegate, UIGestureRecognizerDelegate, UIScrollViewDelegate {
+class ViewController: UIViewController, WKScriptMessageHandler, WKUIDelegate, WKNavigationDelegate, UIGestureRecognizerDelegate, UIScrollViewDelegate {
     let isBlockingScroll = true
     var multiGestureRecognizer: MultiGestureRecognizer?
     var webView: WKWebView?
@@ -44,7 +44,11 @@ class ViewController: UIViewController, WKScriptMessageHandler, WKUIDelegate, UI
         webView = WKWebView(frame: view.frame, configuration: configuration)
         webView!.load(URLRequest(url: url))
         webView!.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-      
+        
+        // Enable support for prompt()
+        webView!.uiDelegate = self
+        webView!.navigationDelegate = self
+
         // Disable magnifying glass
         webView!.configuration.preferences.isTextInteractionEnabled = false
         
@@ -62,7 +66,7 @@ class ViewController: UIViewController, WKScriptMessageHandler, WKUIDelegate, UI
         multiGestureRecognizer!.webView = webView
         multiGestureRecognizer!.delegate = self
         webView!.addGestureRecognizer(multiGestureRecognizer!)
-
+        
         view.addSubview(webView!)
     }
 
@@ -91,5 +95,29 @@ class ViewController: UIViewController, WKScriptMessageHandler, WKUIDelegate, UI
               Log.log("huh? " + msg);
           }
       }
+    }
+    
+    // This enables support for prompt()
+    func webView(_ webView: WKWebView, runJavaScriptTextInputPanelWithPrompt prompt: String, defaultText: String?, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping (String?) -> Void) {
+
+        let alertController = UIAlertController(title: nil, message: prompt, preferredStyle: .alert)
+
+        alertController.addTextField { (textField) in
+            textField.text = defaultText
+        }
+
+        alertController.addAction(UIAlertAction(title: "OK", style: .default, handler: { (action) in
+            if let text = alertController.textFields?.first?.text {
+                completionHandler(text)
+            } else {
+                completionHandler(defaultText)
+            }
+        }))
+
+        alertController.addAction(UIAlertAction(title: "Cancel", style: .default, handler: { (action) in
+            completionHandler(nil)
+        }))
+
+        present(alertController, animated: true, completion: nil)
     }
 }
