@@ -6,7 +6,7 @@
 import { isZero, roundTo } from "./math";
 import { Position } from "./types";
 
-interface Vector {
+export interface Vector {
   x: number;
   y: number;
 }
