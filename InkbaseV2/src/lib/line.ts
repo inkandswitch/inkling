@@ -1,19 +1,24 @@
 // Line
 // This is a collection of functions related to line segments written by Marcel with help of ChatGPT
 
+import { Position } from "./types";
 import Vec from "./vec";
 
-const Line = (a, b) => {
+export interface Line {
+  a: Position;
+  b: Position;
+}
+
+export default function Line(a: Position, b: Position): Line {
   return { a, b };
-};
-export default Line;
+}
 
-Line.len = (l) => Vec.dist(l.a, l.b);
+Line.len = (l: Line) => Vec.dist(l.a, l.b);
 
-Line.directionVec = (l) => Vec.normalize(Vec.sub(l.b, l.a));
+Line.directionVec = (l: Line) => Vec.normalize(Vec.sub(l.b, l.a));
 
 // Returns intersection if the line segments overlap, or null if they don't
-Line.intersect = (l1, l2) => {
+Line.intersect = (l1: Line, l2: Line): Position | null => {
   const { a: p1, b: p2 } = l1;
   const { a: q1, b: q2 } = l2;
 
@@ -46,7 +51,7 @@ Line.intersect = (l1, l2) => {
 };
 
 // Always returns intersection point even if the line segments don't overlap
-Line.intersectAnywhere = (l1, l2) => {
+Line.intersectAnywhere = (l1: Line, l2: Line): Position | null => {
   const { a: p1, b: p2 } = l1;
   const { a: q1, b: q2 } = l2;
 
@@ -76,7 +81,7 @@ Line.intersectAnywhere = (l1, l2) => {
 
 // Get point along slope
 // TODO: make this work for vertical lines, too
-Line.getYforX = (line, x) => {
+Line.getYforX = (line: Line, x: number): number => {
   // Extract the coordinates of points a and b
   const { a, b } = line;
   const { x: x1, y: y1 } = a;
@@ -93,7 +98,7 @@ Line.getYforX = (line, x) => {
 
 // Get point along slope
 // TODO: make this work for vertical lines, too
-Line.getXforY = (line, y) => {
+Line.getXforY = (line: Line, y: number) => {
   // Extract the coordinates of points a and b
   const { a, b } = line;
   const { x: x1, y: y1 } = a;
@@ -108,9 +113,9 @@ Line.getXforY = (line, y) => {
   return x;
 };
 
-Line.distToPoint = (line, point) => Vec.dist(point, Line.closestPoint(line, point));
+Line.distToPoint = (line: Line, point: Position) => Vec.dist(point, Line.closestPoint(line, point));
 
-Line.closestPoint = (line, point, strict = true) => {
+Line.closestPoint = (line: Line, point: Position, strict = true) => {
   const { a, b } = line;
 
   // Calculate vector AB and AP
@@ -130,10 +135,10 @@ Line.closestPoint = (line, point, strict = true) => {
   }
 };
 
-Line.spreadPointsAlong = (line, n) => {
+Line.spreadPointsAlong = (line: Line, n: number) => {
   const segLength = Line.len(line) / n;
   const offsetSeg = Vec.mulS(Line.directionVec(line), segLength);
-  const points: any = [];
+  const points: Position[] = [];
   for (let i = 0; i < n; i++) {
     points.push(Vec.add(line.a, Vec.mulS(offsetSeg, i)));
   }
