@@ -1,33 +1,36 @@
-import { Position } from "../../lib/types";
+import { Position, PositionWithPressure } from "../../lib/types";
 import Vec from "../../lib/vec";
 import SVG from "../Svg";
+import FreehandStroke from "./FreehandStroke";
 
 // tslint:disable:no-any
 
 // A connection between two strokes
 interface Connection {
   position: Position;
-  strokes: any[];
+  strokes: FreehandStroke[];
   indexes: number[];
   aligned: boolean; // True if roughly aligned, false if roughly perpendicular
 }
 
 // Stroke Graph is the datastructure responsible for holding information about groupings of strokes
 export default class StrokeGraph {
-  strokes: any[] = [];
-  groups: any[] = [];
+  strokes: FreehandStroke[] = [];
   connections: Connection[] = [];
 
   dirty = false;
   elements: SVGElement[] = [];
 
-  addStroke(stroke) {
+  // Alex commented out this instance variable b/c it wasn't used anywhere
+  // groups: any[] = [];
+
+  addStroke(stroke: FreehandStroke) {
     // Generate closest strokes for this stroke
     for (const otherStroke of this.strokes) {
       const closestPoint = closestPointsBetweenStrokes(stroke.points, otherStroke.points);
       if (closestPoint.dist < 20) {
         const midPoint = Vec.mulS(
-          Vec.add(stroke.points[closestPoint.indexA], otherStroke.points[closestPoint.indexB]),
+          Vec.add(stroke.points[closestPoint.indexA]!, otherStroke.points[closestPoint.indexB]!),
           0.5
         );
 
@@ -72,16 +75,23 @@ export default class StrokeGraph {
   }
 }
 
-function closestPointsBetweenStrokes(strokeA, strokeB) {
-  let minDist = Vec.dist(strokeA[0], strokeB[0]);
+function closestPointsBetweenStrokes(
+  strokeA: Array<PositionWithPressure | null>,
+  strokeB: Array<PositionWithPressure | null>
+) {
+  let minDist = Vec.dist(strokeA[0]!, strokeB[0]!);
   let indexA = 0;
   let indexB = 0;
 
   for (let i = 0; i < strokeA.length; i++) {
     for (let j = 0; j < strokeB.length; j++) {
-      if (strokeA[i] == null || strokeB[j] == null) continue;
+      const pa = strokeA[i];
+      const pb = strokeB[j];
+      if (pa == null || pb == null) {
+        continue;
+      }
 
-      const dist = Vec.dist(strokeA[i], strokeB[j]);
+      const dist = Vec.dist(pa, pb);
       if (dist < minDist) {
         minDist = dist;
         indexA = i;
@@ -93,16 +103,22 @@ function closestPointsBetweenStrokes(strokeA, strokeB) {
   return { dist: minDist, indexA, indexB };
 }
 
-function getDirectionAtStrokePoint(stroke, index: number) {
+function getDirectionAtStrokePoint(stroke: Array<PositionWithPressure | null>, index: number) {
   let backwardIndex = index - 10;
   if (backwardIndex < 0) {
     backwardIndex = 0;
+  }
+  while (stroke[backwardIndex] == null) {
+    backwardIndex++;
   }
 
   let forwardIndex = index + 10;
   if (forwardIndex > stroke.length - 1) {
     forwardIndex = stroke.length - 1;
   }
+  while (stroke[forwardIndex] == null) {
+    forwardIndex--;
+  }
 
-  return Vec.normalize(Vec.sub(stroke[backwardIndex], stroke[forwardIndex]));
+  return Vec.normalize(Vec.sub(stroke[backwardIndex]!, stroke[forwardIndex]!));
 }
