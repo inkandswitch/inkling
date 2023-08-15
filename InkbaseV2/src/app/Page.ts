@@ -4,10 +4,11 @@ import ArcSegment from "./strokes/ArcSegment";
 import LineSegment from "./strokes/LineSegment";
 import FreehandStroke from "./strokes/FreehandStroke";
 
-import Point, { Position } from "./strokes/Point";
+import Point from "./strokes/Point";
 import ControlPoint from "./strokes/ControlPoint";
 
 import StrokeGraph from "./strokes/StrokeGraph";
+import { Position, PositionWithPressure } from "../lib/types";
 
 export default class Page {
   points: Point[] = [];
@@ -44,9 +45,9 @@ export default class Page {
     return as;
   }
 
-  addFreehandStroke(points: Point[]) {
-    const cp1 = this.addControlPoint(points[0]);
-    const cp2 = this.addControlPoint(points[points.length - 1]);
+  addFreehandStroke(points: Array<PositionWithPressure | null>) {
+    const cp1 = this.addControlPoint(points[0]!);
+    const cp2 = this.addControlPoint(points[points.length - 1]!);
     const s = new FreehandStroke(this.svg, points, cp1, cp2);
     cp1.parent = s;
     cp2.parent = s;
@@ -144,8 +145,8 @@ export default class Page {
 
   render(svg: SVG) {
     this.lineSegments.forEach((ls) => ls.render(svg));
-    this.freehandStrokes.forEach((s) => s.render(svg));
-    this.points.forEach((p) => p.render(svg));
+    this.freehandStrokes.forEach((s) => s.render());
+    this.points.forEach((p) => p.render());
 
     this.graph.render(svg);
   }

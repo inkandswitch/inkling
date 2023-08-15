@@ -1,7 +1,8 @@
+import { Position } from "../lib/types";
 import Vec from "../lib/vec";
 import Page from "./Page";
 import SVG, { updateSvgElement } from "./Svg";
-import Point, { Position } from "./strokes/Point";
+import Point from "./strokes/Point";
 
 export default class Snaps {
   activeSnaps: Snap[] = [];
@@ -148,7 +149,7 @@ interface LineShape {
 class Snap {
   id: string;
 
-  constructor(protected point: Point, protected snapPoint: Point) {
+  constructor(public point: Point, public snapPoint: Point) {
     this.id = `${point.id}.${snapPoint.id}.${this.constructor.name}`;
   }
 

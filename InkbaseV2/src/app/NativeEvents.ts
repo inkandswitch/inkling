@@ -1,12 +1,9 @@
+import { Position } from "../lib/types";
+
 export type Event = PencilEvent | FingerEvent;
 export type EventType = Event["type"];
 export type EventState = "began" | "moved" | "cancelled" | "ended";
 export type TouchId = string;
-
-interface Position {
-  x: number;
-  y: number;
-}
 
 interface AEvent {
   state: EventState;

@@ -4,7 +4,7 @@ import TransformationMatrix from "../../lib/transform_matrix";
 import SVG, { generatePathFromPoints, updateSvgElement } from "../Svg";
 import generateId from "../generateId";
 import ControlPoint from "./ControlPoint";
-import { Position } from "./Point";
+import { Position, PositionWithPressure } from "../../lib/types";
 
 export const strokeSvgProperties = {
   stroke: "rgba(0, 0, 0, .5)",
@@ -17,11 +17,6 @@ export const strokeSvgProperties = {
 // TODO: move this somewhere we can use it again.
 function notNull<T>(x: T | null): x is T {
   return x != null;
-}
-
-// TODO: move this to the right place
-interface PositionWithPressure extends Position {
-  pressure: number;
 }
 
 export default class FreehandStroke {
@@ -83,7 +78,7 @@ export default class FreehandStroke {
     updateSvgElement(this.element, { d: path });
   }
 
-  onControlPointMove(_controlPoint) {
+  onControlPointMove() {
     this.dirty = true;
   }
 

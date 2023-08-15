@@ -1,6 +1,6 @@
+import { Position } from "../../lib/types";
 import Vec from "../../lib/vec";
 import SVG from "../Svg";
-import { Position } from "./Point";
 
 // A connection between two strokes
 interface Connection {

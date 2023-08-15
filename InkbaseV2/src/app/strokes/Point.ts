@@ -1,11 +1,6 @@
+import { Position } from "../../lib/types";
 import SVG, { updateSvgElement } from "../Svg";
 import generateId from "../generateId";
-
-// TODO: figure out where this declaration should live
-export interface Position {
-  x: number;
-  y: number;
-}
 
 export default class Point {
   id = generateId();
@@ -41,17 +36,19 @@ export default class Point {
   }
 
   render() {
-    if (this.dirty) {
-      updateSvgElement(this.elements.normal, {
-        transform: `translate(${this.position.x} ${this.position.y})`,
-      });
-
-      updateSvgElement(this.elements.selected, {
-        transform: `translate(${this.position.x} ${this.position.y})`,
-        fill: this.selected ? "rgba(180, 134, 255, 0.42)" : "none",
-      });
-
-      this.dirty = false;
+    if (!this.dirty) {
+      return;
     }
+
+    updateSvgElement(this.elements.normal, {
+      transform: `translate(${this.position.x} ${this.position.y})`,
+    });
+
+    updateSvgElement(this.elements.selected, {
+      transform: `translate(${this.position.x} ${this.position.y})`,
+      fill: this.selected ? "rgba(180, 134, 255, 0.42)" : "none",
+    });
+
+    this.dirty = false;
   }
 }

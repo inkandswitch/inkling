@@ -1,6 +1,6 @@
 // Arc, defined by angles in radians
 
-import { Position } from "../app/strokes/Point";
+import { Position } from "./types";
 import Vec from "./vec";
 
 interface Arc {

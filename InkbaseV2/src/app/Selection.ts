@@ -1,4 +1,5 @@
 import TransformationMatrix from "../lib/transform_matrix";
+import { Position } from "../lib/types";
 import Vec from "../lib/vec";
 import Point from "./strokes/Point";
 

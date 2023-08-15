@@ -1,14 +1,9 @@
-import Events, { PencilEvent, TouchId } from "../NativeEvents";
+import { PositionWithPressure } from "../../lib/types";
+import Events, { PencilEvent } from "../NativeEvents";
 import Page from "../Page";
 import SVG, { generatePathFromPoints, updateSvgElement } from "../Svg";
 import { strokeSvgProperties } from "../strokes/FreehandStroke";
 import { Tool } from "./Tool";
-
-interface PositionWithPressure {
-  x: number;
-  y: number;
-  pressure: number;
-}
 
 type Mode = "unistroke" | "multistroke";
 
@@ -67,7 +62,7 @@ export default class FreehandTool extends Tool {
   }
 
   endStroke() {
-    this.page.addFreehandStroke(this.points);
+    this.page.addFreehandStroke(this.points!);
     this.points = undefined;
     this.dirty = true;
   }
