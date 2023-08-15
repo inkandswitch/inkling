@@ -226,6 +226,9 @@ export default class FormalTool extends Tool {
       case "circle":
         this.idealPoints = Arc.spreadPointsAlong(this.fit.circle, this.inputPoints!.length);
         break;
+      default:
+        // tslint:disable-next-line:no-any
+        throw new Error("unsupported fit type: " + (this.fit as any).type);
     }
   }
 
