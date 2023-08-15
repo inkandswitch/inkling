@@ -18,3 +18,11 @@ There is a handy little script to make it easier for us to take snapshots of our
 E.g., `./take-snapshot b963db1850e6ea82b7ebab25c9e885bb341c6a63 FormalInkIntegrated FormalInkIntegrated-jul-28-23` will revert the code to the way it was as of commit `b963db1850e6ea82b7ebab25c9e885bb341c6a63`, then copy whatever was in the `FormalInkIntegrated` directory into `FormalInkIntegrated-jul-28-23`, and finally fast-forward "back to the future".
 
 Finally you have to modify index.html to add a link to the prototype.
+
+
+### Auto-formatting and fixing of linter errors
+
+The main application, which lives in the InkbaseV2 folder, uses `gts`. To get the most of gts:
+
+* Enable formatting on save by opening up the settings menu on vscode, typing "format on save", and checking the appropriate box.
+* To automatically fix linter errors, run `yarn fix` at the command line.
