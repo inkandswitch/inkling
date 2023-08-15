@@ -11,7 +11,7 @@ export default class ArcSegment {
   xAxisRotation = 0;
   radius: number;
   path = "";
-  elements: { normal: any; selected: any };
+  elements: { normal: SVGElement; selected: SVGElement };
 
   constructor(private svg: SVG, public a, public b, public c) {
     this.radius = Vec.dist(a.position, c.position);

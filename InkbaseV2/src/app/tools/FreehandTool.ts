@@ -89,7 +89,7 @@ export default class FreehandTool extends Tool {
   }
 
   onDeselected() {
-    if (this.points != undefined) {
+    if (this.points != null) {
       this.endStroke();
       this.updatePath();
     }

@@ -84,6 +84,10 @@ export default class Events {
   private setupNativeEventHandler() {
     (window as any).nativeEvent = (state: EventState, touches: Record<TouchId, TouchPoint[]>) => {
       for (const id in touches) {
+        if (!touches.hasOwnProperty(id)) {
+          continue;
+        }
+
         for (const point of touches[id]) {
           const { type, timestamp, radius, force, altitude, azimuth, x, y } = point;
 
@@ -96,7 +100,7 @@ export default class Events {
           };
 
           const event: Event =
-            type == "touch"
+            type === "touch"
               ? {
                   type: "finger",
                   ...sharedProperties,

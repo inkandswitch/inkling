@@ -4,8 +4,8 @@ import Vec from "../../lib/vec";
 interface Connection {
   position: any;
   strokes: any[];
-  indexes: Number[];
-  aligned: Boolean; // True if roughly aligned, false if roughly perpendicular
+  indexes: number[];
+  aligned: boolean; // True if roughly aligned, false if roughly perpendicular
 }
 
 // Stroke Graph is the datastructure responsible for holding information about groupings of strokes

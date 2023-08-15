@@ -1,9 +1,11 @@
 // import { getStroke } from "perfect-freehand"
 
+type AttributeValue = string | number;
+
 export default class SVG {
   constructor(private root: SVGSVGElement) {}
 
-  addElement(type: string, attributes: Record<string, any>) {
+  addElement(type: string, attributes: Record<string, AttributeValue>) {
     const elem: SVGElement = document.createElementNS("http://www.w3.org/2000/svg", type);
     updateSvgElement(elem, attributes);
     this.root.appendChild(elem);
@@ -11,8 +13,8 @@ export default class SVG {
   }
 }
 
-export function updateSvgElement(elem: SVGElement, attributes: Record<string, any>) {
-  Object.entries(attributes).forEach(([key, value]) => elem.setAttribute(key, value));
+export function updateSvgElement(elem: SVGElement, attributes: Record<string, AttributeValue>) {
+  Object.entries(attributes).forEach(([key, value]) => elem.setAttribute(key, "" + value));
 }
 
 const GET_STROKE_OPTIONS = {
