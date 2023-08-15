@@ -7,7 +7,6 @@ import SVG from "./Svg";
 import ToolPicker from "./ToolPicker";
 import FormalTool from "./tools/FormalTool";
 import FreehandTool from "./tools/FreehandTool";
-import TextTool from "./tools/TextTool";
 
 const root = document.querySelector("svg") as SVGSVGElement;
 
@@ -17,11 +16,7 @@ const page = new Page(svg);
 const snaps = new Snaps(page);
 const selection = new Selection(page, snaps);
 
-const tools = [
-  new FreehandTool(svg, 30, 30, page),
-  new FormalTool(svg, 30, 80, page, snaps),
-  new TextTool(svg, 30, 130, page),
-];
+const tools = [new FreehandTool(svg, 30, 30, page), new FormalTool(svg, 30, 80, page, snaps)];
 
 const toolPicker = new ToolPicker(tools);
 
