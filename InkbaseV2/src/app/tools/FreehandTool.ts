@@ -15,8 +15,8 @@ type Mode = "unistroke" | "multistroke";
 export default class FreehandTool extends Tool {
   mode: Mode = "unistroke";
   points?: Array<PositionWithPressure | null>;
-  strokeElement: any;
-  multistrokeModeDotElement?: any;
+  strokeElement: SVGElement;
+  multistrokeModeDotElement?: SVGElement;
   pencilIsDown = false;
   dirty = false;
 

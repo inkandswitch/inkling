@@ -2,7 +2,7 @@ import Events from "../NativeEvents";
 import SVG, { updateSvgElement } from "../Svg";
 
 export class Tool {
-  button: any;
+  button: SVGElement;
   isSelected = false;
 
   constructor(svg: SVG, public buttonX: number, public buttonY: number) {
