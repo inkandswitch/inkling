@@ -1,13 +1,13 @@
 import Arc from '../../lib/arc.js';
-import Fit, {ArcFit, CircleFit, LineFit} from '../../lib/fit.js';
+import Fit, { ArcFit, CircleFit, LineFit } from '../../lib/fit.js';
 import Line from '../../lib/line.js';
 import Vec from '../../lib/vec.js';
 import Page from '../Page.js';
 import Snaps from '../Snaps.js';
-import SVG, {generatePathFromPoints, updateSvgElement} from '../Svg.js';
-import {Tool} from './Tool.js';
+import SVG, { generatePathFromPoints, updateSvgElement } from '../Svg.js';
+import { Tool } from './Tool.js';
 import Events from '../NativeEvents';
-import {Position} from '../../lib/types.js';
+import { Position } from '../../lib/types.js';
 import LineSegment from '../strokes/LineSegment.js';
 import ArcSegment from '../strokes/ArcSegment.js';
 import Handle from '../strokes/Handle.js';
@@ -47,7 +47,7 @@ export default class FormalTool extends Tool {
   }
 
   resetElement() {
-    updateSvgElement(this.element, {d: '', stroke: 'black', fill: 'none'});
+    updateSvgElement(this.element, { d: '', stroke: 'black', fill: 'none' });
   }
 
   update(events: Events) {
@@ -207,7 +207,7 @@ export default class FormalTool extends Tool {
       const stroke = this.page.addLineSegment(a, b);
       this.fixedStroke = stroke;
     } else if (this.fit.type === 'arc') {
-      const {start, end} = Arc.points(this.fit.arc);
+      const { start, end } = Arc.points(this.fit.arc);
       const a = Handle.create(this.svg, 'formal', start);
       const b = Handle.create(this.svg, 'formal', end);
       const c = Handle.create(this.svg, 'formal', this.fit.arc.center);
@@ -261,7 +261,7 @@ export default class FormalTool extends Tool {
 
     if (this.renderPoints) {
       const path = generatePathFromPoints(this.renderPoints);
-      updateSvgElement(this.element, {d: path});
+      updateSvgElement(this.element, { d: path });
     }
 
     this.needsRerender = false;

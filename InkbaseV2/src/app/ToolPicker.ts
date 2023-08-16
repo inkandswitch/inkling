@@ -1,6 +1,6 @@
 import Vec from '../lib/vec';
 import Events from './NativeEvents';
-import {Tool} from './tools/Tool';
+import { Tool } from './tools/Tool';
 
 export default class ToolPicker {
   selected?: Tool;

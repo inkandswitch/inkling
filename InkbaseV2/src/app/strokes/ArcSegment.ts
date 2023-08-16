@@ -1,6 +1,6 @@
 import generateId from '../generateId';
 import Vec from '../../lib/vec';
-import SVG, {updateSvgElement} from '../Svg';
+import SVG, { updateSvgElement } from '../Svg';
 import Handle from './Handle';
 
 export default class ArcSegment {
@@ -11,7 +11,7 @@ export default class ArcSegment {
   xAxisRotation = 0;
   radius: number;
   path = '';
-  elements: {normal: SVGElement; selected: SVGElement};
+  elements: { normal: SVGElement; selected: SVGElement };
   private needsRerender = true;
 
   constructor(
@@ -28,7 +28,7 @@ export default class ArcSegment {
 
     this.updatePath();
 
-    const attrs = {d: this.path, fill: 'none'};
+    const attrs = { d: this.path, fill: 'none' };
     this.elements = {
       normal: svg.addElement('path', {
         ...attrs,
@@ -77,7 +77,7 @@ export default class ArcSegment {
     this.xAxisRotation = 0;
 
     this.updatePath();
-    const normalAttributes = {d: this.path};
+    const normalAttributes = { d: this.path };
     updateSvgElement(this.elements.normal, normalAttributes);
     updateSvgElement(this.elements.selected, {
       ...normalAttributes,

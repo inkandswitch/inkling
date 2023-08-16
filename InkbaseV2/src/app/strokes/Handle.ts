@@ -1,5 +1,5 @@
-import {Position} from '../../lib/types';
-import SVG, {updateSvgElement} from '../Svg';
+import { Position } from '../../lib/types';
+import SVG, { updateSvgElement } from '../Svg';
 import generateId from '../generateId';
 
 export interface HandleListener {
@@ -51,7 +51,7 @@ export default class Handle {
   id = generateId();
   listeners = new Set<HandleListener>();
 
-  private elements: {normal: SVGElement; selected: SVGElement};
+  private elements: { normal: SVGElement; selected: SVGElement };
   private selected = false;
   private needsRerender = true;
 
@@ -64,10 +64,10 @@ export default class Handle {
       normal: svg.addElement(
         'circle',
         this.type === 'formal'
-          ? {cx: 0, cy: 0, r: 3, fill: 'black'}
-          : {r: 5, fill: 'rgba(100, 100, 100, .2)'}
+          ? { cx: 0, cy: 0, r: 3, fill: 'black' }
+          : { r: 5, fill: 'rgba(100, 100, 100, .2)' }
       ),
-      selected: svg.addElement('circle', {cx: 0, cy: 0, r: 7, fill: 'none'}),
+      selected: svg.addElement('circle', { cx: 0, cy: 0, r: 7, fill: 'none' }),
     };
   }
 

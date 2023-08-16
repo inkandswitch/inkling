@@ -1,9 +1,9 @@
 import Vec from '../../lib/vec';
 import TransformationMatrix from '../../lib/transform_matrix';
 
-import SVG, {generatePathFromPoints, updateSvgElement} from '../Svg';
+import SVG, { generatePathFromPoints, updateSvgElement } from '../Svg';
 import generateId from '../generateId';
-import {PositionWithPressure} from '../../lib/types';
+import { PositionWithPressure } from '../../lib/types';
 import Handle from './Handle';
 
 export const strokeSvgProperties = {
@@ -38,7 +38,7 @@ export default class FreehandStroke {
         return null;
       } else {
         const np = transform.transformPoint(p);
-        return {...np, pressure: p.pressure};
+        return { ...np, pressure: p.pressure };
       }
     });
 
@@ -63,10 +63,10 @@ export default class FreehandStroke {
         return null;
       }
       const np = transform.transformPoint(p);
-      return {...np, pressure: p.pressure};
+      return { ...np, pressure: p.pressure };
     });
     const path = generatePathFromPoints(this.points);
-    updateSvgElement(this.element, {d: path});
+    updateSvgElement(this.element, { d: path });
   }
 
   onHandleMoved() {

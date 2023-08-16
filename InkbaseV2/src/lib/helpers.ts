@@ -1,4 +1,4 @@
-import {Position} from './types';
+import { Position } from './types';
 import Vec from './vec';
 
 // A debug view of an object's properties. Clearing is useful when debugging a single object at 60hz.

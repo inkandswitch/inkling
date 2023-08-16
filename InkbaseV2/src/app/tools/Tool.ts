@@ -1,5 +1,5 @@
 import Events from '../NativeEvents';
-import SVG, {updateSvgElement} from '../Svg';
+import SVG, { updateSvgElement } from '../Svg';
 
 export class Tool {
   private button: SVGElement;
@@ -10,7 +10,7 @@ export class Tool {
     public buttonX: number,
     public buttonY: number
   ) {
-    this.button = svg.addElement('circle', {cx: buttonX, cy: buttonY, r: 20});
+    this.button = svg.addElement('circle', { cx: buttonX, cy: buttonY, r: 20 });
     this.refreshButton();
   }
 

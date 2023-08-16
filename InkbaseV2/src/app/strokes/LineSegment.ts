@@ -1,11 +1,11 @@
-import SVG, {updateSvgElement} from '../Svg';
+import SVG, { updateSvgElement } from '../Svg';
 import generateId from '../generateId';
 import Handle from './Handle';
 
 export default class LineSegment {
   id = generateId();
   selected = false;
-  elements: {normal: SVGElement; selected: SVGElement};
+  elements: { normal: SVGElement; selected: SVGElement };
 
   private needsRerender = true;
 

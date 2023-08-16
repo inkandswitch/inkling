@@ -3,8 +3,8 @@
 // Vec
 // This is a port of (part of) Ivan's homemade CoffeeScript vector library.
 
-import {isZero, roundTo} from './math';
-import {Position} from './types';
+import { isZero, roundTo } from './math';
+import { Position } from './types';
 
 export interface Vector {
   x: number;
@@ -20,7 +20,7 @@ interface Rectangle {
 
 // Constructors ///////////////////////////////////////////////////////////////
 
-const Vec = (x = 0, y = 0): Vector => ({x, y});
+const Vec = (x = 0, y = 0): Vector => ({ x, y });
 export default Vec;
 
 Vec.clone = (v: Vector) => Vec(v.x, v.y);

@@ -5,7 +5,7 @@
 // Transform other things: For transforming points etc.
 
 import Line from './line';
-import {Position} from './types';
+import { Position } from './types';
 import Vec from './vec';
 
 const DEGREES_TO_RADIANS = Math.PI / 180;
@@ -38,7 +38,7 @@ export default class TransformationMatrix {
     e2: number,
     f2: number
   ) {
-    const {a: a1, b: b1, c: c1, d: d1, e: e1, f: f1} = this;
+    const { a: a1, b: b1, c: c1, d: d1, e: e1, f: f1 } = this;
 
     this.a = a1 * a2 + c1 * b2;
     this.b = b1 * a2 + d1 * b2;
@@ -88,7 +88,7 @@ export default class TransformationMatrix {
   }
 
   inverse() {
-    const {a, b, c, d, e, f} = this;
+    const { a, b, c, d, e, f } = this;
 
     const dt = a * d - b * c;
 
@@ -105,7 +105,7 @@ export default class TransformationMatrix {
   // GETTERS
 
   getInverse() {
-    const {a, b, c, d, e, f} = this;
+    const { a, b, c, d, e, f } = this;
 
     const m = new TransformationMatrix();
     const dt = a * d - b * c;
@@ -121,7 +121,7 @@ export default class TransformationMatrix {
   }
 
   getPosition() {
-    return {x: this.e, y: this.f};
+    return { x: this.e, y: this.f };
   }
 
   getRotation() {
@@ -155,7 +155,7 @@ export default class TransformationMatrix {
   // TRANSFORM OTHER THINGS
 
   transformMatrix(m2: TransformationMatrix) {
-    const {a: a1, b: b1, c: c1, d: d1, e: e1, f: f1} = this;
+    const { a: a1, b: b1, c: c1, d: d1, e: e1, f: f1 } = this;
 
     const a2 = m2.a;
     const b2 = m2.b;
@@ -176,8 +176,8 @@ export default class TransformationMatrix {
   }
 
   transformPoint(p: Position): Position {
-    const {x, y} = p;
-    const {a, b, c, d, e, f} = this;
+    const { x, y } = p;
+    const { a, b, c, d, e, f } = this;
 
     return Vec(x * a + y * c + e, x * b + y * d + f);
   }

@@ -1,6 +1,6 @@
 import Arc from './arc';
 import Line from './line';
-import {Position} from './types';
+import { Position } from './types';
 import Vec from './vec';
 
 // tslint:disable:variable-name
@@ -53,9 +53,9 @@ function arc(points: Position[]): ArcFit | null {
     return null;
   }
 
-  const {x: x1, y: y1} = a;
-  const {x: x2, y: y2} = b;
-  const {x: x3, y: y3} = c;
+  const { x: x1, y: y1 } = a;
+  const { x: x2, y: y2 } = b;
+  const { x: x3, y: y3 } = c;
 
   const D = 2 * (x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2));
   const centerX =
@@ -155,7 +155,7 @@ function circle(points: Position[]): CircleFit | null {
   let sumX2Y = 0;
 
   for (const point of points) {
-    const {x, y} = point;
+    const { x, y } = point;
     sumX += x;
     sumY += y;
     sumX2 += x * x;
@@ -194,7 +194,7 @@ function circle(points: Position[]): CircleFit | null {
   const bc = Vec.sub(points[1], points[2]);
   const clockwise = Vec.cross(ab, bc) > 0;
 
-  const circle = {center, radius, startAngle, endAngle, clockwise};
+  const circle = { center, radius, startAngle, endAngle, clockwise };
 
   // check fitness
   let totalDist = 0;
@@ -204,7 +204,7 @@ function circle(points: Position[]): CircleFit | null {
   const circumference = 2 * Math.PI * radius;
   const fitness = totalDist / circumference;
 
-  return {type: 'circle', circle, fitness};
+  return { type: 'circle', circle, fitness };
 }
 
 export default {

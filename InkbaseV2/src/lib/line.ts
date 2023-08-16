@@ -1,7 +1,7 @@
 // Line
 // This is a collection of functions related to line segments written by Marcel with help of ChatGPT
 
-import {Position} from './types';
+import { Position } from './types';
 import Vec from './vec';
 
 interface Line {
@@ -10,7 +10,7 @@ interface Line {
 }
 
 function Line(a: Position, b: Position): Line {
-  return {a, b};
+  return { a, b };
 }
 
 export default Line;
@@ -21,8 +21,8 @@ Line.directionVec = (l: Line) => Vec.normalize(Vec.sub(l.b, l.a));
 
 // Returns intersection if the line segments overlap, or null if they don't
 Line.intersect = (l1: Line, l2: Line): Position | null => {
-  const {a: p1, b: p2} = l1;
-  const {a: q1, b: q2} = l2;
+  const { a: p1, b: p2 } = l1;
+  const { a: q1, b: q2 } = l2;
 
   const dx1 = p2.x - p1.x;
   const dy1 = p2.y - p1.y;
@@ -45,7 +45,7 @@ Line.intersect = (l1: Line, l2: Line): Position | null => {
     // The segments intersect at a point
     const intersectionX = p1.x + t * dx1;
     const intersectionY = p1.y + t * dy1;
-    return {x: intersectionX, y: intersectionY};
+    return { x: intersectionX, y: intersectionY };
   }
 
   // The segments do not intersect
@@ -54,8 +54,8 @@ Line.intersect = (l1: Line, l2: Line): Position | null => {
 
 // Always returns intersection point even if the line segments don't overlap
 Line.intersectAnywhere = (l1: Line, l2: Line): Position | null => {
-  const {a: p1, b: p2} = l1;
-  const {a: q1, b: q2} = l2;
+  const { a: p1, b: p2 } = l1;
+  const { a: q1, b: q2 } = l2;
 
   const dx1 = p2.x - p1.x;
   const dy1 = p2.y - p1.y;
@@ -79,16 +79,16 @@ Line.intersectAnywhere = (l1: Line, l2: Line): Position | null => {
   const intersectionX = p1.x + t * dx1;
   const intersectionY = p1.y + t * dy1; // should u be used here instead of t?
 
-  return {x: intersectionX, y: intersectionY};
+  return { x: intersectionX, y: intersectionY };
 };
 
 // Get point along slope
 // TODO: make this work for vertical lines, too
 Line.getYforX = (line: Line, x: number): number => {
   // Extract the coordinates of points a and b
-  const {a, b} = line;
-  const {x: x1, y: y1} = a;
-  const {x: x2, y: y2} = b;
+  const { a, b } = line;
+  const { x: x1, y: y1 } = a;
+  const { x: x2, y: y2 } = b;
 
   // Calculate the slope of the line
   const slope = (y2 - y1) / (x2 - x1);
@@ -103,9 +103,9 @@ Line.getYforX = (line: Line, x: number): number => {
 // TODO: make this work for vertical lines, too
 Line.getXforY = (line: Line, y: number) => {
   // Extract the coordinates of points a and b
-  const {a, b} = line;
-  const {x: x1, y: y1} = a;
-  const {x: x2, y: y2} = b;
+  const { a, b } = line;
+  const { x: x1, y: y1 } = a;
+  const { x: x2, y: y2 } = b;
 
   // Calculate the slope of the line
   const slope = (y2 - y1) / (x2 - x1);
@@ -120,7 +120,7 @@ Line.distToPoint = (line: Line, point: Position) =>
   Vec.dist(point, Line.closestPoint(line, point));
 
 Line.closestPoint = (line: Line, point: Position, strict = true) => {
-  const {a, b} = line;
+  const { a, b } = line;
 
   // Calculate vector AB and AP
   const AB = Vec.sub(b, a);

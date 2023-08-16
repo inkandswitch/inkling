@@ -4,8 +4,8 @@ import ArcSegment from './strokes/ArcSegment';
 import LineSegment from './strokes/LineSegment';
 import FreehandStroke from './strokes/FreehandStroke';
 import StrokeGraph from './strokes/StrokeGraph';
-import {Position, PositionWithPressure} from '../lib/types';
-import {farthestPair, notNull} from '../lib/helpers';
+import { Position, PositionWithPressure } from '../lib/types';
+import { farthestPair, notNull } from '../lib/helpers';
 import Handle from './strokes/Handle';
 
 export default class Page {

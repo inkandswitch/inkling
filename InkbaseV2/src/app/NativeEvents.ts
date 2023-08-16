@@ -1,4 +1,4 @@
-import {Position} from '../lib/types';
+import { Position } from '../lib/types';
 
 export type Event = PencilEvent | FingerEvent;
 export type EventType = Event['type'];
@@ -86,13 +86,13 @@ export default class Events {
     ) => {
       for (const id in touches) {
         for (const point of touches[id]) {
-          const {type, timestamp, radius, force, altitude, azimuth, x, y} =
+          const { type, timestamp, radius, force, altitude, azimuth, x, y } =
             point;
 
           const sharedProperties = {
             state,
             id,
-            position: {x, y},
+            position: { x, y },
             timestamp,
             radius,
           };

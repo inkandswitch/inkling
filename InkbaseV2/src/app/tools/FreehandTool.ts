@@ -1,9 +1,9 @@
-import {PositionWithPressure} from '../../lib/types';
-import Events, {PencilEvent} from '../NativeEvents';
+import { PositionWithPressure } from '../../lib/types';
+import Events, { PencilEvent } from '../NativeEvents';
 import Page from '../Page';
-import SVG, {generatePathFromPoints, updateSvgElement} from '../Svg';
-import {strokeSvgProperties} from '../strokes/FreehandStroke';
-import {Tool} from './Tool';
+import SVG, { generatePathFromPoints, updateSvgElement } from '../Svg';
+import { strokeSvgProperties } from '../strokes/FreehandStroke';
+import { Tool } from './Tool';
 
 type Mode = 'unistroke' | 'multistroke';
 
@@ -121,6 +121,6 @@ export default class FreehandTool extends Tool {
 
   updatePath() {
     const path = this.points ? generatePathFromPoints(this.points) : '';
-    updateSvgElement(this.strokeElement, {d: path});
+    updateSvgElement(this.strokeElement, { d: path });
   }
 }

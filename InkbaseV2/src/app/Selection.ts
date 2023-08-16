@@ -1,7 +1,7 @@
 import TransformationMatrix from '../lib/transform_matrix';
-import {Position} from '../lib/types';
+import { Position } from '../lib/types';
 import Vec from '../lib/vec';
-import Events, {Event} from './NativeEvents';
+import Events, { Event } from './NativeEvents';
 import Page from './Page';
 import Snaps from './Snaps';
 import Handle from './strokes/Handle';

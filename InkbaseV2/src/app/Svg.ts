@@ -1,5 +1,5 @@
-import {notNull} from '../lib/helpers';
-import {Position} from '../lib/types';
+import { notNull } from '../lib/helpers';
+import { Position } from '../lib/types';
 
 type AttributeValue = string | number;
 

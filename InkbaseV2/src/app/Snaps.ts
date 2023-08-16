@@ -1,7 +1,7 @@
-import {Position} from '../lib/types';
+import { Position } from '../lib/types';
 import Vec from '../lib/vec';
 import Page from './Page';
-import SVG, {updateSvgElement} from './Svg';
+import SVG, { updateSvgElement } from './Svg';
 import Handle from './strokes/Handle';
 
 export default class Snaps {
@@ -111,7 +111,7 @@ export default class Snaps {
 
     for (const snap of this.activeSnaps) {
       const id = snap.id;
-      const {shapeType, shapeData} = snap.getShape();
+      const { shapeType, shapeData } = snap.getShape();
 
       let svgElem = this.snapSvgElementById.get(id);
       if (!svgElem) {

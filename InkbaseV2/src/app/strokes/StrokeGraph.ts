@@ -1,4 +1,4 @@
-import {Position, PositionWithPressure} from '../../lib/types';
+import { Position, PositionWithPressure } from '../../lib/types';
 import Vec from '../../lib/vec';
 import SVG from '../Svg';
 import FreehandStroke from './FreehandStroke';
@@ -110,7 +110,7 @@ function closestPointsBetweenStrokes(
     }
   }
 
-  return {dist: minDist, indexA, indexB};
+  return { dist: minDist, indexA, indexB };
 }
 
 function getDirectionAtStrokePoint(
