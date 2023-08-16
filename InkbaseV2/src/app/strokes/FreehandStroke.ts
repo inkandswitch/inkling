@@ -23,8 +23,8 @@ export default class FreehandStroke {
   constructor(
     svg: SVG,
     public points: Array<PositionWithPressure | null>,
-    public a: Handle,
-    public b: Handle
+    public readonly a: Handle,
+    public readonly b: Handle
   ) {
     a.listeners.add(this);
     b.listeners.add(this);
