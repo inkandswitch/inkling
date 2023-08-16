@@ -4,7 +4,9 @@
 // Getters: that return a value
 // Transform other things: For transforming points etc.
 
-import Vec from "./vec";
+import Line from './line';
+import {Position} from './types';
+import Vec from './vec';
 
 const DEGREES_TO_RADIANS = Math.PI / 180;
 const RADIANS_TO_DEGREES = 180 / Math.PI;
@@ -28,8 +30,15 @@ export default class TransformationMatrix {
 
   // STATEFULL TRANSFORMS
 
-  transform(a2, b2, c2, d2, e2, f2) {
-    const { a: a1, b: b1, c: c1, d: d1, e: e1, f: f1 } = this;
+  transform(
+    a2: number,
+    b2: number,
+    c2: number,
+    d2: number,
+    e2: number,
+    f2: number
+  ) {
+    const {a: a1, b: b1, c: c1, d: d1, e: e1, f: f1} = this;
 
     this.a = a1 * a2 + c1 * b2;
     this.b = b1 * a2 + d1 * b2;
@@ -41,29 +50,29 @@ export default class TransformationMatrix {
     return this;
   }
 
-  rotate(angle) {
+  rotate(angle: number) {
     const cos = Math.cos(angle);
     const sin = Math.sin(angle);
     this.transform(cos, sin, -sin, cos, 0, 0);
     return this;
   }
 
-  rotateDegrees(angle) {
+  rotateDegrees(angle: number) {
     this.rotate(angle * DEGREES_TO_RADIANS);
     return this;
   }
 
-  scale(sx, sy) {
+  scale(sx: number, sy: number) {
     this.transform(sx, 0, 0, sy, 0, 0);
     return this;
   }
 
-  skew(sx, sy) {
+  skew(sx: number, sy: number) {
     this.transform(1, sy, sx, 1, 0, 0);
     return this;
   }
 
-  translate(tx, ty) {
+  translate(tx: number, ty: number) {
     this.transform(1, 0, 0, 1, tx, ty);
     return this;
   }
@@ -79,7 +88,7 @@ export default class TransformationMatrix {
   }
 
   inverse() {
-    const { a, b, c, d, e, f } = this;
+    const {a, b, c, d, e, f} = this;
 
     const dt = a * d - b * c;
 
@@ -96,7 +105,7 @@ export default class TransformationMatrix {
   // GETTERS
 
   getInverse() {
-    const { a, b, c, d, e, f } = this;
+    const {a, b, c, d, e, f} = this;
 
     const m = new TransformationMatrix();
     const dt = a * d - b * c;
@@ -112,7 +121,7 @@ export default class TransformationMatrix {
   }
 
   getPosition() {
-    return { x: this.e, y: this.f };
+    return {x: this.e, y: this.f};
   }
 
   getRotation() {
@@ -145,8 +154,8 @@ export default class TransformationMatrix {
 
   // TRANSFORM OTHER THINGS
 
-  transformMatrix(m2) {
-    const { a: a1, b: b1, c: c1, d: d1, e: e1, f: f1 } = this;
+  transformMatrix(m2: TransformationMatrix) {
+    const {a: a1, b: b1, c: c1, d: d1, e: e1, f: f1} = this;
 
     const a2 = m2.a;
     const b2 = m2.b;
@@ -166,21 +175,21 @@ export default class TransformationMatrix {
     return m;
   }
 
-  transformPoint(p) {
-    const { x, y } = p;
-    const { a, b, c, d, e, f } = this;
+  transformPoint(p: Position): Position {
+    const {x, y} = p;
+    const {a, b, c, d, e, f} = this;
 
     return Vec(x * a + y * c + e, x * b + y * d + f);
   }
 
-  transformLine(l2) {
+  transformLine(l2: Line): Line {
     return {
       a: this.transformPoint(l2.a),
       b: this.transformPoint(l2.b),
     };
   }
 
-  fromLineTranslateRotate(a, b) {
+  fromLineTranslateRotate(a: Position, b: Position) {
     const line = Vec.sub(b, a);
 
     this.translate(a.x, a.y);
@@ -189,7 +198,7 @@ export default class TransformationMatrix {
     return this;
   }
 
-  fromLine(a, b) {
+  fromLine(a: Position, b: Position) {
     const line = Vec.sub(b, a);
     const length = Vec.len(line);
 

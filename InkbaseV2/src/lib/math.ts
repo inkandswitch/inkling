@@ -9,9 +9,15 @@ export const isNonZero = (v: number) => !isZero(v);
 
 export const avg = (a: number, b: number) => (a + b) / 2;
 
-export const clip = (v: number, min = 0, max = 1) => Math.max(min, Math.min(v, max));
+export const clip = (v: number, min = 0, max = 1) =>
+  Math.max(min, Math.min(v, max));
 
-export const lerpN = (input: number, outputMin = 0, outputMax = 1, doClip = false) => {
+export const lerpN = (
+  input: number,
+  outputMin = 0,
+  outputMax = 1,
+  doClip = false
+) => {
   let output = input * (outputMax - outputMin) + outputMin;
   if (doClip) {
     output = clip(output, outputMin, outputMax);
@@ -21,7 +27,14 @@ export const lerpN = (input: number, outputMin = 0, outputMax = 1, doClip = fals
 
 // Prettier really screwed this one up, alas.
 // The args should be: input, inputMin, inputMax, outputMin, outputMax, doClip
-export const lerp = (i: number, im = 0, iM = 1, om = 0, oM = 1, doClip = true) => {
+export const lerp = (
+  i: number,
+  im = 0,
+  iM = 1,
+  om = 0,
+  oM = 1,
+  doClip = true
+) => {
   if (im === iM) {
     return om; // Avoids a divide by zero
   }
@@ -47,6 +60,8 @@ export const roundTo = (input: number, precision: number) => {
 };
 
 export const easeInOut = (t: number) => {
-  const ease = (t) => Math.pow(t, 3);
-  return t < 0.5 ? lerp(ease(t * 2), 0, 1, 0, 0.5) : lerp(ease((1 - t) * 2), 1, 0, 0.5, 1);
+  const ease = (t: number) => Math.pow(t, 3);
+  return t < 0.5
+    ? lerp(ease(t * 2), 0, 1, 0, 0.5)
+    : lerp(ease((1 - t) * 2), 1, 0, 0.5, 1);
 };

@@ -1,7 +1,7 @@
 // Arc, defined by angles in radians
 
-import { Position } from "./types";
-import Vec from "./vec";
+import {Position} from './types';
+import Vec from './vec';
 
 interface Arc {
   center: Position;
@@ -18,13 +18,13 @@ function Arc(
   endAngle: number,
   clockwise = true
 ): Arc {
-  return { center, radius, startAngle, endAngle, clockwise };
+  return {center, radius, startAngle, endAngle, clockwise};
 }
 
 export default Arc;
 
 Arc.len = (arc: Arc) => {
-  const { radius, startAngle, endAngle } = arc;
+  const {radius, startAngle, endAngle} = arc;
 
   // Calculate the arc length using the formula: arc length = radius * angle
   const length = radius * Math.abs(endAngle - startAngle);
@@ -52,7 +52,10 @@ Arc.spreadPointsAlong = (arc: Arc, n: number) => {
 
   for (let i = 0; i < n; i++) {
     const angle = arc.startAngle + angleStep * i;
-    const offset = Vec(arc.radius * Math.cos(angle), arc.radius * Math.sin(angle));
+    const offset = Vec(
+      arc.radius * Math.cos(angle),
+      arc.radius * Math.sin(angle)
+    );
     points.push(Vec.add(arc.center, offset));
   }
 
@@ -77,5 +80,5 @@ Arc.points = (arc: Arc) => {
   const start = Vec.add(arc.center, Vec.polar(arc.startAngle, arc.radius));
   const end = Vec.add(arc.center, Vec.polar(arc.endAngle, arc.radius));
 
-  return { start, end };
+  return {start, end};
 };

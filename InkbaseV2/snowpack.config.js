@@ -1,9 +1,9 @@
 module.exports = {
   mount: {
-    src: "/",
+    src: '/',
   },
   devOptions: {
-    open: "none",
+    open: 'none',
   },
   optimize: {
     bundle: false, // Ivan turned these off so that `dev` and `build` scripts

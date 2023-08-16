@@ -1,13 +1,13 @@
-import { Position } from "../../lib/types";
-import SVG, { updateSvgElement } from "../Svg";
-import generateId from "../generateId";
+import {Position} from '../../lib/types';
+import SVG, {updateSvgElement} from '../Svg';
+import generateId from '../generateId';
 
 export interface HandleListener {
   onHandleMoved(handle: Handle): void;
   onHandleRemoved(handle: Handle): void;
 }
 
-export type HandleType = "formal" | "informal";
+export type HandleType = 'formal' | 'informal';
 
 export default class Handle {
   // static stuff
@@ -35,8 +35,8 @@ export default class Handle {
 
   private static get(id: number): Handle {
     const handle = this.handleById.get(id);
-    if (handle == null) {
-      throw new Error("invalid handle id: " + id);
+    if (!handle) {
+      throw new Error('invalid handle id: ' + id);
     } else {
       return handle;
     }
@@ -51,19 +51,23 @@ export default class Handle {
   id = generateId();
   listeners = new Set<HandleListener>();
 
-  private elements: { normal: SVGElement; selected: SVGElement };
+  private elements: {normal: SVGElement; selected: SVGElement};
   private selected = false;
   private needsRerender = true;
 
-  private constructor(svg: SVG, private type: HandleType, public position: Position) {
+  private constructor(
+    svg: SVG,
+    private type: HandleType,
+    public position: Position
+  ) {
     this.elements = {
       normal: svg.addElement(
-        "circle",
-        this.type === "formal"
-          ? { cx: 0, cy: 0, r: 3, fill: "black" }
-          : { r: 5, fill: "rgba(100, 100, 100, .2)" }
+        'circle',
+        this.type === 'formal'
+          ? {cx: 0, cy: 0, r: 3, fill: 'black'}
+          : {r: 5, fill: 'rgba(100, 100, 100, .2)'}
       ),
-      selected: svg.addElement("circle", { cx: 0, cy: 0, r: 7, fill: "none" }),
+      selected: svg.addElement('circle', {cx: 0, cy: 0, r: 7, fill: 'none'}),
     };
   }
 
@@ -101,7 +105,7 @@ export default class Handle {
 
   absorb(that: Handle) {
     if (this.type !== that.type) {
-      throw new Error("cannot merge handles of different types!");
+      throw new Error('cannot merge handles of different types!');
     }
 
     // move the other handle's listeners to me, and tell them that the handle has moved
@@ -132,7 +136,7 @@ export default class Handle {
 
     updateSvgElement(this.elements.selected, {
       transform: `translate(${this.position.x} ${this.position.y})`,
-      fill: this.selected ? "rgba(180, 134, 255, 0.42)" : "none",
+      fill: this.selected ? 'rgba(180, 134, 255, 0.42)' : 'none',
     });
 
     this.needsRerender = false;

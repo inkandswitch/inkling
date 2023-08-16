@@ -1,7 +1,7 @@
-import generateId from "../generateId";
-import Vec from "../../lib/vec";
-import SVG, { updateSvgElement } from "../Svg";
-import Handle from "./Handle";
+import generateId from '../generateId';
+import Vec from '../../lib/vec';
+import SVG, {updateSvgElement} from '../Svg';
+import Handle from './Handle';
 
 export default class ArcSegment {
   id = generateId();
@@ -10,11 +10,16 @@ export default class ArcSegment {
   clockwise = 1; // clockwise or counterclockwise
   xAxisRotation = 0;
   radius: number;
-  path = "";
-  elements: { normal: SVGElement; selected: SVGElement };
+  path = '';
+  elements: {normal: SVGElement; selected: SVGElement};
   private needsRerender = true;
 
-  constructor(svg: SVG, public a: Handle, public b: Handle, public c: Handle) {
+  constructor(
+    svg: SVG,
+    public a: Handle,
+    public b: Handle,
+    public c: Handle
+  ) {
     a.listeners.add(this);
     b.listeners.add(this);
     c.listeners.add(this);
@@ -23,10 +28,18 @@ export default class ArcSegment {
 
     this.updatePath();
 
-    const attrs = { d: this.path, fill: "none" };
+    const attrs = {d: this.path, fill: 'none'};
     this.elements = {
-      normal: svg.addElement("path", { ...attrs, "stroke-width": 1, stroke: "black" }),
-      selected: svg.addElement("path", { ...attrs, "stroke-width": 7, stroke: "none" }),
+      normal: svg.addElement('path', {
+        ...attrs,
+        'stroke-width': 1,
+        stroke: 'black',
+      }),
+      selected: svg.addElement('path', {
+        ...attrs,
+        'stroke-width': 7,
+        stroke: 'none',
+      }),
     };
   }
 
@@ -64,11 +77,11 @@ export default class ArcSegment {
     this.xAxisRotation = 0;
 
     this.updatePath();
-    const normalAttributes = { d: this.path };
+    const normalAttributes = {d: this.path};
     updateSvgElement(this.elements.normal, normalAttributes);
     updateSvgElement(this.elements.selected, {
       ...normalAttributes,
-      stroke: this.selected ? "rgba(180, 134, 255, 0.42)" : "none",
+      stroke: this.selected ? 'rgba(180, 134, 255, 0.42)' : 'none',
     });
 
     this.needsRerender = false;

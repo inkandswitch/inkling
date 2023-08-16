@@ -1,52 +1,69 @@
-import { PositionWithPressure } from "../../lib/types";
-import Events, { PencilEvent } from "../NativeEvents";
-import Page from "../Page";
-import SVG, { generatePathFromPoints, updateSvgElement } from "../Svg";
-import { strokeSvgProperties } from "../strokes/FreehandStroke";
-import { Tool } from "./Tool";
+import {PositionWithPressure} from '../../lib/types';
+import Events, {PencilEvent} from '../NativeEvents';
+import Page from '../Page';
+import SVG, {generatePathFromPoints, updateSvgElement} from '../Svg';
+import {strokeSvgProperties} from '../strokes/FreehandStroke';
+import {Tool} from './Tool';
 
-type Mode = "unistroke" | "multistroke";
+type Mode = 'unistroke' | 'multistroke';
 
 export default class FreehandTool extends Tool {
-  private mode: Mode = "unistroke";
+  private mode: Mode = 'unistroke';
   private points?: Array<PositionWithPressure | null>;
   private strokeElement: SVGElement;
   private multistrokeModeDotElement?: SVGElement;
   private pencilIsDown = false;
   private needsRerender = false;
 
-  constructor(private svg: SVG, buttonX: number, buttonY: number, private page: Page) {
+  constructor(
+    private svg: SVG,
+    buttonX: number,
+    buttonY: number,
+    private page: Page
+  ) {
     super(svg, buttonX, buttonY);
-    this.strokeElement = svg.addElement("path", { d: "", ...strokeSvgProperties });
+    this.strokeElement = svg.addElement('path', {
+      d: '',
+      ...strokeSvgProperties,
+    });
   }
 
   update(events: Events) {
-    const pencilDown = events.did("pencil", "began") as PencilEvent | undefined;
-    if (pencilDown != null) {
+    const pencilDown = events.did('pencil', 'began') as PencilEvent | undefined;
+    if (pencilDown) {
       this.pencilIsDown = true;
-      if (this.points == null) {
-        this.startStroke({ ...pencilDown.position, pressure: pencilDown.pressure });
+      if (!this.points) {
+        this.startStroke({
+          ...pencilDown.position,
+          pressure: pencilDown.pressure,
+        });
       } else {
         this.extendStroke(null);
-        this.extendStroke({ ...pencilDown.position, pressure: pencilDown.pressure });
+        this.extendStroke({
+          ...pencilDown.position,
+          pressure: pencilDown.pressure,
+        });
       }
     }
 
-    if (this.points == null) {
+    if (!this.points) {
       return;
     }
 
-    const pencilMoves = events.didAll("pencil", "moved") as PencilEvent[];
-    pencilMoves.forEach((pencilMove) => {
-      this.extendStroke({ ...pencilMove.position, pressure: pencilMove.pressure });
+    const pencilMoves = events.didAll('pencil', 'moved') as PencilEvent[];
+    pencilMoves.forEach(pencilMove => {
+      this.extendStroke({
+        ...pencilMove.position,
+        pressure: pencilMove.pressure,
+      });
     });
 
-    const pencilUp = events.did("pencil", "ended");
-    if (pencilUp != null) {
+    const pencilUp = events.did('pencil', 'ended');
+    if (pencilUp) {
       this.pencilIsDown = false;
     }
 
-    if (!this.pencilIsDown && this.mode === "unistroke") {
+    if (!this.pencilIsDown && this.mode === 'unistroke') {
       this.endStroke();
     }
   }
@@ -68,29 +85,29 @@ export default class FreehandTool extends Tool {
   }
 
   onAction() {
-    if (this.mode === "unistroke") {
-      this.mode = "multistroke";
-      this.multistrokeModeDotElement = this.svg.addElement("circle", {
+    if (this.mode === 'unistroke') {
+      this.mode = 'multistroke';
+      this.multistrokeModeDotElement = this.svg.addElement('circle', {
         cx: this.buttonX,
         cy: this.buttonY,
         r: 10,
-        fill: "white",
+        fill: 'white',
       });
     } else {
-      this.mode = "unistroke";
+      this.mode = 'unistroke';
       this.multistrokeModeDotElement!.remove();
       this.multistrokeModeDotElement = undefined;
     }
   }
 
   onDeselected() {
-    if (this.points != null) {
+    if (this.points) {
       this.endStroke();
       this.updatePath();
     }
 
     super.onDeselected();
-    this.mode = "unistroke";
+    this.mode = 'unistroke';
   }
 
   render() {
@@ -103,7 +120,7 @@ export default class FreehandTool extends Tool {
   }
 
   updatePath() {
-    const path = this.points == null ? "" : generatePathFromPoints(this.points);
-    updateSvgElement(this.strokeElement, { d: path });
+    const path = this.points ? generatePathFromPoints(this.points) : '';
+    updateSvgElement(this.strokeElement, {d: path});
   }
 }

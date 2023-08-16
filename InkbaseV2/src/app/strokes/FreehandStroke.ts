@@ -1,17 +1,17 @@
-import Vec from "../../lib/vec";
-import TransformationMatrix from "../../lib/transform_matrix";
+import Vec from '../../lib/vec';
+import TransformationMatrix from '../../lib/transform_matrix';
 
-import SVG, { generatePathFromPoints, updateSvgElement } from "../Svg";
-import generateId from "../generateId";
-import { PositionWithPressure } from "../../lib/types";
-import Handle from "./Handle";
+import SVG, {generatePathFromPoints, updateSvgElement} from '../Svg';
+import generateId from '../generateId';
+import {PositionWithPressure} from '../../lib/types';
+import Handle from './Handle';
 
 export const strokeSvgProperties = {
-  stroke: "rgba(0, 0, 0, .5)",
+  stroke: 'rgba(0, 0, 0, .5)',
   // fill: 'rgba(0, 0, 0, .5)',
   // 'stroke-width': 1,
-  fill: "none",
-  "stroke-width": 2,
+  fill: 'none',
+  'stroke-width': 2,
 };
 
 export default class FreehandStroke {
@@ -30,18 +30,20 @@ export default class FreehandStroke {
     b.listeners.add(this);
 
     // Store normalised point data based on control points
-    const transform = new TransformationMatrix().fromLine(a.position, b.position).inverse();
-    this.pointData = points.map((p) => {
+    const transform = new TransformationMatrix()
+      .fromLine(a.position, b.position)
+      .inverse();
+    this.pointData = points.map(p => {
       if (p === null) {
         return null;
       } else {
         const np = transform.transformPoint(p);
-        return { ...np, pressure: p.pressure };
+        return {...np, pressure: p.pressure};
       }
     });
 
-    this.element = svg.addElement("path", {
-      d: "",
+    this.element = svg.addElement('path', {
+      d: '',
       ...strokeSvgProperties,
     });
   }
@@ -51,17 +53,20 @@ export default class FreehandStroke {
   }
 
   updatePath() {
-    const transform = new TransformationMatrix().fromLine(this.a.position, this.b.position);
+    const transform = new TransformationMatrix().fromLine(
+      this.a.position,
+      this.b.position
+    );
 
-    this.points = this.pointData.map((p) => {
+    this.points = this.pointData.map(p => {
       if (p === null) {
         return null;
       }
       const np = transform.transformPoint(p);
-      return { ...np, pressure: p.pressure };
+      return {...np, pressure: p.pressure};
     });
     const path = generatePathFromPoints(this.points);
-    updateSvgElement(this.element, { d: path });
+    updateSvgElement(this.element, {d: path});
   }
 
   onHandleMoved() {

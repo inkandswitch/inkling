@@ -1,12 +1,12 @@
-import Arc from "./arc";
-import Line from "./line";
-import { Position } from "./types";
-import Vec from "./vec";
+import Arc from './arc';
+import Line from './line';
+import {Position} from './types';
+import Vec from './vec';
 
 // tslint:disable:variable-name
 
 export interface LineFit {
-  type: "line";
+  type: 'line';
   line: Line;
   fitness: number;
   length: number;
@@ -27,7 +27,7 @@ function line(stroke: Position[]): LineFit | null {
   const length = Line.len(line);
 
   return {
-    type: "line",
+    type: 'line',
     line,
     length,
     fitness: length === 0 ? 1 : totalDist / length,
@@ -35,7 +35,7 @@ function line(stroke: Position[]): LineFit | null {
 }
 
 export interface ArcFit {
-  type: "arc";
+  type: 'arc';
   arc: Arc;
   fitness: number;
   length: number;
@@ -53,9 +53,9 @@ function arc(points: Position[]): ArcFit | null {
     return null;
   }
 
-  const { x: x1, y: y1 } = a;
-  const { x: x2, y: y2 } = b;
-  const { x: x3, y: y3 } = c;
+  const {x: x1, y: y1} = a;
+  const {x: x2, y: y2} = b;
+  const {x: x3, y: y3} = c;
 
   const D = 2 * (x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2));
   const centerX =
@@ -68,7 +68,9 @@ function arc(points: Position[]): ArcFit | null {
       (x2 * x2 + y2 * y2) * (x1 - x3) +
       (x3 * x3 + y3 * y3) * (x2 - x1)) /
     D;
-  const radius = Math.sqrt((x1 - centerX) * (x1 - centerX) + (y1 - centerY) * (y1 - centerY));
+  const radius = Math.sqrt(
+    (x1 - centerX) * (x1 - centerX) + (y1 - centerY) * (y1 - centerY)
+  );
 
   const startAngle = Math.atan2(y1 - centerY, x1 - centerX);
   const endAngle = Math.atan2(y3 - centerY, x3 - centerX);
@@ -78,7 +80,13 @@ function arc(points: Position[]): ArcFit | null {
   const bc = Vec.sub(b, c);
   const clockwise = Vec.cross(ab, bc) > 0;
 
-  const arc = Arc(Vec(centerX, centerY), radius, startAngle, endAngle, clockwise);
+  const arc = Arc(
+    Vec(centerX, centerY),
+    radius,
+    startAngle,
+    endAngle,
+    clockwise
+  );
 
   // Compute fitness
   const arcDist = Arc.len(arc);
@@ -89,7 +97,7 @@ function arc(points: Position[]): ArcFit | null {
   }
 
   return {
-    type: "arc",
+    type: 'arc',
     arc,
     fitness: totalDist / arcDist,
     length: arcDist,
@@ -124,7 +132,7 @@ interface Circle {
 }
 
 export interface CircleFit {
-  type: "circle";
+  type: 'circle';
   circle: Circle;
   fitness: number;
 }
@@ -147,7 +155,7 @@ function circle(points: Position[]): CircleFit | null {
   let sumX2Y = 0;
 
   for (const point of points) {
-    const { x, y } = point;
+    const {x, y} = point;
     sumX += x;
     sumY += y;
     sumX2 += x * x;
@@ -186,7 +194,7 @@ function circle(points: Position[]): CircleFit | null {
   const bc = Vec.sub(points[1], points[2]);
   const clockwise = Vec.cross(ab, bc) > 0;
 
-  const circle = { center, radius, startAngle, endAngle, clockwise };
+  const circle = {center, radius, startAngle, endAngle, clockwise};
 
   // check fitness
   let totalDist = 0;
@@ -196,7 +204,7 @@ function circle(points: Position[]): CircleFit | null {
   const circumference = 2 * Math.PI * radius;
   const fitness = totalDist / circumference;
 
-  return { type: "circle", circle, fitness };
+  return {type: 'circle', circle, fitness};
 }
 
 export default {

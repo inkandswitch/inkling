@@ -13,7 +13,7 @@ export default function EveryFrame(update: UpdateFn) {
     requestAnimationFrame(frame);
   }
 
-  requestAnimationFrame((ms) => {
+  requestAnimationFrame(ms => {
     lastTime = ms / 1000;
     requestAnimationFrame(frame);
   });

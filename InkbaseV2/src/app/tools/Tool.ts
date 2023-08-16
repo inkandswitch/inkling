@@ -1,12 +1,16 @@
-import Events from "../NativeEvents";
-import SVG, { updateSvgElement } from "../Svg";
+import Events from '../NativeEvents';
+import SVG, {updateSvgElement} from '../Svg';
 
 export class Tool {
   private button: SVGElement;
   private isSelected = false;
 
-  constructor(svg: SVG, public buttonX: number, public buttonY: number) {
-    this.button = svg.addElement("circle", { cx: buttonX, cy: buttonY, r: 20 });
+  constructor(
+    svg: SVG,
+    public buttonX: number,
+    public buttonY: number
+  ) {
+    this.button = svg.addElement('circle', {cx: buttonX, cy: buttonY, r: 20});
     this.refreshButton();
   }
 
@@ -28,15 +32,19 @@ export class Tool {
     this.refreshButton();
   }
 
-  update(_events: Events) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  update(events: Events) {
     // no op by default, but can be overridden by subclass
   }
 
-  render(_svg: SVG) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  render(svg: SVG) {
     // no op by default, but can be overridden by subclass
   }
 
   private refreshButton() {
-    updateSvgElement(this.button, { fill: this.isSelected ? "black" : "lightgrey" });
+    updateSvgElement(this.button, {
+      fill: this.isSelected ? 'black' : 'lightgrey',
+    });
   }
 }

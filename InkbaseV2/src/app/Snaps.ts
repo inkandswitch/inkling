@@ -1,8 +1,8 @@
-import { Position } from "../lib/types";
-import Vec from "../lib/vec";
-import Page from "./Page";
-import SVG, { updateSvgElement } from "./Svg";
-import Handle from "./strokes/Handle";
+import {Position} from '../lib/types';
+import Vec from '../lib/vec';
+import Page from './Page';
+import SVG, {updateSvgElement} from './Svg';
+import Handle from './strokes/Handle';
 
 export default class Snaps {
   private activeSnaps: Snap[] = [];
@@ -17,12 +17,14 @@ export default class Snaps {
   snapPositions(transformedPositions: Map<Handle, Position>) {
     const snaps: Snap[] = [];
     const snapPositions = new Map<Handle, Position>();
-    const snapHandles = Array.from(Handle.all).filter((h) => !transformedPositions.has(h));
+    const snapHandles = Array.from(Handle.all).filter(
+      h => !transformedPositions.has(h)
+    );
     const selectedHandles = Array.from(transformedPositions.keys());
     const connectedHandles = this.page.handlesReachableFrom(selectedHandles);
 
     for (const [handle, transformedPosition] of transformedPositions) {
-      if (snaps.some((s) => s.snapHandle === handle)) {
+      if (snaps.some(s => s.snapHandle === handle)) {
         // This handle is already being used as a snap.
         // If we move it (by snapping it to another handle), the UI feels shaky.
         snapPositions.set(handle, transformedPosition);
@@ -71,7 +73,10 @@ export default class Snaps {
         }
       }
 
-      const snappedPos = snapVectors.reduce((p, v) => Vec.add(p, v), transformedPosition);
+      const snappedPos = snapVectors.reduce(
+        (p, v) => Vec.add(p, v),
+        transformedPosition
+      );
 
       snapPositions.set(handle, snappedPos);
     }
@@ -86,7 +91,7 @@ export default class Snaps {
     this.needsRerender = true;
 
     // Delete the svg elements associated w/ snaps that went away
-    const activeSnapIds = new Set(activeSnaps.map((snap) => snap.id));
+    const activeSnapIds = new Set(activeSnaps.map(snap => snap.id));
     for (const [id, svgElem] of this.snapSvgElementById) {
       if (!activeSnapIds.has(id)) {
         svgElem.remove();
@@ -106,14 +111,14 @@ export default class Snaps {
 
     for (const snap of this.activeSnaps) {
       const id = snap.id;
-      const { shapeType, shapeData } = snap.getShape();
+      const {shapeType, shapeData} = snap.getShape();
 
       let svgElem = this.snapSvgElementById.get(id);
-      if (svgElem == null) {
+      if (!svgElem) {
         svgElem = svg.addElement(shapeType, {
           ...shapeData,
-          fill: "none",
-          stroke: "rgb(180, 134, 255)",
+          fill: 'none',
+          stroke: 'rgb(180, 134, 255)',
         });
         this.snapSvgElementById.set(id, svgElem);
       } else {
@@ -128,7 +133,7 @@ export default class Snaps {
 type Shape = CircleShape | LineShape;
 
 interface CircleShape {
-  shapeType: "circle";
+  shapeType: 'circle';
   shapeData: {
     cx: number;
     cy: number;
@@ -137,7 +142,7 @@ interface CircleShape {
 }
 
 interface LineShape {
-  shapeType: "line";
+  shapeType: 'line';
   shapeData: {
     x1: number;
     y1: number;
@@ -149,12 +154,15 @@ interface LineShape {
 class Snap {
   id: string;
 
-  constructor(public handle: Handle, public snapHandle: Handle) {
+  constructor(
+    public handle: Handle,
+    public snapHandle: Handle
+  ) {
     this.id = `${handle.id}.${snapHandle.id}.${this.constructor.name}`;
   }
 
   getShape(): Shape {
-    throw new Error("subclass responsibility!");
+    throw new Error('subclass responsibility!');
   }
 }
 
@@ -165,7 +173,7 @@ class PointSnap extends Snap {
 
   getShape(): CircleShape {
     return {
-      shapeType: "circle",
+      shapeType: 'circle',
       shapeData: {
         cx: this.handle.position.x,
         cy: this.handle.position.y,
@@ -182,7 +190,7 @@ class AlignmentSnap extends Snap {
 
   getShape(): LineShape {
     return {
-      shapeType: "line",
+      shapeType: 'line',
       shapeData: {
         x1: this.handle.position.x,
         y1: this.handle.position.y,

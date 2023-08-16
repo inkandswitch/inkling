@@ -1,6 +1,6 @@
-import Vec from "../lib/vec";
-import Events from "./NativeEvents";
-import { Tool } from "./tools/Tool";
+import Vec from '../lib/vec';
+import Events from './NativeEvents';
+import {Tool} from './tools/Tool';
 
 export default class ToolPicker {
   selected?: Tool;
@@ -10,17 +10,17 @@ export default class ToolPicker {
   }
 
   update(events: Events) {
-    const fingerDown = events.did("finger", "began");
-    if (fingerDown == null) {
+    const fingerDown = events.did('finger', 'began');
+    if (!fingerDown) {
       return;
     }
 
-    const newSelected = this.tools.find((tool) => {
+    const newSelected = this.tools.find(tool => {
       const center = Vec(tool.buttonX, tool.buttonY);
       return Vec.dist(center, fingerDown.position) < 20;
     });
 
-    if (newSelected == null) {
+    if (!newSelected) {
       // the user's finger is not on one of the tool buttons,
       // so do nothing
     } else {

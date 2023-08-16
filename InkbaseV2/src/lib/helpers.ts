@@ -1,28 +1,29 @@
-import { Position } from "./types";
-import Vec from "./vec";
+import {Position} from './types';
+import Vec from './vec';
 
 // A debug view of an object's properties. Clearing is useful when debugging a single object at 60hz.
 export function debugTable(obj: {}, clear = true) {
   if (clear) {
+    // eslint-disable-next-line node/no-unsupported-features/node-builtins
     console.clear();
   }
+  // eslint-disable-next-line node/no-unsupported-features/node-builtins
   console.table(objectWithSortedKeys(obj));
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Obj = Record<string, any>;
+
 // My kingdom for a standard library that includes a key-sorted Map.
-// tslint:disable:no-any
-export function objectWithSortedKeys(obj: Record<string, any>) {
-  const newObj: Record<string, any> = {};
+export function objectWithSortedKeys(obj: Obj) {
+  const newObj: Obj = {};
   for (const k of Object.keys(obj).sort()) {
     newObj[k] = obj[k];
   }
   return newObj;
 }
-// tslint:enable
 
-export function notNull<T>(x: T | null): x is T {
-  return x != null;
-}
+export const notNull = <T>(x: T | null): x is T => !!x;
 
 // this is O(n^2), but there is a O(n * log(n)) solution
 // that we can use if this ever becomes a bottleneck

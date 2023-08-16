@@ -1,7 +1,7 @@
-import { Position, PositionWithPressure } from "../../lib/types";
-import Vec from "../../lib/vec";
-import SVG from "../Svg";
-import FreehandStroke from "./FreehandStroke";
+import {Position, PositionWithPressure} from '../../lib/types';
+import Vec from '../../lib/vec';
+import SVG from '../Svg';
+import FreehandStroke from './FreehandStroke';
 
 // A connection between two strokes
 interface Connection {
@@ -25,16 +25,28 @@ export default class StrokeGraph {
   addStroke(stroke: FreehandStroke) {
     // Generate closest strokes for this stroke
     for (const otherStroke of this.strokes) {
-      const closestPoint = closestPointsBetweenStrokes(stroke.points, otherStroke.points);
+      const closestPoint = closestPointsBetweenStrokes(
+        stroke.points,
+        otherStroke.points
+      );
       if (closestPoint.dist < 20) {
         const midPoint = Vec.mulS(
-          Vec.add(stroke.points[closestPoint.indexA]!, otherStroke.points[closestPoint.indexB]!),
+          Vec.add(
+            stroke.points[closestPoint.indexA]!,
+            otherStroke.points[closestPoint.indexB]!
+          ),
           0.5
         );
 
         // Determine alignment at connection point
-        const dirA = getDirectionAtStrokePoint(stroke.points, closestPoint.indexA);
-        const dirB = getDirectionAtStrokePoint(otherStroke.points, closestPoint.indexB);
+        const dirA = getDirectionAtStrokePoint(
+          stroke.points,
+          closestPoint.indexA
+        );
+        const dirB = getDirectionAtStrokePoint(
+          otherStroke.points,
+          closestPoint.indexB
+        );
         const alignment = Math.abs(Vec.cross(dirA, dirB));
         const aligned = alignment < 0.3;
 
@@ -60,12 +72,12 @@ export default class StrokeGraph {
       elem.remove();
     }
 
-    this.elements = this.connections.map((c) => {
-      return svg.addElement("circle", {
+    this.elements = this.connections.map(c => {
+      return svg.addElement('circle', {
         cx: c.position.x,
         cy: c.position.y,
         r: 3,
-        fill: c.aligned ? "pink" : "green",
+        fill: c.aligned ? 'pink' : 'green',
       });
     });
 
@@ -85,7 +97,7 @@ function closestPointsBetweenStrokes(
     for (let j = 0; j < strokeB.length; j++) {
       const pa = strokeA[i];
       const pb = strokeB[j];
-      if (pa == null || pb == null) {
+      if (!pa || !pb) {
         continue;
       }
 
@@ -98,15 +110,18 @@ function closestPointsBetweenStrokes(
     }
   }
 
-  return { dist: minDist, indexA, indexB };
+  return {dist: minDist, indexA, indexB};
 }
 
-function getDirectionAtStrokePoint(stroke: Array<PositionWithPressure | null>, index: number) {
+function getDirectionAtStrokePoint(
+  stroke: Array<PositionWithPressure | null>,
+  index: number
+) {
   let backwardIndex = index - 10;
   if (backwardIndex < 0) {
     backwardIndex = 0;
   }
-  while (stroke[backwardIndex] == null) {
+  while (!stroke[backwardIndex]) {
     backwardIndex++;
   }
 
@@ -114,7 +129,7 @@ function getDirectionAtStrokePoint(stroke: Array<PositionWithPressure | null>, i
   if (forwardIndex > stroke.length - 1) {
     forwardIndex = stroke.length - 1;
   }
-  while (stroke[forwardIndex] == null) {
+  while (!stroke[forwardIndex]) {
     forwardIndex--;
   }
 

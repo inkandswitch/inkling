@@ -3,8 +3,8 @@
 // Vec
 // This is a port of (part of) Ivan's homemade CoffeeScript vector library.
 
-import { isZero, roundTo } from "./math";
-import { Position } from "./types";
+import {isZero, roundTo} from './math';
+import {Position} from './types';
 
 export interface Vector {
   x: number;
@@ -20,7 +20,7 @@ interface Rectangle {
 
 // Constructors ///////////////////////////////////////////////////////////////
 
-const Vec = (x = 0, y = 0): Vector => ({ x, y });
+const Vec = (x = 0, y = 0): Vector => ({x, y});
 export default Vec;
 
 Vec.clone = (v: Vector) => Vec(v.x, v.y);
@@ -34,7 +34,10 @@ Vec.fromRectRB = (r: Rectangle) => Vec(r.x + r.w, r.y + r.h);
 Vec.of = (s: number) => Vec(s, s);
 
 Vec.random = (scale = 1) =>
-  Vec.Smul(scale, Vec.complement(Vec.Smul(2, Vec(Math.random(), Math.random()))));
+  Vec.Smul(
+    scale,
+    Vec.complement(Vec.Smul(2, Vec(Math.random(), Math.random())))
+  );
 
 Vec.toA = (v: Vector) => [v.x, v.y];
 
@@ -61,7 +64,8 @@ Vec.reduce = (f: (x: number, y: number) => number, v: Vector) => f(v.x, v.y);
 // Not really cross product, but close enough
 Vec.cross = (a: Vector, b: Vector) => a.x * b.y - a.y * b.x;
 
-Vec.project = (a: Vector, b: Vector) => Vec.mulS(b, Vec.dot(a, b) / Vec.len2(b));
+Vec.project = (a: Vector, b: Vector) =>
+  Vec.mulS(b, Vec.dot(a, b) / Vec.len2(b));
 
 Vec.reject = (a: Vector, b: Vector) => Vec.sub(a, Vec.project(a, b));
 
@@ -126,12 +130,16 @@ Vec.recip = (v: Vector) => Vec.Sdiv(1, v);
 // Prettier really screwed this one up, alas.
 // The args should be: input, inputMin, inputMax, outputMin, outputMax
 Vec.renormalize = (v: Vector, im: Vector, iM: Vector, om: Vector, oM: Vector) =>
-  Vec.add(Vec.mul(Vec.div(Vec.sub(v, im), Vec.sub(iM, im)), Vec.sub(oM, om)), om);
+  Vec.add(
+    Vec.mul(Vec.div(Vec.sub(v, im), Vec.sub(iM, im)), Vec.sub(oM, om)),
+    om
+  );
 
 // Combinations ///////////////////////////////////////////////////////////////////
 
 Vec.avg = (a: Vector, b: Vector) => Vec.half(Vec.add(a, b));
-Vec.lerp = (a: Vector, b: Vector, t: number) => Vec.add(a, Vec.Smul(t, Vec.sub(b, a)));
+Vec.lerp = (a: Vector, b: Vector, t: number) =>
+  Vec.add(a, Vec.Smul(t, Vec.sub(b, a)));
 Vec.max = (a: Vector, b: Vector) => Vec.map2(Math.max, a, b);
 Vec.min = (a: Vector, b: Vector) => Vec.map2(Math.min, a, b);
 
@@ -154,10 +162,17 @@ Vec.rotate90CCW = (v: Vector) => Vec(-v.y, v.x);
 // e.g., this function takes an angle in radians, whereas angleBetween uses degrees.
 // (this will help avoid confusion...)
 Vec.rotate = (v: Vector, angle: number) =>
-  Vec(v.x * Math.cos(angle) - v.y * Math.sin(angle), v.x * Math.sin(angle) + v.y * Math.cos(angle));
+  Vec(
+    v.x * Math.cos(angle) - v.y * Math.sin(angle),
+    v.x * Math.sin(angle) + v.y * Math.cos(angle)
+  );
 
 // Rotate around
-Vec.rotateAround = (vector: Vector, point: Position, angle: number): Position => {
+Vec.rotateAround = (
+  vector: Vector,
+  point: Position,
+  angle: number
+): Position => {
   // Translate vector to the origin
   const translatedVector = Vec.sub(vector, point);
 

@@ -1,12 +1,12 @@
-import SVG from "./Svg";
-import Vec from "../lib/vec";
-import ArcSegment from "./strokes/ArcSegment";
-import LineSegment from "./strokes/LineSegment";
-import FreehandStroke from "./strokes/FreehandStroke";
-import StrokeGraph from "./strokes/StrokeGraph";
-import { Position, PositionWithPressure } from "../lib/types";
-import { farthestPair, notNull } from "../lib/helpers";
-import Handle from "./strokes/Handle";
+import SVG from './Svg';
+import Vec from '../lib/vec';
+import ArcSegment from './strokes/ArcSegment';
+import LineSegment from './strokes/LineSegment';
+import FreehandStroke from './strokes/FreehandStroke';
+import StrokeGraph from './strokes/StrokeGraph';
+import {Position, PositionWithPressure} from '../lib/types';
+import {farthestPair, notNull} from '../lib/helpers';
+import Handle from './strokes/Handle';
 
 export default class Page {
   graph = new StrokeGraph();
@@ -32,8 +32,8 @@ export default class Page {
 
   addFreehandStroke(points: Array<PositionWithPressure | null>) {
     const [aPos, bPos] = farthestPair(points.filter(notNull));
-    const a = Handle.create(this.svg, "informal", aPos);
-    const b = Handle.create(this.svg, "informal", bPos);
+    const a = Handle.create(this.svg, 'informal', aPos);
+    const b = Handle.create(this.svg, 'informal', bPos);
 
     const s = new FreehandStroke(this.svg, points, a, b);
     a.listeners.add(s);
@@ -62,7 +62,7 @@ export default class Page {
 
   handlesReachableFrom(startHandles: Handle[]) {
     const reachableHandles = new Set(startHandles);
-    while (true) {
+    for (;;) {
       const oldSize = reachableHandles.size;
 
       for (const ls of this.lineSegments) {
@@ -91,8 +91,8 @@ export default class Page {
   }
 
   render(svg: SVG) {
-    this.lineSegments.forEach((ls) => ls.render());
-    this.freehandStrokes.forEach((s) => s.render());
+    this.lineSegments.forEach(ls => ls.render());
+    this.freehandStrokes.forEach(s => s.render());
     this.graph.render(svg);
   }
 }

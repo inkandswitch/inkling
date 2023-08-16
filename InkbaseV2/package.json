@@ -8,7 +8,7 @@
     "build": "snowpack build",
     "check": "gts check",
     "clean": "gts clean",
-    "compile": "tsc -p .",
+    "compile": "tsc",
     "fix": "gts fix",
     "prepare": "npm run compile",
     "pretest": "npm run compile",
@@ -17,17 +17,11 @@
   "keywords": [],
   "license": "MIT",
   "devDependencies": {
-    "gtx": "^0.6.1",
+    "gts": "^5.0.0",
     "snowpack": "^3.8.8",
-    "gts": "^0.9.0",
-    "typescript": "~3.1.0"
+    "typescript": "~5.1.6"
   },
   "dependencies": {
     "perfect-freehand": "^1.2.0"
-  },
-  "prettier": {
-    "tabWidth": 2,
-    "semi": true,
-    "printWidth": 100
   }
 }

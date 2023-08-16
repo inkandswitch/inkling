@@ -1,8 +1,8 @@
-import { Position } from "../lib/types";
+import {Position} from '../lib/types';
 
 export type Event = PencilEvent | FingerEvent;
-export type EventType = Event["type"];
-export type EventState = "began" | "moved" | "cancelled" | "ended";
+export type EventType = Event['type'];
+export type EventState = 'began' | 'moved' | 'cancelled' | 'ended';
 export type TouchId = string;
 
 interface AEvent {
@@ -14,14 +14,14 @@ interface AEvent {
 }
 
 export interface PencilEvent extends AEvent {
-  type: "pencil";
+  type: 'pencil';
   pressure: number;
   altitude: number;
   azimuth: number;
 }
 
 export interface FingerEvent extends AEvent {
-  type: "finger";
+  type: 'finger';
 }
 
 // If we fixed the following inconsistencies, we could delete most of nativeEvent:
@@ -31,7 +31,7 @@ export interface FingerEvent extends AEvent {
 // • .force -> .pressure
 
 type TouchPoint = {
-  type: "pencil" | "touch" | "stylus";
+  type: 'pencil' | 'touch' | 'stylus';
   altitude: number;
   azimuth: number;
   force: number;
@@ -62,49 +62,49 @@ export default class Events {
 
   did(type: EventType, state: EventState, id?: TouchId) {
     return this.events.find(
-      (e) => e.type === type && e.state === state && (id == null || e.id === id)
+      e => e.type === type && e.state === state && (!id || e.id === id)
     );
   }
 
   didAll(type: EventType, state: EventState, id?: TouchId) {
     return this.events.filter(
-      (e) => e.type === type && e.state === state && (id == null || e.id === id)
+      e => e.type === type && e.state === state && (!id || e.id === id)
     );
   }
 
   didLast(type: EventType, state: EventState, id?: TouchId) {
     return this.events.findLast(
-      (e) => e.type === type && e.state === state && (id == null || e.id === id)
+      e => e.type === type && e.state === state && (!id || e.id === id)
     );
   }
 
   private setupNativeEventHandler() {
-    // tslint:disable-next-line:no-any
-    (window as any).nativeEvent = (state: EventState, touches: Record<TouchId, TouchPoint[]>) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (window as any).nativeEvent = (
+      state: EventState,
+      touches: Record<TouchId, TouchPoint[]>
+    ) => {
       for (const id in touches) {
-        if (!touches.hasOwnProperty(id)) {
-          continue;
-        }
-
         for (const point of touches[id]) {
-          const { type, timestamp, radius, force, altitude, azimuth, x, y } = point;
+          const {type, timestamp, radius, force, altitude, azimuth, x, y} =
+            point;
 
           const sharedProperties = {
             state,
             id,
-            position: { x, y },
+            position: {x, y},
             timestamp,
             radius,
           };
 
           const event: Event =
-            type === "touch"
+            type === 'touch'
               ? {
-                  type: "finger",
+                  type: 'finger',
                   ...sharedProperties,
                 }
               : {
-                  type: "pencil",
+                  type: 'pencil',
                   pressure: force,
                   altitude,
                   azimuth,
