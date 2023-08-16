@@ -14,12 +14,12 @@ export default class ArcSegment {
   elements: { normal: SVGElement; selected: SVGElement };
   private needsRerender = true;
 
-  constructor(svg: SVG, private aId: number, private bId: number, private cId: number) {
-    this.a.listeners.add(this);
-    this.b.listeners.add(this);
-    this.c.listeners.add(this);
+  constructor(svg: SVG, public a: Handle, public b: Handle, public c: Handle) {
+    a.listeners.add(this);
+    b.listeners.add(this);
+    c.listeners.add(this);
 
-    this.radius = Vec.dist(this.a.position, this.c.position);
+    this.radius = Vec.dist(a.position, c.position);
 
     this.updatePath();
 
@@ -28,18 +28,6 @@ export default class ArcSegment {
       normal: svg.addElement("path", { ...attrs, "stroke-width": 1, stroke: "black" }),
       selected: svg.addElement("path", { ...attrs, "stroke-width": 7, stroke: "none" }),
     };
-  }
-
-  get a() {
-    return Handle.get(this.aId);
-  }
-
-  get b() {
-    return Handle.get(this.bId);
-  }
-
-  get c() {
-    return Handle.get(this.cId);
   }
 
   updatePath() {

@@ -9,15 +9,15 @@ export default class LineSegment {
 
   private needsRerender = true;
 
-  constructor(svg: SVG, private aId: number, private bId: number) {
-    this.a.listeners.add(this);
-    this.b.listeners.add(this);
+  constructor(svg: SVG, public a: Handle, public b: Handle) {
+    a.listeners.add(this);
+    b.listeners.add(this);
 
     const normalAttributes = {
-      x1: this.a.position.x,
-      y1: this.a.position.y,
-      x2: this.b.position.x,
-      y2: this.b.position.y,
+      x1: a.position.x,
+      y1: a.position.y,
+      x2: b.position.x,
+      y2: b.position.y,
       "stroke-width": 1,
       stroke: "black",
     };
@@ -29,14 +29,6 @@ export default class LineSegment {
         stroke: "none",
       }),
     };
-  }
-
-  get a() {
-    return Handle.get(this.aId);
-  }
-
-  get b() {
-    return Handle.get(this.bId);
   }
 
   onHandleMoved() {
@@ -62,13 +54,11 @@ export default class LineSegment {
       return;
     }
 
-    const a = this.a; // cache these so that we don't...
-    const b = this.b; // ... do a look-up every time
     const normalAttributes = {
-      x1: a.position.x,
-      y1: a.position.y,
-      x2: b.position.x,
-      y2: b.position.y,
+      x1: this.a.position.x,
+      y1: this.a.position.y,
+      x2: this.b.position.x,
+      y2: this.b.position.y,
     };
     updateSvgElement(this.elements.normal, normalAttributes);
     updateSvgElement(this.elements.selected, {

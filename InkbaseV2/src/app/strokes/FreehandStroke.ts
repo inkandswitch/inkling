@@ -4,7 +4,6 @@ import TransformationMatrix from "../../lib/transform_matrix";
 import SVG, { generatePathFromPoints, updateSvgElement } from "../Svg";
 import generateId from "../generateId";
 import { PositionWithPressure } from "../../lib/types";
-import { farthestPair, notNull } from "../../lib/helpers";
 import Handle from "./Handle";
 
 export const strokeSvgProperties = {
@@ -24,15 +23,14 @@ export default class FreehandStroke {
   constructor(
     svg: SVG,
     public points: Array<PositionWithPressure | null>,
-    private aId: number,
-    private bId: number
+    public a: Handle,
+    public b: Handle
   ) {
-    const [aPos, bPos] = farthestPair(this.points.filter(notNull));
-    this.a.setPosition(aPos);
-    this.b.setPosition(bPos);
+    a.listeners.add(this);
+    b.listeners.add(this);
 
     // Store normalised point data based on control points
-    const transform = new TransformationMatrix().fromLine(aPos, bPos).inverse();
+    const transform = new TransformationMatrix().fromLine(a.position, b.position).inverse();
     this.pointData = points.map((p) => {
       if (p === null) {
         return null;
@@ -46,14 +44,6 @@ export default class FreehandStroke {
       d: "",
       ...strokeSvgProperties,
     });
-  }
-
-  get a() {
-    return Handle.get(this.aId);
-  }
-
-  get b() {
-    return Handle.get(this.bId);
   }
 
   currentAngle() {

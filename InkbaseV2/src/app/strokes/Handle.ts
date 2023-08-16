@@ -13,18 +13,27 @@ export default class Handle {
   // static stuff
 
   static handleById = new Map<number, Handle>();
+  static proxyById = new Map<number, Handle>();
 
-  static create(svg: SVG, type: HandleType, position: Position): number {
+  static create(svg: SVG, type: HandleType, position: Position): Handle {
     const handle = new Handle(svg, type, position);
-    Handle.handleById.set(handle.id, handle);
-    return handle.id;
+    const id = handle.id;
+    Handle.handleById.set(id, handle);
+
+    const proxy = new Proxy<Handle>(handle, {
+      get(_target, property) {
+        return Handle.get(id)[property as keyof Handle];
+      },
+      set(_target, property, newValue) {
+        Handle.get(id)[property as keyof Handle] = newValue;
+        return true;
+      },
+    });
+    Handle.proxyById.set(id, proxy);
+    return proxy;
   }
 
-  static addListener(id: number, listener: HandleListener) {
-    Handle.get(id).listeners.add(listener);
-  }
-
-  static get(id: number): Handle {
+  private static get(id: number): Handle {
     const handle = this.handleById.get(id);
     if (handle == null) {
       throw new Error("invalid handle id: " + id);
@@ -34,19 +43,19 @@ export default class Handle {
   }
 
   static get all(): IterableIterator<Handle> {
-    return Handle.handleById.values();
+    return Handle.proxyById.values();
   }
 
   // instance stuff
 
-  readonly id = generateId();
-  readonly listeners = new Set<HandleListener>();
+  id = generateId();
+  listeners = new Set<HandleListener>();
 
-  private readonly elements: { normal: SVGElement; selected: SVGElement };
+  private elements: { normal: SVGElement; selected: SVGElement };
   private selected = false;
-  private needsRerender = false;
+  private needsRerender = true;
 
-  private constructor(svg: SVG, readonly type: HandleType, public position: Position) {
+  private constructor(svg: SVG, private type: HandleType, public position: Position) {
     this.elements = {
       normal: svg.addElement(
         "circle",

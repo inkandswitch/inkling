@@ -18,26 +18,26 @@ export default class Page {
 
   constructor(private svg: SVG) {}
 
-  addLineSegment(aId: number, bId: number) {
-    const ls = new LineSegment(this.svg, aId, bId);
+  addLineSegment(a: Handle, b: Handle) {
+    const ls = new LineSegment(this.svg, a, b);
     this.lineSegments.push(ls);
     return ls;
   }
 
-  addArcSegment(aId: number, bId: number, cId: number) {
-    const as = new ArcSegment(this.svg, aId, bId, cId);
+  addArcSegment(a: Handle, b: Handle, c: Handle) {
+    const as = new ArcSegment(this.svg, a, b, c);
     this.lineSegments.push(as);
     return as;
   }
 
   addFreehandStroke(points: Array<PositionWithPressure | null>) {
     const [aPos, bPos] = farthestPair(points.filter(notNull));
-    const aId = Handle.create(this.svg, "informal", aPos);
-    const bId = Handle.create(this.svg, "informal", bPos);
+    const a = Handle.create(this.svg, "informal", aPos);
+    const b = Handle.create(this.svg, "informal", bPos);
 
-    const s = new FreehandStroke(this.svg, points, aId, bId);
-    Handle.addListener(aId, s);
-    Handle.addListener(bId, s);
+    const s = new FreehandStroke(this.svg, points, a, b);
+    a.listeners.add(s);
+    b.listeners.add(s);
 
     this.freehandStrokes.push(s);
     this.graph.addStroke(s);
