@@ -1,4 +1,7 @@
 {
   "eslint.format.enable": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
   "prettier.configPath": ".prettierrc.js"
 }

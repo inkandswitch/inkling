@@ -64,7 +64,7 @@ export default class Page {
     const reachableHandles = new Set(
       startHandles.map(handle => handle.canonicalInstance)
     );
-    for (;;) {
+    while (true) {
       const oldSize = reachableHandles.size;
 
       for (const ls of this.lineSegments) {
