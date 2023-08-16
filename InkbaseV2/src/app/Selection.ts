@@ -7,8 +7,8 @@ import Snaps from './Snaps';
 import Handle from './strokes/Handle';
 
 export default class Selection {
-  handles = new Set<Handle>();
-  origPosition = new Map<Handle, Position>();
+  readonly handles = new Set<Handle>();
+  readonly origPosition = new Map<Handle, Position>();
 
   // gesture state
   tappedOn?: Handle;
@@ -18,8 +18,8 @@ export default class Selection {
   secondFingerMoved?: Event;
 
   constructor(
-    private page: Page,
-    private snaps: Snaps
+    private readonly page: Page,
+    private readonly snaps: Snaps
   ) {}
 
   update(events: Events) {
@@ -92,9 +92,9 @@ export default class Selection {
           }
         }
 
-        // for (const handle of this.handles) {
-        //   // TODO: merge handle w/ nearby handles
-        // }
+        for (const handle of this.handles) {
+          handle.absorbNearbyHandles();
+        }
 
         this.firstFinger = undefined;
         this.firstFingerMoved = undefined;
@@ -127,11 +127,14 @@ export default class Selection {
   }
 
   selectHandle(handle: Handle) {
-    this.handles.add(handle);
+    this.handles.add(handle.canonicalInstance);
     handle.select();
 
     for (const ls of this.page.lineSegments) {
-      if (this.handles.has(ls.a) && this.handles.has(ls.b)) {
+      if (
+        this.handles.has(ls.a.canonicalInstance) &&
+        this.handles.has(ls.b.canonicalInstance)
+      ) {
         ls.select();
       } else {
         ls.deselect();
@@ -143,8 +146,8 @@ export default class Selection {
     for (const handle of this.handles) {
       handle.deselect();
     }
-    this.handles = new Set();
-    this.origPosition = new Map();
+    this.handles.clear();
+    this.origPosition.clear();
 
     for (const ls of this.page.lineSegments) {
       ls.deselect();

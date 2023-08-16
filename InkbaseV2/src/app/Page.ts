@@ -61,25 +61,27 @@ export default class Page {
   }
 
   handlesReachableFrom(startHandles: Handle[]) {
-    const reachableHandles = new Set(startHandles);
+    const reachableHandles = new Set(
+      startHandles.map(handle => handle.canonicalInstance)
+    );
     for (;;) {
       const oldSize = reachableHandles.size;
 
       for (const ls of this.lineSegments) {
-        if (reachableHandles.has(ls.a)) {
-          reachableHandles.add(ls.b);
+        if (reachableHandles.has(ls.a.canonicalInstance)) {
+          reachableHandles.add(ls.b.canonicalInstance);
         }
-        if (reachableHandles.has(ls.b)) {
-          reachableHandles.add(ls.a);
+        if (reachableHandles.has(ls.b.canonicalInstance)) {
+          reachableHandles.add(ls.a.canonicalInstance);
         }
       }
 
       for (const s of this.freehandStrokes) {
-        if (reachableHandles.has(s.a)) {
-          reachableHandles.add(s.b);
+        if (reachableHandles.has(s.a.canonicalInstance)) {
+          reachableHandles.add(s.b.canonicalInstance);
         }
-        if (reachableHandles.has(s.b)) {
-          reachableHandles.add(s.a);
+        if (reachableHandles.has(s.b.canonicalInstance)) {
+          reachableHandles.add(s.a.canonicalInstance);
         }
       }
 

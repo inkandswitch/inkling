@@ -143,8 +143,8 @@ export default class FormalTool extends Tool {
         this.clearGuess();
       }
 
-      this.fixedStroke!.a.absorbNearby();
-      this.fixedStroke!.b.absorbNearby();
+      this.fixedStroke!.a.absorbNearbyHandles();
+      this.fixedStroke!.b.absorbNearbyHandles();
 
       this.fixedStroke = undefined;
       this.mode = 'unknown';

@@ -1,4 +1,5 @@
 import { Position } from '../../lib/types';
+import Vec from '../../lib/vec';
 import SVG, { updateSvgElement } from '../Svg';
 import generateId from '../generateId';
 
@@ -9,136 +10,203 @@ export interface HandleListener {
 
 export type HandleType = 'formal' | 'informal';
 
-export default class Handle {
-  // static stuff
+interface HandleState {
+  id: number;
+  type: HandleType;
+  position: Position;
+  listeners: Set<HandleListener>;
+  elements: { normal: SVGElement; selected: SVGElement };
+  selected: boolean;
+  needsRerender: boolean;
+}
 
-  static handleById = new Map<number, Handle>();
-  static proxyById = new Map<number, Handle>();
+export default class Handle {
+  // --- static stuff ---
+
+  // only canonical handles
+  static readonly all = new Set<Handle>();
+
+  // contains non-canonical handles, too
+  private static readonly allInstances = new Set<Handle>();
+
+  private static readonly stateById = new Map<number, HandleState>();
 
   static create(svg: SVG, type: HandleType, position: Position): Handle {
-    const handle = new Handle(svg, type, position);
-    const id = handle.id;
-    Handle.handleById.set(id, handle);
+    const id = generateId();
 
-    const proxy = new Proxy<Handle>(handle, {
-      get(_target, property) {
-        return Handle.get(id)[property as keyof Handle];
+    const state: HandleState = {
+      id,
+      type,
+      position,
+      listeners: new Set(),
+      elements: {
+        normal: svg.addElement(
+          'circle',
+          type === 'formal'
+            ? { cx: 0, cy: 0, r: 3, fill: 'black' }
+            : { r: 5, fill: 'rgba(100, 100, 100, .2)' }
+        ),
+        selected: svg.addElement('circle', {
+          cx: 0,
+          cy: 0,
+          r: 7,
+          fill: 'none',
+        }),
       },
-      set(_target, property, newValue) {
-        Handle.get(id)[property as keyof Handle] = newValue;
-        return true;
-      },
-    });
-    Handle.proxyById.set(id, proxy);
-    return proxy;
+      selected: false,
+      needsRerender: true,
+    };
+    return new Handle(id, state);
   }
 
-  private static get(id: number): Handle {
-    const handle = this.handleById.get(id);
-    if (!handle) {
-      throw new Error('invalid handle id: ' + id);
-    } else {
-      return handle;
-    }
-  }
+  // --- instance stuff ---
 
-  static get all(): IterableIterator<Handle> {
-    return Handle.proxyById.values();
-  }
-
-  // instance stuff
-
-  id = generateId();
-  listeners = new Set<HandleListener>();
-
-  private elements: { normal: SVGElement; selected: SVGElement };
-  private selected = false;
-  private needsRerender = true;
+  public canonicalInstance: Handle = this;
 
   private constructor(
-    svg: SVG,
-    private type: HandleType,
-    public position: Position
+    public id: number,
+    state: HandleState
   ) {
-    this.elements = {
-      normal: svg.addElement(
-        'circle',
-        this.type === 'formal'
-          ? { cx: 0, cy: 0, r: 3, fill: 'black' }
-          : { r: 5, fill: 'rgba(100, 100, 100, .2)' }
-      ),
-      selected: svg.addElement('circle', { cx: 0, cy: 0, r: 7, fill: 'none' }),
-    };
+    Handle.all.add(this);
+    Handle.allInstances.add(this);
+    Handle.stateById.set(id, state);
+  }
+
+  private getState(): HandleState {
+    const state = Handle.stateById.get(this.id);
+    if (!state) {
+      throw new Error(`no state for handle w/ id ${this.id}`);
+    } else {
+      return state;
+    }
   }
 
   select() {
-    this.needsRerender = true;
-    this.selected = true;
+    const state = this.getState();
+    state.selected = true;
+    state.needsRerender = true;
   }
 
   deselect() {
-    this.needsRerender = true;
-    this.selected = false;
+    const state = this.getState();
+    state.selected = false;
+    state.needsRerender = true;
+  }
+
+  get position(): Position {
+    return this.getState().position;
   }
 
   setPosition(pos: Position) {
-    this.position = pos;
-    this.needsRerender = true;
-    for (const listener of this.listeners) {
+    const state = this.getState();
+    state.position = pos;
+    state.needsRerender = true;
+    for (const listener of state.listeners) {
       listener.onHandleMoved(this);
     }
+  }
+
+  get listeners(): Set<HandleListener> {
+    return this.getState().listeners;
   }
 
   remove() {
-    // remove me from the map
-    Handle.handleById.delete(this.id);
-
-    // remove my SVG elements from the DOM
-    this.elements.normal.remove();
-    this.elements.selected.remove();
-
-    // tell everybody about this
-    for (const listener of this.listeners) {
-      listener.onHandleRemoved(this);
-    }
-  }
-
-  absorb(that: Handle) {
-    if (this.type !== that.type) {
-      throw new Error('cannot merge handles of different types!');
-    }
-
-    // move the other handle's listeners to me, and tell them that the handle has moved
-    for (const listener of that.listeners) {
-      this.listeners.add(listener);
-      listener.onHandleMoved(this);
-    }
-
-    // remove the other handle from the DOM and the map
-    that.remove();
-
-    // update the map so that any references to the old handle now come to me
-    Handle.handleById.set(that.id, this);
-  }
-
-  absorbNearby() {
-    // TODO
-  }
-
-  render() {
-    if (!this.needsRerender) {
+    // b/c of absorb operation, there may be several handle instances w/ the same id
+    if (this !== this.canonicalInstance) {
+      this.canonicalInstance.remove();
       return;
     }
 
-    updateSvgElement(this.elements.normal, {
-      transform: `translate(${this.position.x} ${this.position.y})`,
+    this.removeFromDOM();
+
+    // tell everybody that I'm gone
+    for (const listener of this.listeners) {
+      listener.onHandleRemoved(this);
+    }
+
+    this.forEachSiblingThenMe(sibling => {
+      Handle.allInstances.delete(sibling);
+      sibling.id = -1; // to make it obvious that it's gone
     });
 
-    updateSvgElement(this.elements.selected, {
-      transform: `translate(${this.position.x} ${this.position.y})`,
-      fill: this.selected ? 'rgba(180, 134, 255, 0.42)' : 'none',
+    // remove me from the set of canonical instances and the state map
+    Handle.all.delete(this);
+    Handle.stateById.delete(this.id);
+  }
+
+  absorb(that: Handle) {
+    // b/c of this operation, there may be several handle instances w/ the same id
+    that = that.canonicalInstance;
+
+    const thisState = this.getState();
+    const thatState = that.getState();
+
+    if (thisState.type !== thatState.type) {
+      throw new Error('cannot merge handles of different types!');
+    }
+
+    // remove the handle from the DOM and the state map
+    that.removeFromDOM();
+    Handle.stateById.delete(thatState.id);
+
+    that.forEachSiblingThenMe(sibling => {
+      sibling.id = this.id;
+      sibling.canonicalInstance = this;
+      Handle.all.delete(sibling); // not a canonical handle anymore
     });
 
-    this.needsRerender = false;
+    // tell the handle's listeners that it has moved,
+    // then move its listeners them to me
+    for (const listener of thatState.listeners) {
+      listener.onHandleMoved(that);
+      thisState.listeners.add(listener);
+      thatState.listeners.delete(listener);
+    }
+  }
+
+  absorbNearbyHandles() {
+    const position = this.getState().position;
+    for (const that of Handle.all) {
+      if (that === this) {
+        continue;
+      }
+      const dist = Vec.dist(position, that.getState().position);
+      if (dist < 10) {
+        this.absorb(that);
+      }
+    }
+  }
+
+  render() {
+    const state = this.getState();
+    if (!state.needsRerender) {
+      return;
+    }
+
+    updateSvgElement(state.elements.normal, {
+      transform: `translate(${state.position.x} ${state.position.y})`,
+    });
+
+    updateSvgElement(state.elements.selected, {
+      transform: `translate(${state.position.x} ${state.position.y})`,
+      fill: state.selected ? 'rgba(180, 134, 255, 0.42)' : 'none',
+    });
+
+    state.needsRerender = false;
+  }
+
+  private forEachSiblingThenMe(fn: (handle: Handle) => void) {
+    for (const sibling of Handle.allInstances) {
+      if (sibling !== this && sibling.id === this.id) {
+        fn(sibling);
+      }
+    }
+    fn(this);
+  }
+
+  private removeFromDOM() {
+    const state = this.getState();
+    state.elements.normal.remove();
+    state.elements.selected.remove();
   }
 }
