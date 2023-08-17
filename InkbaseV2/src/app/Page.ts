@@ -36,9 +36,6 @@ export default class Page {
     const b = Handle.create(this.svg, 'informal', bPos);
 
     const s = new FreehandStroke(this.svg, points, a, b);
-    a.listeners.add(s);
-    b.listeners.add(s);
-
     this.freehandStrokes.push(s);
     this.graph.addStroke(s);
 

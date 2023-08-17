@@ -26,8 +26,8 @@ export default class FreehandStroke {
     public readonly a: Handle,
     public readonly b: Handle
   ) {
-    a.listeners.add(this);
-    b.listeners.add(this);
+    a.addListener(this);
+    b.addListener(this);
 
     // Store normalised point data based on control points
     const transform = new TransformationMatrix()
@@ -71,6 +71,10 @@ export default class FreehandStroke {
 
   onHandleMoved() {
     this.needsRerender = true;
+  }
+
+  onHandleAbsorbed() {
+    // no op
   }
 
   onHandleRemoved() {

@@ -20,9 +20,9 @@ export default class ArcSegment {
     public b: Handle,
     public c: Handle
   ) {
-    a.listeners.add(this);
-    b.listeners.add(this);
-    c.listeners.add(this);
+    a.addListener(this);
+    b.addListener(this);
+    c.addListener(this);
 
     this.radius = Vec.dist(a.position, c.position);
 
@@ -60,6 +60,10 @@ export default class ArcSegment {
 
   onHandleMoved() {
     this.needsRerender = true;
+  }
+
+  onHandleAbsorbed() {
+    // no op
   }
 
   onHandleRemoved() {

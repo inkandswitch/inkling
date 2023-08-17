@@ -14,8 +14,8 @@ export default class LineSegment {
     public a: Handle,
     public b: Handle
   ) {
-    a.listeners.add(this);
-    b.listeners.add(this);
+    a.addListener(this);
+    b.addListener(this);
 
     const normalAttributes = {
       x1: a.position.x,
@@ -37,6 +37,10 @@ export default class LineSegment {
 
   onHandleMoved() {
     this.needsRerender = true;
+  }
+
+  onHandleAbsorbed() {
+    // no-op
   }
 
   onHandleRemoved() {

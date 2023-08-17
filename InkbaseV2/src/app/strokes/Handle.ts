@@ -5,6 +5,7 @@ import generateId from '../generateId';
 
 export interface HandleListener {
   onHandleMoved(handle: Handle): void;
+  onHandleAbsorbed(handle: Handle): void;
   onHandleRemoved(handle: Handle): void;
 }
 
@@ -169,11 +170,12 @@ export default class Handle {
 
     // update the instance state of the new absorbed handles,
     // add them to my set of absorbed handles, and
-    // tell their listeners that they've moved
+    // tell their listeners that they've been absorbed and moved
     for (const handle of [that, ...that.instanceState.absorbedHandles]) {
       handle.instanceState = { isCanonical: false, canonicalInstance: this };
       this.instanceState.absorbedHandles.add(handle);
       for (const listener of handle.listeners) {
+        listener.onHandleAbsorbed(handle);
         listener.onHandleMoved(handle);
       }
     }
