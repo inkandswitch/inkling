@@ -10,15 +10,24 @@ export interface HandleListener {
 
 export type HandleType = 'formal' | 'informal';
 
-interface HandleState {
+interface CanonicalInstanceState {
+  isCanonical: true;
   id: number;
   type: HandleType;
+  absorbedHandles: Set<Handle>;
   position: Position;
-  listeners: Set<HandleListener>;
   elements: { normal: SVGElement; selected: SVGElement };
   selected: boolean;
   needsRerender: boolean;
+  wasRemoved: boolean;
 }
+
+interface AbsorbedInstanceState {
+  isCanonical: false;
+  canonicalInstance: Handle;
+}
+
+type InstanceState = CanonicalInstanceState | AbsorbedInstanceState;
 
 export default class Handle {
   // --- static stuff ---
@@ -26,19 +35,16 @@ export default class Handle {
   // only canonical handles
   static readonly all = new Set<Handle>();
 
-  // contains non-canonical handles, too
+  // contains canonical and absorbed handles
   private static readonly allInstances = new Set<Handle>();
 
-  private static readonly stateById = new Map<number, HandleState>();
-
   static create(svg: SVG, type: HandleType, position: Position): Handle {
-    const id = generateId();
-
-    const state: HandleState = {
-      id,
+    return new Handle({
+      isCanonical: true,
+      id: generateId(),
       type,
+      absorbedHandles: new Set(),
       position,
-      listeners: new Set(),
       elements: {
         normal: svg.addElement(
           'circle',
@@ -55,130 +61,151 @@ export default class Handle {
       },
       selected: false,
       needsRerender: true,
-    };
-    return new Handle(id, state);
+      wasRemoved: false,
+    });
   }
 
   // --- instance stuff ---
 
-  public canonicalInstance: Handle = this;
+  private readonly listeners = new Set<HandleListener>();
 
-  private constructor(
-    public id: number,
-    state: HandleState
-  ) {
-    Handle.all.add(this);
+  private constructor(private instanceState: InstanceState) {
+    if (instanceState.isCanonical) {
+      Handle.all.add(this);
+    }
+
     Handle.allInstances.add(this);
-    Handle.stateById.set(id, state);
   }
 
-  private getState(): HandleState {
-    const state = Handle.stateById.get(this.id);
-    if (!state) {
-      throw new Error(`no state for handle w/ id ${this.id}`);
-    } else {
-      return state;
-    }
+  // methods that can be called on any handle
+
+  addListener(listener: HandleListener) {
+    this.listeners.add(listener);
+  }
+
+  get canonicalInstance(): Handle {
+    return !this.instanceState.isCanonical
+      ? this.instanceState.canonicalInstance
+      : this;
   }
 
   select() {
-    const state = this.getState();
-    state.selected = true;
-    state.needsRerender = true;
+    if (!this.instanceState.isCanonical) {
+      this.canonicalInstance.select();
+      return;
+    }
+
+    this.instanceState.selected = true;
+    this.instanceState.needsRerender = true;
   }
 
   deselect() {
-    const state = this.getState();
-    state.selected = false;
-    state.needsRerender = true;
+    if (!this.instanceState.isCanonical) {
+      this.canonicalInstance.deselect();
+      return;
+    }
+
+    this.instanceState.selected = false;
+    this.instanceState.needsRerender = true;
   }
 
   get position(): Position {
-    return this.getState().position;
+    return !this.instanceState.isCanonical
+      ? this.canonicalInstance.position
+      : this.instanceState.position;
   }
 
   setPosition(pos: Position) {
-    const state = this.getState();
-    state.position = pos;
-    state.needsRerender = true;
-    for (const listener of state.listeners) {
-      listener.onHandleMoved(this);
+    if (!this.instanceState.isCanonical) {
+      this.canonicalInstance.setPosition(pos);
+      return;
     }
-  }
 
-  get listeners(): Set<HandleListener> {
-    return this.getState().listeners;
+    this.instanceState.position = pos;
+    this.instanceState.needsRerender = true;
+    this.notifyListeners((handle, listener) => listener.onHandleMoved(handle));
   }
 
   remove() {
-    // b/c of absorb operation, there may be several handle instances w/ the same id
-    if (this !== this.canonicalInstance) {
+    if (!this.instanceState.isCanonical) {
       this.canonicalInstance.remove();
       return;
     }
 
     this.removeFromDOM();
 
-    // tell everybody that I'm gone
-    for (const listener of this.listeners) {
-      listener.onHandleRemoved(this);
+    this.notifyListeners((handle, listener) =>
+      listener.onHandleRemoved(handle)
+    );
+
+    // remove me and my absorbed handles from the set of all handles
+    Handle.allInstances.delete(this);
+    for (const handle of this.instanceState.absorbedHandles) {
+      Handle.allInstances.delete(handle);
     }
 
-    this.forEachSiblingThenMe(sibling => {
-      Handle.allInstances.delete(sibling);
-      sibling.id = -1; // to make it obvious that it's gone
-    });
-
-    // remove me from the set of canonical instances and the state map
+    // remove me from the set of canonical handles
     Handle.all.delete(this);
-    Handle.stateById.delete(this.id);
+
+    // record that I've been removed -- this is to make debugging easier,
+    // should we ever find that some code is holding onto a removed handle
+    this.instanceState.wasRemoved = true;
   }
 
   absorb(that: Handle) {
-    // b/c of this operation, there may be several handle instances w/ the same id
-    that = that.canonicalInstance;
-
-    const thisState = this.getState();
-    const thatState = that.getState();
-
-    if (thisState.type !== thatState.type) {
-      throw new Error('cannot merge handles of different types!');
+    // the absorb operation needs canonical instances!
+    if (!this.instanceState.isCanonical || !that.instanceState.isCanonical) {
+      this.canonicalInstance.absorb(that.canonicalInstance);
+      return;
     }
 
-    // remove the handle from the DOM and the state map
+    if (this.instanceState.type !== that.instanceState.type) {
+      throw new Error('handle type mismatch');
+    }
+
+    // remove the absorbed canonical handle from the DOM and canonical instance set
     that.removeFromDOM();
-    Handle.stateById.delete(thatState.id);
+    Handle.all.delete(that);
 
-    that.forEachSiblingThenMe(sibling => {
-      sibling.id = this.id;
-      sibling.canonicalInstance = this;
-      Handle.all.delete(sibling); // not a canonical handle anymore
-    });
-
-    // tell the handle's listeners that it has moved,
-    // then move its listeners them to me
-    for (const listener of thatState.listeners) {
-      listener.onHandleMoved(that);
-      thisState.listeners.add(listener);
-      thatState.listeners.delete(listener);
+    // update the instance state of the new absorbed handles,
+    // add them to my set of absorbed handles, and
+    // tell their listeners that they've moved
+    for (const handle of [that, ...that.instanceState.absorbedHandles]) {
+      handle.instanceState = { isCanonical: false, canonicalInstance: this };
+      this.instanceState.absorbedHandles.add(handle);
+      for (const listener of handle.listeners) {
+        listener.onHandleMoved(handle);
+      }
     }
   }
 
   absorbNearbyHandles() {
-    const position = this.getState().position;
+    if (!this.instanceState.isCanonical) {
+      this.canonicalInstance.absorbNearbyHandles();
+      return;
+    }
+
     for (const that of Handle.all) {
       if (that === this) {
         continue;
       }
-      const dist = Vec.dist(position, that.getState().position);
+
+      const dist = Vec.dist(this.position, that.position);
       if (dist < 10) {
         this.absorb(that);
       }
     }
   }
 
+  // methods that can only be called on canonical handles
+
   render() {
-    const state = this.getState();
+    const state = this.instanceState;
+
+    if (!state.isCanonical) {
+      throw new Error('called render() on absorbed handle');
+    }
+
     if (!state.needsRerender) {
       return;
     }
@@ -195,18 +222,32 @@ export default class Handle {
     state.needsRerender = false;
   }
 
-  private forEachSiblingThenMe(fn: (handle: Handle) => void) {
-    for (const sibling of Handle.allInstances) {
-      if (sibling !== this && sibling.id === this.id) {
-        fn(sibling);
-      }
+  private removeFromDOM() {
+    if (!this.instanceState.isCanonical) {
+      throw new Error('called removeFromDOM() on absorbed handle');
     }
-    fn(this);
+
+    this.instanceState.elements.normal.remove();
+    this.instanceState.elements.selected.remove();
   }
 
-  private removeFromDOM() {
-    const state = this.getState();
-    state.elements.normal.remove();
-    state.elements.selected.remove();
+  private notifyListeners(
+    fn: (handle: Handle, listener: HandleListener) => void
+  ) {
+    if (!this.instanceState.isCanonical) {
+      throw new Error('called notifyListeners() on absorbed handle');
+    }
+
+    // notify my listeners
+    for (const listener of this.listeners) {
+      fn(this, listener);
+    }
+
+    // notify the listeners of my absorbed handles
+    for (const handle of this.instanceState.absorbedHandles) {
+      for (const listener of handle.listeners) {
+        fn(handle, listener);
+      }
+    }
   }
 }
