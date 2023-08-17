@@ -80,6 +80,12 @@ export default class Handle {
 
   // methods that can be called on any handle
 
+  get id(): number {
+    return !this.instanceState.isCanonical
+      ? this.canonicalInstance.id
+      : this.instanceState.id;
+  }
+
   addListener(listener: HandleListener) {
     this.listeners.add(listener);
   }
