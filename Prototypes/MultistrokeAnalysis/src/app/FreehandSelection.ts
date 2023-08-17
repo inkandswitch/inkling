@@ -1,12 +1,13 @@
 import Page from "./Page"
 import FreehandStroke from "./strokes/FreehandStroke"
+import StrokeGroup from "./strokes/StrokeGroup"
 
 export default class FreehandSelection {
     page: Page
-    selectedStrokes = new Set<FreehandStroke>()
+    selectedStrokes: (StrokeGroup | null) = null;
 
     selections = [];
-    selectionsByStroke = new Map<FreehandStroke, Set<FreehandStroke>>();
+    selectionsByStroke = new Map<FreehandStroke, StrokeGroup>();
 
     constructor(page) {
         this.page = page
@@ -16,47 +17,64 @@ export default class FreehandSelection {
         const fingerDown = events.did('finger', 'began');
 
         if (fingerDown) {
-            
-            
-
             let found = this.page.findFreehandStrokeNear(fingerDown.position)
             if(found) {
-                // Find Existing Selections
-                console.log(this.selectedStrokes.size);
-                
-                if(this.selectedStrokes.size == 0) {
-                    let foundSelection = this.selectionsByStroke.get(found);
-                    console.log("found", foundSelection);
-                    
-                    if(foundSelection) {
-                        for(const s of foundSelection) {
-                            this.select(s);
-                        }
-                    } else {
-                        this.select(found);
-                    }
-                } else {
-                    this.select(found);
-                }
+                this.fingerDownOnStroke(found)
             } else {
-                this.clearSelection();
+                this.fingerDownOnEmptySpace()
             }
         }
     }
 
+    fingerDownOnStroke(stroke){
+      this.select(stroke);
+        
+        // Find Existing Selections
+        //console.log(this.selectedStrokes.size);
+                        
+        // if(this.selectedStrokes === null) {
+        //     let foundSelection = this.selectionsByStroke.get(stroke);
+            
+        //     if(foundSelection) {
+        //         for(const s of foundSelection) {
+        //             this.select(s);
+        //         }
+        //     } else {
+        //         this.select(stroke);
+        //     }
+        // } else {
+        //     this.select(stroke);
+        // }
+    }
+
+    fingerDownOnEmptySpace(){
+        this.clearSelection();
+    }
+
+    render(svg){
+      if(this.selectedStrokes) {
+        this.selectedStrokes.render(svg)
+      }
+    }
+
     select(stroke){
-        this.selectedStrokes.add(stroke);
-        this.selectionsByStroke.set(stroke, this.selectedStrokes);
         stroke.select();
-        //this.downPositions.set(stroke, stroke.points.map(p=>({...p})));
+        if(this.selectedStrokes === null) {
+            this.selectedStrokes = new StrokeGroup();
+        } 
+
+        this.selectedStrokes.addStroke(stroke);
     }
 
     clearSelection(){
-        for(const stroke of this.selectedStrokes) {
-            stroke.deselect();
-        }
+      if(this.selectedStrokes === null) {
+        return;
+      }
+      for(const stroke of this.selectedStrokes.strokes) {
+        stroke.deselect();
+      }
 
-        this.selectedStrokes = new Set();
-        //this.downPositions = new Map();
+      this.selectedStrokes.remove();
+      this.selectedStrokes = null;
     }
 }

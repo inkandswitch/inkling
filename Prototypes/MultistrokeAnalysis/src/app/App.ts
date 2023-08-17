@@ -31,6 +31,7 @@ EveryFrame(() => {
   toolPicker.selected?.render(svg);
   snaps.render(svg);
   page.render(svg);
+  selection.render(svg);
 });
 
 

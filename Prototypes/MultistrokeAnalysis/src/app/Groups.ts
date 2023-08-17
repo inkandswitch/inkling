@@ -130,27 +130,7 @@ export default class Groups {
 }
 
 
-class Group {
-  strokes = new Set<FreehandStroke>();
-  outline: ClipperShape
 
-  constructor(stroke, shape){
-    this.strokes.add(stroke)
-    this.outline = shape
-  }
-
-  addStroke(stroke, shape){
-    this.strokes.add(stroke)
-    this.outline = this.outline.union(shape);
-  }
-  
-  intersects(shape){
-    return this.outline.intersect(shape).paths.length > 0;
-  }
-
-
-
-}
 
 
 

@@ -225,7 +225,7 @@ export default class FreehandStroke {
       return { ...np, pressure: p.pressure };
     });
     const path = generatePathFromPoints(this.points);
-    updateSvgElement(this.element, { d: path, stroke: this.selected ? "red": "rgba(0, 0, 0, .5)" });
+    updateSvgElement(this.element, { d: path, stroke: this.selected ? "rgba(255, 0, 0, 1)": "rgba(0, 0, 0, .5)" });
 
     // outline path
     // const outlinePath = this.outline.flatMap(path=>generatePathFromPoints(path));
