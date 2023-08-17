@@ -105,12 +105,8 @@ export default class FormalTool extends Tool {
 
         const snappedPositions = this.snaps.snapPositions(pointPositions);
 
-        this.fixedStroke.a.setPosition(
-          snappedPositions.get(this.fixedStroke.a)!
-        );
-        this.fixedStroke.b.setPosition(
-          snappedPositions.get(this.fixedStroke.b)!
-        );
+        this.fixedStroke.a.position = snappedPositions.get(this.fixedStroke.a)!;
+        this.fixedStroke.b.position = snappedPositions.get(this.fixedStroke.b)!;
       }
 
       // STATE TRANSITIONS

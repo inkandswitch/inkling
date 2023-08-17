@@ -180,7 +180,7 @@ export default class Selection {
 
     const snappedPositions = this.snaps.snapPositions(transformedPositions);
     for (const handle of this.handles) {
-      handle.setPosition(snappedPositions.get(handle)!);
+      handle.position = snappedPositions.get(handle)!;
     }
   }
 }

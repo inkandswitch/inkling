@@ -86,14 +86,31 @@ export default class Handle {
       : this.instanceState.id;
   }
 
-  addListener(listener: HandleListener) {
-    this.listeners.add(listener);
-  }
-
   get canonicalInstance(): Handle {
     return !this.instanceState.isCanonical
       ? this.instanceState.canonicalInstance
       : this;
+  }
+
+  get position(): Position {
+    return !this.instanceState.isCanonical
+      ? this.canonicalInstance.position
+      : this.instanceState.position;
+  }
+
+  set position(pos: Position) {
+    if (!this.instanceState.isCanonical) {
+      this.canonicalInstance.position = pos;
+      return;
+    }
+
+    this.instanceState.position = pos;
+    this.instanceState.needsRerender = true;
+    this.notifyListeners((handle, listener) => listener.onHandleMoved(handle));
+  }
+
+  addListener(listener: HandleListener) {
+    this.listeners.add(listener);
   }
 
   select() {
@@ -114,23 +131,6 @@ export default class Handle {
 
     this.instanceState.selected = false;
     this.instanceState.needsRerender = true;
-  }
-
-  get position(): Position {
-    return !this.instanceState.isCanonical
-      ? this.canonicalInstance.position
-      : this.instanceState.position;
-  }
-
-  setPosition(pos: Position) {
-    if (!this.instanceState.isCanonical) {
-      this.canonicalInstance.setPosition(pos);
-      return;
-    }
-
-    this.instanceState.position = pos;
-    this.instanceState.needsRerender = true;
-    this.notifyListeners((handle, listener) => listener.onHandleMoved(handle));
   }
 
   remove() {
