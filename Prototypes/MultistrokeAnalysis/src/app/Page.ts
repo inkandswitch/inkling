@@ -7,12 +7,12 @@ import FreehandStroke from "./strokes/FreehandStroke";
 import Point from "./strokes/Point";
 import ControlPoint from "./strokes/ControlPoint";
 
-import StrokeGraph from "./strokes/StrokeGraph";
+import Groups from "./Groups";
 import { Position, PositionWithPressure } from "../lib/types";
 
 export default class Page {
   points: Point[] = [];
-  graph = new StrokeGraph();
+  groups = new Groups();
 
   // TODO: figure out a better model for how to store different kinds of strokes
   // For now just keep them separate, until we have a better idea of what freehand strokes look like
@@ -52,9 +52,25 @@ export default class Page {
     cp1.parent = s;
     cp2.parent = s;
     this.freehandStrokes.push(s);
-    this.graph.addStroke(s);
+    this.groups.update(this.freehandStrokes);
     return s;
   }
+
+  findFreehandStrokeNear(position, dist = 20) {
+    let closestStroke = null;
+    let closestDistance = dist;
+    for(const stroke of this.freehandStrokes) {
+        for(const point of stroke.points) {
+            const d = Vec.dist(point, position);
+            if (d < closestDistance) {
+                closestDistance = d;
+                closestStroke = stroke;
+            }
+        }
+    }
+
+    return closestStroke
+}
 
   findPointNear(position: Position, dist = 20) {
     let closestPoint: Point | null = null;
@@ -148,6 +164,6 @@ export default class Page {
     this.freehandStrokes.forEach((s) => s.render());
     this.points.forEach((p) => p.render());
 
-    this.graph.render(svg);
+    this.groups.render(svg);
   }
 }

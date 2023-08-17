@@ -11,7 +11,7 @@ export default class ControlPoint extends Point {
     super(svg, position);
     updateSvgElement(this.elements.normal, {
       r: 5,
-      fill: "rgba(100, 100, 100, .2)",
+      fill: "rgba(100, 100, 100, 0 )",
     });
   }
 

@@ -8,11 +8,13 @@ import { Position, PositionWithPressure } from "../../lib/types";
 
 import Polygon from "../../lib/polygon";
 
-import hull from "hull.js"
-import Voronoi from "voronoi"
+// import hull from "hull.js"
+// import Voronoi from "voronoi"
 
 
-var voronoi = new Voronoi();
+
+
+// var voronoi = new Voronoi();
 
 export const strokeSvgProperties = {
   stroke: "rgba(0, 0, 0, .5)",
@@ -39,6 +41,8 @@ export default class FreehandStroke {
 
   dirty = true;
   outline: Array<any> = [];
+
+  selected = false;
 
   constructor(
     svg: SVG,
@@ -82,12 +86,67 @@ export default class FreehandStroke {
       "stroke-width": 2
     });
 
-    this.generateOutline()
+    //this.generateOutline2()
+  }
+
+  select() {
+    this.dirty = true;
+    this.selected = true;
+  }
+
+  deselect() {
+      this.dirty = true;
+      this.selected = false;
   }
 
   currentAngle() {
     return Vec.angle(Vec.sub(this.controlPoints[1].position, this.controlPoints[0].position));
   }
+
+  generateOutline2(){
+    this.points = rdp_simplify(this.points, 2)
+    let shape = new Shape([this.points], true, true, true, true)
+    
+    shape = shape.offset( 10, {
+      jointType: 'jtRound',
+      endType: 'etOpenRound',
+      miterLimit: 2.0,
+      roundPrecision: 0.25
+    })
+    console.log(shape);
+    this.outline = shape.paths.map(path=>{
+      let newpath = path.map(pt=>{
+        return {x: pt.X, y: pt.Y}
+      })
+      newpath.push({
+        x: shape.paths[0][0].X,
+        y: shape.paths[0][0].Y
+      })
+      return newpath
+    })
+    
+
+    console.log(this.outline);
+    
+    
+
+    //const clipperPath = new Clipper.Path();
+
+    // this.points = rdp_simplify(this.points, 1)
+    // let offset = offsetPath(this.points, 20)
+    // this.outline = offset
+    // console.log(offset);
+    
+    //let path = new paper.Path()
+    // this.points.forEach(point=>{
+    //   path.add(new paper.Point(point?.x, point?.y))
+    // })
+
+    // PaperOffset.offsetStroke(path, 10, { cap: 'round' })
+    // console.log(path);
+  }
+
+
   generateOutline(){
     const OFFSET = 10;
     const CIRCLESTEP = 16;
@@ -166,18 +225,18 @@ export default class FreehandStroke {
       return { ...np, pressure: p.pressure };
     });
     const path = generatePathFromPoints(this.points);
-    updateSvgElement(this.element, { d: path });
+    updateSvgElement(this.element, { d: path, stroke: this.selected ? "red": "rgba(0, 0, 0, .5)" });
 
     // outline path
-    const outlinePath = generatePathFromPoints(this.outline);
-    updateSvgElement(this.outlineElement, {d: outlinePath});
+    // const outlinePath = this.outline.flatMap(path=>generatePathFromPoints(path));
+    // updateSvgElement(this.outlineElement, {d: outlinePath});
 
     // skeleton path
-    let skeletonPath = "";
-    this.diagram.forEach(edge=>{      
-        skeletonPath += `M ${edge.a.x} ${edge.a.y} L ${edge.b.x} ${edge.b.y}`
-    })
-    updateSvgElement(this.skeletonElement, {d: skeletonPath});
+    // let skeletonPath = "";
+    // this.diagram.forEach(edge=>{      
+    //     skeletonPath += `M ${edge.a.x} ${edge.a.y} L ${edge.b.x} ${edge.b.y}`
+    // })
+    // updateSvgElement(this.skeletonElement, {d: skeletonPath});
   }
 
   render() {
@@ -255,3 +314,31 @@ function generateGaussianKernel(size, sigma) {
   
   return kernel;
 }
+
+function offsetPath(points, offsetDistance) {
+  if (points.length < 2 || typeof offsetDistance !== 'number') {
+    throw new Error('Invalid input');
+  }
+
+  const offsetPath: any[] = [];
+
+  for (let i = 0; i < points.length; i++) {
+    const point = points[i];
+    const prevPoint = points[i - 1] || point;
+    const nextPoint = points[i + 1] || point;
+
+    const angle = Math.atan2(nextPoint.y - prevPoint.y, nextPoint.x - prevPoint.x) + Math.PI / 2;
+    const offsetX = Math.cos(angle) * offsetDistance;
+    const offsetY = Math.sin(angle) * offsetDistance;
+
+    const offsetPoint = {
+      x: point.x + offsetX,
+      y: point.y + offsetY
+    };
+
+    offsetPath.push(offsetPoint);
+  }
+
+  return offsetPath;
+}
+
