@@ -67,19 +67,22 @@ export default class FreehandStroke {
       return { ...np, pressure: p.pressure };
     });
     const path = generatePathFromPoints(this.points);
-    updateSvgElement(this.element, { d: path, stroke: this.selected ? 'rgba(255, 0, 0, .5)' : 'rgba(0, 0, 0, .5)' });
+    updateSvgElement(this.element, {
+      d: path,
+      stroke: this.selected ? 'rgba(255, 0, 0, .5)' : 'rgba(0, 0, 0, .5)',
+    });
   }
 
   onHandleMoved() {
     this.needsRerender = true;
   }
 
-  select(){
+  select() {
     this.selected = true;
     this.needsRerender = true;
   }
 
-  deselect(){
+  deselect() {
     this.selected = false;
     this.needsRerender = true;
   }
