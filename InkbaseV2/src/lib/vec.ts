@@ -195,25 +195,16 @@ Vec.angleBetween = (a: Vector, b: Vector) => {
   // Calculate the angle between the vectors using the dot product and magnitudes
   const angleInRadians = Math.acos(dotProduct / (magnitudeA * magnitudeB));
 
-  // Convert the angle from radians to degrees
-  const angleInDegrees = (angleInRadians * 180) / Math.PI;
-
-  return angleInDegrees;
+  return angleInRadians;
 };
 
 Vec.angleBetweenClockwise = (a: Vector, b: Vector) => {
   const dP = Vec.dot(a, b);
   const cP = Vec.cross(a, b);
 
-  const angle = Math.atan2(dP, cP);
+  const angleInRadians = Math.atan2(dP, cP);
 
-  // Convert the angle from radians to degrees
-  let angleInDegrees = angle * (180 / Math.PI);
-  if (angleInDegrees < 0) {
-    angleInDegrees = 360 + angleInDegrees;
-  }
-
-  return angleInDegrees;
+  return angleInRadians;
 };
 
 Vec.update = (dest: Vector, src: Vector) => {
