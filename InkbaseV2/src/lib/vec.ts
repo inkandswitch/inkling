@@ -202,7 +202,7 @@ Vec.angleBetweenClockwise = (a: Vector, b: Vector) => {
   const dP = Vec.dot(a, b);
   const cP = Vec.cross(a, b);
 
-  const angleInRadians = Math.atan2(dP, cP);
+  const angleInRadians = Math.atan2(cP, dP);
 
   return angleInRadians;
 };
