@@ -9,6 +9,7 @@ import ToolPicker from './ToolPicker';
 import Handle from './strokes/Handle';
 import FormalTool from './tools/FormalTool';
 import FreehandTool from './tools/FreehandTool';
+import minimize from '../lib/minimize';
 
 const root = document.querySelector('svg') as SVGSVGElement;
 
@@ -28,6 +29,8 @@ const tools = [
 const toolPicker = new ToolPicker(tools);
 
 EveryFrame(() => {
+  runConstraintSolver();
+
   toolPicker.update(events);
   toolPicker.selected?.update(events);
   selection.update(events);
@@ -43,3 +46,20 @@ EveryFrame(() => {
     handle.render();
   }
 });
+
+function runConstraintSolver() {
+  // if (Handle.all.size < 2) {
+  //   return;
+  // }
+  // const [h1, h2] = Array.from(Handle.all);
+  // let { x: h1x, y: h1y } = h1.position;
+  // let { x: h2x, y: h2y } = h2.position;
+  // const inputs = [h1x, h1y, h2x, h2y];
+  // const outputs = minimize(
+  //   ([h1x, h1y, h2x, h2y]) => Math.abs(h1x - h2y),
+  //   inputs
+  // ).solution;
+  // [h1x, h1y, h2x, h2y] = outputs;
+  // h1.position = { x: h1x, y: h1y };
+  // h2.position = { x: h2x, y: h2y };
+}
