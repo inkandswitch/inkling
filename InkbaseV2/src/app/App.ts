@@ -2,6 +2,7 @@ import EveryFrame from './EveryFrame';
 import Events from './NativeEvents';
 import Page from './Page';
 import Selection from './Selection';
+import FreehandSelection from './FreehandSelection';
 import Snaps from './Snaps';
 import SVG from './Svg';
 import ToolPicker from './ToolPicker';
@@ -15,7 +16,9 @@ const events = new Events();
 const svg = new SVG(root);
 const page = new Page(svg);
 const snaps = new Snaps(page);
+
 const selection = new Selection(page, snaps);
+const freehandSelection = new FreehandSelection(page);
 
 const tools = [
   new FreehandTool(svg, 30, 30, page),
@@ -28,6 +31,8 @@ EveryFrame(() => {
   toolPicker.update(events);
   toolPicker.selected?.update(events);
   selection.update(events);
+  freehandSelection.update(events);
+
   events.clear();
 
   toolPicker.selected?.render(svg);

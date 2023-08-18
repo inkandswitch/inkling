@@ -70,7 +70,7 @@ export default class Page {
     }
 
     return closestStroke
-}
+  }
 
   findPointNear(position: Position, dist = 20) {
     let closestPoint: Point | null = null;

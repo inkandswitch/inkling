@@ -89,6 +89,23 @@ export default class Page {
     return reachableHandles;
   }
 
+
+  findFreehandStrokeNear(position, dist = 20) {
+    let closestStroke = null;
+    let closestDistance = dist;
+    for(const stroke of this.freehandStrokes) {
+      for(const point of stroke.points) {
+        const d = Vec.dist(point, position);
+        if (d < closestDistance) {
+          closestDistance = d;
+          closestStroke = stroke;
+        }
+      }
+    }
+
+    return closestStroke
+  }
+
   render(svg: SVG) {
     this.lineSegments.forEach(ls => ls.render());
     this.freehandStrokes.forEach(s => s.render());

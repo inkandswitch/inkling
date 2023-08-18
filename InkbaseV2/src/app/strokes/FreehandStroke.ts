@@ -19,6 +19,7 @@ export default class FreehandStroke {
   private readonly pointData: Array<PositionWithPressure | null>;
   private readonly element: SVGElement;
   private needsRerender = true;
+  private selected = false;
 
   constructor(
     svg: SVG,
@@ -66,10 +67,20 @@ export default class FreehandStroke {
       return { ...np, pressure: p.pressure };
     });
     const path = generatePathFromPoints(this.points);
-    updateSvgElement(this.element, { d: path });
+    updateSvgElement(this.element, { d: path, stroke: this.selected ? 'rgba(255, 0, 0, .5)' : 'rgba(0, 0, 0, .5)' });
   }
 
   onHandleMoved() {
+    this.needsRerender = true;
+  }
+
+  select(){
+    this.selected = true;
+    this.needsRerender = true;
+  }
+
+  deselect(){
+    this.selected = false;
     this.needsRerender = true;
   }
 
