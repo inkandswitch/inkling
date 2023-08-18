@@ -1,4 +1,3 @@
-import { randInt } from '../lib/math';
 import TransformationMatrix from '../lib/transform_matrix';
 import { Position } from '../lib/types';
 import Vec from '../lib/vec';
@@ -237,16 +236,28 @@ export default class Selection {
   getHandleThatBreaksOff(handle: Handle, newPos: Position): Handle | null {
     if (
       // TODO: decide based on acceleration?
-      Vec.dist(handle.position, newPos) < 40 ||
+      Vec.dist(handle.position, newPos) < 30 ||
       handle.absorbedHandles.size === 0
     ) {
       return null;
     }
 
-    const handles = [handle, ...handle.absorbedHandles];
+    const v = Vec.sub(newPos, handle.position);
+    let smallestAngle = Infinity;
+    let handleWithSmallestAngle: Handle | null = null;
 
-    // TODO: pick one based on the positions of the other handles
-    // that are attached to these guys
-    return Array.from(handles)[randInt(0, handles.length - 1)];
+    for (const h of [handle, ...handle.absorbedHandles]) {
+      for (const ch of this.page.getHandlesImmediatelyConnectedTo(h)) {
+        const angle = Math.abs(
+          Vec.angleBetweenClockwise(v, Vec.sub(ch.position, handle.position))
+        );
+        if (angle < smallestAngle) {
+          smallestAngle = angle;
+          handleWithSmallestAngle = h;
+        }
+      }
+    }
+
+    return handleWithSmallestAngle!;
   }
 }
