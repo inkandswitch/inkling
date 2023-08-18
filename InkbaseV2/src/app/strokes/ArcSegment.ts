@@ -62,14 +62,6 @@ export default class ArcSegment {
     this.needsRerender = true;
   }
 
-  onHandleAbsorbed() {
-    // no op
-  }
-
-  onHandleRemoved() {
-    // no op
-  }
-
   render() {
     if (!this.needsRerender) {
       return;

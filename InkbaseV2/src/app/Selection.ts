@@ -1,3 +1,4 @@
+import { randInt } from '../lib/math';
 import TransformationMatrix from '../lib/transform_matrix';
 import { Position } from '../lib/types';
 import Vec from '../lib/vec';
@@ -126,10 +127,19 @@ export default class Selection {
     }
   }
 
-  selectHandle(handle: Handle) {
-    this.handles.add(handle.canonicalInstance);
+  private selectHandle(handle: Handle) {
     handle.select();
+    this.handles.add(handle.canonicalInstance);
+    this.updateLineSelections();
+  }
 
+  private deselectHandle(handle: Handle) {
+    handle.deselect();
+    this.handles.delete(handle.canonicalInstance);
+    this.updateLineSelections();
+  }
+
+  private updateLineSelections() {
     for (const ls of this.page.lineSegments) {
       if (
         this.handles.has(ls.a.canonicalInstance) &&
@@ -142,10 +152,11 @@ export default class Selection {
     }
   }
 
-  clearSelection() {
+  private clearSelection() {
     for (const handle of this.handles) {
       handle.deselect();
     }
+
     this.handles.clear();
     this.origPosition.clear();
 
@@ -179,8 +190,63 @@ export default class Selection {
     }
 
     const snappedPositions = this.snaps.snapPositions(transformedPositions);
+
+    const brokenOffHandles = new Set<Handle>();
     for (const handle of this.handles) {
-      handle.position = snappedPositions.get(handle)!;
+      const newPos = snappedPositions.get(handle)!;
+      const handleThatBreaksOff = this.getHandleThatBreaksOff(handle, newPos);
+      if (handleThatBreaksOff) {
+        // console.log(
+        //   'breaking off',
+        //   JSON.stringify(handleThatBreaksOff),
+        //   'from',
+        //   JSON.stringify(handle)
+        // );
+        handle.breakOff(handleThatBreaksOff);
+        // console.log(
+        //   'broke off handle',
+        //   JSON.stringify(handleThatBreaksOff),
+        //   'from',
+        //   JSON.stringify(handle)
+        // );
+        handleThatBreaksOff.position = newPos;
+
+        // deselect the original angle and remove it from the set of
+        // selected handles
+        this.deselectHandle(handle);
+
+        // we'll add handleThatBreaksOff to the set of selected handles
+        // (and tell it that it's selected) after this loop is done,
+        // so that we won't see it this time around
+        brokenOffHandles.add(handleThatBreaksOff);
+
+        // update orig position map
+        const origPos = this.origPosition.get(handle)!;
+        this.origPosition.delete(handle);
+        this.origPosition.set(handleThatBreaksOff, origPos);
+      } else {
+        handle.position = newPos;
+      }
     }
+
+    for (const brokenOffHandle of brokenOffHandles) {
+      this.selectHandle(brokenOffHandle);
+    }
+  }
+
+  getHandleThatBreaksOff(handle: Handle, newPos: Position): Handle | null {
+    if (
+      // TODO: decide based on acceleration?
+      Vec.dist(handle.position, newPos) < 40 ||
+      handle.absorbedHandles.size === 0
+    ) {
+      return null;
+    }
+
+    const handles = [handle, ...handle.absorbedHandles];
+
+    // TODO: pick one based on the positions of the other handles
+    // that are attached to these guys
+    return Array.from(handles)[randInt(0, handles.length - 1)];
   }
 }

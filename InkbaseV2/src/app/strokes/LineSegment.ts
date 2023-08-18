@@ -39,14 +39,6 @@ export default class LineSegment {
     this.needsRerender = true;
   }
 
-  onHandleAbsorbed() {
-    // no-op
-  }
-
-  onHandleRemoved() {
-    // no-op
-  }
-
   select() {
     this.needsRerender = true;
     this.selected = true;

@@ -13,7 +13,6 @@ export default class Snaps {
 
   constructor(private page: Page) {}
 
-  // returns Map<Point, snap position>
   snapPositions(transformedPositions: Map<Handle, Position>) {
     const snaps: Snap[] = [];
     const snapPositions = new Map<Handle, Position>();
@@ -33,12 +32,12 @@ export default class Snaps {
 
       const snapVectors: Position[] = [];
 
-      // snap to point
+      // snap to handle
       for (const snapHandle of snapHandles) {
         const v = Vec.sub(snapHandle.position, transformedPosition);
         if (Vec.len(v) < 10) {
           snapVectors.push(v);
-          snaps.push(new PointSnap(handle, snapHandle));
+          snaps.push(new HandleSnap(handle, snapHandle));
           break;
         }
       }
@@ -86,7 +85,7 @@ export default class Snaps {
     return snapPositions;
   }
 
-  setActiveSnaps(activeSnaps: Snap[]) {
+  private setActiveSnaps(activeSnaps: Snap[]) {
     this.activeSnaps = activeSnaps;
     this.needsRerender = true;
 
@@ -166,7 +165,7 @@ class Snap {
   }
 }
 
-class PointSnap extends Snap {
+class HandleSnap extends Snap {
   constructor(handle: Handle, snapHandle: Handle) {
     super(handle, snapHandle);
   }

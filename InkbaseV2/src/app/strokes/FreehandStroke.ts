@@ -73,14 +73,6 @@ export default class FreehandStroke {
     this.needsRerender = true;
   }
 
-  onHandleAbsorbed() {
-    // no op
-  }
-
-  onHandleRemoved() {
-    // no op
-  }
-
   render() {
     if (!this.needsRerender) {
       return;
