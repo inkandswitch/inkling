@@ -89,6 +89,34 @@ export default class Page {
     return reachableHandles;
   }
 
+  /**
+   * returns a set of handles that are immediately connected to the given handle
+   * (but not to its canonical handle, if it has been absorbed)
+   */
+  getHandlesImmediatelyConnectedTo(handle: Handle) {
+    const connectedHandles = new Set<Handle>();
+
+    for (const ls of this.lineSegments) {
+      if (handle === ls.a) {
+        connectedHandles.add(ls.b);
+      }
+      if (handle === ls.b) {
+        connectedHandles.add(ls.a);
+      }
+    }
+
+    for (const s of this.freehandStrokes) {
+      if (handle === s.a) {
+        connectedHandles.add(s.b);
+      }
+      if (handle === s.b) {
+        connectedHandles.add(s.a);
+      }
+    }
+
+    return connectedHandles;
+  }
+
   findFreehandStrokeNear(position: Position, dist = 20) {
     let closestStroke = null;
     let closestDistance = dist;
