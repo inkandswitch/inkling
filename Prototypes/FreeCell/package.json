@@ -1,0 +1,6 @@
+{
+  "type": "module",
+  "dependencies": {
+    "fmin": "^0.0.2"
+  }
+}
