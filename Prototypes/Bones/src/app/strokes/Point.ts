@@ -7,10 +7,11 @@ export default class Point {
   dirty = true;
   selected = false;
   elements: Record<string, SVGElement>;
+  stroke?: any;
 
   constructor(svg: SVG, public position: Position) {
     this.elements = {
-      normal: svg.addElement("circle", { cx: 0, cy: 0, r: 3, fill: "black" }),
+      normal: svg.addElement("circle", { cx: 0, cy: 0, r: 3, fill: "black", "fill-opacity": 0 }),
       selected: svg.addElement("circle", { cx: 0, cy: 0, r: 7, fill: "none" }),
     };
   }

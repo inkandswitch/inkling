@@ -1,4 +1,6 @@
 import { Position } from "../lib/types";
+import { debugTable } from "../lib/helpers";
+import { lerp, clip } from "../lib/math";
 
 export type Event = PencilEvent | FingerEvent;
 export type EventType = Event["type"];
@@ -88,6 +90,9 @@ export default class Events {
 
         for (const point of touches[id]) {
           const { type, timestamp, radius, force, altitude, azimuth, x, y } = point;
+
+          let blend = lerp(Math.pow(force / 3.2, 0.01), 0.8, 1, 0, 1);
+          debugTable({ blend: blend });
 
           const sharedProperties = {
             state,

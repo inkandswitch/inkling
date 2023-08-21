@@ -3,6 +3,7 @@ import Vec from "../lib/vec";
 import ArcSegment from "./strokes/ArcSegment";
 import LineSegment from "./strokes/LineSegment";
 import FreehandStroke from "./strokes/FreehandStroke";
+import Stroke from "./strokes/Stroke";
 
 import Point from "./strokes/Point";
 import ControlPoint, { ControlPointListener } from "./strokes/ControlPoint";
@@ -18,6 +19,8 @@ export default class Page {
   // For now just keep them separate, until we have a better idea of what freehand strokes look like
   lineSegments: Array<LineSegment | ArcSegment> = [];
   freehandStrokes: FreehandStroke[] = [];
+  strokes: Stroke[] = [];
+  objects: any[] = [];
 
   constructor(private svg: SVG) {}
 
@@ -25,6 +28,11 @@ export default class Page {
     const p = new Point(this.svg, position);
     this.points.push(p);
     return p;
+  }
+
+  addObject(obj: any) {
+    this.objects.push(obj);
+    return obj;
   }
 
   addControlPoint(position: Position) {
@@ -45,30 +53,34 @@ export default class Page {
     return as;
   }
 
-  addFreehandStroke(points: Array<PositionWithPressure | null>) {
-    const cp1 = this.addControlPoint(points[0]!);
-    const cp2 = this.addControlPoint(points[points.length - 1]!);
-    const s = new FreehandStroke(this.svg, points, cp1, cp2);
-    cp1.listener = s;
-    cp2.listener = s;
+  addFreehandStroke(points: Array<PositionWithPressure>) {
+    const s = new FreehandStroke(this.svg, points);
     this.freehandStrokes.push(s);
-    this.graph.addStroke(s);
     return s;
   }
 
-  findPointNear(position: Position, dist = 20) {
-    let closestPoint: Point | null = null;
+  addStroke<S extends Stroke>(s: S): S {
+    this.strokes.push(s);
+    return s;
+  }
+
+  findObjectNear(position: Position, dist = 20, collection = this.objects) {
+    let closestItem: any | undefined;
     let closestDistance = dist;
 
-    for (const point of this.points) {
-      const d = Vec.dist(point.position, position);
+    for (const item of collection) {
+      const d = Vec.dist(item.position, position);
       if (d < closestDistance) {
         closestDistance = d;
-        closestPoint = point;
+        closestItem = item;
       }
     }
 
-    return closestPoint;
+    return closestItem;
+  }
+
+  findPointNear(position: Position, dist = 20) {
+    return this.findObjectNear(position, dist, this.points);
   }
 
   // TODO: this is a bad idea -- it breaks too much of the stuff that I want to do.
@@ -113,41 +125,12 @@ export default class Page {
     // this.points = this.points.filter((p) => !pointsToMerge.has(p))
   }
 
-  pointsReachableFrom(startPoints: Point[]) {
-    const reachablePoints = new Set(startPoints);
-    while (true) {
-      const oldSize = reachablePoints.size;
-
-      for (const ls of this.lineSegments) {
-        if (reachablePoints.has(ls.a)) {
-          reachablePoints.add(ls.b);
-        }
-        if (reachablePoints.has(ls.b)) {
-          reachablePoints.add(ls.a);
-        }
-      }
-
-      for (const s of this.freehandStrokes) {
-        if (reachablePoints.has(s.controlPoints[0])) {
-          reachablePoints.add(s.controlPoints[1]);
-        }
-        if (reachablePoints.has(s.controlPoints[1])) {
-          reachablePoints.add(s.controlPoints[0]);
-        }
-      }
-
-      if (reachablePoints.size === oldSize) {
-        break;
-      }
-    }
-    return reachablePoints;
-  }
-
   render(svg: SVG) {
     this.lineSegments.forEach((ls) => ls.render());
     this.freehandStrokes.forEach((s) => s.render());
+    this.strokes.forEach((s) => s.render());
     this.points.forEach((p) => p.render());
-
+    this.objects.forEach((o) => o.render());
     this.graph.render(svg);
   }
 }

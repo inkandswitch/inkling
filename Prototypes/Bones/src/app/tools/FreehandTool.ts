@@ -7,15 +7,15 @@ import { Tool } from "./Tool";
 
 type Mode = "unistroke" | "multistroke";
 
-export default class FreehandTool extends Tool {
+export default class Free extends Tool {
   mode: Mode = "unistroke";
-  points?: Array<PositionWithPressure | null>;
+  points?: Array<PositionWithPressure>;
   strokeElement: SVGElement;
   multistrokeModeDotElement?: SVGElement;
   pencilIsDown = false;
   dirty = false;
 
-  constructor(private svg: SVG, buttonX: number, buttonY: number, private page: Page) {
+  constructor(svg: SVG, buttonX: number, buttonY: number, private page: Page) {
     super(svg, buttonX, buttonY);
     this.strokeElement = svg.addElement("path", { d: "", ...strokeSvgProperties });
   }
@@ -27,7 +27,7 @@ export default class FreehandTool extends Tool {
       if (this.points == null) {
         this.startStroke({ ...pencilDown.position, pressure: pencilDown.pressure });
       } else {
-        this.extendStroke(null);
+        this.extendStroke({ ...pencilDown.position, pressure: -1 });
         this.extendStroke({ ...pencilDown.position, pressure: pencilDown.pressure });
       }
     }
@@ -56,7 +56,7 @@ export default class FreehandTool extends Tool {
     this.dirty = true;
   }
 
-  extendStroke(point: PositionWithPressure | null) {
+  extendStroke(point: PositionWithPressure) {
     this.points!.push(point);
     this.dirty = true;
   }

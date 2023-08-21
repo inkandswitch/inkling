@@ -1,14 +1,18 @@
-import { Position } from "../lib/types";
+import { Position, PositionWithPressure } from "../lib/types";
 
 type AttributeValue = string | number;
 
 export default class SVG {
   constructor(private root: SVGSVGElement) {}
 
-  addElement(type: string, attributes: Record<string, AttributeValue>) {
+  addElement(
+    type: string,
+    attributes: Record<string, AttributeValue>,
+    parent: SVGElement = this.root
+  ) {
     const elem: SVGElement = document.createElementNS("http://www.w3.org/2000/svg", type);
     updateSvgElement(elem, attributes);
-    this.root.appendChild(elem);
+    parent.appendChild(elem);
     return elem;
   }
 }
@@ -18,11 +22,11 @@ export function updateSvgElement(elem: SVGElement, attributes: Record<string, At
 }
 
 // TODO: maybe this should live somewhere else, tbd
-export function generatePathFromPoints(points: Array<Position | null>) {
+export function generatePathFromPoints(points: Array<Position | PositionWithPressure | null>) {
   const parts: string[] = [];
   let nextCommand = "M";
   for (const p of points) {
-    if (p == null) {
+    if (p == null || (p.pressure !== undefined && p.pressure < 0)) {
       nextCommand = "M";
       continue;
     }

@@ -19,65 +19,6 @@ export default class Snaps {
     const snapPositions = new Map<Point, Position>();
     const snapPoints = this.page.points.filter((p) => !transformedPositions.has(p));
     const selectedPoints = Array.from(transformedPositions.keys());
-    const connectedPoints = this.page.pointsReachableFrom(selectedPoints);
-
-    for (const [point, transformedPosition] of transformedPositions) {
-      if (snaps.some((s) => s.snapPoint === point)) {
-        // This point is already being used as a snap.
-        // If we move it (by snapping it to another point), the UI feels shaky.
-        snapPositions.set(point, transformedPosition);
-        continue;
-      }
-
-      const snapVectors: Position[] = [];
-
-      // snap to point
-      for (const snapPoint of snapPoints) {
-        const v = Vec.sub(snapPoint.position, transformedPosition);
-        if (Vec.len(v) < 10) {
-          snapVectors.push(v);
-          snaps.push(new PointSnap(point, snapPoint));
-          break;
-        }
-      }
-
-      if (snapVectors.length === 0) {
-        // vertical alignment
-        for (const snapPoint of connectedPoints) {
-          if (snapPoint === point) {
-            continue;
-          }
-          const dx = snapPoint.position.x - transformedPosition.x;
-          if (Math.abs(dx) < 10) {
-            const v = Vec(dx, 0);
-            snapVectors.push(v);
-            snaps.push(new AlignmentSnap(point, snapPoint));
-            break;
-          }
-        }
-
-        // horizontal alignment
-        for (const snapPoint of connectedPoints) {
-          if (snapPoint === point) {
-            continue;
-          }
-          const dy = snapPoint.position.y - transformedPosition.y;
-          if (Math.abs(dy) < 10) {
-            const v = Vec(0, dy);
-            snapVectors.push(v);
-            snaps.push(new AlignmentSnap(point, snapPoint));
-            break;
-          }
-        }
-      }
-
-      const snappedPos = snapVectors.reduce((p, v) => Vec.add(p, v), transformedPosition);
-
-      snapPositions.set(point, snappedPos);
-    }
-
-    this.setActiveSnaps(snaps);
-
     return snapPositions;
   }
 

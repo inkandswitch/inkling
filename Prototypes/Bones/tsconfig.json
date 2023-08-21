@@ -3,8 +3,11 @@
   "compilerOptions": {
     "rootDir": ".",
     "outDir": "build",
+    "target": "esnext",
+    "module": "esnext",
+    "noImplicitAny": false,
     "lib": [
-      "ES2018",
+      "esnext",
       "DOM",
     ],
   },

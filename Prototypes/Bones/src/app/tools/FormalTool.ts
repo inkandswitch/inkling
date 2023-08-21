@@ -10,7 +10,7 @@ import Events from "../NativeEvents";
 import { Position } from "../../lib/types.js";
 import LineSegment from "../strokes/LineSegment.js";
 
-export default class FormalTool extends Tool {
+export default class Form extends Tool {
   element: SVGElement;
   dirty = false;
 
