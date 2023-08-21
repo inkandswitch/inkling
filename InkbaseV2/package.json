@@ -18,10 +18,12 @@
   "license": "MIT",
   "devDependencies": {
     "gts": "^5.0.0",
-    "snowpack": "^3.8.8",
+    "snowpack": "3.0.13",
     "typescript": "~5.1.6"
   },
   "dependencies": {
+    "@types/numeric": "^1.2.3",
+    "numeric": "^1.2.6",
     "perfect-freehand": "^1.2.0"
   }
 }
