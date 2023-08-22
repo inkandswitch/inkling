@@ -22,6 +22,10 @@ export default class Selection {
     private readonly snaps: Snaps
   ) {}
 
+  includes(handle: Handle): boolean {
+    return this.handles.has(handle.canonicalInstance);
+  }
+
   update(events: Events) {
     const fingerDown = events.did('finger', 'began');
     if (fingerDown) {
