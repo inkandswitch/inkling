@@ -28,10 +28,10 @@ export const notNull = <T>(x: T | null): x is T => !!x;
 // this is O(n^2), but there is a O(n * log(n)) solution
 // that we can use if this ever becomes a bottleneck
 // https://www.baeldung.com/cs/most-distant-pair-of-points
-export function farthestPair(points: Position[]): [Position, Position] {
+export function farthestPair<P extends Position>(points: P[]): [P, P] {
   let maxDist = -Infinity;
-  let mdp1: Position | null = null;
-  let mdp2: Position | null = null;
+  let mdp1: P | null = null;
+  let mdp2: P | null = null;
   for (const p1 of points) {
     for (const p2 of points) {
       const d = Vec.dist(p1, p2);
