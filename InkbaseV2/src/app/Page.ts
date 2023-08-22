@@ -19,16 +19,16 @@ export default class Page {
   readonly freehandStrokes: FreehandStroke[] = [];
   readonly strokeGroups: Array<StrokeGroup> = [];
 
-  constructor(private readonly svg: SVG) {}
+  constructor(readonly svg: SVG) {}
 
-  addLineSegment(a: Handle, b: Handle) {
-    const ls = new LineSegment(this.svg, a, b);
+  addLineSegment(aPos: Position, bPos: Position) {
+    const ls = new LineSegment(this.svg, aPos, bPos);
     this.lineSegments.push(ls);
     return ls;
   }
 
-  addArcSegment(a: Handle, b: Handle, c: Handle) {
-    const as = new ArcSegment(this.svg, a, b, c);
+  addArcSegment(aPos: Position, bPos: Position, cPos: Position) {
+    const as = new ArcSegment(this.svg, aPos, bPos, cPos);
     this.lineSegments.push(as);
     return as;
   }

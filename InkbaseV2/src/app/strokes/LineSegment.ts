@@ -1,42 +1,37 @@
+import { Position } from '../../lib/types';
 import SVG, { updateSvgElement } from '../Svg';
 import generateId from '../generateId';
 import Handle from './Handle';
 
 export default class LineSegment {
-  id = generateId();
-  selected = false;
-  elements: { normal: SVGElement; selected: SVGElement };
+  readonly id = generateId();
+  readonly a: Handle;
+  readonly b: Handle;
 
+  private selected = false;
+  private readonly elements: { normal: SVGElement; selected: SVGElement };
   private needsRerender = true;
 
-  constructor(
-    svg: SVG,
-    public a: Handle,
-    public b: Handle
-  ) {
-    a.addListener(this);
-    b.addListener(this);
+  constructor(svg: SVG, aPos: Position, bPos: Position) {
+    this.a = Handle.create(svg, 'formal', aPos, this);
+    this.b = Handle.create(svg, 'formal', bPos, this);
 
-    const normalAttributes = {
-      x1: a.position.x,
-      y1: a.position.y,
-      x2: b.position.x,
-      y2: b.position.y,
+    const commonAttributes = {
+      x1: aPos.x,
+      y1: aPos.y,
+      x2: bPos.x,
+      y2: bPos.y,
       'stroke-width': 1,
       stroke: 'black',
     };
     this.elements = {
-      normal: svg.addElement('line', normalAttributes),
+      normal: svg.addElement('line', commonAttributes),
       selected: svg.addElement('line', {
-        ...normalAttributes,
+        ...commonAttributes,
         'stroke-width': 7,
         stroke: 'none',
       }),
     };
-  }
-
-  onHandleMoved() {
-    this.needsRerender = true;
   }
 
   select() {
@@ -49,20 +44,24 @@ export default class LineSegment {
     this.selected = false;
   }
 
+  onHandleMoved() {
+    this.needsRerender = true;
+  }
+
   render() {
     if (!this.needsRerender) {
       return;
     }
 
-    const normalAttributes = {
+    const commonAttributes = {
       x1: this.a.position.x,
       y1: this.a.position.y,
       x2: this.b.position.x,
       y2: this.b.position.y,
     };
-    updateSvgElement(this.elements.normal, normalAttributes);
+    updateSvgElement(this.elements.normal, commonAttributes);
     updateSvgElement(this.elements.selected, {
-      ...normalAttributes,
+      ...commonAttributes,
       stroke: this.selected ? 'rgba(180, 134, 255, 0.42)' : 'none',
     });
 

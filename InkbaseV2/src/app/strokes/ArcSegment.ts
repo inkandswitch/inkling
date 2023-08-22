@@ -2,29 +2,23 @@ import generateId from '../generateId';
 import Vec from '../../lib/vec';
 import SVG, { updateSvgElement } from '../Svg';
 import Handle from './Handle';
+import { Position } from '../../lib/types';
 
 export default class ArcSegment {
-  id = generateId();
-  selected = false;
-  isLargeArc = 0; // more than 180
-  clockwise = 1; // clockwise or counterclockwise
-  xAxisRotation = 0;
-  radius: number;
-  path = '';
-  elements: { normal: SVGElement; selected: SVGElement };
+  readonly id = generateId();
+  readonly a: Handle;
+  readonly b: Handle;
+  readonly c: Handle;
+
+  private selected = false;
+  private path = '';
+  private readonly elements: { normal: SVGElement; selected: SVGElement };
   private needsRerender = true;
 
-  constructor(
-    svg: SVG,
-    public a: Handle,
-    public b: Handle,
-    public c: Handle
-  ) {
-    a.addListener(this);
-    b.addListener(this);
-    c.addListener(this);
-
-    this.radius = Vec.dist(a.position, c.position);
+  constructor(svg: SVG, aPos: Position, bPos: Position, cPos: Position) {
+    this.a = Handle.create(svg, 'formal', aPos, this);
+    this.b = Handle.create(svg, 'formal', bPos, this);
+    this.c = Handle.create(svg, 'formal', cPos, this);
 
     this.updatePath();
 
@@ -44,8 +38,13 @@ export default class ArcSegment {
   }
 
   updatePath() {
-    //           M   start_x              start_y            A   radius_x        radius_y       x-axis-rotation,      more-than-180      clockwise         end_x                end_y
-    this.path = `M ${this.a.position.x} ${this.a.position.y} A ${this.radius}  ${this.radius} ${this.xAxisRotation} ${this.isLargeArc} ${this.clockwise} ${this.b.position.x} ${this.b.position.y}`;
+    const radius = Vec.dist(this.a.position, this.c.position);
+    const isLargeArc = 0; // more than 180
+    const clockwise = 1; // clockwise or counterclockwise
+    const xAxisRotation = 0;
+
+    //           M   start_x              start_y            A   radius_x   radius_y  x-axis-rotation  more-than-180 clockwise    end_x                end_y
+    this.path = `M ${this.a.position.x} ${this.a.position.y} A ${radius}  ${radius} ${xAxisRotation} ${isLargeArc} ${clockwise} ${this.b.position.x} ${this.b.position.y}`;
   }
 
   select() {
@@ -67,16 +66,11 @@ export default class ArcSegment {
       return;
     }
 
-    this.radius = Vec.dist(this.a.position, this.c.position);
-    this.isLargeArc = 0; // more than 180
-    this.clockwise = 1; // clockwise or counterclockwise
-    this.xAxisRotation = 0;
-
     this.updatePath();
-    const normalAttributes = { d: this.path };
-    updateSvgElement(this.elements.normal, normalAttributes);
+    const commonAttributes = { d: this.path };
+    updateSvgElement(this.elements.normal, commonAttributes);
     updateSvgElement(this.elements.selected, {
-      ...normalAttributes,
+      ...commonAttributes,
       stroke: this.selected ? 'rgba(180, 134, 255, 0.42)' : 'none',
     });
 

@@ -198,16 +198,11 @@ export default class FormalTool extends Tool {
     }
 
     if (this.fit.type === 'line') {
-      const a = Handle.create(this.svg, 'formal', this.fit.line.a);
-      const b = Handle.create(this.svg, 'formal', this.fit.line.b);
-      const stroke = this.page.addLineSegment(a, b);
+      const stroke = this.page.addLineSegment(this.fit.line.a, this.fit.line.b);
       this.fixedStroke = stroke;
     } else if (this.fit.type === 'arc') {
       const { start, end } = Arc.points(this.fit.arc);
-      const a = Handle.create(this.svg, 'formal', start);
-      const b = Handle.create(this.svg, 'formal', end);
-      const c = Handle.create(this.svg, 'formal', this.fit.arc.center);
-      const stroke = this.page.addArcSegment(a, b, c);
+      const stroke = this.page.addArcSegment(start, end, this.fit.arc.center);
       this.fixedStroke = stroke;
     }
   }
