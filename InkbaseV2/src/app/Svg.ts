@@ -1,5 +1,4 @@
-import { notNull } from '../lib/helpers';
-import { Position } from '../lib/types';
+import { Position, PositionWithPressure } from '../lib/types';
 
 type AttributeValue = string | number;
 
@@ -27,17 +26,10 @@ export function updateSvgElement(
 }
 
 // TODO: maybe this should live somewhere else, tbd
-export function generatePathFromPoints(points: Array<Position | null>) {
-  const parts: string[] = [];
-  let nextCommand = 'M';
-  for (const p of points) {
-    if (!p) {
-      nextCommand = 'M';
-      continue;
-    }
-
-    parts.push(`${nextCommand} ${p.x} ${p.y}`);
-    nextCommand = 'L';
-  }
-  return parts.filter(notNull).join(' ');
+export function generatePathFromPoints(
+  points: Position[] | PositionWithPressure[]
+) {
+  return points
+    .map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x} ${p.y}`)
+    .join(' ');
 }
