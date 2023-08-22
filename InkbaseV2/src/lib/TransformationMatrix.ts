@@ -177,11 +177,15 @@ export default class TransformationMatrix {
     return m;
   }
 
-  transformPoint(p: Position): Position {
+  transformPoint<P extends Position>(p: P): P {
     const { x, y } = p;
     const { a, b, c, d, e, f } = this;
 
-    return Vec(x * a + y * c + e, x * b + y * d + f);
+    return {
+      ...p, // to get the other properties
+      x: x * a + y * c + e,
+      y: x * b + y * d + f,
+    };
   }
 
   transformLine(l2: Line): Line {
