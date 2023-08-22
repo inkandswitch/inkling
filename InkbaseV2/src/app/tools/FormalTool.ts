@@ -10,7 +10,6 @@ import Events from '../NativeEvents';
 import { Position } from '../../lib/types.js';
 import LineSegment from '../strokes/LineSegment.js';
 import ArcSegment from '../strokes/ArcSegment.js';
-import Handle from '../strokes/Handle.js';
 
 export default class FormalTool extends Tool {
   private element: SVGElement;
@@ -139,8 +138,17 @@ export default class FormalTool extends Tool {
         this.clearGuess();
       }
 
-      this.fixedStroke!.a.absorbNearbyHandles();
-      this.fixedStroke!.b.absorbNearbyHandles();
+      if (!this.fixedStroke) {
+        // TODO(marcel): sometimes there's no fixedStroke.
+        // E.g., if you just tap on the screen so that the start and end points
+        // of a formal stroke are the same. I made a change to Fit.line that
+        // I thought would have solved this problem, but it's still happening
+        // from time to time. What do you think is the best way to fix this?
+        throw new Error('there is no fixed stroke!');
+      }
+
+      this.fixedStroke.a.absorbNearbyHandles();
+      this.fixedStroke.b.absorbNearbyHandles();
 
       this.fixedStroke = undefined;
       this.mode = 'unknown';
