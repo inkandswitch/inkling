@@ -19,6 +19,8 @@ export default class TransformationMatrix {
   e = 0;
   f = 0;
 
+  private constructor() {}
+
   reset() {
     this.a = 1;
     this.b = 0;
@@ -189,23 +191,30 @@ export default class TransformationMatrix {
     };
   }
 
-  fromLineTranslateRotate(a: Position, b: Position) {
-    const line = Vec.sub(b, a);
+  // factory methods
 
-    this.translate(a.x, a.y);
-    this.rotate(Vec.angle(line));
-
-    return this;
+  static identity(): TransformationMatrix {
+    return new TransformationMatrix();
   }
 
-  fromLine(a: Position, b: Position) {
+  static fromLineTranslateRotate(a: Position, b: Position) {
+    const line = Vec.sub(b, a);
+
+    const m = new TransformationMatrix();
+    m.translate(a.x, a.y);
+    m.rotate(Vec.angle(line));
+    return m;
+  }
+
+  static fromLine(a: Position, b: Position) {
     const line = Vec.sub(b, a);
     const length = Vec.len(line);
 
-    this.translate(a.x, a.y);
-    this.rotate(Vec.angle(line));
-    this.scale(length, length);
+    const m = new TransformationMatrix();
+    m.translate(a.x, a.y);
+    m.rotate(Vec.angle(line));
+    m.scale(length, length);
 
-    return this;
+    return m;
   }
 }

@@ -43,9 +43,10 @@ export default class Selection {
         }
 
         // Set initial offset transform
-        const transform = new TransformationMatrix();
         const pos = fingerDown.position;
-        transform.translate(pos.x, pos.y).inverse();
+        const transform = TransformationMatrix.identity()
+          .translate(pos.x, pos.y)
+          .inverse();
         for (const handle of this.handles) {
           this.origPosition.set(
             handle,
@@ -58,13 +59,15 @@ export default class Selection {
         this.secondFingerMoved = fingerDown;
 
         // Set initial offset transform
-        const transform = new TransformationMatrix();
         const a = Vec.divS(
           Vec.add(this.firstFingerMoved!.position, this.secondFinger.position),
           2
         );
         const b = this.secondFinger.position;
-        transform.fromLineTranslateRotate(a, b).inverse();
+        const transform = TransformationMatrix.fromLineTranslateRotate(
+          a,
+          b
+        ).inverse();
         for (const handle of this.handles) {
           this.origPosition.set(
             handle,
@@ -169,7 +172,7 @@ export default class Selection {
   }
 
   transformSelection() {
-    const transform = new TransformationMatrix();
+    let transform: TransformationMatrix;
     if (this.firstFingerMoved && this.secondFingerMoved) {
       const a = Vec.divS(
         Vec.add(
@@ -179,13 +182,13 @@ export default class Selection {
         2
       );
       const b = this.secondFingerMoved.position;
-      transform.fromLineTranslateRotate(a, b);
+      transform = TransformationMatrix.fromLineTranslateRotate(a, b);
     } else {
       const p = this.firstFingerMoved!.position;
-      transform.translate(p.x, p.y);
+      transform = TransformationMatrix.identity().translate(p.x, p.y);
     }
 
-    const transformedPositions = new Map();
+    const transformedPositions = new Map<Handle, Position>();
     for (const handle of this.handles) {
       const oldPos = this.origPosition.get(handle)!;
       const newPos = transform.transformPoint(oldPos);

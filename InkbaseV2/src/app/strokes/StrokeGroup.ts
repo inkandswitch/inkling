@@ -37,9 +37,10 @@ export default class StrokeGroup {
     this.handles = [a, b];
 
     // Generate transform data
-    const transform = new TransformationMatrix()
-      .fromLine(a.position, b.position)
-      .inverse();
+    const transform = TransformationMatrix.fromLine(
+      a.position,
+      b.position
+    ).inverse();
 
     this.pointData = this.strokes.map(stroke =>
       stroke.points.map(p => ({
@@ -51,10 +52,7 @@ export default class StrokeGroup {
 
   updatePaths() {
     const [a, b] = this.handles;
-    const transform = new TransformationMatrix().fromLine(
-      a.position,
-      b.position
-    );
+    const transform = TransformationMatrix.fromLine(a.position, b.position);
 
     for (const [i, stroke] of this.strokes.entries()) {
       const newPoints = this.pointData[i].map(p => ({
