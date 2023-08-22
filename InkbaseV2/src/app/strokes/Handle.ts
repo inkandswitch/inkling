@@ -39,11 +39,20 @@ export default class Handle {
   // contains canonical and absorbed handles
   private static readonly allInstances = new Set<Handle>();
 
-  static create(svg: SVG, type: HandleType, position: Position): Handle {
-    return new Handle(
+  static create(
+    svg: SVG,
+    type: HandleType,
+    position: Position,
+    listener: HandleListener | null = null
+  ): Handle {
+    const handle = new Handle(
       svg,
       this.makeCanonicalInstanceState(svg, type, position)
     );
+    if (listener) {
+      handle.addListener(listener);
+    }
+    return handle;
   }
 
   private static makeCanonicalInstanceState(
