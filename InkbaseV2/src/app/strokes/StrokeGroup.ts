@@ -1,5 +1,6 @@
 import FreehandStroke from "./FreehandStroke";
 import Vec from "../../lib/vec";
+import SVG from "../Svg";
 // import ClipperShape from "@doodle3d/clipper-js"
 // import Voronoi from "voronoi"
 
@@ -18,8 +19,9 @@ export default class StrokeGroup {
 
   svgElements: SVGElement[] = [];
 
-  addStroke(stroke){
-    this.strokes.add(stroke)
+  addStroke(stroke: FreehandStroke){
+    this.strokes.add(stroke);
+    this.dirty = true;
 
     // // Generate outline shape
     // //let points = rdp_simplify(stroke.points, 2)
@@ -44,7 +46,7 @@ export default class StrokeGroup {
 
     // //this.generateSkeleton();
 
-    this.dirty = true;
+    
   }
   
 //   intersects(shape){
@@ -83,7 +85,7 @@ export default class StrokeGroup {
 
   }
 
-  render(svg){
+  render(svg: SVG){
     // if(!this.dirty) {
     //   return
     // }
@@ -125,140 +127,140 @@ export default class StrokeGroup {
 }
 
 
-// Clipper utilities
-function clipperShapeToPoints(shape){
-  return shape.paths.map(path=>{
-    return path.map(pt=>{
-      return {x: pt.X, y: pt.Y}
-    })
-  })
-}
+// // Clipper utilities
+// function clipperShapeToPoints(shape){
+//   return shape.paths.map(path=>{
+//     return path.map(pt=>{
+//       return {x: pt.X, y: pt.Y}
+//     })
+//   })
+// }
 
-function clipperShapeToArrayPoints(shape){
-  return shape.paths.map(path=>{
-    return path.map(pt=>{
-      return [pt.X, pt.Y]
-    })
-  })
-}
+// function clipperShapeToArrayPoints(shape){
+//   return shape.paths.map(path=>{
+//     return path.map(pt=>{
+//       return [pt.X, pt.Y]
+//     })
+//   })
+// }
 
-function shapeToSVGPath(shape){
-  let svgPath = "";
-  for(const path of shape.paths) {
-    svgPath += `M ${path[0].x} ${path[0].y} `;
-    for (let i = 1; i < path.length; i++) {
-      svgPath += `L ${path[i].x} ${path[i].y} `;
-    }
-    svgPath += `L ${path[0].x} ${path[0].y} `;
-  }
-  return svgPath
-}
+// function shapeToSVGPath(shape){
+//   let svgPath = "";
+//   for(const path of shape.paths) {
+//     svgPath += `M ${path[0].x} ${path[0].y} `;
+//     for (let i = 1; i < path.length; i++) {
+//       svgPath += `L ${path[i].x} ${path[i].y} `;
+//     }
+//     svgPath += `L ${path[0].x} ${path[0].y} `;
+//   }
+//   return svgPath
+// }
 
-function pointInClipperShape(shape, point){
-  return shape.paths.find(path=>{
-    return path.find(pt=>{
-      return pt.X == point.X && pt.Y == point.Y
-    })
-  })
-}
+// function pointInClipperShape(shape, point){
+//   return shape.paths.find(path=>{
+//     return path.find(pt=>{
+//       return pt.X == point.X && pt.Y == point.Y
+//     })
+//   })
+// }
 
-function clipperShapeToSVGPath(shape){
-  let svgPath = "";
-  for(const path of shape.paths) {
-    svgPath += `M ${path[0].X} ${path[0].Y} `;
-    for (let i = 1; i < path.length; i++) {
-      svgPath += `L ${path[i].X} ${path[i].Y} `;
-    }
-    svgPath += `L ${path[0].X} ${path[0].Y} `;
-  }
-  return svgPath
-}
+// function clipperShapeToSVGPath(shape){
+//   let svgPath = "";
+//   for(const path of shape.paths) {
+//     svgPath += `M ${path[0].X} ${path[0].Y} `;
+//     for (let i = 1; i < path.length; i++) {
+//       svgPath += `L ${path[i].X} ${path[i].Y} `;
+//     }
+//     svgPath += `L ${path[0].X} ${path[0].Y} `;
+//   }
+//   return svgPath
+// }
 
-// Path Simplification
-function rdp_simplify(line, epsilon = 20) {
-  if(line.length == 2) {
-    return line
-  }
+// // Path Simplification
+// function rdp_simplify(line, epsilon = 20) {
+//   if(line.length == 2) {
+//     return line
+//   }
   
-  let start = line[0]
-  let end = line[line.length-1]
+//   let start = line[0]
+//   let end = line[line.length-1]
   
-  var largestDistance = -1;
-  var furthestIndex = -1;
+//   var largestDistance = -1;
+//   var furthestIndex = -1;
   
-  for (let i = 0; i < line.length; i++) {
-    let point = line[i]
-    let dist = point_line_distance(point, start, end)
-    if(dist > largestDistance) {
-      largestDistance = dist
-      furthestIndex = i
-    }
-  }
+//   for (let i = 0; i < line.length; i++) {
+//     let point = line[i]
+//     let dist = point_line_distance(point, start, end)
+//     if(dist > largestDistance) {
+//       largestDistance = dist
+//       furthestIndex = i
+//     }
+//   }
   
-  if(largestDistance > epsilon) {
-    let segment_a = rdp_simplify(line.slice(0,furthestIndex), epsilon)
-    let segment_b = rdp_simplify(line.slice(furthestIndex), epsilon)
+//   if(largestDistance > epsilon) {
+//     let segment_a = rdp_simplify(line.slice(0,furthestIndex), epsilon)
+//     let segment_b = rdp_simplify(line.slice(furthestIndex), epsilon)
     
-    return segment_a.concat(segment_b.slice(1))
-  }
-  return [start, end]
-}
+//     return segment_a.concat(segment_b.slice(1))
+//   }
+//   return [start, end]
+// }
 
-function point_line_distance(p, a, b) {
-  let norm = scalar_projection(p, a, b)
-  return Vec.len(Vec.sub(p,norm))
-}
+// function point_line_distance(p, a, b) {
+//   let norm = scalar_projection(p, a, b)
+//   return Vec.len(Vec.sub(p,norm))
+// }
 
-function scalar_projection(p, a, b) {
-  let ap = Vec.sub(p, a)
-  let ab = Vec.normalize(Vec.sub(b, a))
-  let f = Vec.mulS(ab, Vec.dot(ap, ab))
+// function scalar_projection(p, a, b) {
+//   let ap = Vec.sub(p, a)
+//   let ab = Vec.normalize(Vec.sub(b, a))
+//   let f = Vec.mulS(ab, Vec.dot(ap, ab))
 
-  return Vec.add(a, f)
-}
+//   return Vec.add(a, f)
+// }
 
-// Smoothing
-function gaussianSmooth(polygon, sigma = 1) {
-  const kernelSize = Math.ceil(3 * sigma); // Determine kernel size based on sigma
-  const kernel = generateGaussianKernel(kernelSize, sigma);
-  const halfKernelSize = Math.floor(kernelSize/2);
+// // Smoothing
+// function gaussianSmooth(polygon, sigma = 1) {
+//   const kernelSize = Math.ceil(3 * sigma); // Determine kernel size based on sigma
+//   const kernel = generateGaussianKernel(kernelSize, sigma);
+//   const halfKernelSize = Math.floor(kernelSize/2);
   
-  const smoothedPolygon: any[] = [];
+//   const smoothedPolygon: any[] = [];
   
-  for (let i = 0; i < polygon.length; i++) {
-    let smoothedPoint = { x: 0, y: 0 };
+//   for (let i = 0; i < polygon.length; i++) {
+//     let smoothedPoint = { x: 0, y: 0 };
     
-    for (let j = -halfKernelSize; j <= halfKernelSize; j++) {
-      const index = (i + j + polygon.length) % polygon.length;
-      const weight = kernel[j + halfKernelSize];
+//     for (let j = -halfKernelSize; j <= halfKernelSize; j++) {
+//       const index = (i + j + polygon.length) % polygon.length;
+//       const weight = kernel[j + halfKernelSize];
       
-      smoothedPoint.x += weight * polygon[index].x;
-      smoothedPoint.y += weight * polygon[index].y;
-    }
+//       smoothedPoint.x += weight * polygon[index].x;
+//       smoothedPoint.y += weight * polygon[index].y;
+//     }
     
-    smoothedPolygon.push(smoothedPoint);
-  }
+//     smoothedPolygon.push(smoothedPoint);
+//   }
   
-  return smoothedPolygon;
-}
+//   return smoothedPolygon;
+// }
 
-function generateGaussianKernel(size, sigma) {
-  const kernel: any[] = [];
-  const sigmaSquared = sigma * sigma;
-  const constant = 1 / (2 * Math.PI * sigmaSquared);
-  let sum = 0;
+// function generateGaussianKernel(size, sigma) {
+//   const kernel: any[] = [];
+//   const sigmaSquared = sigma * sigma;
+//   const constant = 1 / (2 * Math.PI * sigmaSquared);
+//   let sum = 0;
   
-  for (let i = 0; i < size; i++) {
-    const distance = i - Math.floor(size / 2);
-    const weight = constant * Math.exp(-(distance * distance) / (2 * sigmaSquared));
-    kernel.push(weight);
-    sum += weight;
-  }
+//   for (let i = 0; i < size; i++) {
+//     const distance = i - Math.floor(size / 2);
+//     const weight = constant * Math.exp(-(distance * distance) / (2 * sigmaSquared));
+//     kernel.push(weight);
+//     sum += weight;
+//   }
   
-  // Normalize the kernel
-  for (let i = 0; i < size; i++) {
-    kernel[i] /= sum;
-  }
+//   // Normalize the kernel
+//   for (let i = 0; i < size; i++) {
+//     kernel[i] /= sum;
+//   }
   
-  return kernel;
-}
+//   return kernel;
+// }

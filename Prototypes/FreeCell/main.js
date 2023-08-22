@@ -1,4 +1,5 @@
 // A simple extention of spreadsheets that enables a number of things including circular references and scrubbing arbitrary numbers
+// See example at bottom of the file
 
 // Each cell has 4 fields:
 // Id
@@ -164,10 +165,16 @@ class Sheet {
 // The result will then be {Offset:400, A: 100, B: 500, C: 900}
 
 const s = new Sheet()
-s.addCell("Offset", "100")
-s.addCell("A", "100", "100")
-s.addCell("B", "A + Offset")
-s.addCell("C", "B + Offset", "B + 400")
+// s.addCell("Offset", "100")
+// s.addCell("A", "100", "100")
+// s.addCell("B", "A + Offset")
+// s.addCell("C", "B + Offset", "B + 400")
+
+s.addCell("TaxRate", "0.21", "0.21")
+s.addCell("Price", "100")
+s.addCell("Tax", "Price * TaxRate")
+s.addCell("Total", "Price + Tax", "200")
+
 
 s.rebuild()
 s.evaluate()

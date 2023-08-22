@@ -3,18 +3,23 @@ import Vec from '../lib/vec';
 import ArcSegment from './strokes/ArcSegment';
 import LineSegment from './strokes/LineSegment';
 import FreehandStroke from './strokes/FreehandStroke';
-import StrokeGraph from './strokes/StrokeGraph';
+import StrokeGroup from './strokes/StrokeGroup';
+
+import StrokeClusters from './StrokeClusters';
 import { Position, PositionWithPressure } from '../lib/types';
 import { farthestPair, notNull } from '../lib/helpers';
 import Handle from './strokes/Handle';
 
 export default class Page {
-  graph = new StrokeGraph();
+
+  // Stroke clusters are possible stroke Groups
+  clusters = new StrokeClusters();
 
   // TODO: figure out a better model for how to store different kinds of strokes
   // For now just keep them separate, until we have a better idea of what freehand strokes look like
   lineSegments: Array<LineSegment | ArcSegment> = [];
   freehandStrokes: FreehandStroke[] = [];
+  strokeGroups:  Array<StrokeGroup> = [];
 
   constructor(private svg: SVG) {}
 
@@ -37,7 +42,6 @@ export default class Page {
 
     const s = new FreehandStroke(this.svg, points, a, b);
     this.freehandStrokes.push(s);
-    this.graph.addStroke(s);
 
     return s;
   }
@@ -139,6 +143,5 @@ export default class Page {
   render(svg: SVG) {
     this.lineSegments.forEach(ls => ls.render());
     this.freehandStrokes.forEach(s => s.render());
-    this.graph.render(svg);
   }
 }

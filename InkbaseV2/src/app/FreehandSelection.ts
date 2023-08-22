@@ -1,22 +1,22 @@
 // NOTE THIS IS VERY WORK IN PROGRESS
 // DON'T WASTE YOUR TIME "FIXING" THIS
 
+import Events from "./NativeEvents";
 import Page from "./Page"
+import { SortedSet } from "./StrokeClusters";
 import FreehandStroke from "./strokes/FreehandStroke"
 import StrokeGroup from "./strokes/StrokeGroup"
 
 export default class FreehandSelection {
     page: Page
-    selectedStrokes: (StrokeGroup | null) = null;
+    selectedStrokes = new Set<FreehandStroke>();
+    clusterSelectionIndex = 0;
 
-    selections = [];
-    selectionsByStroke = new Map<FreehandStroke, StrokeGroup>();
-
-    constructor(page) {
+    constructor(page: Page) {
         this.page = page
     }
 
-    update(events) {
+    update(events: Events) {
         const fingerDown = events.did('finger', 'began');
 
         if (fingerDown) {
@@ -29,59 +29,45 @@ export default class FreehandSelection {
         }
     }
 
-    fingerDownOnStroke(stroke){
-      if(this.selectedStrokes?.strokes.has(stroke)) {
-        let connected = this.page.graph.findClusterForStroke(stroke);
-        connected.forEach(stroke=>{
-          this.select(stroke);  
-        })
+    fingerDownOnStroke(stroke: FreehandStroke){
+      if(this.selectedStrokes.has(stroke)) {
+        let clusters = this.page.clusters.getClustersForStroke(stroke);
+        
+        if(clusters== undefined) return        
 
-        // let loops = this.page.graph.computeLoopsForStroke(stroke);
-        // if(loops.length > 0) {
-        //   loops[0].forEach(c=>{
-        //       this.select(c.stroke);  
-        //     })
-        // }
+        this.clusterSelectionIndex++;
+        let cluster = clusters.get(this.clusterSelectionIndex % (clusters.size()))
+
+
+        this.clearSelection()
+        for(const stroke of cluster) {
+          this.select(stroke);
+        }
       } else {
         this.select(stroke);
+        if(this.selectedStrokes.size > 1) {
+          for(const stroke of this.selectedStrokes) {
+            this.page.clusters.addClusterForStroke(stroke, this.selectedStrokes);
+          }
+        }
+
+        this.clusterSelectionIndex = 0;
       }
-      
-        
-        // Find Existing Selections
-        //console.log(this.selectedStrokes.size);
-                        
-        // if(this.selectedStrokes === null) {
-        //     let foundSelection = this.selectionsByStroke.get(stroke);
-            
-        //     if(foundSelection) {
-        //         for(const s of foundSelection) {
-        //             this.select(s);
-        //         }
-        //     } else {
-        //         this.select(stroke);
-        //     }
-        // } else {
-        //     this.select(stroke);
-        // }
     }
 
     fingerDownOnEmptySpace(){
         this.clearSelection();
     }
 
-    render(svg){
-      if(this.selectedStrokes) {
-        this.selectedStrokes.render(svg)
-      }
+    render(){
+      // if(this.selectedStrokes) {
+      //   this.selectedStrokes.render(svg)
+      // }
     }
 
-    select(stroke){
+    select(stroke: FreehandStroke){
         stroke.select();
-        if(this.selectedStrokes === null) {
-            this.selectedStrokes = new StrokeGroup();
-        } 
-
-        this.selectedStrokes.addStroke(stroke);
+        this.selectedStrokes.add(stroke);
     }
 
     clearSelection(){
@@ -89,11 +75,10 @@ export default class FreehandSelection {
         return;
       }
       
-      for(const stroke of this.selectedStrokes.strokes) {
+      for(const stroke of this.selectedStrokes) {
         stroke.deselect();
       }
 
-      this.selectedStrokes.remove();
-      this.selectedStrokes = null;
+      this.selectedStrokes = new Set();
     }
 }

@@ -1,6 +1,3 @@
-// NOTE: THIS IS VERY WIP
-// PLEASE DON'T WASTE YOUR TIME "FIXING" THIS
-
 import { Position, PositionWithPressure } from '../../lib/types';
 import Vec from '../../lib/vec';
 import SVG from '../Svg';
@@ -8,34 +5,44 @@ import FreehandStroke from './FreehandStroke';
 
 // A connection between two strokes
 interface Connection {
-  //id: number;
   position: Position;
   strokes: FreehandStroke[];
   indexes: number[];
 }
 
+type Cluster = Set<FreehandStroke>;
+
 // Stroke Graph is the datastructure responsible for holding information about groupings of strokes
 export default class StrokeGraph {
   strokes: FreehandStroke[] = [];
   connections: Connection[] = [];
-  //connectionIds = 0;
-
-  // nodes: GraphNode[] = [];
-  // edges: GraphEdge[] = [];
-  //connectionsByStroke: Map<FreehandStroke, Set<Connection>> = 
-
   elements: SVGElement[] = [];
 
-  private needsRerender = false;
+  clustersForStroke: Map<FreehandStroke, Set<Cluster>> = new Map();
 
+  private needsRerender = false;
 
   addStroke(stroke: FreehandStroke) {
     this.addConnectionsForStroke(stroke);
     this.strokes.push(stroke);
     this.needsRerender = true;
+
+    let clusters: Set<Cluster> = new Set();
+    this.clustersForStroke.set(stroke, clusters);
   }
 
-  addConnectionsForStroke(stroke){
+  addClusterForStroke(stroke: FreehandStroke, cluster: Cluster){
+    let clusters = this.clustersForStroke.get(stroke);
+    clusters?.add(cluster);
+  }
+
+  getClustersForStroke(stroke: FreehandStroke) {
+    return Array.from(this.clustersForStroke.get(stroke));
+  }
+
+
+  // Automatic clustering detection
+  addConnectionsForStroke(stroke: FreehandStroke){
     // Generate connections for this stroke
     for (const otherStroke of this.strokes) {
       const connections = findConnectionsBetweenStrokes(stroke.points, otherStroke.points);
@@ -45,12 +52,21 @@ export default class StrokeGraph {
           strokes: [stroke, otherStroke],
           indexes: connection.mid,
           position: Vec.mulS(Vec.add(stroke.points[connection.mid[0]], otherStroke.points[connection.mid[1]]), 0.5),
-          //id: this.connectionIds++
         })
       }
     }
-  }
 
+
+
+    // Merge Close Connections
+
+    // // Compute loops for stroke
+    // let loops = this.computeLoopsForStroke(stroke);
+    // loops = loops.map(l=>new Set(l));
+    // this.clustersForStroke.get()
+  }
+  // Automatic 
+  // TODO: Filter out small loops
   computeLoopsForStroke(targetStroke){
     const loops = [];
 
