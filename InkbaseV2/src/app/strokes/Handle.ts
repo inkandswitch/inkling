@@ -3,6 +3,8 @@ import Vec from '../../lib/vec';
 import SVG, { updateSvgElement } from '../Svg';
 import generateId from '../generateId';
 
+const SHOW_IDS = false;
+
 export interface HandleListener {
   onHandleMoved(moved: Handle): void;
 }
@@ -15,7 +17,7 @@ interface CanonicalInstanceState {
   type: HandleType;
   absorbedHandles: Set<Handle>;
   position: Position;
-  elements: { normal: SVGElement; selected: SVGElement };
+  elements: { normal: SVGElement; selected: SVGElement; label: SVGTextElement };
   selected: boolean;
   needsRerender: boolean;
   wasRemoved: boolean;
@@ -49,6 +51,13 @@ export default class Handle {
     type: HandleType,
     position: Position
   ): CanonicalInstanceState {
+    const label = svg.addElement('text', {
+      x: 0,
+      y: 0,
+      visibility: SHOW_IDS ? 'visible' : 'hidden',
+    }) as SVGTextElement;
+    label.appendChild(document.createTextNode('?'));
+
     return {
       isCanonical: true,
       id: generateId(),
@@ -68,6 +77,7 @@ export default class Handle {
           r: 7,
           fill: 'none',
         }),
+        label,
       },
       selected: false,
       needsRerender: true,
@@ -282,6 +292,15 @@ export default class Handle {
       fill: state.selected ? 'rgba(180, 134, 255, 0.42)' : 'none',
     });
 
+    const label = state.elements.label;
+    const labelText = label.firstChild!;
+    labelText.textContent = '' + this.id;
+    updateSvgElement(label, {
+      transform: `translate(${state.position.x - label.getBBox().width / 2} ${
+        state.position.y - 10
+      })`,
+    });
+
     state.needsRerender = false;
   }
 
@@ -292,6 +311,7 @@ export default class Handle {
 
     this.instanceState.elements.normal.remove();
     this.instanceState.elements.selected.remove();
+    this.instanceState.elements.label.remove();
   }
 
   private notifyListeners(fn: (listener: HandleListener) => void) {
