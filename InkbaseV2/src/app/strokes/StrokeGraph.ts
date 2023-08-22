@@ -5,9 +5,9 @@ import FreehandStroke from './FreehandStroke';
 
 // A connection between two strokes
 interface Connection {
-  position: Position;
   strokes: FreehandStroke[];
   indexes: number[];
+  position: Position;
 }
 
 type Cluster = Set<FreehandStroke>;
@@ -27,36 +27,42 @@ export default class StrokeGraph {
     this.strokes.push(stroke);
     this.needsRerender = true;
 
-    let clusters: Set<Cluster> = new Set();
+    const clusters: Set<Cluster> = new Set();
     this.clustersForStroke.set(stroke, clusters);
   }
 
-  addClusterForStroke(stroke: FreehandStroke, cluster: Cluster){
-    let clusters = this.clustersForStroke.get(stroke);
+  addClusterForStroke(stroke: FreehandStroke, cluster: Cluster) {
+    const clusters = this.clustersForStroke.get(stroke);
     clusters?.add(cluster);
   }
 
   getClustersForStroke(stroke: FreehandStroke) {
-    return Array.from(this.clustersForStroke.get(stroke));
+    return Array.from(this.clustersForStroke.get(stroke)!);
   }
 
-
   // Automatic clustering detection
-  addConnectionsForStroke(stroke: FreehandStroke){
+  addConnectionsForStroke(stroke: FreehandStroke) {
     // Generate connections for this stroke
     for (const otherStroke of this.strokes) {
-      const connections = findConnectionsBetweenStrokes(stroke.points, otherStroke.points);
-      
-      for(const connection of connections) {
+      const connections = findConnectionsBetweenStrokes(
+        stroke.points,
+        otherStroke.points
+      );
+
+      for (const connection of connections) {
         this.connections.push({
           strokes: [stroke, otherStroke],
           indexes: connection.mid,
-          position: Vec.mulS(Vec.add(stroke.points[connection.mid[0]], otherStroke.points[connection.mid[1]]), 0.5),
-        })
+          position: Vec.mulS(
+            Vec.add(
+              stroke.points[connection.mid[0]],
+              otherStroke.points[connection.mid[1]]
+            ),
+            0.5
+          ),
+        });
       }
     }
-
-
 
     // Merge Close Connections
 
@@ -65,91 +71,94 @@ export default class StrokeGraph {
     // loops = loops.map(l=>new Set(l));
     // this.clustersForStroke.get()
   }
-  // Automatic 
+  // Automatic
   // TODO: Filter out small loops
-  computeLoopsForStroke(targetStroke){
-    const loops = [];
+  computeLoopsForStroke(targetStroke: FreehandStroke) {
+    type StackEntry = { stroke: FreehandStroke; connection: any | null };
+    type Stack = StackEntry[];
+
+    const loops: Stack[] = [];
 
     // Do a DFS for loops in the connections
-    const stack = [{stroke: targetStroke, connection: null}];
-    const trace = [];
+    const stack: Stack = [{ stroke: targetStroke, connection: null }];
+    const trace: Stack = [];
 
     // Make sure we backgrack connections multiple times
     const tracedConnections = new Set();
 
-    while(stack.length > 0) {
-      console.log("stack", stack.map(s=>s.stroke.id));
+    while (stack.length > 0) {
+      console.log(
+        'stack',
+        stack.map(s => s.stroke.id)
+      );
 
-      let s = stack.pop();
+      const s = stack.pop()!;
       trace.push(s);
 
-      let currentStroke = s.stroke;
+      const currentStroke = s.stroke;
       tracedConnections.add(s.connection);
 
-      let connections = this.connections.filter(connection=>{
-        return !tracedConnections.has(connection) && connection.strokes.find(s=>s===currentStroke)
-      })
+      const connections = this.connections.filter(connection => {
+        return (
+          !tracedConnections.has(connection) &&
+          connection.strokes.includes(currentStroke)
+        );
+      });
 
-      if(connections.length == 0) {
+      if (connections.length === 0) {
         trace.pop();
       }
 
-      connections.forEach(connection=>{
-        let other = connection.strokes.find(s=>s!==currentStroke)
-        stack.push({stroke: other, connection});
+      connections.forEach(connection => {
+        const other = connection.strokes.find(s => s !== currentStroke)!;
+        stack.push({ stroke: other, connection });
 
         // reached goal
-        if(stack.length > 0 && other == targetStroke) {
+        if (stack.length > 0 && other === targetStroke) {
           loops.push([...trace]);
           trace.pop();
         }
-      })
-
-
+      });
     }
 
     console.log(loops);
-    return loops
+    return loops;
   }
 
-  findClusterForStroke(stroke){
-    let results = new Set();
+  findClusterForStroke(stroke: FreehandStroke) {
+    const results = new Set();
     results.add(stroke);
 
-    let stack = [stroke];
+    const stack = [stroke];
 
-    while(stack.length > 0) {
-      let currentStroke = stack.pop();
+    while (stack.length > 0) {
+      const currentStroke = stack.pop()!;
 
-      let connectedStrokes = this.connections.filter(connection=>{
-        return connection.strokes.find(s=>s===currentStroke)
-      }).map(connection=>{
-        return connection.strokes.find(s=>s!==currentStroke)
-      })
+      const connectedStrokes = this.connections
+        .filter(connection => connection.strokes.find(s => s === currentStroke))
+        .map(connection => connection.strokes.find(s => s !== currentStroke)!);
 
-      connectedStrokes.forEach(s=>{
-        if(!results.has(s)) {
+      for (const s of connectedStrokes) {
+        if (!results.has(s)) {
           results.add(s);
           stack.push(s);
         }
-      })
+      }
     }
-    
+
     return Array.from(results);
   }
 
-  findStrokeConnections(stroke: FreehandStroke){
-    return this.connections.filter(connection=>{
-      return connection.strokes.find(s=>s===stroke)
-    })
+  findStrokeConnections(stroke: FreehandStroke) {
+    return this.connections.filter(connection =>
+      connection.strokes.find(s => s === stroke)
+    );
   }
 
-  findConnectedStrokes(stroke: FreehandStroke){
-    return this.connections.filter(connection=>{
-      return connection.strokes.find(s=>s===stroke)
-    }).map(connection=>{
-      return connection.strokes.find(s=>s!==stroke)
-    })
+  findConnectedStrokes(stroke: FreehandStroke) {
+    return this.connections
+      .filter(connection => connection.strokes.find(s => s === stroke))
+      .map(connection => connection.strokes.find(s => s !== stroke));
   }
 
   render(svg: SVG) {
@@ -166,7 +175,7 @@ export default class StrokeGraph {
         cx: c.position.x,
         cy: c.position.y,
         r: 3,
-        fill: 'pink'//c.aligned ? 'pink' : 'green',
+        fill: 'pink', //c.aligned ? 'pink' : 'green',
       });
     });
 
@@ -174,36 +183,43 @@ export default class StrokeGraph {
   }
 }
 
+// TODO(marcel): come up with a better name for this.
+interface Connection2 {
+  start: [number, number];
+  mid: [number, number];
+  end: [number, number];
+  dist: number;
+}
 
-function findConnectionsBetweenStrokes(strokeA, strokeB) {
-  let connections: any[] = [];
+function findConnectionsBetweenStrokes(
+  strokeA: PositionWithPressure[],
+  strokeB: PositionWithPressure[]
+): Connection2[] {
+  const connections: Connection2[] = [];
 
-  let currentConnection: any = null;
+  let currentConnection: Connection2 | null = null;
   for (let i = 0; i < strokeA.length; i++) {
-    if (strokeA[i] == null) continue;
+    const closest = findClosestPointOnStroke(strokeB, strokeA[i]);
 
-
-    let closest = findClostestPointOnStroke(strokeB, strokeA[i]);
-    
-    if(closest.dist < 20) {
-      if(!currentConnection) {
+    if (closest.dist < 20) {
+      if (!currentConnection) {
         currentConnection = {
           start: [i, closest.index],
           end: [i, closest.index],
           mid: [i, closest.index],
           dist: closest.dist,
-        }
+        };
       } else {
-        currentConnection.end = [i, closest.index]
-        if(closest.dist < currentConnection.dist) {
-          currentConnection.mid = [i, closest.index]
-          currentConnection.dist = closest.dist
+        currentConnection.end = [i, closest.index];
+        if (closest.dist < currentConnection.dist) {
+          currentConnection.mid = [i, closest.index];
+          currentConnection.dist = closest.dist;
         }
       }
     } else {
-      if(currentConnection) {
+      if (currentConnection) {
         connections.push(currentConnection);
-        currentConnection = null
+        currentConnection = null;
       }
     }
     //   const dist = Vec.dist(strokeA[i], strokeB[j]);
@@ -215,21 +231,22 @@ function findConnectionsBetweenStrokes(strokeA, strokeB) {
     // }
   }
 
-  if(currentConnection) {
+  if (currentConnection) {
     connections.push(currentConnection);
   }
 
   return connections;
 }
 
-// TODO: we can speed this up significantly if it becomse a bottleneck.
-function findClostestPointOnStroke(stroke, point) {
+// TODO: we can speed this up significantly if it becomes a bottleneck.
+function findClosestPointOnStroke(
+  stroke: PositionWithPressure[],
+  point: PositionWithPressure
+) {
   let minDist = Vec.dist(stroke[0], point);
   let index = 0;
 
   for (let i = 0; i < stroke.length; i++) {
-    if (stroke[i] == null) continue;
-
     const dist = Vec.dist(stroke[i], point);
     if (dist < minDist) {
       minDist = dist;
@@ -240,53 +257,37 @@ function findClostestPointOnStroke(stroke, point) {
   return { dist: minDist, index };
 }
 
-function closestPointsBetweenStrokes(
-  strokeA: Array<PositionWithPressure | null>,
-  strokeB: Array<PositionWithPressure | null>
-) {
-  let minDist = Vec.dist(strokeA[0]!, strokeB[0]!);
-  let indexA = 0;
-  let indexB = 0;
+// --- Alex commented out these functions b/c they weren't used ---
 
-  for (let i = 0; i < strokeA.length; i++) {
-    for (let j = 0; j < strokeB.length; j++) {
-      const pa = strokeA[i];
-      const pb = strokeB[j];
-      if (!pa || !pb) {
-        continue;
-      }
+// function closestPointsBetweenStrokes(
+//   strokeA: PositionWithPressure[],
+//   strokeB: PositionWithPressure[]
+// ) {
+//   let minDist = Vec.dist(strokeA[0], strokeB[0]);
+//   let indexA = 0;
+//   let indexB = 0;
 
-      const dist = Vec.dist(pa, pb);
-      if (dist < minDist) {
-        minDist = dist;
-        indexA = i;
-        indexB = j;
-      }
-    }
-  }
+//   for (let i = 0; i < strokeA.length; i++) {
+//     for (let j = 0; j < strokeB.length; j++) {
+//       const pa = strokeA[i];
+//       const pb = strokeB[j];
+//       const dist = Vec.dist(pa, pb);
+//       if (dist < minDist) {
+//         minDist = dist;
+//         indexA = i;
+//         indexB = j;
+//       }
+//     }
+//   }
 
-  return { dist: minDist, indexA, indexB };
-}
+//   return { dist: minDist, indexA, indexB };
+// }
 
-function getDirectionAtStrokePoint(
-  stroke: Array<PositionWithPressure | null>,
-  index: number
-) {
-  let backwardIndex = index - 10;
-  if (backwardIndex < 0) {
-    backwardIndex = 0;
-  }
-  while (!stroke[backwardIndex]) {
-    backwardIndex++;
-  }
-
-  let forwardIndex = index + 10;
-  if (forwardIndex > stroke.length - 1) {
-    forwardIndex = stroke.length - 1;
-  }
-  while (!stroke[forwardIndex]) {
-    forwardIndex--;
-  }
-
-  return Vec.normalize(Vec.sub(stroke[backwardIndex]!, stroke[forwardIndex]!));
-}
+// function getDirectionAtStrokePoint(
+//   stroke: PositionWithPressure[],
+//   index: number
+// ) {
+//   const backwardIndex = Math.max(index - 10, 0);
+//   const forwardIndex = Math.min(index + 10, stroke.length - 1);
+//   return Vec.normalize(Vec.sub(stroke[backwardIndex]!, stroke[forwardIndex]!));
+// }
