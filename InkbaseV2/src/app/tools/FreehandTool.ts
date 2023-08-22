@@ -2,7 +2,7 @@ import { PositionWithPressure } from '../../lib/types';
 import Events, { PencilEvent } from '../NativeEvents';
 import Page from '../Page';
 import SVG, { generatePathFromPoints, updateSvgElement } from '../Svg';
-import { strokeSvgProperties } from '../strokes/FreehandStroke';
+import { STROKE_SVG_PROPERTIES } from '../strokes/FreehandStroke';
 import { Tool } from './Tool';
 
 type Mode = 'unistroke' | 'multistroke';
@@ -24,7 +24,7 @@ export default class FreehandTool extends Tool {
     super(svg, buttonX, buttonY);
     this.strokeElement = svg.addElement('path', {
       d: '',
-      ...strokeSvgProperties,
+      ...STROKE_SVG_PROPERTIES,
     });
   }
 

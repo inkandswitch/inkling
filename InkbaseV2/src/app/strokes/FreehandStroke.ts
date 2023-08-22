@@ -2,11 +2,11 @@ import SVG, { generatePathFromPoints, updateSvgElement } from '../Svg';
 import generateId from '../generateId';
 import { PositionWithPressure } from '../../lib/types';
 
-export const strokeSvgProperties = {
+export const STROKE_SVG_PROPERTIES = Object.freeze({
   stroke: 'rgba(0, 0, 0, .5)',
   fill: 'none',
   'stroke-width': 2,
-};
+});
 
 export default class FreehandStroke {
   readonly id = generateId();
@@ -21,7 +21,7 @@ export default class FreehandStroke {
     // Store normalised point data based on control points
     this.element = svg.addElement('path', {
       d: '',
-      ...strokeSvgProperties,
+      ...STROKE_SVG_PROPERTIES,
     });
   }
 
