@@ -1,6 +1,12 @@
 import FreehandStroke from "./FreehandStroke";
 import Vec from "../../lib/vec";
 import SVG from "../Svg";
+import Handle from "./Handle";
+
+import TransformationMatrix from '../../lib/transform_matrix';
+import { PositionWithPressure } from '../../lib/types';
+
+import { farthestPair, notNull } from '../../lib/helpers';
 // import ClipperShape from "@doodle3d/clipper-js"
 // import Voronoi from "voronoi"
 
@@ -12,42 +18,94 @@ import SVG from "../Svg";
 //var voronoi = new Voronoi();
 
 export default class StrokeGroup {
-  strokes = new Set<FreehandStroke>();
+  strokes: Array<FreehandStroke>;
+  pointData: Array<Array<PositionWithPressure>>;
+
+  handles: Array<Handle>;
   //outlineShape: ClipperShape;
   skeleton: any[] = [];
   dirty = false;
 
   svgElements: SVGElement[] = [];
 
-  addStroke(stroke: FreehandStroke){
-    this.strokes.add(stroke);
-    this.dirty = true;
+  constructor(svg: SVG, strokes: Set<FreehandStroke>) {
+    this.strokes = Array.from(strokes) || [];
 
-    // // Generate outline shape
-    // //let points = rdp_simplify(stroke.points, 2)
-    // let shape = new ClipperShape([rdp_simplify(stroke.points, 5)], false, true, true, true)
-    // shape = shape.offset( 10, {
-    //   jointType: 'jtSquare',
-    //   endType: 'etOpenSquare',
-    //   miterLimit: 2.0,
-    //   roundPrecision: 0.25
-    // })
+    // Generate Handles
+    const allPoints = Array.from(this.strokes).flatMap(stroke=>stroke.points);
+    const [aPos, bPos] = farthestPair(allPoints.filter(notNull));
+    const a = Handle.create(svg, 'informal', aPos)
+    const b = Handle.create(svg, 'informal', bPos)
+    this.handles = [a, b];
 
-    // if(this.outlineShape == null) {
-    //   this.outlineShape = shape
-    // } else {
-    //   this.outlineShape = this.outlineShape.union(shape);
-    // }
+    // Attach handle listeners (isn't there a cleaner way of doing this?)
+    this.handles.forEach(h=>{
+      h.addListener(this);
+    });
 
-    // // Simplify outlines
-    // this.outlineShape.paths = this.outlineShape.paths.map(path=>{
-    //   return simplify(path.map(pt=>({x: pt.X, y: pt.Y})), 10).map(pt=>({X: pt.x, Y: pt.y}))
-    // })
+    // Generate transform data
+    const transform = new TransformationMatrix()
+      .fromLine(a.position, b.position)
+      .inverse();
 
-    // //this.generateSkeleton();
+    this.pointData = this.strokes.map(stroke=>{
+      return stroke.points.map(p => {
+        const np = transform.transformPoint(p);
+        return { ...np, pressure: p.pressure };
+      });
+    });
+  }
+
+  updatePaths(){
+    const [a, b] = this.handles;
+    const transform = new TransformationMatrix().fromLine(
+      a.position,
+      b.position
+    );
+
+    for(const [i, stroke] of this.strokes.entries()) {
+      let newPoints = this.pointData[i].map(p => {
+        const np = transform.transformPoint(p);
+        return { ...np, pressure: p.pressure };
+      });
+
+      stroke.updatePath(newPoints);
+    }
+  }
+
+  onHandleMoved(){
+    this.updatePaths();
+  }
+
+  // addStroke(stroke: FreehandStroke){
+  //   this.strokes.add(stroke);
+  //   this.dirty = true;
+
+  //   // // Generate outline shape
+  //   // //let points = rdp_simplify(stroke.points, 2)
+  //   // let shape = new ClipperShape([rdp_simplify(stroke.points, 5)], false, true, true, true)
+  //   // shape = shape.offset( 10, {
+  //   //   jointType: 'jtSquare',
+  //   //   endType: 'etOpenSquare',
+  //   //   miterLimit: 2.0,
+  //   //   roundPrecision: 0.25
+  //   // })
+
+  //   // if(this.outlineShape == null) {
+  //   //   this.outlineShape = shape
+  //   // } else {
+  //   //   this.outlineShape = this.outlineShape.union(shape);
+  //   // }
+
+  //   // // Simplify outlines
+  //   // this.outlineShape.paths = this.outlineShape.paths.map(path=>{
+  //   //   return simplify(path.map(pt=>({x: pt.X, y: pt.Y})), 10).map(pt=>({X: pt.x, Y: pt.y}))
+  //   // })
+
+  //   // //this.generateSkeleton();
 
     
-  }
+  // }
   
 //   intersects(shape){
 //     return this.outlineShape.intersect(shape).paths.length > 0;

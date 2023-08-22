@@ -11,6 +11,7 @@ import { farthestPair, notNull } from '../lib/helpers';
 import Handle from './strokes/Handle';
 
 export default class Page {
+  svg: SVG;
 
   // Stroke clusters are possible stroke Groups
   clusters = new StrokeClusters();
@@ -21,7 +22,9 @@ export default class Page {
   freehandStrokes: FreehandStroke[] = [];
   strokeGroups:  Array<StrokeGroup> = [];
 
-  constructor(private svg: SVG) {}
+  constructor(svg: SVG) {
+    this.svg = svg
+  }
 
   addLineSegment(a: Handle, b: Handle) {
     const ls = new LineSegment(this.svg, a, b);
@@ -35,12 +38,8 @@ export default class Page {
     return as;
   }
 
-  addFreehandStroke(points: Array<PositionWithPressure | null>) {
-    const [aPos, bPos] = farthestPair(points.filter(notNull));
-    const a = Handle.create(this.svg, 'informal', aPos);
-    const b = Handle.create(this.svg, 'informal', bPos);
-
-    const s = new FreehandStroke(this.svg, points, a, b);
+  addFreehandStroke(points: Array<PositionWithPressure>) {
+    const s = new FreehandStroke(this.svg, points);
     this.freehandStrokes.push(s);
 
     return s;
@@ -77,12 +76,12 @@ export default class Page {
         }
       }
 
-      for (const s of this.freehandStrokes) {
-        if (reachableHandles.has(s.a.canonicalInstance)) {
-          reachableHandles.add(s.b.canonicalInstance);
+      for (const group of this.strokeGroups) {
+        if (reachableHandles.has(group.handles[0].canonicalInstance)) {
+          reachableHandles.add(group.handles[1].canonicalInstance);
         }
-        if (reachableHandles.has(s.b.canonicalInstance)) {
-          reachableHandles.add(s.a.canonicalInstance);
+        if (reachableHandles.has(group.handles[1].canonicalInstance)) {
+          reachableHandles.add(group.handles[0].canonicalInstance);
         }
       }
 
@@ -109,12 +108,12 @@ export default class Page {
       }
     }
 
-    for (const s of this.freehandStrokes) {
-      if (handle === s.a) {
-        connectedHandles.add(s.b);
+    for (const group of this.strokeGroups) {
+      if (handle === group.handles[0]) {
+        connectedHandles.add(group.handles[1]);
       }
-      if (handle === s.b) {
-        connectedHandles.add(s.a);
+      if (handle === group.handles[1]) {
+        connectedHandles.add(group.handles[0]);
       }
     }
 
