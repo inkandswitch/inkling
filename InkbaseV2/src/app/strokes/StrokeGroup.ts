@@ -2,7 +2,7 @@ import FreehandStroke from './FreehandStroke';
 import SVG from '../Svg';
 import Handle from './Handle';
 
-import TransformationMatrix from '../../lib/transform_matrix';
+import TransformationMatrix from '../../lib/TransformationMatrix';
 import { Position, PositionWithPressure } from '../../lib/types';
 
 import { farthestPair } from '../../lib/helpers';

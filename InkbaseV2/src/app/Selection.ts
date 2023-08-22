@@ -1,4 +1,4 @@
-import TransformationMatrix from '../lib/transform_matrix';
+import TransformationMatrix from '../lib/TransformationMatrix';
 import { Position } from '../lib/types';
 import Vec from '../lib/vec';
 import Events, { Event } from './NativeEvents';

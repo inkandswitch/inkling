@@ -1,15 +1,9 @@
-import Vec from '../../lib/vec';
-import TransformationMatrix from '../../lib/transform_matrix';
-
 import SVG, { generatePathFromPoints, updateSvgElement } from '../Svg';
 import generateId from '../generateId';
 import { PositionWithPressure } from '../../lib/types';
-import Handle from './Handle';
 
 export const strokeSvgProperties = {
   stroke: 'rgba(0, 0, 0, .5)',
-  // fill: 'rgba(0, 0, 0, .5)',
-  // 'stroke-width': 1,
   fill: 'none',
   'stroke-width': 2,
 };
@@ -22,7 +16,7 @@ export default class FreehandStroke {
 
   constructor(
     svg: SVG,
-    public points: Array<PositionWithPressure>,
+    public points: Array<PositionWithPressure>
   ) {
     // Store normalised point data based on control points
     this.element = svg.addElement('path', {
