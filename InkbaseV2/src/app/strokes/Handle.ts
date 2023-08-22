@@ -26,6 +26,7 @@ interface CanonicalInstanceState {
 interface AbsorbedInstanceState {
   isCanonical: false;
   canonicalInstance: Handle;
+  origId: number;
 }
 
 type InstanceState = CanonicalInstanceState | AbsorbedInstanceState;
@@ -58,7 +59,8 @@ export default class Handle {
   private static makeCanonicalInstanceState(
     svg: SVG,
     type: HandleType,
-    position: Position
+    position: Position,
+    id = generateId()
   ): CanonicalInstanceState {
     const label = svg.addElement('text', {
       x: 0,
@@ -69,7 +71,7 @@ export default class Handle {
 
     return {
       isCanonical: true,
-      id: generateId(),
+      id,
       type,
       absorbedHandles: new Set(),
       position,
@@ -214,7 +216,11 @@ export default class Handle {
 
     for (const handle of [that, ...that.instanceState.absorbedHandles]) {
       // update the instance state of the absorbed handle
-      handle.instanceState = { isCanonical: false, canonicalInstance: this };
+      handle.instanceState = {
+        isCanonical: false,
+        canonicalInstance: this,
+        origId: handle.id,
+      };
 
       // add it to my absorbed set
       this.instanceState.absorbedHandles.add(handle);
@@ -357,7 +363,8 @@ export default class Handle {
     this.instanceState = Handle.makeCanonicalInstanceState(
       this.svg,
       this.type,
-      this.position
+      this.position,
+      this.instanceState.origId
     );
 
     // add me to the list of canonical handles
