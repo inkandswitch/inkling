@@ -74,7 +74,7 @@ export default class StrokeGraph {
   // Automatic
   // TODO: Filter out small loops
   computeLoopsForStroke(targetStroke: FreehandStroke) {
-    type StackEntry = { stroke: FreehandStroke; connection: any | null };
+    type StackEntry = { stroke: FreehandStroke; connection: Connection | null };
     type Stack = StackEntry[];
 
     const loops: Stack[] = [];
@@ -109,7 +109,7 @@ export default class StrokeGraph {
         trace.pop();
       }
 
-      connections.forEach(connection => {
+      for (const connection of connections) {
         const other = connection.strokes.find(s => s !== currentStroke)!;
         stack.push({ stroke: other, connection });
 
@@ -118,7 +118,7 @@ export default class StrokeGraph {
           loops.push([...trace]);
           trace.pop();
         }
-      });
+      }
     }
 
     console.log(loops);
