@@ -1,29 +1,27 @@
-import FreehandStroke from "./FreehandStroke";
-import Vec from "../../lib/vec";
-import SVG from "../Svg";
-import Handle from "./Handle";
+import FreehandStroke from './FreehandStroke';
+import SVG from '../Svg';
+import Handle from './Handle';
 
 import TransformationMatrix from '../../lib/transform_matrix';
-import { PositionWithPressure } from '../../lib/types';
+import { Position, PositionWithPressure } from '../../lib/types';
 
-import { farthestPair, notNull } from '../../lib/helpers';
+import { farthestPair } from '../../lib/helpers';
+
 // import ClipperShape from "@doodle3d/clipper-js"
-// import Voronoi from "voronoi"
 
 // import simplify from "simplify-js";
 // import {SkeletonBuilder} from 'straight-skeleton';
 
-
-
-//var voronoi = new Voronoi();
+// import Voronoi from "voronoi"
+// const voronoi = new Voronoi();
 
 export default class StrokeGroup {
   strokes: Array<FreehandStroke>;
   pointData: Array<Array<PositionWithPressure>>;
 
   handles: Array<Handle>;
-  //outlineShape: ClipperShape;
-  skeleton: any[] = [];
+  // outlineShape: ClipperShape;
+  skeleton: Position[] = [];
   dirty = false;
 
   svgElements: SVGElement[] = [];
@@ -32,48 +30,43 @@ export default class StrokeGroup {
     this.strokes = Array.from(strokes) || [];
 
     // Generate Handles
-    const allPoints = Array.from(this.strokes).flatMap(stroke=>stroke.points);
-    const [aPos, bPos] = farthestPair(allPoints.filter(notNull));
-    const a = Handle.create(svg, 'informal', aPos)
-    const b = Handle.create(svg, 'informal', bPos)
+    const allPoints = this.strokes.flatMap(stroke => stroke.points);
+    const [aPos, bPos] = farthestPair(allPoints);
+    const a = Handle.create(svg, 'informal', aPos, this);
+    const b = Handle.create(svg, 'informal', bPos, this);
     this.handles = [a, b];
-
-    // Attach handle listeners (isn't there a cleaner way of doing this?)
-    this.handles.forEach(h=>{
-      h.addListener(this);
-    });
 
     // Generate transform data
     const transform = new TransformationMatrix()
       .fromLine(a.position, b.position)
       .inverse();
 
-    this.pointData = this.strokes.map(stroke=>{
-      return stroke.points.map(p => {
-        const np = transform.transformPoint(p);
-        return { ...np, pressure: p.pressure };
-      });
-    });
+    this.pointData = this.strokes.map(stroke =>
+      stroke.points.map(p => ({
+        ...transform.transformPoint(p),
+        pressure: p.pressure,
+      }))
+    );
   }
 
-  updatePaths(){
+  updatePaths() {
     const [a, b] = this.handles;
     const transform = new TransformationMatrix().fromLine(
       a.position,
       b.position
     );
 
-    for(const [i, stroke] of this.strokes.entries()) {
-      let newPoints = this.pointData[i].map(p => {
-        const np = transform.transformPoint(p);
-        return { ...np, pressure: p.pressure };
-      });
+    for (const [i, stroke] of this.strokes.entries()) {
+      const newPoints = this.pointData[i].map(p => ({
+        ...transform.transformPoint(p),
+        pressure: p.pressure,
+      }));
 
       stroke.updatePath(newPoints);
     }
   }
 
-  onHandleMoved(){
+  onHandleMoved() {
     this.updatePaths();
   }
 
@@ -104,68 +97,55 @@ export default class StrokeGroup {
 
   //   // //this.generateSkeleton();
 
-    
   // }
-  
-//   intersects(shape){
-//     return this.outlineShape.intersect(shape).paths.length > 0;
-//   }
 
-  generateSkeleton(){
+  //   intersects(shape){
+  //     return this.outlineShape.intersect(shape).paths.length > 0;
+  //   }
+
+  generateSkeleton() {
     // //let sb = new SkeletonBuilder()
     // let info = clipperShapeToArrayPoints(this.outlineShape)
     // console.log(info);
-    
     // try {
     //   const diagram = SkeletonBuilder.BuildFromGeoJSON([info]);
     //   console.log(diagram);
-  
     //   this.skeleton = [];
-  
     //   console.log(this.outlineShape);
-      
     //   for(const edge of diagram.Edges) {
-  
     //     for (let i = 0; i < edge.Polygon.length-1; i++) {
     //       let a = edge.Polygon[i]
     //       let b = edge.Polygon[(i+1) % (edge.Polygon.length-1)]
     //       if(!pointInClipperShape(this.outlineShape, a) && !pointInClipperShape(this.outlineShape, b)) {
     //         this.skeleton.push({
-    //           a: Vec(a.X, a.Y), 
-    //           b: Vec(b.X, b.Y), 
-    //         })  
+    //           a: Vec(a.X, a.Y),
+    //           b: Vec(b.X, b.Y),
+    //         })
     //       }
     //     }
     //   }
     // } catch {
-
     // }
-
   }
 
-  render(svg: SVG){
+  render(svg: SVG) {
     // if(!this.dirty) {
     //   return
     // }
-
     // for (const elem of this.svgElements) {
     //   elem.remove();
     // }
-    
     // const outlinePath = clipperShapeToSVGPath(this.outlineShape)
-
     // let skeletonPath = "";
-    // this.skeleton.forEach(edge=>{      
+    // this.skeleton.forEach(edge=>{
     //     skeletonPath += `M ${edge.a.x} ${edge.a.y} L ${edge.b.x} ${edge.b.y}`
     // })
-    
     // this.svgElements = [
     //   svg.addElement("path", {
     //     d: outlinePath,
     //     fill: "rgba(0,0,0,0.05)",
     //     stroke: "rgba(0,0,0,0.05)",
     //   }),
-
     //   svg.addElement("path", {
     //     d: skeletonPath,
     //     fill: "none",
@@ -173,17 +153,15 @@ export default class StrokeGroup {
     //     "stroke-width": "4"
     //   })
     // ];
-
     // this.dirty = false;
   }
 
-  remove(){
+  remove() {
     for (const elem of this.svgElements) {
       elem.remove();
     }
   }
 }
-
 
 // // Clipper utilities
 // function clipperShapeToPoints(shape){
@@ -239,13 +217,13 @@ export default class StrokeGroup {
 //   if(line.length == 2) {
 //     return line
 //   }
-  
+
 //   let start = line[0]
 //   let end = line[line.length-1]
-  
+
 //   var largestDistance = -1;
 //   var furthestIndex = -1;
-  
+
 //   for (let i = 0; i < line.length; i++) {
 //     let point = line[i]
 //     let dist = point_line_distance(point, start, end)
@@ -254,11 +232,11 @@ export default class StrokeGroup {
 //       furthestIndex = i
 //     }
 //   }
-  
+
 //   if(largestDistance > epsilon) {
 //     let segment_a = rdp_simplify(line.slice(0,furthestIndex), epsilon)
 //     let segment_b = rdp_simplify(line.slice(furthestIndex), epsilon)
-    
+
 //     return segment_a.concat(segment_b.slice(1))
 //   }
 //   return [start, end]
@@ -282,23 +260,23 @@ export default class StrokeGroup {
 //   const kernelSize = Math.ceil(3 * sigma); // Determine kernel size based on sigma
 //   const kernel = generateGaussianKernel(kernelSize, sigma);
 //   const halfKernelSize = Math.floor(kernelSize/2);
-  
+
 //   const smoothedPolygon: any[] = [];
-  
+
 //   for (let i = 0; i < polygon.length; i++) {
 //     let smoothedPoint = { x: 0, y: 0 };
-    
+
 //     for (let j = -halfKernelSize; j <= halfKernelSize; j++) {
 //       const index = (i + j + polygon.length) % polygon.length;
 //       const weight = kernel[j + halfKernelSize];
-      
+
 //       smoothedPoint.x += weight * polygon[index].x;
 //       smoothedPoint.y += weight * polygon[index].y;
 //     }
-    
+
 //     smoothedPolygon.push(smoothedPoint);
 //   }
-  
+
 //   return smoothedPolygon;
 // }
 
@@ -307,18 +285,18 @@ export default class StrokeGroup {
 //   const sigmaSquared = sigma * sigma;
 //   const constant = 1 / (2 * Math.PI * sigmaSquared);
 //   let sum = 0;
-  
+
 //   for (let i = 0; i < size; i++) {
 //     const distance = i - Math.floor(size / 2);
 //     const weight = constant * Math.exp(-(distance * distance) / (2 * sigmaSquared));
 //     kernel.push(weight);
 //     sum += weight;
 //   }
-  
+
 //   // Normalize the kernel
 //   for (let i = 0; i < size; i++) {
 //     kernel[i] /= sum;
 //   }
-  
+
 //   return kernel;
 // }
