@@ -1,0 +1,6 @@
+* Changes to SVG class:
+  - shouldn't have to pass an instance around just to be able to create/add elements
+  - createElement should take an optional parent element
+  - add Ivan's createEphemeralElement() (is removed automatically when rendered)
+
+* Make FreehandTool's multi-stroke mode create a stroke group
