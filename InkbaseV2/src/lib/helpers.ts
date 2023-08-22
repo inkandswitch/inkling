@@ -44,3 +44,56 @@ export function farthestPair(points: Position[]): [Position, Position] {
   }
   return [mdp1!, mdp2!];
 }
+
+// Sorted Set
+// Guarantees unique items, and allows resorting of items when iterating
+export class SortedSet<T> {
+  private items: Array<T> = [];
+
+  static fromSet<T>(set: Set<T>) {
+    const ss = new SortedSet<T>();
+    ss.items = Array.from(set);
+    return ss;
+  }
+
+  add(item: T) {
+    for (const o of this.items) {
+      if (o === item) {
+        return;
+      }
+    }
+
+    this.items.push(item);
+  }
+
+  moveItemToFront(item: T) {
+    // find old position
+    const oldIndex = this.items.indexOf(item);
+    if (oldIndex === -1) {
+      return;
+    }
+
+    // Remove item from old position
+    const oldItem = this.items.splice(oldIndex, 1)[0];
+
+    // Add it back to front
+    this.items.unshift(oldItem);
+  }
+
+  get(index: number) {
+    return this.items[index];
+  }
+
+  size() {
+    return this.items.length;
+  }
+
+  [Symbol.iterator]() {
+    let index = -1;
+    const data = this.items;
+
+    return {
+      next: () => ({ value: data[++index], done: !(index in data) }),
+    };
+  }
+}
