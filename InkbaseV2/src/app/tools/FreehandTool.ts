@@ -9,7 +9,7 @@ type Mode = 'unistroke' | 'multistroke';
 
 export default class FreehandTool extends Tool {
   private mode: Mode = 'unistroke';
-  private points?: Array<PositionWithPressure | null>;
+  private points?: Array<PositionWithPressure>;
   private strokeElement: SVGElement;
   private multistrokeModeDotElement?: SVGElement;
   private pencilIsDown = false;
@@ -37,12 +37,6 @@ export default class FreehandTool extends Tool {
           ...pencilDown.position,
           pressure: pencilDown.pressure,
         });
-      } else {
-        this.extendStroke(null);
-        this.extendStroke({
-          ...pencilDown.position,
-          pressure: pencilDown.pressure,
-        });
       }
     }
 
@@ -63,7 +57,7 @@ export default class FreehandTool extends Tool {
       this.pencilIsDown = false;
     }
 
-    if (!this.pencilIsDown && this.mode === 'unistroke') {
+    if (!this.pencilIsDown) {
       this.endStroke();
     }
   }
@@ -73,7 +67,7 @@ export default class FreehandTool extends Tool {
     this.needsRerender = true;
   }
 
-  extendStroke(point: PositionWithPressure | null) {
+  extendStroke(point: PositionWithPressure) {
     this.points!.push(point);
     this.needsRerender = true;
   }
