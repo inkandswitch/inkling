@@ -36,11 +36,11 @@ EveryFrame(() => {
 
   events.clear();
 
-  // runConstraintSolver();
+  // runConstraintSolver(selection);
 
   toolPicker.selected?.render(svg);
   snaps.render(svg);
-  page.render(svg);
+  page.render();
 
   for (const handle of Handle.all) {
     handle.render();

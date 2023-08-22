@@ -16,10 +16,11 @@ import { farthestPair } from '../../lib/helpers';
 // const voronoi = new Voronoi();
 
 export default class StrokeGroup {
-  strokes: Array<FreehandStroke>;
-  pointData: Array<Array<PositionWithPressure>>;
+  readonly strokes: FreehandStroke[];
+  private pointData: PositionWithPressure[][];
+  readonly a: Handle;
+  readonly b: Handle;
 
-  handles: Array<Handle>;
   // outlineShape: ClipperShape;
   skeleton: Position[] = [];
   dirty = false;
@@ -27,39 +28,33 @@ export default class StrokeGroup {
   svgElements: SVGElement[] = [];
 
   constructor(svg: SVG, strokes: Set<FreehandStroke>) {
-    this.strokes = Array.from(strokes) || [];
+    this.strokes = Array.from(strokes);
 
     // Generate Handles
-    const allPoints = this.strokes.flatMap(stroke => stroke.points);
-    const [aPos, bPos] = farthestPair(allPoints);
-    const a = Handle.create(svg, 'informal', aPos, this);
-    const b = Handle.create(svg, 'informal', bPos, this);
-    this.handles = [a, b];
+    const points = this.strokes.flatMap(stroke => stroke.points);
+    [this.a, this.b] = farthestPair(points).map(pos =>
+      Handle.create(svg, 'informal', pos, this)
+    );
 
     // Generate transform data
     const transform = TransformationMatrix.fromLine(
-      a.position,
-      b.position
+      this.a.position,
+      this.b.position
     ).inverse();
 
     this.pointData = this.strokes.map(stroke =>
-      stroke.points.map(p => ({
-        ...transform.transformPoint(p),
-        pressure: p.pressure,
-      }))
+      stroke.points.map(p => transform.transformPoint(p))
     );
   }
 
   updatePaths() {
-    const [a, b] = this.handles;
-    const transform = TransformationMatrix.fromLine(a.position, b.position);
+    const transform = TransformationMatrix.fromLine(
+      this.a.position,
+      this.b.position
+    );
 
     for (const [i, stroke] of this.strokes.entries()) {
-      const newPoints = this.pointData[i].map(p => ({
-        ...transform.transformPoint(p),
-        pressure: p.pressure,
-      }));
-
+      const newPoints = this.pointData[i].map(p => transform.transformPoint(p));
       stroke.updatePath(newPoints);
     }
   }

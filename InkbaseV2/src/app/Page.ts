@@ -7,24 +7,19 @@ import StrokeGroup from './strokes/StrokeGroup';
 
 import StrokeClusters from './StrokeClusters';
 import { Position, PositionWithPressure } from '../lib/types';
-import { farthestPair, notNull } from '../lib/helpers';
 import Handle from './strokes/Handle';
 
 export default class Page {
-  svg: SVG;
-
   // Stroke clusters are possible stroke Groups
-  clusters = new StrokeClusters();
+  readonly clusters = new StrokeClusters();
 
   // TODO: figure out a better model for how to store different kinds of strokes
   // For now just keep them separate, until we have a better idea of what freehand strokes look like
-  lineSegments: Array<LineSegment | ArcSegment> = [];
-  freehandStrokes: FreehandStroke[] = [];
-  strokeGroups:  Array<StrokeGroup> = [];
+  readonly lineSegments: Array<LineSegment | ArcSegment> = [];
+  readonly freehandStrokes: FreehandStroke[] = [];
+  readonly strokeGroups: Array<StrokeGroup> = [];
 
-  constructor(svg: SVG) {
-    this.svg = svg
-  }
+  constructor(private readonly svg: SVG) {}
 
   addLineSegment(a: Handle, b: Handle) {
     const ls = new LineSegment(this.svg, a, b);
@@ -41,7 +36,6 @@ export default class Page {
   addFreehandStroke(points: Array<PositionWithPressure>) {
     const s = new FreehandStroke(this.svg, points);
     this.freehandStrokes.push(s);
-
     return s;
   }
 
@@ -64,24 +58,16 @@ export default class Page {
     const reachableHandles = new Set(
       startHandles.map(handle => handle.canonicalInstance)
     );
+    const things = [...this.lineSegments, ...this.strokeGroups];
     while (true) {
       const oldSize = reachableHandles.size;
 
-      for (const ls of this.lineSegments) {
-        if (reachableHandles.has(ls.a.canonicalInstance)) {
-          reachableHandles.add(ls.b.canonicalInstance);
+      for (const thing of things) {
+        if (reachableHandles.has(thing.a.canonicalInstance)) {
+          reachableHandles.add(thing.b.canonicalInstance);
         }
-        if (reachableHandles.has(ls.b.canonicalInstance)) {
-          reachableHandles.add(ls.a.canonicalInstance);
-        }
-      }
-
-      for (const group of this.strokeGroups) {
-        if (reachableHandles.has(group.handles[0].canonicalInstance)) {
-          reachableHandles.add(group.handles[1].canonicalInstance);
-        }
-        if (reachableHandles.has(group.handles[1].canonicalInstance)) {
-          reachableHandles.add(group.handles[0].canonicalInstance);
+        if (reachableHandles.has(thing.b.canonicalInstance)) {
+          reachableHandles.add(thing.a.canonicalInstance);
         }
       }
 
@@ -99,21 +85,12 @@ export default class Page {
   getHandlesImmediatelyConnectedTo(handle: Handle) {
     const connectedHandles = new Set<Handle>();
 
-    for (const ls of this.lineSegments) {
-      if (handle === ls.a) {
-        connectedHandles.add(ls.b);
+    for (const thing of [...this.lineSegments, ...this.strokeGroups]) {
+      if (handle === thing.a) {
+        connectedHandles.add(thing.b);
       }
-      if (handle === ls.b) {
-        connectedHandles.add(ls.a);
-      }
-    }
-
-    for (const group of this.strokeGroups) {
-      if (handle === group.handles[0]) {
-        connectedHandles.add(group.handles[1]);
-      }
-      if (handle === group.handles[1]) {
-        connectedHandles.add(group.handles[0]);
+      if (handle === thing.b) {
+        connectedHandles.add(thing.a);
       }
     }
 
@@ -123,11 +100,9 @@ export default class Page {
   findFreehandStrokeNear(position: Position, dist = 20) {
     let closestStroke = null;
     let closestDistance = dist;
+
     for (const stroke of this.freehandStrokes) {
       for (const point of stroke.points) {
-        if (!point) {
-          continue;
-        }
         const d = Vec.dist(point, position);
         if (d < closestDistance) {
           closestDistance = d;
@@ -139,7 +114,7 @@ export default class Page {
     return closestStroke;
   }
 
-  render(svg: SVG) {
+  render() {
     this.lineSegments.forEach(ls => ls.render());
     this.freehandStrokes.forEach(s => s.render());
   }
