@@ -2,16 +2,23 @@ import { PositionWithPressure } from '../../lib/types';
 import Events, { PencilEvent } from '../NativeEvents';
 import Page from '../Page';
 import SVG from '../Svg';
-import { STROKE_SVG_PROPERTIES } from '../strokes/FreehandStroke';
+import FreehandStroke, {
+  STROKE_SVG_PROPERTIES,
+} from '../strokes/FreehandStroke';
 import { Tool } from './Tool';
 
-type Mode = 'unistroke' | 'multistroke';
+type ModeInfo =
+  | { mode: 'unistroke' }
+  | {
+      mode: 'multistroke';
+      accumulatedStrokes: FreehandStroke[];
+      multistrokeModeDotElement: SVGElement;
+    };
 
 export default class FreehandTool extends Tool {
-  private mode: Mode = 'unistroke';
+  private modeInfo: ModeInfo = { mode: 'unistroke' };
   private points?: Array<PositionWithPressure>;
   private strokeElement: SVGElement;
-  private multistrokeModeDotElement?: SVGElement;
   private pencilIsDown = false;
   private needsRerender = false;
 
@@ -61,36 +68,27 @@ export default class FreehandTool extends Tool {
     }
   }
 
-  startStroke(point: PositionWithPressure) {
+  private startStroke(point: PositionWithPressure) {
     this.points = [point];
     this.needsRerender = true;
   }
 
-  extendStroke(point: PositionWithPressure) {
+  private extendStroke(point: PositionWithPressure) {
     this.points!.push(point);
     this.needsRerender = true;
   }
 
-  endStroke() {
-    this.page.addFreehandStroke(this.points!);
+  private endStroke() {
+    const stroke = this.page.addFreehandStroke(this.points!);
+    if (this.modeInfo.mode === 'multistroke') {
+      this.modeInfo.accumulatedStrokes.push(stroke);
+    }
     this.points = undefined;
     this.needsRerender = true;
   }
 
   onAction() {
-    if (this.mode === 'unistroke') {
-      this.mode = 'multistroke';
-      this.multistrokeModeDotElement = SVG.add('circle', {
-        cx: this.buttonX,
-        cy: this.buttonY,
-        r: 10,
-        fill: 'white',
-      });
-    } else {
-      this.mode = 'unistroke';
-      this.multistrokeModeDotElement!.remove();
-      this.multistrokeModeDotElement = undefined;
-    }
+    this.toggleModes();
   }
 
   onDeselected() {
@@ -100,7 +98,52 @@ export default class FreehandTool extends Tool {
     }
 
     super.onDeselected();
-    this.mode = 'unistroke';
+    this.setMode('unistroke');
+  }
+
+  private toggleModes() {
+    this.setMode(
+      this.modeInfo.mode === 'unistroke' ? 'multistroke' : 'unistroke'
+    );
+  }
+
+  private setMode(mode: ModeInfo['mode']) {
+    switch (mode) {
+      case 'multistroke':
+        if (this.modeInfo.mode !== 'multistroke') {
+          this.modeInfo = {
+            mode: 'multistroke',
+            accumulatedStrokes: [],
+            multistrokeModeDotElement: SVG.add('circle', {
+              cx: this.buttonX,
+              cy: this.buttonY,
+              r: 10,
+              fill: 'white',
+            }),
+          };
+        }
+        break;
+      case 'unistroke':
+        if (this.modeInfo.mode !== 'unistroke') {
+          this.addStrokeGroupForAccumulatedStrokes(
+            this.modeInfo.accumulatedStrokes
+          );
+          this.modeInfo.multistrokeModeDotElement.remove();
+          this.modeInfo = { mode: 'unistroke' };
+        }
+        break;
+      default:
+        throw new Error('unsupported mode: ' + mode);
+    }
+  }
+
+  private addStrokeGroupForAccumulatedStrokes(
+    accumulatedStrokes: FreehandStroke[]
+  ) {
+    accumulatedStrokes = accumulatedStrokes.filter(stroke => !stroke.group);
+    if (accumulatedStrokes.length > 0) {
+      this.page.addStrokeGroup(new Set(accumulatedStrokes));
+    }
   }
 
   render() {
