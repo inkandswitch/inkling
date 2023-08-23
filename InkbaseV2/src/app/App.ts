@@ -11,6 +11,8 @@ import FormalTool from './tools/FormalTool';
 import FreehandTool from './tools/FreehandTool';
 import { runConstraintSolver } from './constraints';
 
+const RUN_CONSTRAINT_SOLVER = false;
+
 const events = new Events();
 const page = new Page();
 const snaps = new Snaps(page);
@@ -18,12 +20,10 @@ const snaps = new Snaps(page);
 const selection = new Selection(page, snaps);
 const freehandSelection = new FreehandSelection(page);
 
-const tools = [
+const toolPicker = new ToolPicker([
   new FreehandTool(30, 30, page),
   new FormalTool(30, 80, page, snaps),
-];
-
-const toolPicker = new ToolPicker(tools);
+]);
 
 EveryFrame(() => {
   SVG.clearNow();
@@ -35,7 +35,9 @@ EveryFrame(() => {
 
   events.clear();
 
-  // runConstraintSolver(selection);
+  if (RUN_CONSTRAINT_SOLVER) {
+    runConstraintSolver(selection);
+  }
 
   toolPicker.selected?.render();
   snaps.render();
