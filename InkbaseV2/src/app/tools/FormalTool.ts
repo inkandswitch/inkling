@@ -4,7 +4,7 @@ import Line from '../../lib/line.js';
 import Vec from '../../lib/vec.js';
 import Page from '../Page.js';
 import Snaps from '../Snaps.js';
-import SVG, { generatePathFromPoints, updateSvgElement } from '../Svg.js';
+import SVG from '../Svg.js';
 import { Tool } from './Tool.js';
 import Events from '../NativeEvents';
 import { Position } from '../../lib/types.js';
@@ -33,20 +33,19 @@ export default class FormalTool extends Tool {
   private fixedStroke?: LineSegment | ArcSegment;
 
   constructor(
-    svg: SVG,
     buttonX: number,
     buttonY: number,
     private page: Page,
     private snaps: Snaps
   ) {
-    super(svg, buttonX, buttonY);
+    super(buttonX, buttonY);
 
-    this.element = svg.addElement('path', {});
+    this.element = SVG.add('path', {});
     this.resetElement();
   }
 
   resetElement() {
-    updateSvgElement(this.element, { d: '', stroke: 'black', fill: 'none' });
+    SVG.update(this.element, { d: '', stroke: 'black', fill: 'none' });
   }
 
   update(events: Events) {
@@ -259,8 +258,8 @@ export default class FormalTool extends Tool {
     }
 
     if (this.renderPoints) {
-      const path = generatePathFromPoints(this.renderPoints);
-      updateSvgElement(this.element, { d: path });
+      const path = SVG.generatePathFromPoints(this.renderPoints);
+      SVG.update(this.element, { d: path });
     }
 
     this.needsRerender = false;

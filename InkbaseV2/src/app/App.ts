@@ -11,19 +11,16 @@ import FormalTool from './tools/FormalTool';
 import FreehandTool from './tools/FreehandTool';
 import { runConstraintSolver } from './constraints';
 
-const root = document.querySelector('svg') as SVGSVGElement;
-
 const events = new Events();
-const svg = new SVG();
-const page = new Page(svg);
+const page = new Page();
 const snaps = new Snaps(page);
 
 const selection = new Selection(page, snaps);
 const freehandSelection = new FreehandSelection(page);
 
 const tools = [
-  new FreehandTool(svg, 30, 30, page),
-  new FormalTool(svg, 30, 80, page, snaps),
+  new FreehandTool(30, 30, page),
+  new FormalTool(30, 80, page, snaps),
 ];
 
 const toolPicker = new ToolPicker(tools);
@@ -40,8 +37,8 @@ EveryFrame(() => {
 
   // runConstraintSolver(selection);
 
-  toolPicker.selected?.render(svg);
-  snaps.render(svg);
+  toolPicker.selected?.render();
+  snaps.render();
   page.render();
 
   for (const handle of Handle.all) {

@@ -163,7 +163,7 @@ export default class StrokeGraph {
       .map(connection => connection.strokes.find(s => s !== stroke));
   }
 
-  render(svg: SVG) {
+  render() {
     if (!this.needsRerender) {
       return;
     }
@@ -173,7 +173,7 @@ export default class StrokeGraph {
     }
 
     this.elements = this.connections.map(c => {
-      return svg.addElement('circle', {
+      return SVG.add('circle', {
         cx: c.position.x,
         cy: c.position.y,
         r: 3,

@@ -1,7 +1,7 @@
 import { PositionWithPressure } from '../../lib/types';
 import Events, { PencilEvent } from '../NativeEvents';
 import Page from '../Page';
-import SVG, { generatePathFromPoints, updateSvgElement } from '../Svg';
+import SVG from '../Svg';
 import { STROKE_SVG_PROPERTIES } from '../strokes/FreehandStroke';
 import { Tool } from './Tool';
 
@@ -16,13 +16,12 @@ export default class FreehandTool extends Tool {
   private needsRerender = false;
 
   constructor(
-    private svg: SVG,
     buttonX: number,
     buttonY: number,
     private page: Page
   ) {
-    super(svg, buttonX, buttonY);
-    this.strokeElement = svg.addElement('path', {
+    super(buttonX, buttonY);
+    this.strokeElement = SVG.add('path', {
       d: '',
       ...STROKE_SVG_PROPERTIES,
     });
@@ -81,7 +80,7 @@ export default class FreehandTool extends Tool {
   onAction() {
     if (this.mode === 'unistroke') {
       this.mode = 'multistroke';
-      this.multistrokeModeDotElement = this.svg.addElement('circle', {
+      this.multistrokeModeDotElement = SVG.add('circle', {
         cx: this.buttonX,
         cy: this.buttonY,
         r: 10,
@@ -114,7 +113,7 @@ export default class FreehandTool extends Tool {
   }
 
   updatePath() {
-    const path = this.points ? generatePathFromPoints(this.points) : '';
-    updateSvgElement(this.strokeElement, { d: path });
+    const path = this.points ? SVG.generatePathFromPoints(this.points) : '';
+    SVG.update(this.strokeElement, { d: path });
   }
 }

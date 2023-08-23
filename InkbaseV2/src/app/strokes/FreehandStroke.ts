@@ -1,4 +1,4 @@
-import SVG, { generatePathFromPoints, updateSvgElement } from '../Svg';
+import SVG from '../Svg';
 import generateId from '../generateId';
 import { PositionWithPressure } from '../../lib/types';
 import StrokeGroup from './StrokeGroup';
@@ -16,12 +16,9 @@ export default class FreehandStroke {
   private selected = false;
   public group: StrokeGroup | null = null;
 
-  constructor(
-    svg: SVG,
-    public points: Array<PositionWithPressure>
-  ) {
+  constructor(public points: Array<PositionWithPressure>) {
     // Store normalised point data based on control points
-    this.element = svg.addElement('path', {
+    this.element = SVG.add('path', {
       d: '',
       ...STROKE_SVG_PROPERTIES,
     });
@@ -47,8 +44,8 @@ export default class FreehandStroke {
       return;
     }
 
-    const path = generatePathFromPoints(this.points);
-    updateSvgElement(this.element, {
+    const path = SVG.generatePathFromPoints(this.points);
+    SVG.update(this.element, {
       d: path,
       stroke: this.selected ? 'rgba(255, 0, 0, .5)' : 'rgba(0, 0, 0, .5)',
     });

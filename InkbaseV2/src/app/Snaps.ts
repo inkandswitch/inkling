@@ -1,7 +1,7 @@
 import { Position } from '../lib/types';
 import Vec from '../lib/vec';
 import Page from './Page';
-import SVG, { updateSvgElement } from './Svg';
+import SVG from './Svg';
 import Handle from './strokes/Handle';
 
 export default class Snaps {
@@ -103,7 +103,7 @@ export default class Snaps {
     this.setActiveSnaps([]);
   }
 
-  render(svg: SVG) {
+  render() {
     if (!this.needsRerender) {
       return;
     }
@@ -114,14 +114,14 @@ export default class Snaps {
 
       let svgElem = this.snapSvgElementById.get(id);
       if (!svgElem) {
-        svgElem = svg.addElement(shapeType, {
+        svgElem = SVG.add(shapeType, {
           ...shapeData,
           fill: 'none',
           stroke: 'rgb(180, 134, 255)',
         });
         this.snapSvgElementById.set(id, svgElem);
       } else {
-        updateSvgElement(svgElem, shapeData);
+        SVG.update(svgElem, shapeData);
       }
     }
 

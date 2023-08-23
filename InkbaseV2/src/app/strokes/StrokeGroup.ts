@@ -1,5 +1,4 @@
 import FreehandStroke from './FreehandStroke';
-import SVG from '../Svg';
 import Handle from './Handle';
 
 import TransformationMatrix from '../../lib/TransformationMatrix';
@@ -27,7 +26,7 @@ export default class StrokeGroup {
 
   svgElements: SVGElement[] = [];
 
-  constructor(svg: SVG, strokes: Set<FreehandStroke>) {
+  constructor(strokes: Set<FreehandStroke>) {
     for (const stroke of strokes) {
       if (stroke.group) {
         throw new Error('a freehand stroke cannot be in more than one group');
@@ -40,7 +39,7 @@ export default class StrokeGroup {
     // Generate Handles
     const points = this.strokes.flatMap(stroke => stroke.points);
     [this.a, this.b] = farthestPair(points).map(pos =>
-      Handle.create(svg, 'informal', pos, this)
+      Handle.create('informal', pos, this)
     );
 
     // Generate transform data
@@ -128,7 +127,7 @@ export default class StrokeGroup {
     // }
   }
 
-  render(svg: SVG) {
+  render() {
     // if(!this.dirty) {
     //   return
     // }
@@ -141,12 +140,12 @@ export default class StrokeGroup {
     //     skeletonPath += `M ${edge.a.x} ${edge.a.y} L ${edge.b.x} ${edge.b.y}`
     // })
     // this.svgElements = [
-    //   svg.addElement("path", {
+    //   SVG.add("path", {
     //     d: outlinePath,
     //     fill: "rgba(0,0,0,0.05)",
     //     stroke: "rgba(0,0,0,0.05)",
     //   }),
-    //   svg.addElement("path", {
+    //   SVG.add("path", {
     //     d: skeletonPath,
     //     fill: "none",
     //     stroke: "rgba(0,0,255,1)",

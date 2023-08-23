@@ -1,5 +1,5 @@
 import { Position } from '../../lib/types';
-import SVG, { updateSvgElement } from '../Svg';
+import SVG from '../Svg';
 import generateId from '../generateId';
 import Handle from './Handle';
 
@@ -12,9 +12,9 @@ export default class LineSegment {
   private readonly elements: { normal: SVGElement; selected: SVGElement };
   private needsRerender = true;
 
-  constructor(svg: SVG, aPos: Position, bPos: Position) {
-    this.a = Handle.create(svg, 'formal', aPos, this);
-    this.b = Handle.create(svg, 'formal', bPos, this);
+  constructor(aPos: Position, bPos: Position) {
+    this.a = Handle.create('formal', aPos, this);
+    this.b = Handle.create('formal', bPos, this);
 
     const commonAttributes = {
       x1: aPos.x,
@@ -25,8 +25,8 @@ export default class LineSegment {
       stroke: 'black',
     };
     this.elements = {
-      normal: svg.addElement('line', commonAttributes),
-      selected: svg.addElement('line', {
+      normal: SVG.add('line', commonAttributes),
+      selected: SVG.add('line', {
         ...commonAttributes,
         'stroke-width': 7,
         stroke: 'none',
@@ -59,8 +59,8 @@ export default class LineSegment {
       x2: this.b.position.x,
       y2: this.b.position.y,
     };
-    updateSvgElement(this.elements.normal, commonAttributes);
-    updateSvgElement(this.elements.selected, {
+    SVG.update(this.elements.normal, commonAttributes);
+    SVG.update(this.elements.selected, {
       ...commonAttributes,
       stroke: this.selected ? 'rgba(180, 134, 255, 0.42)' : 'none',
     });

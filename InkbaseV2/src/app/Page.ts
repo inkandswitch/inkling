@@ -1,4 +1,3 @@
-import SVG from './Svg';
 import Vec from '../lib/vec';
 import ArcSegment from './strokes/ArcSegment';
 import LineSegment from './strokes/LineSegment';
@@ -19,28 +18,26 @@ export default class Page {
   readonly freehandStrokes: FreehandStroke[] = [];
   readonly strokeGroups: Array<StrokeGroup> = [];
 
-  constructor(readonly svg: SVG) {}
-
   addLineSegment(aPos: Position, bPos: Position) {
-    const ls = new LineSegment(this.svg, aPos, bPos);
+    const ls = new LineSegment(aPos, bPos);
     this.lineSegments.push(ls);
     return ls;
   }
 
   addArcSegment(aPos: Position, bPos: Position, cPos: Position) {
-    const as = new ArcSegment(this.svg, aPos, bPos, cPos);
+    const as = new ArcSegment(aPos, bPos, cPos);
     this.lineSegments.push(as);
     return as;
   }
 
   addFreehandStroke(points: Array<PositionWithPressure>) {
-    const s = new FreehandStroke(this.svg, points);
+    const s = new FreehandStroke(points);
     this.freehandStrokes.push(s);
     return s;
   }
 
   addStrokeGroup(strokes: Set<FreehandStroke>): StrokeGroup {
-    const sg = new StrokeGroup(this.svg, strokes);
+    const sg = new StrokeGroup(strokes);
     this.strokeGroups.push(sg);
     return sg;
   }

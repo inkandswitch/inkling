@@ -1,6 +1,6 @@
 import { Position } from '../../lib/types';
 import Vec from '../../lib/vec';
-import SVG, { updateSvgElement } from '../Svg';
+import SVG from '../Svg';
 import generateId from '../generateId';
 
 const SHOW_IDS = false;
@@ -41,15 +41,11 @@ export default class Handle {
   private static readonly allInstances = new Set<Handle>();
 
   static create(
-    svg: SVG,
     type: HandleType,
     position: Position,
     listener: HandleListener | null = null
   ): Handle {
-    const handle = new Handle(
-      svg,
-      this.makeCanonicalInstanceState(svg, type, position)
-    );
+    const handle = new Handle(this.makeCanonicalInstanceState(type, position));
     // console.trace('new handle created', handle);
     if (listener) {
       handle.addListener(listener);
@@ -59,18 +55,10 @@ export default class Handle {
   }
 
   private static makeCanonicalInstanceState(
-    svg: SVG,
     type: HandleType,
     position: Position,
     id = generateId()
   ): CanonicalInstanceState {
-    const label = svg.addElement('text', {
-      x: 0,
-      y: 0,
-      visibility: SHOW_IDS ? 'visible' : 'hidden',
-    }) as SVGTextElement;
-    label.appendChild(document.createTextNode('?'));
-
     return {
       isCanonical: true,
       id,
@@ -78,19 +66,24 @@ export default class Handle {
       absorbedHandles: new Set(),
       position,
       elements: {
-        normal: svg.addElement(
+        normal: SVG.add(
           'circle',
           type === 'formal'
             ? { cx: 0, cy: 0, r: 3, fill: 'black' }
             : { r: 5, fill: 'rgba(100, 100, 100, .2)' }
         ),
-        selected: svg.addElement('circle', {
+        selected: SVG.add('circle', {
           cx: 0,
           cy: 0,
           r: 7,
           fill: 'none',
         }),
-        label,
+        label: SVG.add('text', {
+          x: 0,
+          y: 0,
+          visibility: SHOW_IDS ? 'visible' : 'hidden',
+          content: '?',
+        }) as SVGTextElement,
       },
       selected: false,
       needsRerender: true,
@@ -102,10 +95,7 @@ export default class Handle {
 
   private readonly listeners = new Set<HandleListener>();
 
-  private constructor(
-    private svg: SVG, // silly that we need to keep this...
-    private instanceState: InstanceState
-  ) {
+  private constructor(private instanceState: InstanceState) {
     if (instanceState.isCanonical) {
       Handle.all.add(this);
     }
@@ -300,22 +290,20 @@ export default class Handle {
       return;
     }
 
-    updateSvgElement(state.elements.normal, {
+    SVG.update(state.elements.normal, {
       transform: `translate(${state.position.x} ${state.position.y})`,
     });
 
-    updateSvgElement(state.elements.selected, {
+    SVG.update(state.elements.selected, {
       transform: `translate(${state.position.x} ${state.position.y})`,
       fill: state.selected ? 'rgba(180, 134, 255, 0.42)' : 'none',
     });
 
-    const label = state.elements.label;
-    const labelText = label.firstChild!;
-    labelText.textContent = '' + this.id;
-    updateSvgElement(label, {
-      transform: `translate(${state.position.x - label.getBBox().width / 2} ${
-        state.position.y - 10
-      })`,
+    SVG.update(state.elements.label, {
+      transform: `translate(${
+        state.position.x - state.elements.label.getBBox().width / 2
+      } ${state.position.y - 10})`,
+      content: '' + this.id,
     });
 
     state.needsRerender = false;
@@ -363,7 +351,6 @@ export default class Handle {
 
     // change my instance state to make me a canonical handle
     this.instanceState = Handle.makeCanonicalInstanceState(
-      this.svg,
       this.type,
       this.position,
       this.instanceState.origId
