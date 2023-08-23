@@ -155,7 +155,7 @@ export default class FreehandTool extends Tool {
     this.needsRerender = false;
   }
 
-  updatePath() {
+  private updatePath() {
     SVG.update(this.strokeElement, {
       d: this.points ? SVG.path(this.points) : '',
     });
