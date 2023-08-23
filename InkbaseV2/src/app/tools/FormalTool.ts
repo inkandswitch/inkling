@@ -12,7 +12,7 @@ import LineSegment from '../strokes/LineSegment.js';
 import ArcSegment from '../strokes/ArcSegment.js';
 
 export default class FormalTool extends Tool {
-  private element: SVGElement;
+  private readonly element: SVGElement;
   private needsRerender = false;
 
   // Data for guessing
@@ -33,7 +33,7 @@ export default class FormalTool extends Tool {
   private fixedStroke?: LineSegment | ArcSegment;
 
   constructor(
-    private svg: SVG,
+    svg: SVG,
     buttonX: number,
     buttonY: number,
     private page: Page,
