@@ -7,13 +7,11 @@ import StrokeGroup from './strokes/StrokeGroup';
 export default class FreehandSelection {
   readonly selectedStrokes = new Set<FreehandStroke>();
   clusterSelectionIndex = 0;
+  currStrokeGroup: StrokeGroup | null = null;
 
   // Interaction State
   fingerDown: Event | null = null;
   fingerMoved: Event | null = null;
-
-  // Current Group
-  strokeGroup: StrokeGroup | null = null;
 
   constructor(private readonly page: Page) {}
 
@@ -32,8 +30,10 @@ export default class FreehandSelection {
         ) {
           console.log('Longhold');
 
-          if (!this.strokeGroup && this.selectedStrokes.size > 0) {
-            this.strokeGroup = this.page.addStrokeGroup(this.selectedStrokes);
+          if (!this.currStrokeGroup && this.selectedStrokes.size > 0) {
+            this.currStrokeGroup = this.page.addStrokeGroup(
+              this.selectedStrokes
+            );
           }
         }
       }, 750);
@@ -113,6 +113,6 @@ export default class FreehandSelection {
     }
 
     this.selectedStrokes.clear();
-    this.strokeGroup = null;
+    this.currStrokeGroup = null;
   }
 }
