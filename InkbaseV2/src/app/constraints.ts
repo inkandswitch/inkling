@@ -33,7 +33,16 @@ export class LengthConstraint implements Constraint {
 
 const constraints: Constraint[] = [];
 
-// let lastGoodResult: any = null;
+interface UncminResult {
+  solution: number[];
+  f: number;
+  gradient: number[];
+  invHessian: number[][];
+  iterations: number;
+  message: string;
+}
+
+let prevResult: UncminResult | null = null;
 
 export function runConstraintSolver(selection: Selection) {
   const handles = Array.from(Handle.all);
@@ -82,11 +91,11 @@ export function runConstraintSolver(selection: Selection) {
   }, inputs);
 
   const outputs = result.solution;
-  // let totalDisplacement = 0;
+  let totalDisplacement = 0;
   for (const handle of handlesThatCanBeMoved) {
     const idx = handleIndex.get(handle)!;
     const pos = { x: outputs[idx], y: outputs[idx + 1] };
-    // totalDisplacement += Vec.dist(handle.position, pos);
+    totalDisplacement += Vec.dist(handle.position, pos);
     handle.position = pos;
   }
 
@@ -99,12 +108,12 @@ export function runConstraintSolver(selection: Selection) {
   //   handle.position = pos;
   // });
 
-  // console.log('totalDisplacement', totalDisplacement);
-  // if (totalDisplacement > 50) {
-  //   console.log('result', result);
-  //   console.log('lastGoodResult', lastGoodResult);
-  //   throw new Error('boom!');
-  // } else {
-  //   lastGoodResult = result;
-  // }
+  console.log('totalDisplacement', totalDisplacement);
+  if (totalDisplacement > 50) {
+    console.log('result', result);
+    console.log('prevResult', prevResult);
+    throw new Error('boom!');
+  } else {
+    prevResult = result;
+  }
 }
