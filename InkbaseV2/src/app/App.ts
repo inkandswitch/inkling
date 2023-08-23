@@ -14,7 +14,7 @@ import { runConstraintSolver } from './constraints';
 const root = document.querySelector('svg') as SVGSVGElement;
 
 const events = new Events();
-const svg = new SVG(root);
+const svg = new SVG();
 const page = new Page(svg);
 const snaps = new Snaps(page);
 
@@ -29,6 +29,8 @@ const tools = [
 const toolPicker = new ToolPicker(tools);
 
 EveryFrame(() => {
+  SVG.clearNow();
+
   toolPicker.update(events);
   toolPicker.selected?.update(events);
   selection.update(events);
