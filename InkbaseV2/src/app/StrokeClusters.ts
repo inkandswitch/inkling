@@ -5,7 +5,7 @@ import FreehandStroke from './strokes/FreehandStroke';
 
 type Cluster = Set<FreehandStroke>;
 
-export default class StrokeGraph {
+export default class StrokeClusters {
   private clustersByStroke = new Map<FreehandStroke, SortedSet<Cluster>>();
 
   addClusterForStroke(stroke: FreehandStroke, cluster: Cluster) {
@@ -14,7 +14,7 @@ export default class StrokeGraph {
       clusters = new SortedSet();
       this.clustersByStroke.set(stroke, clusters);
     }
-
+    
     clusters.add(cluster);
   }
 
