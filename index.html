@@ -3,33 +3,38 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inkling Prototypes</title>
 </head>
 
 <body>
-    <h1>Inkling Prototypes</h1>
-    <div><a href="Prototypes/FormalGeometry/build/">Formal Geometry</a></div>
-    <div><a href="Prototypes/FormalGeometry2/build/">Formal Geometry 2</a></div>
-    <div><a href="Prototypes/RenderingToSvg/build/">Rendering to SVG</a></div>
-    <div><a href="Prototypes/Repeater/build/">Repeater</a></div>
-    <div><a href="Prototypes/Repeater2/build/">Repeater2</a></div>
-    <div><a href="Prototypes/RemovingConstraints/build/">Removing Constraints</a></div>
-    <div><a href="Prototypes/BetterFormalInk/build/">Better Formal Ink</a></div>
-    <div><a href="Prototypes/FormalInkIntegrated-jul-28-23/build/">Formal Ink - snaps (jul/28/23)</a></div>
-    <hr>
-    <div><a href="Prototypes/FormalInkIntegratedWithControlPoints/build/">Freehand Strokes w/ Control Points</a></div>
-    <div><a href="Prototypes/InkDeformation-aug-2-23/build/">Ink Deformation - multipoint (aug/2/23)</a></div>
-    <div><a href="Prototypes/FreehandInkSelection/build/">Freehand Ink Selection</a></div>
-    <div><a href="Prototypes/MultistrokeAnalysis/build/">Multistroke Analysis</a></div>
-    <h1>Local Development</h1>
-    <div><a href="http://192.168.1.31:8080">Marcel</a></div>
-    <div><a href="http://192.168.188.58:8080">Marcel - Tethering 2</a></div>
-    <div><a href="http://awarth.local:8080" style="position: absolute; bottom: 30px; right: 30px;">Alex</a></div>
-    <div><a href="http://chonker.local:8080">Ivan</a></div>
-    <div></div>
-    <div><a id="custom" href="#">Custom IP</a></div>
+    <nav>
+        <h1>Inkling Prototypes</h1>
+        <a href="Prototypes/FormalGeometry/build/">Formal Geometry</a>
+        <a href="Prototypes/FormalGeometry2/build/">Formal Geometry 2</a>
+        <a href="Prototypes/RenderingToSvg/build/">Rendering to SVG</a>
+        <a href="Prototypes/Repeater/build/">Repeater</a>
+        <a href="Prototypes/Repeater2/build/">Repeater2</a>
+        <a href="Prototypes/RemovingConstraints/build/">Removing Constraints</a>
+        <a href="Prototypes/BetterFormalInk/build/">Better Formal Ink</a>
+        <a href="Prototypes/FormalInkIntegrated-jul-28-23/build/">Formal Ink - snaps (jul/28/23)</a>
+        <hr>
+        <a href="Prototypes/FormalInkIntegratedWithControlPoints/build/">Freehand Strokes w/ Control Points</a>
+        <a href="Prototypes/InkDeformation-aug-2-23/build/">Ink Deformation - multipoint (aug/2/23)</a>
+        <a href="Prototypes/FreehandInkSelection/build/">Freehand Ink Selection</a>
+        <a href="Prototypes/MultistrokeAnalysis/build/">Multistroke Analysis</a>
+    </nav>
+
+    <nav>
+        <h1>Local Development</h1>
+        <a href="http://192.168.1.31:8080">Marcel</a>
+        <a href="http://192.168.188.58:8080">Marcel - Tethering 2</a>
+        <a href="http://awarth.local:8080" style="right: 30px;">Alex</a>
+        <a href="http://chonker.local:8080" style="left: 30px; rotate: 771deg">Ivan</a>
+        <hr>
+        <a id="custom" href="#">Custom IP</a>
+    </nav>
+
     <script>
         document.querySelector("#custom").onclick = (e) => {
             const ip = prompt("Enter your IP (no protocol, no port)", "192.168.x.y");
@@ -37,6 +42,28 @@
             return false;
         }
     </script>
+
+    <style>
+        body {
+            display: flex;
+            justify-content: space-around;
+            font-family: system-ui;
+        }
+
+        a {
+            display: block;
+            padding: .4em 0;
+        }
+
+        a[style] {
+            position: absolute;
+            bottom: 30px;
+        }
+
+        hr {
+            border: .5px solid #ddd;
+        }
+    </style>
 </body>
 
 </html>
