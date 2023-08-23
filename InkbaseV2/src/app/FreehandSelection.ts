@@ -30,10 +30,19 @@ export default class FreehandSelection {
         ) {
           console.log('Longhold');
 
-          if (!this.currStrokeGroup && this.selectedStrokes.size > 0) {
-            this.currStrokeGroup = this.page.addStrokeGroup(
-              this.selectedStrokes
-            );
+          if (this.currStrokeGroup) {
+            return;
+          }
+
+          // It doesn't make sense for the same stroke to be in more than one group.
+          // E.g., what transform applies when the user has moved handles associated
+          // with the more than one group that the stroke belongs to? That's why
+          // we only consider strokes that are not already in a group.
+          const ungroupedStrokes = new Set(
+            Array.from(this.selectedStrokes).filter(s => !s.group)
+          );
+          if (ungroupedStrokes.size > 0) {
+            this.currStrokeGroup = this.page.addStrokeGroup(ungroupedStrokes);
           }
         }
       }, 750);

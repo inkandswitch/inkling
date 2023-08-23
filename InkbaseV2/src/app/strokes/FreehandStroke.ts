@@ -1,6 +1,7 @@
 import SVG, { generatePathFromPoints, updateSvgElement } from '../Svg';
 import generateId from '../generateId';
 import { PositionWithPressure } from '../../lib/types';
+import StrokeGroup from './StrokeGroup';
 
 export const STROKE_SVG_PROPERTIES = Object.freeze({
   stroke: 'rgba(0, 0, 0, .5)',
@@ -13,6 +14,7 @@ export default class FreehandStroke {
   private readonly element: SVGElement;
   private needsRerender = true;
   private selected = false;
+  public group: StrokeGroup | null = null;
 
   constructor(
     svg: SVG,

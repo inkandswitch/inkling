@@ -28,6 +28,13 @@ export default class StrokeGroup {
   svgElements: SVGElement[] = [];
 
   constructor(svg: SVG, strokes: Set<FreehandStroke>) {
+    for (const stroke of strokes) {
+      if (stroke.group) {
+        throw new Error('a freehand stroke cannot be in more than one group');
+      }
+      stroke.group = this;
+    }
+
     this.strokes = Array.from(strokes);
 
     // Generate Handles
@@ -47,7 +54,11 @@ export default class StrokeGroup {
     );
   }
 
-  updatePaths() {
+  onHandleMoved() {
+    this.updatePaths();
+  }
+
+  private updatePaths() {
     const transform = TransformationMatrix.fromLine(
       this.a.position,
       this.b.position
@@ -57,10 +68,6 @@ export default class StrokeGroup {
       const newPoints = this.pointData[i].map(p => transform.transformPoint(p));
       stroke.updatePath(newPoints);
     }
-  }
-
-  onHandleMoved() {
-    this.updatePaths();
   }
 
   // addStroke(stroke: FreehandStroke){
@@ -96,7 +103,7 @@ export default class StrokeGroup {
   //     return this.outlineShape.intersect(shape).paths.length > 0;
   //   }
 
-  generateSkeleton() {
+  private generateSkeleton() {
     // //let sb = new SkeletonBuilder()
     // let info = clipperShapeToArrayPoints(this.outlineShape)
     // console.log(info);
