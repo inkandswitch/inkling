@@ -257,16 +257,12 @@ export class AngleConstraint extends Constraint {
 
 export function runConstraintSolver(selection: Selection) {
   addSampleConstraints();
-  if (Constraint.all.size === 0) {
-    return;
+  if (Constraint.all.size > 0) {
+    doWithTempConstraintsForSelection(selection, minimizeError);
   }
+}
 
-  // Temporarily treat whatever handles the user has selected as unmovable.
-  // (This is the "finger of God" semantics that we've talked about.)
-  const tempConstraintsForSelection = Array.from(selection.handles).map(
-    handle => new FixedPositionConstraint(handle, handle.position)
-  );
-
+function minimizeError() {
   const things = [...Variable.all, ...Handle.all];
   const knowns = computeKnowns();
 
@@ -293,6 +289,7 @@ export function runConstraintSolver(selection: Selection) {
     }
   }
 
+  // This is where we actually run the solver.
   const result = numeric.uncmin((currState: number[]) => {
     let error = 0;
     for (const c of Constraint.all) {
@@ -335,9 +332,25 @@ export function runConstraintSolver(selection: Selection) {
       thing.position = { x, y };
     }
   }
+}
 
-  for (const tempConstraint of tempConstraintsForSelection) {
-    tempConstraint.remove();
+/**
+ * Temporarily adds fixed position constraints for each selected handle.
+ * This is the "finger of God" semantics that we've talked about.
+ */
+function doWithTempConstraintsForSelection(
+  selection: Selection,
+  fn: () => void
+) {
+  const tempConstraintsForSelection = Array.from(selection.handles).map(
+    handle => new FixedPositionConstraint(handle, handle.position)
+  );
+  try {
+    fn();
+  } finally {
+    for (const tempConstraint of tempConstraintsForSelection) {
+      tempConstraint.remove();
+    }
   }
 }
 
