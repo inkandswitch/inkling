@@ -33,6 +33,8 @@ export class LengthConstraint implements Constraint {
 
 const constraints: Constraint[] = [];
 
+// let lastGoodResult: any = null;
+
 export function runConstraintSolver(selection: Selection) {
   const handles = Array.from(Handle.all);
 
@@ -65,11 +67,11 @@ export function runConstraintSolver(selection: Selection) {
     inputs.push(x, y);
   }
 
-  const result = numeric.uncmin((vars: number[]) => {
+  const result = numeric.uncmin(vars => {
     let error = 0;
     for (const c of constraints) {
       const positions = c.handles.map(h => {
-        const idx = handleIndex.get(h.canonicalInstance);
+        const idx = handleIndex.get(h);
         return idx === undefined
           ? h.position
           : { x: vars[idx], y: vars[idx + 1] };
@@ -78,12 +80,31 @@ export function runConstraintSolver(selection: Selection) {
     }
     return error;
   }, inputs);
-  const outputs = result.solution;
-  // console.log(result);
 
-  for (let idx = 0; idx < handlesThatCanBeMoved.length; idx++) {
-    const handle = handles[idx];
-    handle.position = { x: outputs[idx * 2], y: outputs[idx * 2 + 1] };
-    // console.log('moved', handle.id, 'to', handle.position);
+  const outputs = result.solution;
+  // let totalDisplacement = 0;
+  for (const handle of handlesThatCanBeMoved) {
+    const idx = handleIndex.get(handle)!;
+    const pos = { x: outputs[idx], y: outputs[idx + 1] };
+    // totalDisplacement += Vec.dist(handle.position, pos);
+    handle.position = pos;
   }
+
+  // Here's a more performant version of the loop above that
+  // we can use if it turns out to be too slow:
+  // handlesThatCanBeMoved.forEach((handle, idx) => {
+  //   const posPtr = idx * 2;
+  //   const pos = { x: outputs[posPtr], y: outputs[posPtr + 1] };
+  //   totalDisplacement += Vec.dist(handle.position, pos);
+  //   handle.position = pos;
+  // });
+
+  // console.log('totalDisplacement', totalDisplacement);
+  // if (totalDisplacement > 50) {
+  //   console.log('result', result);
+  //   console.log('lastGoodResult', lastGoodResult);
+  //   throw new Error('boom!');
+  // } else {
+  //   lastGoodResult = result;
+  // }
 }
