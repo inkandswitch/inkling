@@ -369,12 +369,15 @@ function addSampleConstraints() {
     const a1 = unconstrainedHandles.shift()!;
     const a2 = unconstrainedHandles.shift()!;
     const aLength = new LengthConstraint(a1, a2).length;
-    new FixedValueConstraint(aLength, aLength.value);
+    // new FixedValueConstraint(aLength, aLength.value);
 
     const b1 = unconstrainedHandles.shift()!;
     const b2 = unconstrainedHandles.shift()!;
     const bLength = new LengthConstraint(b1, b2).length;
 
     new VariableEqualsConstraint(aLength, bLength);
+
+    const angle = new AngleConstraint(a1, a2, b1, b2).angle;
+    new FixedValueConstraint(angle, angle.value);
   }
 }
