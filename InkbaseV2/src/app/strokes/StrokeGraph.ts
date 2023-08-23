@@ -83,8 +83,8 @@ export default class StrokeGraph {
     const stack: Stack = [{ stroke: targetStroke, connection: null }];
     const trace: Stack = [];
 
-    // Make sure we backgrack connections multiple times
-    const tracedConnections = new Set();
+    // Make sure we backtrack connections multiple times
+    const tracedConnections = new Set<Connection>();
 
     while (stack.length > 0) {
       console.log(
@@ -96,7 +96,9 @@ export default class StrokeGraph {
       trace.push(s);
 
       const currentStroke = s.stroke;
-      tracedConnections.add(s.connection);
+      if (s.connection) {
+        tracedConnections.add(s.connection);
+      }
 
       const connections = this.connections.filter(connection => {
         return (
