@@ -258,8 +258,7 @@ export default class FormalTool extends Tool {
     }
 
     if (this.renderPoints) {
-      const path = SVG.generatePathFromPoints(this.renderPoints);
-      SVG.update(this.element, { d: path });
+      SVG.update(this.element, { d: SVG.path(this.renderPoints) });
     }
 
     this.needsRerender = false;

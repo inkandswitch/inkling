@@ -64,9 +64,8 @@ function points(...positions: Array<Position | Position[]>) {
     .join(' ');
 }
 
-// Maybe deprecate in favor of points?
-// TODO: maybe this should live somewhere else, tbd
-function generatePathFromPoints(points: Position[] | PositionWithPressure[]) {
+/** Returns a string that can be used as the 'd' attribute of an SVG path element. */
+function path(points: Position[] | PositionWithPressure[]) {
   return points
     .map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x} ${p.y}`)
     .join(' ');
@@ -78,5 +77,5 @@ export default {
   now,
   clearNow,
   points,
-  generatePathFromPoints,
+  path,
 };

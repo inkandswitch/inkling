@@ -44,9 +44,8 @@ export default class FreehandStroke {
       return;
     }
 
-    const path = SVG.generatePathFromPoints(this.points);
     SVG.update(this.element, {
-      d: path,
+      d: SVG.path(this.points),
       stroke: this.selected ? 'rgba(255, 0, 0, .5)' : 'rgba(0, 0, 0, .5)',
     });
 

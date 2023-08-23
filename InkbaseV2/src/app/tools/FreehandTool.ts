@@ -113,7 +113,8 @@ export default class FreehandTool extends Tool {
   }
 
   updatePath() {
-    const path = this.points ? SVG.generatePathFromPoints(this.points) : '';
-    SVG.update(this.strokeElement, { d: path });
+    SVG.update(this.strokeElement, {
+      d: this.points ? SVG.path(this.points) : '',
+    });
   }
 }
