@@ -5,7 +5,7 @@ import Handle from './strokes/Handle';
 import Selection from './Selection';
 
 export interface Constraint {
-  readonly handles: Handle[];
+  handles: Handle[];
 
   /** Returns the current error for this constraint. (OK if it's negative.) */
   getError(positions: Position[]): number;
@@ -27,22 +27,11 @@ export class LengthConstraint implements Constraint {
   }
 
   getError(positions: Position[]): number {
-    return Math.abs(Vec.dist(positions[0], positions[1]) - this.length);
+    return Vec.dist(positions[0], positions[1]) - this.length;
   }
 }
 
 const constraints: Constraint[] = [];
-
-interface UncminResult {
-  solution: number[];
-  f: number;
-  gradient: number[];
-  invHessian: number[][];
-  iterations: number;
-  message: string;
-}
-
-let prevResult: UncminResult | null = null;
 
 export function runConstraintSolver(selection: Selection) {
   const handles = Array.from(Handle.all);
@@ -76,7 +65,7 @@ export function runConstraintSolver(selection: Selection) {
     inputs.push(x, y);
   }
 
-  const result = numeric.uncmin(vars => {
+  const result = numeric.uncmin((vars: number[]) => {
     let error = 0;
     for (const c of constraints) {
       const positions = c.handles.map(h => {
@@ -85,17 +74,15 @@ export function runConstraintSolver(selection: Selection) {
           ? h.position
           : { x: vars[idx], y: vars[idx + 1] };
       });
-      error += Math.abs(c.getError(positions));
+      error += Math.pow(c.getError(positions), 2);
     }
     return error;
   }, inputs);
 
   const outputs = result.solution;
-  let totalDisplacement = 0;
   for (const handle of handlesThatCanBeMoved) {
     const idx = handleIndex.get(handle)!;
     const pos = { x: outputs[idx], y: outputs[idx + 1] };
-    totalDisplacement += Vec.dist(handle.position, pos);
     handle.position = pos;
   }
 
@@ -104,16 +91,6 @@ export function runConstraintSolver(selection: Selection) {
   // handlesThatCanBeMoved.forEach((handle, idx) => {
   //   const posPtr = idx * 2;
   //   const pos = { x: outputs[posPtr], y: outputs[posPtr + 1] };
-  //   totalDisplacement += Vec.dist(handle.position, pos);
   //   handle.position = pos;
   // });
-
-  console.log('totalDisplacement', totalDisplacement);
-  if (totalDisplacement > 50) {
-    console.log('result', result);
-    console.log('prevResult', prevResult);
-    throw new Error('boom!');
-  } else {
-    prevResult = result;
-  }
 }
