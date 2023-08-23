@@ -28,22 +28,7 @@ export default class FreehandSelection {
           (!this.fingerMoved ||
             Vec.dist(this.fingerDown.position, this.fingerMoved.position) < 10)
         ) {
-          console.log('Longhold');
-
-          if (this.currStrokeGroup) {
-            return;
-          }
-
-          // It doesn't make sense for the same stroke to be in more than one group.
-          // E.g., what transform applies when the user has moved handles associated
-          // with the more than one group that the stroke belongs to? That's why
-          // we only consider strokes that are not already in a group.
-          const ungroupedStrokes = new Set(
-            Array.from(this.selectedStrokes).filter(s => !s.group)
-          );
-          if (ungroupedStrokes.size > 0) {
-            this.currStrokeGroup = this.page.addStrokeGroup(ungroupedStrokes);
-          }
+          this.createGroupFromSelection();
         }
       }, 750);
 
@@ -65,6 +50,24 @@ export default class FreehandSelection {
         this.fingerDown = null;
         this.fingerMoved = null;
       }
+    }
+  }
+
+  createGroupFromSelection(){
+    // Don't create a group if it's already a group
+    if (this.currStrokeGroup) {
+      return;
+    }
+
+    // It doesn't make sense for the same stroke to be in more than one group.
+    // E.g., what transform applies when the user has moved handles associated
+    // with the more than one group that the stroke belongs to? That's why
+    // we only consider strokes that are not already in a group.
+    const ungroupedStrokes = new Set(
+      Array.from(this.selectedStrokes).filter(s => !s.group)
+    );
+    if (ungroupedStrokes.size > 0) {
+      this.currStrokeGroup = this.page.addStrokeGroup(ungroupedStrokes);
     }
   }
 
