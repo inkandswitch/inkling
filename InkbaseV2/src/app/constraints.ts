@@ -31,6 +31,38 @@ export class LengthConstraint implements Constraint {
   }
 }
 
+export class AngleConstraint implements Constraint {
+  readonly handles: Handle[];
+  private readonly angle: number;
+
+  constructor(a1: Handle, a2: Handle, b1: Handle, b2: Handle) {
+    this.handles = [a1, a2, b1, b2];
+    this.angle = this.computeAngle(
+      a1.position,
+      a2.position,
+      b1.position,
+      b2.position
+    );
+  }
+
+  getError(positions: Position[]): number {
+    const [a1, a2, b1, b2] = positions;
+    return this.computeAngle(a1, a2, b1, b2) - this.angle;
+  }
+
+  computeAngle(
+    a1Pos: Position,
+    a2Pos: Position,
+    b1Pos: Position,
+    b2Pos: Position
+  ) {
+    return Vec.angleBetweenClockwise(
+      Vec.sub(a2Pos, a1Pos),
+      Vec.sub(b2Pos, b1Pos)
+    );
+  }
+}
+
 const constraints: Constraint[] = [];
 
 export function runConstraintSolver(selection: Selection) {
@@ -45,6 +77,18 @@ export function runConstraintSolver(selection: Selection) {
       new LengthConstraint(
         unconstrainedHandles.pop()!,
         unconstrainedHandles.pop()!
+      )
+    );
+  }
+  if (constraints.length === 2) {
+    const lc1 = constraints[0] as LengthConstraint;
+    const lc2 = constraints[1] as LengthConstraint;
+    constraints.push(
+      new AngleConstraint(
+        lc1.handles[0],
+        lc1.handles[1],
+        lc2.handles[0],
+        lc2.handles[1]
       )
     );
   }
