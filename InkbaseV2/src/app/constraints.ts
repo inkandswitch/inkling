@@ -37,17 +37,15 @@ export class AngleConstraint implements Constraint {
 
   constructor(a1: Handle, a2: Handle, b1: Handle, b2: Handle) {
     this.handles = [a1, a2, b1, b2];
-    this.angle = this.computeAngle(
-      a1.position,
-      a2.position,
-      b1.position,
-      b2.position
-    );
+    this.angle =
+      this.computeAngle(a1.position, a2.position, b1.position, b2.position) ??
+      0;
   }
 
   getError(positions: Position[]): number {
     const [a1, a2, b1, b2] = positions;
-    return this.computeAngle(a1, a2, b1, b2) - this.angle;
+    const currentAngle = this.computeAngle(a1, a2, b1, b2) ?? this.angle;
+    return currentAngle - this.angle;
   }
 
   computeAngle(
@@ -55,11 +53,12 @@ export class AngleConstraint implements Constraint {
     a2Pos: Position,
     b1Pos: Position,
     b2Pos: Position
-  ) {
-    return Vec.angleBetweenClockwise(
-      Vec.sub(a2Pos, a1Pos),
-      Vec.sub(b2Pos, b1Pos)
-    );
+  ): number | null {
+    const va = Vec.sub(a2Pos, a1Pos);
+    const vb = Vec.sub(b2Pos, b1Pos);
+    return Vec.len(va) < 5 || Vec.len(vb) < 5
+      ? null
+      : Vec.angleBetweenClockwise(va, vb);
   }
 }
 
@@ -72,23 +71,21 @@ export function runConstraintSolver(selection: Selection) {
   const unconstrainedHandles = handles.filter(
     handle => !constraints.some(constraint => involves(constraint, handle))
   );
-  while (constraints.length < 2 && unconstrainedHandles.length >= 2) {
-    constraints.push(
-      new LengthConstraint(
-        unconstrainedHandles.pop()!,
-        unconstrainedHandles.pop()!
-      )
-    );
-  }
-  if (constraints.length === 2) {
-    const lc1 = constraints[0] as LengthConstraint;
-    const lc2 = constraints[1] as LengthConstraint;
+  // while (constraints.length < 2 && unconstrainedHandles.length >= 2) {
+  //   constraints.push(
+  //     new LengthConstraint(
+  //       unconstrainedHandles.pop()!,
+  //       unconstrainedHandles.pop()!
+  //     )
+  //   );
+  // }
+  if (constraints.length === 0 && unconstrainedHandles.length >= 4) {
     constraints.push(
       new AngleConstraint(
-        lc1.handles[0],
-        lc1.handles[1],
-        lc2.handles[0],
-        lc2.handles[1]
+        unconstrainedHandles.pop()!,
+        unconstrainedHandles.pop()!,
+        unconstrainedHandles.pop()!,
+        unconstrainedHandles.pop()!
       )
     );
   }
