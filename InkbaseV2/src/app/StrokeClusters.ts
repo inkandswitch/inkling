@@ -14,7 +14,7 @@ export default class StrokeClusters {
       clusters = new SortedSet();
       this.clustersByStroke.set(stroke, clusters);
     }
-    
+
     clusters.add(cluster);
   }
 

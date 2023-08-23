@@ -53,7 +53,7 @@ export default class FreehandSelection {
     }
   }
 
-  createGroupFromSelection(){
+  createGroupFromSelection() {
     // Don't create a group if it's already a group
     if (this.currStrokeGroup) {
       return;
