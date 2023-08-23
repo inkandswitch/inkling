@@ -69,7 +69,7 @@ export function runConstraintSolver(selection: Selection) {
     let error = 0;
     for (const c of constraints) {
       const positions = c.handles.map(h => {
-        const idx = handleIndex.get(h);
+        const idx = handleIndex.get(h.canonicalInstance);
         return idx === undefined
           ? h.position
           : { x: vars[idx], y: vars[idx + 1] };
