@@ -50,9 +50,11 @@ export default class Handle {
       svg,
       this.makeCanonicalInstanceState(svg, type, position)
     );
+    // console.trace('new handle created', handle);
     if (listener) {
       handle.addListener(listener);
     }
+    handle.absorbNearbyHandles();
     return handle;
   }
 
