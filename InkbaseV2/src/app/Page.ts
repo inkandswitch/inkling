@@ -39,6 +39,12 @@ export default class Page {
     return s;
   }
 
+  addStrokeGroup(strokes: Set<FreehandStroke>): StrokeGroup {
+    const sg = new StrokeGroup(this.svg, strokes);
+    this.strokeGroups.push(sg);
+    return sg;
+  }
+
   findHandleNear(pos: Position, dist = 20): Handle | null {
     let closestHandle: Handle | null = null;
     let closestDistance = dist;

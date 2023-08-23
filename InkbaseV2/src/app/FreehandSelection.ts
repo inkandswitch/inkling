@@ -33,9 +33,7 @@ export default class FreehandSelection {
           console.log('Longhold');
 
           if (!this.strokeGroup && this.selectedStrokes.size > 0) {
-            const group = new StrokeGroup(this.page.svg, this.selectedStrokes);
-            this.page.strokeGroups.push(group);
-            this.strokeGroup = group;
+            this.strokeGroup = this.page.addStrokeGroup(this.selectedStrokes);
           }
         }
       }, 750);
