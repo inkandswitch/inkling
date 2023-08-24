@@ -135,6 +135,7 @@ export default class Page {
     this.lineSegments.forEach(render);
     this.freehandStrokes.forEach(render);
     this.strokes.forEach(render);
+    this.analyzer.render();
   }
 }
 

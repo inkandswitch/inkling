@@ -1,12 +1,26 @@
 // Work in progress
+// TODO:
+// [] Find shortest (Maximally turning) loops
+// [] Find smooth continuation loops
+// [] Find connectors between shapes
+// [] Find blobbly clusters like text etc.
+
+// [] Update graph when strokes are moved
 
 import { Position, PositionWithPressure } from '../lib/types';
 import Page from './Page';
 import FreehandStroke from './strokes/FreehandStroke';
 import Vec from '../lib/vec';
+import Svg from './Svg';
 
+
+// **
+// StrokeGraph, Intermediate representation of the page. Useful for finding loops etc.
+// TODO: Maybe move to a different file, just leave here for now
+// **
+
+// Node in the graph
 class StrokeGraphNode {
-  // partialStrokes: PartialStroke[];
   averagePosition: Position;
   positions: Array<Position>;
 
@@ -24,39 +38,76 @@ class StrokeGraphNode {
   }
 }
 
-// Not quite the same as an edge, as it represents multiple edges along the length of a stroke
+// A partial stroke is a reference to a slice of a FreehandStroke
+// Equivalent to an actual edge in the graph
+interface PartialStroke {
+  stroke: FreehandStroke;
+  pointIndexes: Array<number>;
+  nodes: Array<StrokeGraphNode>;
+  distance: number;
+  id: string; //TODO: Maybe there's a better way of identifying uniqueness?
+}
+
+
+// Not quite the same as an edge in the graph, as it represents multiple edges along the length of a stroke
 class StrokeGraphEdge {
   stroke: FreehandStroke;
 
   // A sorted array of nodes positioned along the length of the stroke
-  nodes: Array<{node: StrokeGraphNode, index: number}> = [];
+  nodesWithPointIndex: Array<{node: StrokeGraphNode, pointIndex: number}> = [];
   
   constructor(stroke: FreehandStroke){
     this.stroke = stroke;
   }
 
-  addNode(node: StrokeGraphNode, index: number) {
-    if(this.nodes.find(n=>n.node == node)) {
+  addNode(node: StrokeGraphNode, pointIndex: number) {
+    if(this.nodesWithPointIndex.find(n=>n.node == node)) {
       return;
     }
 
-    this.nodes.push({node, index});
-    this.nodes.sort((a, b)=>{
-      return a.index - b.index;
+    this.nodesWithPointIndex.push({node, pointIndex});
+    this.nodesWithPointIndex.sort((a, b)=>{
+      return a.pointIndex - b.pointIndex;
     })
   }
 
   // Find nodes that are directly reachable from this node along this edge
   getAdjacentNodes(node: StrokeGraphNode): Array<StrokeGraphNode>{
-    let index = this.nodes.findIndex(n=>n.node===node);
+    let index = this.nodesWithPointIndex.findIndex(n=>n.node===node);
     if(index == -1) return [];
 
     const adjacentNodes = [
-      this.nodes[index-1],
-      this.nodes[index+1]
+      this.nodesWithPointIndex[index-1],
+      this.nodesWithPointIndex[index+1]
     ].filter(n=>n).map(n=>n.node);
 
     return adjacentNodes;
+  }
+  
+  getPartialStrokeBetween(nodeA: StrokeGraphNode, nodeB: StrokeGraphNode): PartialStroke {
+    const indexA = this.nodesWithPointIndex.find(n=>n.node===nodeA)?.pointIndex;
+    const indexB = this.nodesWithPointIndex.find(n=>n.node===nodeB)?.pointIndex;
+    if(indexA === undefined || indexB === undefined) {
+      throw new Error('nodes not connected to this edge');
+    };
+
+    const pointIndexes = [indexA, indexB].sort((a, b)=>a-b);
+    const distance = this.stroke.distanceBetweenPoints(pointIndexes[0], pointIndexes[1]);
+
+    return {
+      stroke: this.stroke,
+      pointIndexes,
+      nodes: [nodeA, nodeB],
+      distance,
+      id: this.stroke.id+"_"+pointIndexes[0]+"_"+pointIndexes[1]
+    }
+  }
+
+  getAdjacentPartialStrokes(node: StrokeGraphNode): Array<PartialStroke> {
+    const adjacentNodes = this.getAdjacentNodes(node);
+    return adjacentNodes.map(otherNode=>{
+      return this.getPartialStrokeBetween(node, otherNode);
+    })
   }
 }
 
@@ -93,11 +144,135 @@ class StrokeGraph {
 
     edge.addNode(node, index);
   }
+
+  getAdjacentNodes(node: StrokeGraphNode): Set<StrokeGraphNode> {
+    let neighbours: Set<StrokeGraphNode> = new Set();
+    for(const edge of this.edges) {
+      let edgeNeighbours = edge.getAdjacentNodes(node);
+      for(const n of edgeNeighbours) {
+        neighbours.add(n);
+      }
+    }
+
+    return neighbours
+  }
+
+  getAdjacentPartialStrokes(node: StrokeGraphNode): Array<PartialStroke> {
+    return this.edges.flatMap(edge=>edge.getAdjacentPartialStrokes(node));
+  }
+
+  // Find the shortest cycle for this node
+  findShortestCycle(startNode: StrokeGraphNode, visited: Set<string>) {
+    let partialStrokes = this.getAdjacentPartialStrokes(startNode);
+    console.log("partialStrokes", partialStrokes);
+    partialStrokes.sort((a, b)=>a.distance - b.distance);
+
+    // If there are multiple partial strokes that means we can possibly find a loop
+    if(partialStrokes.length > 1) {
+      const startStroke = partialStrokes.pop();
+      const targetNodes = partialStrokes.map(ps=>ps.nodes[1]);
+
+      
+
+
+      for(const targetNode of targetNodes) {
+
+      }
+    }
+  }
+  
+  // TODO: Improve search heuristic here
+  shortestFirstSearch(
+    startNode: StrokeGraphNode, 
+    targetNode: StrokeGraphNode, 
+    visitedEdges: Set<string> = new Set(),
+    path: Array<PartialStroke> = [],
+    paths: Array<Array<PartialStroke>> = []
+  ) {
+
+    console.log("sfs", startNode, targetNode, visitedEdges, path, paths);
+    
+    if(path.length > 0 && startNode === targetNode) {
+      paths.push([...path]);
+    }
+
+    let partialStrokes = this.getAdjacentPartialStrokes(startNode)
+      .filter(ps=>!visitedEdges.has(ps.id)) // Only edges that we haven't visited yet
+      .sort((a, b)=>a.distance - b.distance); // Do shortest edge first
+
+    console.log("partialStrokes", partialStrokes);
+    
+    for(const ps of partialStrokes) {
+      let nextNode = ps.nodes[1];
+      visitedEdges.add(ps.id);
+      path.push(ps);
+      this.shortestFirstSearch(nextNode, targetNode, visitedEdges, path, paths);
+    }
+
+    return paths;
+  }
+
+  // // Dijkstras shortest path between nodes
+  // findShortestPathBetween(startNode: StrokeGraphNode, endNode: StrokeGraphNode) {
+    
+  // }
+
+  render(){
+    this.nodes.forEach(node=>{
+      Svg.now("circle", {
+        cx: node.averagePosition.x,
+        cy: node.averagePosition.y,
+        r: "5",
+        fill: "pink"
+      });
+    })
+    
+  }
+
+  // Find cycles using meet-in-the-middle
+  // findCyclesMIM(
+  //   startNode: StrokeGraphNode
+  // ){
+
+  // }
+
+  // findCycles(
+  //   startNode: StrokeGraphNode, 
+  //   currentNode: StrokeGraphNode, 
+  //   visited: Set<StrokeGraphNode> = new Set(), 
+  //   path: Array<StrokeGraphNode> = [], 
+  //   cycles: Array<Array<StrokeGraphNode>> = []
+  // ) {
+  //   visited.add(currentNode);
+  //   path.push(currentNode);
+
+
+
+  //   // // Find neighbours
+  //   for (const adjacentNode of this.getAdjacentNodes(currentNode)) {
+  //     if (adjacentNode === startNode && path.length > 2) {
+  //       cycles.push([...path, startNode]);
+  //     } else if(!visited.has(adjacentNode)) {
+  //       this.findCycles(startNode, adjacentNode, visited, path, cycles);
+  //     }
+  //   }
+
+  //   path.pop();
+  //   visited.delete(currentNode);
+
+  //   return cycles
+  // }
 }
+
+// **
+// Stroke Analyzer: Responsible for running different analysis algorithms
+// ** 
 
 export default class StrokeAnalyzer {
   page: Page;
   graph = new StrokeGraph();
+
+  loops = new Array<any>();
   //partialStrokes: 
   //loops: Loop[] = [];
 
@@ -131,10 +306,14 @@ export default class StrokeAnalyzer {
         let node = this.graph.addNode(position);
         this.graph.addEdge(stroke, node, connectionZone.mid[0]);
         this.graph.addEdge(otherStroke, node, connectionZone.mid[1]);
+        let shortestLoop = this.graph.shortestFirstSearch(node, node);
+        this.loops.push(...shortestLoop);
       }
 
       console.log(this.graph);
     }
+
+    // TODO: Find self intersections & closings
   }
 
   generateLoopsForStroke(targetStroke: FreehandStroke){
@@ -144,6 +323,22 @@ export default class StrokeAnalyzer {
 
   generateArrowLikes(){
 
+  }
+
+  render(){
+    this.graph.render()
+
+    this.loops.forEach(loop=>{
+      loop.forEach((ps: any)=>{
+        let points = Svg.points(ps.stroke.points.slice(ps.pointIndexes[0], ps.pointIndexes[1]))
+        Svg.now("polyline", {
+          points,
+          stroke: "rgba(255,0,0,0.1)",
+          fill: "none",
+          "stroke-width": "5"
+        })
+      })
+    })
   }
 }
 

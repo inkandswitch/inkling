@@ -2,6 +2,7 @@ import SVG from '../Svg';
 import generateId from '../generateId';
 import { PositionWithPressure } from '../../lib/types';
 import StrokeGroup from './StrokeGroup';
+import Vec from '../../lib/vec';
 
 export const STROKE_SVG_PROPERTIES = Object.freeze({
   stroke: 'rgba(0, 0, 0, .5)',
@@ -50,5 +51,23 @@ export default class FreehandStroke {
     });
 
     this.needsRerender = false;
+  }
+
+  getLocalDirection(index: number) {
+    const a = this.points[Math.max(index-10, 0)]
+    const b = this.points[Math.min(index+10, this.points.length-1)]
+
+    return Vec.normalize(Vec.sub(b, a))
+  }
+
+  distanceBetweenPoints(a: number, b: number) {
+    let dist = 0;
+    for (let i = a; i < b-1; i++) {
+      const pointA = this.points[i];
+      const pointB = this.points[i+1];
+      dist += Vec.dist(pointA, pointB);
+    }
+
+    return dist;
   }
 }
