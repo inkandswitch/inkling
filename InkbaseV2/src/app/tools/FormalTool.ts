@@ -1,15 +1,15 @@
-import Arc from '../../lib/arc.js';
-import Fit, { ArcFit, CircleFit, LineFit } from '../../lib/fit.js';
-import Line from '../../lib/line.js';
-import Vec from '../../lib/vec.js';
-import Page from '../Page.js';
-import Snaps from '../Snaps.js';
-import SVG from '../Svg.js';
-import { Tool } from './Tool.js';
+import Arc from '../../lib/arc';
+import Fit, { ArcFit, CircleFit, LineFit } from '../../lib/fit';
+import Line from '../../lib/line';
+import Vec from '../../lib/vec';
+import Page from '../Page';
+import Snaps from '../Snaps';
+import SVG from '../Svg';
+import { Tool } from './Tool';
 import Events from '../NativeEvents';
-import { Position } from '../../lib/types.js';
-import LineSegment from '../strokes/LineSegment.js';
-import ArcSegment from '../strokes/ArcSegment.js';
+import { Position } from '../../lib/types';
+import LineSegment from '../strokes/LineSegment';
+import ArcSegment from '../strokes/ArcSegment';
 
 export default class FormalTool extends Tool {
   private readonly element: SVGElement;
