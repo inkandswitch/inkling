@@ -256,7 +256,7 @@ export class AngleConstraint extends Constraint {
 }
 
 export function runConstraintSolver(selection: Selection) {
-  addSampleConstraints();
+  // addSampleConstraints();
   if (Constraint.all.size > 0) {
     doWithTempConstraintsForSelection(selection, minimizeError);
   }
@@ -370,27 +370,27 @@ function computeKnowns(): Knowns {
   return knowns;
 }
 
-/** Adds a couple of constraints, if we don't have some already. */
-function addSampleConstraints() {
-  const unconstrainedHandles = Array.from(Handle.all).filter(
-    handle =>
-      !Array.from(Constraint.all).some(constraint =>
-        constraint.involves(handle)
-      )
-  );
-  while (Constraint.all.size === 0 && unconstrainedHandles.length >= 4) {
-    const a1 = unconstrainedHandles.shift()!;
-    const a2 = unconstrainedHandles.shift()!;
-    const aLength = new LengthConstraint(a1, a2).length;
-    // new FixedValueConstraint(aLength, aLength.value);
+// /** Adds a couple of constraints, if we don't have some already. */
+// function addSampleConstraints() {
+//   const unconstrainedHandles = Array.from(Handle.all).filter(
+//     handle =>
+//       !Array.from(Constraint.all).some(constraint =>
+//         constraint.involves(handle)
+//       )
+//   );
+//   while (Constraint.all.size === 0 && unconstrainedHandles.length >= 4) {
+//     const a1 = unconstrainedHandles.shift()!;
+//     const a2 = unconstrainedHandles.shift()!;
+//     const aLength = new LengthConstraint(a1, a2).length;
+//     // new FixedValueConstraint(aLength, aLength.value);
 
-    const b1 = unconstrainedHandles.shift()!;
-    const b2 = unconstrainedHandles.shift()!;
-    const bLength = new LengthConstraint(b1, b2).length;
+//     const b1 = unconstrainedHandles.shift()!;
+//     const b2 = unconstrainedHandles.shift()!;
+//     const bLength = new LengthConstraint(b1, b2).length;
 
-    new VariableEqualsConstraint(aLength, bLength);
+//     new VariableEqualsConstraint(aLength, bLength);
 
-    const angle = new AngleConstraint(a1, a2, b1, b2).angle;
-    new FixedValueConstraint(angle, angle.value);
-  }
-}
+//     const angle = new AngleConstraint(a1, a2, b1, b2).angle;
+//     new FixedValueConstraint(angle, angle.value);
+//   }
+// }

@@ -15,7 +15,7 @@ import FreehandTool from './tools/FreehandTool';
 import { runConstraintSolver } from './constraints';
 import { ConstraintTool } from './tools/ConstraintTool';
 
-const RUN_CONSTRAINT_SOLVER = false;
+const RUN_CONSTRAINT_SOLVER = true;
 
 const events = new Events();
 const page = new Page();
