@@ -2,12 +2,10 @@ import Vec from '../lib/vec';
 import Events, { Event } from './NativeEvents';
 import Page from './Page';
 import FreehandStroke from './strokes/FreehandStroke';
-import StrokeGroup from './strokes/StrokeGroup';
 
 export default class FreehandSelection {
   readonly selectedStrokes = new Set<FreehandStroke>();
   private clusterSelectionIndex = 0;
-  private currStrokeGroup: StrokeGroup | null = null;
 
   // Interaction State
   private fingerDown: Event | null = null;
@@ -54,11 +52,6 @@ export default class FreehandSelection {
   }
 
   private createGroupFromSelection() {
-    // Don't create a group if it's already a group
-    if (this.currStrokeGroup) {
-      return;
-    }
-
     // It doesn't make sense for the same stroke to be in more than one group.
     // E.g., what transform applies when the user has moved handles associated
     // with the more than one group that the stroke belongs to? That's why
@@ -67,7 +60,7 @@ export default class FreehandSelection {
       Array.from(this.selectedStrokes).filter(s => !s.group)
     );
     if (ungroupedStrokes.size > 0) {
-      this.currStrokeGroup = this.page.addStrokeGroup(ungroupedStrokes);
+      this.page.addStrokeGroup(ungroupedStrokes);
     }
   }
 
@@ -108,7 +101,7 @@ export default class FreehandSelection {
 
   render() {
     // if (this.selectedStrokes) {
-    //   this.selectedStrokes.render(svg)
+    //   this.selectedStrokes.render()
     // }
   }
 
@@ -124,15 +117,10 @@ export default class FreehandSelection {
   }
 
   private clearSelection() {
-    if (!this.selectedStrokes) {
-      return;
-    }
-
     for (const stroke of this.selectedStrokes) {
       stroke.deselect();
     }
 
     this.selectedStrokes.clear();
-    this.currStrokeGroup = null;
   }
 }
