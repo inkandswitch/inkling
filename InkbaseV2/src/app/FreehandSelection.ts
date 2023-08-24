@@ -6,12 +6,12 @@ import StrokeGroup from './strokes/StrokeGroup';
 
 export default class FreehandSelection {
   readonly selectedStrokes = new Set<FreehandStroke>();
-  clusterSelectionIndex = 0;
-  currStrokeGroup: StrokeGroup | null = null;
+  private clusterSelectionIndex = 0;
+  private currStrokeGroup: StrokeGroup | null = null;
 
   // Interaction State
-  fingerDown: Event | null = null;
-  fingerMoved: Event | null = null;
+  private fingerDown: Event | null = null;
+  private fingerMoved: Event | null = null;
 
   constructor(private readonly page: Page) {}
 
@@ -71,7 +71,7 @@ export default class FreehandSelection {
     }
   }
 
-  fingerDownOnStroke(stroke: FreehandStroke) {
+  private fingerDownOnStroke(stroke: FreehandStroke) {
     if (this.selectedStrokes.has(stroke)) {
       const clusters = this.page.clusters.getClustersForStroke(stroke);
 
@@ -102,7 +102,7 @@ export default class FreehandSelection {
     }
   }
 
-  fingerDownOnEmptySpace() {
+  private fingerDownOnEmptySpace() {
     this.clearSelection();
   }
 
@@ -123,7 +123,7 @@ export default class FreehandSelection {
     this.selectedStrokes.add(stroke);
   }
 
-  clearSelection() {
+  private clearSelection() {
     if (!this.selectedStrokes) {
       return;
     }
