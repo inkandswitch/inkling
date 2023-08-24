@@ -123,10 +123,7 @@ Vec.half = (v: Vector) => Vec.divS(v, 2);
 Vec.normalize = (v: Vector) => Vec.divS(v, Vec.len(v));
 Vec.recip = (v: Vector) => Vec.Sdiv(1, v);
 
-// Prettier really screwed this one up, alas.
-// The args should be: input, inputMin, inputMax, outputMin, outputMax
-Vec.renormalize = (v: Vector, im: Vector, iM: Vector, om: Vector, oM: Vector) =>
-  Vec.add(Vec.mul(Vec.div(Vec.sub(v, im), Vec.sub(iM, im)), Vec.sub(oM, om)), om);
+Vec.renormalize = (v: Vector, length: number) => Vec.Smul(length, Vec.normalize(v));
 
 // Combinations ///////////////////////////////////////////////////////////////////
 

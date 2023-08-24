@@ -8,6 +8,7 @@ export interface Position {
 // so it doesn't belong here.
 export interface PositionWithPressure extends Position {
   pressure: number;
+  dead?: boolean;
 }
 
 export interface PositionWithRadius extends Position {

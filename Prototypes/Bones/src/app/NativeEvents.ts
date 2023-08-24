@@ -91,8 +91,8 @@ export default class Events {
         for (const point of touches[id]) {
           const { type, timestamp, radius, force, altitude, azimuth, x, y } = point;
 
-          let blend = lerp(Math.pow(force / 3.2, 0.01), 0.8, 1, 0, 1);
-          debugTable({ blend: blend });
+          // let blend = lerp(Math.pow(force / 3.2, 0.01), 0.8, 1, 0, 1);
+          // debugTable({ blend: blend });
 
           const sharedProperties = {
             state,
