@@ -13,6 +13,7 @@ import Stroke from './strokes/Stroke';
 import FormalTool from './tools/FormalTool';
 import FreehandTool from './tools/FreehandTool';
 import { runConstraintSolver } from './constraints';
+import { ConstraintTool } from './tools/ConstraintTool';
 
 const RUN_CONSTRAINT_SOLVER = false;
 
@@ -28,6 +29,7 @@ const toolPicker = new ToolPicker([
   new FormalTool('FORM', 30, 80, page, snaps),
   new ColorTool('COLOR', 30, 130, page),
   new Tool('🧠', 30, 180, page, Stroke),
+  new ConstraintTool('CONST', 30, 230, page, snaps),
 ]);
 
 EveryFrame(() => {

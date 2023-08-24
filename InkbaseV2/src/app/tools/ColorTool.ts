@@ -4,21 +4,21 @@ import Page from '../Page';
 import Tool from './Tool';
 import ColorStroke from '../strokes/ColorStroke';
 
-export default class ColorTool extends Tool {
+export default class ColorTool extends Tool<ColorStroke> {
   last?: PositionWithPressure;
 
   constructor(label: string, buttonX: number, buttonY: number, page: Page) {
-    super(label, buttonX, buttonY, page);
+    super(label, buttonX, buttonY, page, ColorStroke);
   }
 
   startStroke(point: PositionWithPressure) {
-    this.stroke = this.page.addStroke(new ColorStroke([point]));
+    super.startStroke(point);
     this.last = point;
   }
 
   extendStroke(point: PositionWithPressure) {
     if (this.last && Vec.dist(this.last, point) > 50) {
-      this.stroke?.points?.push(point);
+      super.extendStroke(point);
       this.last = point;
     }
   }

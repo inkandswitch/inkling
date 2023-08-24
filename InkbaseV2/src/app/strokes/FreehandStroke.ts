@@ -10,7 +10,7 @@ export default class FreehandStroke extends Stroke {
   private selected = false;
   public group: StrokeGroup | null = null;
 
-  constructor(public points: PositionWithPressure[]) {
+  constructor(points: PositionWithPressure[]) {
     super(points);
     this.element = SVG.add('polyline', {
       fill: 'none',

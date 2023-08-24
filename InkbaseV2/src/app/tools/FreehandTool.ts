@@ -1,5 +1,4 @@
 import { PositionWithPressure } from '../../lib/types';
-import Events, { PencilEvent } from '../NativeEvents';
 import Page from '../Page';
 import SVG from '../Svg';
 import FreehandStroke from '../strokes/FreehandStroke';
@@ -13,63 +12,18 @@ type ModeInfo =
       multistrokeModeDotElement: SVGElement;
     };
 
-export default class FreehandTool extends Tool {
+export default class FreehandTool extends Tool<FreehandStroke> {
   private modeInfo: ModeInfo = { mode: 'unistroke' };
-  private stroke?: FreehandStroke;
-  private pencilIsDown = false;
-  private needsRerender = false;
 
   constructor(label: string, buttonX: number, buttonY: number, page: Page) {
-    super(label, buttonX, buttonY, page);
-  }
-
-  update(events: Events) {
-    const pencilDown = events.did('pencil', 'began') as PencilEvent | undefined;
-    if (pencilDown) {
-      this.pencilIsDown = true;
-      if (!this.stroke) {
-        this.startStroke({
-          ...pencilDown.position,
-          pressure: pencilDown.pressure,
-        });
-      }
-    }
-
-    if (!this.stroke) {
-      return;
-    }
-
-    const pencilMoves = events.didAll('pencil', 'moved') as PencilEvent[];
-    pencilMoves.forEach(pencilMove => {
-      this.extendStroke({
-        ...pencilMove.position,
-        pressure: pencilMove.pressure,
-      });
-    });
-
-    const pencilUp = events.did('pencil', 'ended');
-    if (pencilUp) {
-      this.pencilIsDown = false;
-    }
-
-    if (!this.pencilIsDown) {
-      this.endStroke();
-    }
+    super(label, buttonX, buttonY, page, FreehandStroke);
   }
 
   startStroke(point: PositionWithPressure) {
-    this.stroke = this.page.addFreehandStroke([point]);
+    super.startStroke(point);
     if (this.modeInfo.mode === 'multistroke') {
-      this.modeInfo.accumulatedStrokes.push(this.stroke);
+      this.modeInfo.accumulatedStrokes.push(this.stroke!);
     }
-  }
-
-  extendStroke(point: PositionWithPressure) {
-    this.stroke!.points?.push(point);
-  }
-
-  endStroke() {
-    this.stroke = undefined;
   }
 
   onAction() {

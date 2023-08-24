@@ -4,17 +4,17 @@ import SVG from '../Svg';
 import Page from '../Page';
 import Stroke from '../strokes/Stroke';
 
-export default class Tool {
+export default class Tool<S extends Stroke = Stroke> {
   button: SVGElement;
   private isSelected = false;
-  stroke?: Stroke;
+  stroke?: S;
 
   constructor(
     label: string,
     public buttonX: number,
     public buttonY: number,
     public page: Page,
-    public strokeClass?: typeof Stroke
+    public strokeClass?: { new (points: PositionWithPressure[]): S }
   ) {
     this.button = SVG.add('circle', { cx: buttonX, cy: buttonY, r: 20 });
 
@@ -48,12 +48,14 @@ export default class Tool {
     }
 
     const pencilMoves = events.didAll('pencil', 'moved') as PencilEvent[];
-    pencilMoves.forEach(pencilMove => {
-      this.extendStroke({ ...pencilMove.position, ...pencilMove });
-    });
+    if (this.stroke) {
+      pencilMoves.forEach(pencilMove => {
+        this.extendStroke({ ...pencilMove.position, ...pencilMove });
+      });
+    }
 
     const pencilUp = events.did('pencil', 'ended');
-    if (pencilUp) {
+    if (pencilUp && this.stroke) {
       this.endStroke();
     }
 
@@ -80,20 +82,18 @@ export default class Tool {
   }
 
   extendStroke(point: PositionWithPressure) {
-    this.stroke?.points?.push(point);
+    this.stroke!.points.push(point);
   }
 
   endStroke() {
     this.stroke = undefined;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  startFinger(point: PositionWithRadius) {
+  startFinger(_point: PositionWithRadius) {
     // no op by default, but can be overridden by subclass
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  moveFinger(point: PositionWithRadius) {
+  moveFinger(_point: PositionWithRadius) {
     // no op by default, but can be overridden by subclass
   }
 
