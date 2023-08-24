@@ -19,16 +19,19 @@ export default class Page {
   // TODO: figure out a better model for how to store different kinds of strokes
   // For now just keep them separate, until we have a better idea of what freehand strokes look like
   readonly lineSegments: Array<LineSegment | ArcSegment> = [];
-  readonly freehandStrokes: FreehandStroke[] = [];
-  readonly strokeGroups: Array<StrokeGroup> = [];
-
-  // Begin to address the above issue — this should be a heterogeneous array of Stroke subclasses.
+  readonly strokeGroups: StrokeGroup[] = [];
   readonly strokes: Stroke[] = [];
 
-  // Add a stroke subclass to the heterogeneous strokes array
-  addStroke<S extends Stroke>(stroke: S) {
-    this.strokes.push(stroke);
-    return stroke;
+  get freehandStrokes(): IterableIterator<FreehandStroke> {
+    const strokes = this.strokes;
+    function* generator() {
+      for (const stroke of strokes) {
+        if (stroke instanceof FreehandStroke) {
+          yield stroke;
+        }
+      }
+    }
+    return generator();
   }
 
   addLineSegment(aPos: Position, bPos: Position) {
@@ -43,17 +46,22 @@ export default class Page {
     return as;
   }
 
-  addFreehandStroke(points: Array<PositionWithPressure>) {
-    const s = new FreehandStroke(points);
-    this.freehandStrokes.push(s);
-    this.analyzer.addStroke(s);
-    return s;
-  }
-
   addStrokeGroup(strokes: Set<FreehandStroke>): StrokeGroup {
     const sg = new StrokeGroup(strokes);
     this.strokeGroups.push(sg);
     return sg;
+  }
+
+  addStroke<S extends Stroke>(stroke: S) {
+    this.strokes.push(stroke);
+    return stroke;
+  }
+
+  addFreehandStroke(points: Array<PositionWithPressure>) {
+    const s = new FreehandStroke(points);
+    this.addStroke(s);
+    this.analyzer.addStroke(s);
+    return s;
   }
 
   findHandleNear(pos: Position, dist = 20): Handle | null {
@@ -133,7 +141,6 @@ export default class Page {
 
   render() {
     this.lineSegments.forEach(render);
-    this.freehandStrokes.forEach(render);
     this.strokes.forEach(render);
     this.analyzer.render();
   }
