@@ -5,7 +5,7 @@ import SVG from '../Svg';
 import FreehandStroke, {
   STROKE_SVG_PROPERTIES,
 } from '../strokes/FreehandStroke';
-import { Tool } from './Tool';
+import Tool from './Tool';
 
 type ModeInfo =
   | { mode: 'unistroke' }
@@ -22,12 +22,8 @@ export default class FreehandTool extends Tool {
   private pencilIsDown = false;
   private needsRerender = false;
 
-  constructor(
-    buttonX: number,
-    buttonY: number,
-    private page: Page
-  ) {
-    super(buttonX, buttonY);
+  constructor(label: string, buttonX: number, buttonY: number, page: Page) {
+    super(label, buttonX, buttonY, page);
     this.strokeElement = SVG.add('path', {
       d: '',
       ...STROKE_SVG_PROPERTIES,
@@ -68,17 +64,17 @@ export default class FreehandTool extends Tool {
     }
   }
 
-  private startStroke(point: PositionWithPressure) {
+  startStroke(point: PositionWithPressure) {
     this.points = [point];
     this.needsRerender = true;
   }
 
-  private extendStroke(point: PositionWithPressure) {
+  extendStroke(point: PositionWithPressure) {
     this.points!.push(point);
     this.needsRerender = true;
   }
 
-  private endStroke() {
+  endStroke() {
     const stroke = this.page.addFreehandStroke(this.points!);
     if (this.modeInfo.mode === 'multistroke') {
       this.modeInfo.accumulatedStrokes.push(stroke);
@@ -117,8 +113,9 @@ export default class FreehandTool extends Tool {
             multistrokeModeDotElement: SVG.add('circle', {
               cx: this.buttonX,
               cy: this.buttonY,
-              r: 10,
-              fill: 'white',
+              r: 17,
+              stroke: '#fff',
+              fill: 'none',
             }),
           };
         }

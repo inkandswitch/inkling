@@ -5,7 +5,7 @@ import Vec from '../../lib/vec';
 import Page from '../Page';
 import Snaps from '../Snaps';
 import SVG from '../Svg';
-import { Tool } from './Tool';
+import Tool from './Tool';
 import Events from '../NativeEvents';
 import { Position } from '../../lib/types';
 import LineSegment from '../strokes/LineSegment';
@@ -33,12 +33,13 @@ export default class FormalTool extends Tool {
   private fixedStroke?: LineSegment | ArcSegment;
 
   constructor(
+    label: string,
     buttonX: number,
     buttonY: number,
-    private page: Page,
+    page: Page,
     private snaps: Snaps
   ) {
-    super(buttonX, buttonY);
+    super(label, buttonX, buttonY, page);
 
     this.element = SVG.add('path', {});
     this.resetElement();

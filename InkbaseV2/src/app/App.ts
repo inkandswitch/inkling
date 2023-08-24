@@ -7,6 +7,9 @@ import Snaps from './Snaps';
 import SVG from './Svg';
 import ToolPicker from './ToolPicker';
 import Handle from './strokes/Handle';
+import Tool from './tools/Tool';
+import ColorTool from './tools/ColorTool';
+import Stroke from './strokes/Stroke';
 import FormalTool from './tools/FormalTool';
 import FreehandTool from './tools/FreehandTool';
 import { runConstraintSolver } from './constraints';
@@ -21,8 +24,10 @@ const selection = new Selection(page, snaps);
 const freehandSelection = new FreehandSelection(page);
 
 const toolPicker = new ToolPicker([
-  new FreehandTool(30, 30, page),
-  new FormalTool(30, 80, page, snaps),
+  new FreehandTool('FREE', 30, 30, page),
+  new FormalTool('FORM', 30, 80, page, snaps),
+  new ColorTool('COLOR', 30, 130, page),
+  new Tool('🧠', 30, 180, page, Stroke),
 ]);
 
 EveryFrame(() => {

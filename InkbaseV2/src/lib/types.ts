@@ -8,3 +8,7 @@ export interface Position {
 export interface PositionWithPressure extends Position {
   pressure: number;
 }
+
+export interface PositionWithRadius extends Position {
+  radius: number;
+}

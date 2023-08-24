@@ -3,7 +3,7 @@ import ArcSegment from './strokes/ArcSegment';
 import LineSegment from './strokes/LineSegment';
 import FreehandStroke from './strokes/FreehandStroke';
 import StrokeGroup from './strokes/StrokeGroup';
-
+import Stroke from './strokes/Stroke';
 import StrokeClusters from './StrokeClusters';
 import { Position, PositionWithPressure } from '../lib/types';
 import Handle from './strokes/Handle';
@@ -17,6 +17,15 @@ export default class Page {
   readonly lineSegments: Array<LineSegment | ArcSegment> = [];
   readonly freehandStrokes: FreehandStroke[] = [];
   readonly strokeGroups: Array<StrokeGroup> = [];
+
+  // Begin to address the above issue — this should be a heterogeneous array of Stroke subclasses.
+  readonly strokes: Stroke[] = [];
+
+  // Add a stroke subclass to the heterogeneous strokes array
+  addStroke(stroke: Stroke) {
+    this.strokes.push(stroke);
+    return stroke;
+  }
 
   addLineSegment(aPos: Position, bPos: Position) {
     const ls = new LineSegment(aPos, bPos);
@@ -118,7 +127,11 @@ export default class Page {
   }
 
   render() {
-    this.lineSegments.forEach(ls => ls.render());
-    this.freehandStrokes.forEach(s => s.render());
+    this.lineSegments.forEach(render);
+    this.freehandStrokes.forEach(render);
+    this.strokes.forEach(render);
   }
 }
+
+type Renderable = { render: Function };
+const render = (s: Renderable) => s.render();
