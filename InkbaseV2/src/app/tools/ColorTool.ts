@@ -1,5 +1,5 @@
 import Vec from '../../lib/vec';
-import { PositionWithPressure, PositionWithRadius } from '../../lib/types';
+import { PositionWithPressure } from '../../lib/types';
 import Page from '../Page';
 import Tool from './Tool';
 import ColorStroke from '../strokes/ColorStroke';
