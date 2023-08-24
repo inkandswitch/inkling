@@ -53,7 +53,7 @@ export default class FreehandSelection {
     }
   }
 
-  createGroupFromSelection() {
+  private createGroupFromSelection() {
     // Don't create a group if it's already a group
     if (this.currStrokeGroup) {
       return;
@@ -112,10 +112,10 @@ export default class FreehandSelection {
     // }
   }
 
-  select(stroke: FreehandStroke) {
+  private select(stroke: FreehandStroke) {
     stroke.select();
 
-    // if(stroke.group) {
+    // if (stroke.group) {
     //   stroke.group.a.select()
     //   stroke.group.b.select()
     // }
