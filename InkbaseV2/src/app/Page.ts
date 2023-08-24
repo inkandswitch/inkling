@@ -26,7 +26,7 @@ export default class Page {
   readonly strokes: Stroke[] = [];
 
   // Add a stroke subclass to the heterogeneous strokes array
-  addStroke(stroke: Stroke) {
+  addStroke<S extends Stroke>(stroke: S) {
     this.strokes.push(stroke);
     return stroke;
   }
