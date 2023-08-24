@@ -122,21 +122,34 @@ export default class Page {
     return connectedHandles;
   }
 
-  findFreehandStrokeNear(position: Position, dist = 20) {
+  findFreehandStrokeNear(pos: Position, dist = 20) {
     let closestStroke = null;
     let closestDistance = dist;
 
     for (const stroke of this.freehandStrokes) {
-      for (const point of stroke.points) {
-        const d = Vec.dist(point, position);
-        if (d < closestDistance) {
-          closestDistance = d;
-          closestStroke = stroke;
-        }
+      const d = stroke.minDistanceFrom(pos);
+      if (d < closestDistance) {
+        closestDistance = d;
+        closestStroke = stroke;
       }
     }
 
     return closestStroke;
+  }
+
+  findStrokeGroupNear(pos: Position, dist = 20) {
+    let closestStrokeGroup = null;
+    let closestDistance = dist;
+
+    for (const strokeGroup of this.strokeGroups) {
+      const d = strokeGroup.minDistanceFrom(pos);
+      if (d < closestDistance) {
+        closestDistance = d;
+        closestStrokeGroup = strokeGroup;
+      }
+    }
+
+    return closestStrokeGroup;
   }
 
   render() {

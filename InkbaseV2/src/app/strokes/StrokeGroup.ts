@@ -69,6 +69,14 @@ export default class StrokeGroup {
     }
   }
 
+  minDistanceFrom(pos: Position) {
+    let minDistance = Infinity;
+    for (const stroke of this.strokes) {
+      minDistance = Math.min(minDistance, stroke.minDistanceFrom(pos));
+    }
+    return minDistance;
+  }
+
   // addStroke(stroke: FreehandStroke){
   //   this.strokes.add(stroke);
   //   this.dirty = true;

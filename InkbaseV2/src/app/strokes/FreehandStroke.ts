@@ -1,6 +1,6 @@
 import SVG from '../Svg';
 import generateId from '../generateId';
-import { PositionWithPressure } from '../../lib/types';
+import { Position, PositionWithPressure } from '../../lib/types';
 import StrokeGroup from './StrokeGroup';
 import Vec from '../../lib/vec';
 import Stroke from './Stroke';
@@ -54,5 +54,13 @@ export default class FreehandStroke extends Stroke {
     }
 
     return dist;
+  }
+
+  minDistanceFrom(pos: Position) {
+    let minDistance = Infinity;
+    for (const point of this.points) {
+      minDistance = Math.min(minDistance, Vec.dist(point, pos));
+    }
+    return minDistance;
   }
 }
