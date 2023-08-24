@@ -7,10 +7,14 @@ import Stroke from './strokes/Stroke';
 import StrokeClusters from './StrokeClusters';
 import { Position, PositionWithPressure } from '../lib/types';
 import Handle from './strokes/Handle';
+import StrokeAnalyzer from './StrokeAnalyzer';
 
 export default class Page {
   // Stroke clusters are possible stroke Groups
   readonly clusters = new StrokeClusters();
+
+  // Stroke graph looks at the page and tries to be smart about finding structure
+  readonly analyzer = new StrokeAnalyzer(this);
 
   // TODO: figure out a better model for how to store different kinds of strokes
   // For now just keep them separate, until we have a better idea of what freehand strokes look like
@@ -42,6 +46,7 @@ export default class Page {
   addFreehandStroke(points: Array<PositionWithPressure>) {
     const s = new FreehandStroke(points);
     this.freehandStrokes.push(s);
+    this.analyzer.addStroke(s);
     return s;
   }
 
