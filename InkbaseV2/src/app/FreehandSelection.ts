@@ -76,7 +76,7 @@ export default class FreehandSelection {
       const clusters = this.page.clusters.getClustersForStroke(stroke);
 
       console.log(clusters);
-      
+
       if (!clusters) {
         return;
       }
@@ -114,7 +114,7 @@ export default class FreehandSelection {
 
   select(stroke: FreehandStroke) {
     stroke.select();
-    
+
     // if(stroke.group) {
     //   stroke.group.a.select()
     //   stroke.group.b.select()

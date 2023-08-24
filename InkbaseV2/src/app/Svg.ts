@@ -26,8 +26,11 @@ function update<T extends SVGElement>(
   attributes: Record<string, AttributeValue>
 ) {
   Object.entries(attributes).forEach(([key, value]) => {
-    let cache = ((elm as any).__cache ||= {});
-    if (cache[key] === value) return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const cache = ((elm as any).__cache ||= {});
+    if (cache[key] === value) {
+      return;
+    }
     cache[key] = value;
 
     if (key === 'content') {

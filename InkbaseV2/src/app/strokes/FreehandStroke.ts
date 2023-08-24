@@ -54,17 +54,17 @@ export default class FreehandStroke {
   }
 
   getLocalDirection(index: number) {
-    const a = this.points[Math.max(index-10, 0)]
-    const b = this.points[Math.min(index+10, this.points.length-1)]
+    const a = this.points[Math.max(index - 10, 0)];
+    const b = this.points[Math.min(index + 10, this.points.length - 1)];
 
-    return Vec.normalize(Vec.sub(b, a))
+    return Vec.normalize(Vec.sub(b, a));
   }
 
   distanceBetweenPoints(a: number, b: number) {
     let dist = 0;
-    for (let i = a; i < b-1; i++) {
+    for (let i = a; i < b - 1; i++) {
       const pointA = this.points[i];
-      const pointB = this.points[i+1];
+      const pointB = this.points[i + 1];
       dist += Vec.dist(pointA, pointB);
     }
 

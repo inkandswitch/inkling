@@ -11,17 +11,21 @@ export default class ColorStroke extends Stroke {
   }
 
   render() {
-    if (this.points.length == this.lastLength) return;
+    if (this.points.length === this.lastLength) {
+      return;
+    }
     this.lastLength = this.points.length;
 
     this.element.replaceChildren();
 
     this.points.forEach((p1, i) => {
-      if (i == 0) return;
+      if (i === 0) {
+        return;
+      }
 
-      let p2 = this.points[i - 1];
+      const p2 = this.points[i - 1];
 
-      let hue = (360 * i) / this.points.length;
+      const hue = (360 * i) / this.points.length;
 
       SVG.add('polyline', {
         points: SVG.points(p1, p2),
