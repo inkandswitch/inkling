@@ -1,6 +1,7 @@
 import { Position } from '../../lib/types';
 import Vec from '../../lib/vec';
 import SVG from '../Svg';
+import { Constraint } from '../constraints';
 import generateId from '../generateId';
 
 const SHOW_IDS = false;
@@ -231,6 +232,8 @@ export default class Handle {
       // notify its listeners
       handle.notifyListeners(listener => listener.onHandleMoved(that));
     }
+
+    Constraint.onHandlesChanged();
   }
 
   absorbNearbyHandles() {
@@ -288,6 +291,8 @@ export default class Handle {
     } else {
       throw new Error('called breakOff(h) but h is unrelated to receiver');
     }
+
+    Constraint.onHandlesChanged();
   }
 
   render() {
