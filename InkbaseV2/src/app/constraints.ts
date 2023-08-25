@@ -145,6 +145,7 @@ function minimizeError(constraints: Constraint[]) {
     let error = 0;
     for (const constraint of constraints) {
       const positions = constraint.handles.map(handle => {
+        handle = handle.canonicalInstance;
         const xi = xIdx.get(handle);
         const yi = yIdx.get(handle);
         if (xi === undefined && yi === undefined) {
