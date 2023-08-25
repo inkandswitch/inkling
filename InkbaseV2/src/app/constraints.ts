@@ -15,26 +15,187 @@ class Variable {
   }
 }
 
+class ConstraintKeyGenerator {
+  public readonly key: string;
+  private cachedKeyWithCanonicalHandleIds: string | null = null;
+
+  constructor(
+    private readonly type: string,
+    // Note: order matters in both of these arrays!
+    private readonly handleGroups: Handle[][],
+    private readonly variableGroups: Variable[][]
+  ) {
+    this.key = this.generateKey();
+  }
+
+  invalidateKeyCache() {
+    if (this.handleGroups.length > 0) {
+      this.cachedKeyWithCanonicalHandleIds = null;
+    }
+  }
+
+  get keyWithCanonicalHandleIds() {
+    if (!this.cachedKeyWithCanonicalHandleIds) {
+      this.cachedKeyWithCanonicalHandleIds = this.generateKey(true);
+    }
+    return this.cachedKeyWithCanonicalHandleIds;
+  }
+
+  private generateKey(useCanonicalHandleIds = false) {
+    const handleIdGroups = this.handleGroups
+      .map(handleGroup =>
+        handleGroup
+          .map(handle => (useCanonicalHandleIds ? handle.id : handle.ownId))
+          .sort()
+          .join(',')
+      )
+      .map(handleIdGroup => `[${handleIdGroup}]`);
+    const variableIdGroups = this.variableGroups
+      .map(variableGroup =>
+        variableGroup
+          .map(variable => variable.id)
+          .sort()
+          .join(',')
+      )
+      .map(variableIdGroup => `[${variableIdGroup}]`);
+    return `${this.type}(${handleIdGroups},${variableIdGroups})`;
+  }
+}
+
 interface Knowns {
   xs: Set<Handle>;
   ys: Set<Handle>;
   variables: Set<Variable>;
 }
 
-abstract class Constraint {
-  static readonly all = new Set<Constraint>();
+export abstract class Constraint {
+  private static readonly temp = new Set<Constraint>();
+  private static readonly perm = new Set<Constraint>();
 
-  readonly id = generateId();
+  public static get all(): IterableIterator<Constraint> {
+    function* generator() {
+      for (const constraint of Constraint.temp) {
+        yield constraint;
+      }
+      for (const constraint of Constraint.perm) {
+        yield constraint;
+      }
+    }
+    return generator();
+  }
+
+  // This is where constraints are added when you `new` them.
+  private static newConstraintContainer = Constraint.perm;
+
+  static newOnesAreTemporary() {
+    Constraint.newConstraintContainer = Constraint.temp;
+  }
+
+  static newOnesArePermanent() {
+    Constraint.newConstraintContainer = Constraint.perm;
+  }
+
+  static clearTemp() {
+    Constraint.temp.clear();
+  }
+
+  private static find<C extends Constraint>(key: string) {
+    for (const constraint of this.temp) {
+      if (constraint.key === key) {
+        return constraint as C;
+      }
+    }
+    for (const constraint of this.perm) {
+      if (constraint.key === key) {
+        return constraint as C;
+      }
+    }
+    return null;
+  }
+
+  private static add<C extends Constraint>(
+    keyGenerator: ConstraintKeyGenerator,
+    createNew: (keyGenerator: ConstraintKeyGenerator) => C,
+    onClash: (constraint: C) => void
+  ): C {
+    let constraint = Constraint.find<C>(keyGenerator.key);
+    if (constraint) {
+      onClash(constraint);
+    } else {
+      constraint = createNew(keyGenerator);
+    }
+    return constraint;
+  }
+
+  static FixedValue(variable: Variable, value: number = variable.value) {
+    return Constraint.add(
+      new ConstraintKeyGenerator('fixedValue', [], [[variable]]),
+      keyGenerator => new FixedValueConstraint(variable, value, keyGenerator),
+      constraint => {
+        constraint.value = value;
+      }
+    );
+  }
+
+  static VariableEquals(a: Variable, b: Variable) {
+    return Constraint.add(
+      new ConstraintKeyGenerator('variableEquals', [], [[a, b]]),
+      keyGenerator => new VariableEqualsConstraint(a, b, keyGenerator),
+      _constraint => {}
+    );
+  }
+
+  static FixedPosition(handle: Handle, pos: Position = handle.position) {
+    return Constraint.add(
+      new ConstraintKeyGenerator('fixedPosition', [[handle]], []),
+      keyGenerator => new FixedPositionConstraint(handle, pos, keyGenerator),
+      constraint => {
+        constraint.position = pos;
+      }
+    );
+  }
+
+  // TODO: Horizontal
+  // TODO: Vertical
+
+  static Length(a: Handle, b: Handle, length?: Variable) {
+    return Constraint.add(
+      new ConstraintKeyGenerator('length', [[a, b]], []),
+      keyGenerator =>
+        new LengthConstraint(
+          a,
+          b,
+          length ?? new Variable(Vec.dist(a.position, b.position)),
+          keyGenerator
+        ),
+      constraint => {
+        if (length) {
+          Constraint.VariableEquals(constraint.length, length);
+        }
+      }
+    );
+  }
+
+  // TODO: Angle
+
+  get key() {
+    return this.keyGenerator.key;
+  }
+
+  get keyWithCanonicalHandleIds() {
+    return this.keyGenerator.keyWithCanonicalHandleIds;
+  }
 
   constructor(
     public readonly handles: Handle[],
-    public readonly variables: Variable[]
+    public readonly variables: Variable[],
+    private readonly keyGenerator: ConstraintKeyGenerator
   ) {
-    Constraint.all.add(this);
+    Constraint.newConstraintContainer.add(this);
   }
 
   remove() {
-    Constraint.all.delete(this);
+    Constraint.perm.delete(this);
   }
 
   /**
@@ -65,9 +226,10 @@ abstract class Constraint {
 export class FixedValueConstraint extends Constraint {
   constructor(
     private readonly variable: Variable,
-    private readonly value: number
+    public value: number,
+    keyGenerator: ConstraintKeyGenerator
   ) {
-    super([], [variable]);
+    super([], [variable], keyGenerator);
   }
 
   propagateKnowns(knowns: Knowns): boolean {
@@ -89,9 +251,10 @@ export class FixedValueConstraint extends Constraint {
 export class VariableEqualsConstraint extends Constraint {
   constructor(
     private readonly a: Variable,
-    private readonly b: Variable
+    private readonly b: Variable,
+    keyGenerator: ConstraintKeyGenerator
   ) {
-    super([], [a, b]);
+    super([], [a, b], keyGenerator);
   }
 
   propagateKnowns(knowns: Knowns): boolean {
@@ -117,9 +280,10 @@ export class VariableEqualsConstraint extends Constraint {
 export class FixedPositionConstraint extends Constraint {
   constructor(
     private readonly handle: Handle,
-    private readonly position: Position
+    public position: Position,
+    keyGenerator: ConstraintKeyGenerator
   ) {
-    super([handle], []);
+    super([handle], [], keyGenerator);
   }
 
   propagateKnowns(knowns: Knowns): boolean {
@@ -142,9 +306,10 @@ export class FixedPositionConstraint extends Constraint {
 export class HorizontalConstraint extends Constraint {
   constructor(
     private readonly a: Handle,
-    private readonly b: Handle
+    private readonly b: Handle,
+    keyGenerator: ConstraintKeyGenerator
   ) {
-    super([a, b], []);
+    super([a, b], [], keyGenerator);
   }
 
   propagateKnowns(knowns: Knowns): boolean {
@@ -170,9 +335,10 @@ export class HorizontalConstraint extends Constraint {
 export class VerticalConstraint extends Constraint {
   constructor(
     private readonly a: Handle,
-    private readonly b: Handle
+    private readonly b: Handle,
+    keyGenerator: ConstraintKeyGenerator
   ) {
-    super([a, b], []);
+    super([a, b], [], keyGenerator);
   }
 
   propagateKnowns(knowns: Knowns): boolean {
@@ -199,9 +365,10 @@ export class LengthConstraint extends Constraint {
   constructor(
     public readonly a: Handle,
     public readonly b: Handle,
-    public readonly length = new Variable(Vec.dist(a.position, b.position))
+    public readonly length: Variable,
+    keyGenerator: ConstraintKeyGenerator
   ) {
-    super([a, b], [length]);
+    super([a, b], [length], keyGenerator);
   }
 
   getError(positions: Position[], values: number[]): number {
@@ -224,9 +391,10 @@ export class AngleConstraint extends Constraint {
         b1.position,
         b2.position
       ) ?? 0
-    )
+    ),
+    keyGenerator: ConstraintKeyGenerator
   ) {
-    super([a1, a2, b1, b2], [angle]);
+    super([a1, a2, b1, b2], [angle], keyGenerator);
   }
 
   getError(positions: Position[], values: number[]): number {
@@ -257,8 +425,27 @@ export class AngleConstraint extends Constraint {
 
 export function runConstraintSolver(selection: Selection) {
   // addSampleConstraints();
-  if (Constraint.all.size > 0) {
-    doWithTempConstraintsForSelection(selection, minimizeError);
+
+  // Temporarily add fixed position constraints for each selected handle.
+  // This is the "finger of God" semantics that we've talked about.
+  Constraint.newOnesAreTemporary();
+  for (const handle of selection.handles) {
+    Constraint.FixedPosition(handle);
+  }
+  Constraint.newOnesArePermanent();
+
+  try {
+    minimizeError();
+  } catch (e) {
+    console.log('error', e);
+    console.log(Constraint);
+    console.log('constraints:');
+    for (const constraint of Constraint.all) {
+      console.log(constraint);
+    }
+    throw e;
+  } finally {
+    Constraint.clearTemp();
   }
 }
 
@@ -330,26 +517,6 @@ function minimizeError() {
       const x = knowX ? thing.position.x : outputs.shift()!;
       const y = knowY ? thing.position.y : outputs.shift()!;
       thing.position = { x, y };
-    }
-  }
-}
-
-/**
- * Temporarily adds fixed position constraints for each selected handle.
- * This is the "finger of God" semantics that we've talked about.
- */
-function doWithTempConstraintsForSelection(
-  selection: Selection,
-  fn: () => void
-) {
-  const tempConstraintsForSelection = Array.from(selection.handles).map(
-    handle => new FixedPositionConstraint(handle, handle.position)
-  );
-  try {
-    fn();
-  } finally {
-    for (const tempConstraint of tempConstraintsForSelection) {
-      tempConstraint.remove();
     }
   }
 }

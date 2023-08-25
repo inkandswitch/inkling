@@ -2,7 +2,7 @@ import { Position } from '../../lib/types';
 import Vec from '../../lib/vec';
 import Events, { Event } from '../NativeEvents';
 import Page from '../Page';
-import { LengthConstraint, VariableEqualsConstraint } from '../constraints';
+import { Constraint } from '../constraints';
 import FreehandStroke from '../strokes/FreehandStroke';
 import StrokeGroup from '../strokes/StrokeGroup';
 import Tool from './Tool';
@@ -87,10 +87,9 @@ export class ConstraintTool extends Tool {
     const lenDiff = Math.abs(refLen - len);
     console.log('lenDiff', lenDiff);
     if (lenDiff < 10) {
-      console.log('adding!');
-      const refLenVar = new LengthConstraint(ra, rb).length;
-      const newLenVar = new LengthConstraint(a, b).length;
-      new VariableEqualsConstraint(refLenVar, newLenVar);
+      const refLenVar = Constraint.Length(ra, rb).length;
+      const newLenVar = Constraint.Length(a, b).length;
+      Constraint.VariableEquals(refLenVar, newLenVar);
     }
   }
 }
