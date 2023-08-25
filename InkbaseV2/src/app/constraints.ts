@@ -1,9 +1,3 @@
-// TODO: Constraint.perm -> Constraint.raw
-// Constraint.perm needs to be recomputed before solving, if
-// a handle has been absorbed / broken off. The Handle class
-// will let Constraint know via Constraint.onHandlesChanged().
-// Constraint keys w/ canonical handle ids will come in handy.
-
 import numeric from 'numeric';
 import { Position } from '../lib/types';
 import { generateId } from '../lib/helpers';
@@ -21,56 +15,6 @@ class Variable {
   }
 }
 
-class ConstraintKeyGenerator {
-  public readonly key: string;
-  private cachedKeyWithCanonicalHandleIds: string | null = null;
-
-  constructor(
-    private readonly type: string,
-    private readonly handleGroups: Handle[][],
-    private readonly variableGroups: Variable[][]
-  ) {
-    this.key = this.generateKey();
-  }
-
-  clearKeyCache() {
-    this.cachedKeyWithCanonicalHandleIds = null;
-  }
-
-  get keyWithCanonicalHandleIds() {
-    if (!this.cachedKeyWithCanonicalHandleIds) {
-      this.cachedKeyWithCanonicalHandleIds = this.generateKey(true);
-    }
-    return this.cachedKeyWithCanonicalHandleIds;
-  }
-
-  private generateKey(useCanonicalHandleIds = false) {
-    const handleIdGroups = this.handleGroups
-      .map(handleGroup =>
-        handleGroup
-          .map(handle => (useCanonicalHandleIds ? handle.id : handle.ownId))
-          .sort()
-          .join(',')
-      )
-      .map(handleIdGroup => `[${handleIdGroup}]`);
-    const variableIdGroups = this.variableGroups
-      .map(variableGroup =>
-        variableGroup
-          .map(variable => variable.id)
-          .sort()
-          .join(',')
-      )
-      .map(variableIdGroup => `[${variableIdGroup}]`);
-    return `${this.type}(${handleIdGroups},${variableIdGroups})`;
-  }
-}
-
-interface Knowns {
-  xs: Set<Handle>;
-  ys: Set<Handle>;
-  variables: Set<Variable>;
-}
-
 let allConstraints: Constraint[] = [];
 
 // #region constraints for solver
@@ -82,23 +26,20 @@ function getConstraintsForSolver() {
     return _constraintsForSolver;
   }
 
-  // TODO: get this right (see below)
-  _constraintsForSolver = allConstraints.slice();
+  const constraintByKey = new Map<string, Constraint>();
+  for (const constraint of allConstraints) {
+    const key = constraint.getKeyWithCanonicalHandleIds();
+    const matchingConstraint = constraintByKey.get(key);
+    if (matchingConstraint) {
+      // TODO: add "on clash" (can we reuse code from factories?)
+      // New constraints must go into the array that's returned by this method!!!
+    } else {
+      constraintByKey.set(key, constraint);
+    }
+  }
+
+  _constraintsForSolver = Array.from(constraintByKey.values());
   return _constraintsForSolver;
-
-  // const constraintByKey = new Map<string, Constraint>();
-  // for (const constraint of Constraint.all) {
-  //   constraint.keyGenerator.clearKeyCache();
-  //   const key = constraint.keyWithCanonicalHandleIds;
-  //   if (!constraintByKey.has(key)) {
-  //     constraintByKey.set(key, constraint);
-  //     continue;
-  //   }
-
-  // TODO: add "on clash" (can we reuse code from factories?)
-  // Annoyingly, must redirect new constraints into this map
-  // instead of the permanent set!
-  // }
 }
 
 function forgetConstraintsForSolver() {
@@ -110,6 +51,14 @@ export function onHandlesReconfigured() {
 }
 
 // #endregion constraints for solver
+
+// #region solving
+
+interface Knowns {
+  xs: Set<Handle>;
+  ys: Set<Handle>;
+  variables: Set<Variable>;
+}
 
 export function solve(selection: Selection) {
   const constraintsForSolver = getConstraintsForSolver();
@@ -234,10 +183,44 @@ function computeKnowns() {
   return knowns;
 }
 
-function findConstraint<C extends Constraint>(key: string) {
-  return allConstraints.find(constraint => constraint.key === key) as
-    | C
-    | undefined;
+// #endregion solving
+
+// #region adding constraints
+
+class ConstraintKeyGenerator {
+  public readonly key: string;
+
+  constructor(
+    private readonly type: string,
+    private readonly handleGroups: Handle[][],
+    private readonly variableGroups: Variable[][]
+  ) {
+    this.key = this.generateKey();
+  }
+
+  getKeyWithCanonicalHandleIds() {
+    return this.generateKey(true);
+  }
+
+  private generateKey(useCanonicalHandleIds = false) {
+    const handleIdGroups = this.handleGroups
+      .map(handleGroup =>
+        handleGroup
+          .map(handle => (useCanonicalHandleIds ? handle.id : handle.ownId))
+          .sort()
+          .join(',')
+      )
+      .map(handleIdGroup => `[${handleIdGroup}]`);
+    const variableIdGroups = this.variableGroups
+      .map(variableGroup =>
+        variableGroup
+          .map(variable => variable.id)
+          .sort()
+          .join(',')
+      )
+      .map(variableIdGroup => `[${variableIdGroup}]`);
+    return `${this.type}(${handleIdGroups},${variableIdGroups})`;
+  }
 }
 
 function addConstraint<C extends Constraint>(
@@ -253,6 +236,14 @@ function addConstraint<C extends Constraint>(
   }
   return constraint;
 }
+
+function findConstraint<C extends Constraint>(key: string) {
+  return allConstraints.find(constraint => constraint.key === key) as
+    | C
+    | undefined;
+}
+
+// #endregion adding constraints
 
 abstract class Constraint {
   constructor(
@@ -276,8 +267,8 @@ abstract class Constraint {
     return this.keyGenerator.key;
   }
 
-  get keyWithCanonicalHandleIds() {
-    return this.keyGenerator.keyWithCanonicalHandleIds;
+  getKeyWithCanonicalHandleIds() {
+    return this.keyGenerator.getKeyWithCanonicalHandleIds();
   }
 
   /**
