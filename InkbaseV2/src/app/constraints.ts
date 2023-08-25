@@ -105,7 +105,7 @@ export function solve(selection: Selection) {
   });
 
   try {
-    minimizeError();
+    minimizeError(constraintsForSolver);
   } finally {
     // Remove the temporary fixed position constraints that we added to
     // `constraintsForSolver`.
@@ -113,9 +113,9 @@ export function solve(selection: Selection) {
   }
 }
 
-function minimizeError() {
+function minimizeError(constraints: Constraint[]) {
   const things = [...Variable.all, ...Handle.all];
-  const knowns = computeKnowns();
+  const knowns = computeKnowns(constraints);
 
   // The state that goes into `inputs` is the stuff that can be modified by the solver.
   // It excludes any value that we've already computed from known values like fixed position
@@ -143,7 +143,7 @@ function minimizeError() {
   // This is where we actually run the solver.
   const result = numeric.uncmin((currState: number[]) => {
     let error = 0;
-    for (const constraint of allConstraints) {
+    for (const constraint of constraints) {
       const positions = constraint.handles.map(handle => {
         const xi = xIdx.get(handle);
         const yi = yIdx.get(handle);
@@ -185,7 +185,7 @@ function minimizeError() {
   }
 }
 
-function computeKnowns() {
+function computeKnowns(constraints: Constraint[]) {
   const knowns: Knowns = {
     xs: new Set(),
     ys: new Set(),
@@ -193,7 +193,7 @@ function computeKnowns() {
   };
   while (true) {
     let didSomething = false;
-    for (const constraint of allConstraints) {
+    for (const constraint of constraints) {
       if (constraint.propagateKnowns(knowns)) {
         didSomething = true;
       }
