@@ -15,8 +15,6 @@ import { runConstraintSolver } from './constraints';
 import { ConstraintTool } from './tools/ConstraintTool';
 import { onEveryFrame } from '../lib/helpers';
 
-const RUN_CONSTRAINT_SOLVER = true;
-
 const events = new Events();
 const page = new Page();
 const snaps = new Snaps(page);
@@ -35,21 +33,19 @@ const toolPicker = new ToolPicker([
 onEveryFrame(() => {
   SVG.clearNow();
 
+  // handle events
   toolPicker.update(events);
   toolPicker.selected?.update(events);
   selection.update(events);
   freehandSelection.update(events);
-
   events.clear();
 
-  if (RUN_CONSTRAINT_SOLVER) {
-    runConstraintSolver(selection);
-  }
+  runConstraintSolver(selection);
 
+  // render everything
   toolPicker.selected?.render();
   snaps.render();
   page.render();
-
   for (const handle of Handle.all) {
     handle.render();
   }
