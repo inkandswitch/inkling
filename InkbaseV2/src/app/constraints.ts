@@ -27,7 +27,9 @@ function getConstraintsForSolver() {
   }
 
   const constraintByKey = new Map<string, Constraint>();
-  for (const constraint of allConstraints) {
+  const constraintsToProcess = allConstraints.slice();
+  while (constraintsToProcess.length > 0) {
+    const constraint = constraintsToProcess.shift()!;
     const key = constraint.getKeyWithCanonicalHandleIds();
     const matchingConstraint = constraintByKey.get(key);
     if (matchingConstraint) {
@@ -243,7 +245,7 @@ class ConstraintKeyGenerator {
 function addConstraint<C extends Constraint>(
   keyGenerator: ConstraintKeyGenerator,
   createNew: (keyGenerator: ConstraintKeyGenerator) => C,
-  onClash: (constraint: C) => void
+  onClash: (olderConstraint: C) => void
 ): C {
   let constraint = findConstraint<C>(keyGenerator.key);
   if (constraint) {
@@ -304,6 +306,8 @@ abstract class Constraint {
     variableValues: number[]
   ): number;
 
+  abstract onClash(newerConstraint: this): void;
+
   involves(thing: Variable | Handle): boolean {
     return thing instanceof Variable
       ? this.variables.includes(thing)
@@ -317,9 +321,7 @@ export function fixedValue(variable: Variable, value: number = variable.value) {
   return addConstraint(
     new ConstraintKeyGenerator('fixedValue', [], [[variable]]),
     keyGenerator => new FixedValueConstraint(variable, value, keyGenerator),
-    constraint => {
-      constraint.value = value;
-    }
+    olderConstraint => olderConstraint.onClash(value)
   );
 }
 
@@ -346,13 +348,20 @@ class FixedValueConstraint extends Constraint {
     const [currentValue] = values;
     return currentValue - this.value;
   }
+
+  onClash(newerConstraintOrValue: this | number) {
+    this.value =
+      newerConstraintOrValue instanceof FixedValueConstraint
+        ? newerConstraintOrValue.value
+        : newerConstraintOrValue;
+  }
 }
 
 export function variableEquals(a: Variable, b: Variable) {
   return addConstraint(
     new ConstraintKeyGenerator('variableEquals', [], [[a, b]]),
     keyGenerator => new VariableEqualsConstraint(a, b, keyGenerator),
-    _constraint => {}
+    _olderConstraint => {}
   );
 }
 
@@ -383,15 +392,17 @@ class VariableEqualsConstraint extends Constraint {
     const [aValue, bValue] = values;
     return aValue - bValue;
   }
+
+  onClash(_newerConstraint: this) {
+    // no op
+  }
 }
 
 export function fixedPosition(handle: Handle, pos: Position = handle.position) {
   return addConstraint(
     new ConstraintKeyGenerator('fixedPosition', [[handle]], []),
     keyGenerator => new FixedPositionConstraint(handle, pos, keyGenerator),
-    constraint => {
-      constraint.position = pos;
-    }
+    olderConstraint => olderConstraint.onClash(pos)
   );
 }
 
@@ -419,13 +430,20 @@ class FixedPositionConstraint extends Constraint {
     const [handlePos] = positions;
     return Vec.dist(handlePos, this.position);
   }
+
+  onClash(newerConstraintOrPosition: this | Position) {
+    this.position =
+      newerConstraintOrPosition instanceof FixedPositionConstraint
+        ? newerConstraintOrPosition.position
+        : newerConstraintOrPosition;
+  }
 }
 
 export function horizontal(a: Handle, b: Handle) {
   return addConstraint(
     new ConstraintKeyGenerator('horizontal', [[a, b]], []),
     keyGenerator => new HorizontalConstraint(a, b, keyGenerator),
-    _constraint => {}
+    _olderConstraint => {}
   );
 }
 
@@ -456,13 +474,17 @@ class HorizontalConstraint extends Constraint {
     const [aPos, bPos] = positions;
     return aPos.y - bPos.y;
   }
+
+  onClash(_newerConstraint: this) {
+    // no op
+  }
 }
 
 export function vertical(a: Handle, b: Handle) {
   return addConstraint(
     new ConstraintKeyGenerator('vertical', [[a, b]], []),
     keyGenerator => new VerticalConstraint(a, b, keyGenerator),
-    _constraint => {}
+    _olderConstraint => {}
   );
 }
 
@@ -493,6 +515,10 @@ class VerticalConstraint extends Constraint {
     const [aPos, bPos] = positions;
     return aPos.x - bPos.x;
   }
+
+  onClash(_newerConstraint: this) {
+    // no op
+  }
 }
 
 export function length(a: Handle, b: Handle, length?: Variable) {
@@ -505,9 +531,9 @@ export function length(a: Handle, b: Handle, length?: Variable) {
         length ?? new Variable(Vec.dist(a.position, b.position)),
         keyGenerator
       ),
-    constraint => {
+    olderConstraint => {
       if (length) {
-        variableEquals(constraint.length, length);
+        olderConstraint.onClash(length);
       }
     }
   );
@@ -527,6 +553,14 @@ class LengthConstraint extends Constraint {
     const [aPos, bPos] = positions;
     const [length] = values;
     return Vec.dist(aPos, bPos) - length;
+  }
+
+  onClash(newerConstraintOrLength: this | Variable) {
+    const thatLength =
+      newerConstraintOrLength instanceof LengthConstraint
+        ? newerConstraintOrLength.length
+        : newerConstraintOrLength;
+    variableEquals(this.length, thatLength);
   }
 }
 
@@ -565,6 +599,10 @@ class AngleConstraint extends Constraint {
       b2Pos
     );
     return currentAngle === null ? angle : currentAngle - angle;
+  }
+
+  onClash(_newerConstraint: this): void {
+    throw new Error('TODO');
   }
 
   static computeAngle(
