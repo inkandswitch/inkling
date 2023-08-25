@@ -1,4 +1,4 @@
-import Events, { FingerEvent, PencilEvent } from '../NativeEvents';
+import Events from '../NativeEvents';
 import { PositionWithPressure, PositionWithRadius } from '../../lib/types';
 import SVG from '../Svg';
 import Page from '../Page';
