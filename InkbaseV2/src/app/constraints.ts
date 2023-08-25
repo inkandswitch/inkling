@@ -6,7 +6,7 @@
 
 import numeric from 'numeric';
 import { Position } from '../lib/types';
-import { generateId, makeIterableIterator } from '../lib/helpers';
+import { generateId } from '../lib/helpers';
 import Vec from '../lib/vec';
 import Handle from './strokes/Handle';
 import Selection from './Selection';
@@ -27,17 +27,14 @@ class ConstraintKeyGenerator {
 
   constructor(
     private readonly type: string,
-    // Note: order matters in both of these arrays!
     private readonly handleGroups: Handle[][],
     private readonly variableGroups: Variable[][]
   ) {
     this.key = this.generateKey();
   }
 
-  invalidateKeyCache() {
-    if (this.handleGroups.length > 0) {
-      this.cachedKeyWithCanonicalHandleIds = null;
-    }
+  clearKeyCache() {
+    this.cachedKeyWithCanonicalHandleIds = null;
   }
 
   get keyWithCanonicalHandleIds() {
@@ -74,124 +71,181 @@ interface Knowns {
   variables: Set<Variable>;
 }
 
-export abstract class Constraint {
-  private static readonly ephemeral = new Set<Constraint>();
-  private static readonly permanent = new Set<Constraint>();
+const allConstraints: Constraint[] = [];
 
-  public static get all() {
-    return makeIterableIterator([Constraint.ephemeral, Constraint.permanent]);
+// #region constraints for solver
+
+let _constraintsForSolver: Constraint[] | null = null;
+
+function getConstraintsForSolver() {
+  if (_constraintsForSolver) {
+    return _constraintsForSolver;
   }
 
-  // This is where constraints are added when you `new` them.
-  private static newConstraintContainer = Constraint.permanent;
+  // TODO: get this right (see below)
+  _constraintsForSolver = allConstraints.slice();
+  return _constraintsForSolver;
 
-  static newOnesAreEphemeral() {
-    Constraint.newConstraintContainer = Constraint.ephemeral;
+  // const constraintByKey = new Map<string, Constraint>();
+  // for (const constraint of Constraint.all) {
+  //   constraint.keyGenerator.clearKeyCache();
+  //   const key = constraint.keyWithCanonicalHandleIds;
+  //   if (!constraintByKey.has(key)) {
+  //     constraintByKey.set(key, constraint);
+  //     continue;
+  //   }
+
+  // TODO: add "on clash" (can we reuse code from factories?)
+  // Annoyingly, must redirect new constraints into this map
+  // instead of the permanent set!
+  // }
+}
+
+function forgetConstraintsForSolver() {
+  _constraintsForSolver = null;
+}
+
+export function onHandlesReconfigured() {
+  forgetConstraintsForSolver();
+}
+
+// #endregion constraints for solver
+
+export function solve(selection: Selection) {
+  // Temporarily add fixed position constraints for each selected handle.
+  // This is the "finger of God" semantics that we've talked about.
+  const oldNumConstraints = allConstraints.length;
+  for (const handle of selection.handles) {
+    fixedPosition(handle);
   }
 
-  static newOnesArePermanent() {
-    Constraint.newConstraintContainer = Constraint.permanent;
+  try {
+    minimizeError();
+  } finally {
+    allConstraints.length = oldNumConstraints;
   }
+}
 
-  static clearTemp() {
-    Constraint.ephemeral.clear();
-  }
+function minimizeError() {
+  const things = [...Variable.all, ...Handle.all];
+  const knowns = computeKnowns();
 
-  private static find<C extends Constraint>(key: string) {
-    for (const constraint of this.ephemeral) {
-      if (constraint.key === key) {
-        return constraint as C;
+  // The state that goes into `inputs` is the stuff that can be modified by the solver.
+  // It excludes any value that we've already computed from known values like fixed position
+  // and fixed value constraints.
+  const inputs: number[] = [];
+  const varIdx = new Map<Variable, number>();
+  const xIdx = new Map<Handle, number>();
+  const yIdx = new Map<Handle, number>();
+  for (const thing of things) {
+    if (thing instanceof Variable && !knowns.variables.has(thing)) {
+      varIdx.set(thing, inputs.length);
+      inputs.push(thing.value);
+    } else if (thing instanceof Handle) {
+      if (!knowns.xs.has(thing)) {
+        xIdx.set(thing, inputs.length);
+        inputs.push(thing.position.x);
+      }
+      if (!knowns.ys.has(thing)) {
+        yIdx.set(thing, inputs.length);
+        inputs.push(thing.position.y);
       }
     }
-    for (const constraint of this.permanent) {
-      if (constraint.key === key) {
-        return constraint as C;
-      }
-    }
-    return null;
   }
 
-  static onHandlesReconfigured() {
-    // TODO
-  }
-
-  private static add<C extends Constraint>(
-    keyGenerator: ConstraintKeyGenerator,
-    createNew: (keyGenerator: ConstraintKeyGenerator) => C,
-    onClash: (constraint: C) => void
-  ): C {
-    let constraint = Constraint.find<C>(keyGenerator.key);
-    if (constraint) {
-      onClash(constraint);
-    } else {
-      constraint = createNew(keyGenerator);
-    }
-    return constraint;
-  }
-
-  static FixedValue(variable: Variable, value: number = variable.value) {
-    return Constraint.add(
-      new ConstraintKeyGenerator('fixedValue', [], [[variable]]),
-      keyGenerator => new FixedValueConstraint(variable, value, keyGenerator),
-      constraint => {
-        constraint.value = value;
-      }
-    );
-  }
-
-  static VariableEquals(a: Variable, b: Variable) {
-    return Constraint.add(
-      new ConstraintKeyGenerator('variableEquals', [], [[a, b]]),
-      keyGenerator => new VariableEqualsConstraint(a, b, keyGenerator),
-      _constraint => {}
-    );
-  }
-
-  static FixedPosition(handle: Handle, pos: Position = handle.position) {
-    return Constraint.add(
-      new ConstraintKeyGenerator('fixedPosition', [[handle]], []),
-      keyGenerator => new FixedPositionConstraint(handle, pos, keyGenerator),
-      constraint => {
-        constraint.position = pos;
-      }
-    );
-  }
-
-  static Horizontal(a: Handle, b: Handle) {
-    return Constraint.add(
-      new ConstraintKeyGenerator('horizontal', [[a, b]], []),
-      keyGenerator => new HorizontalConstraint(a, b, keyGenerator),
-      _constraint => {}
-    );
-  }
-
-  static Vertical(a: Handle, b: Handle) {
-    return Constraint.add(
-      new ConstraintKeyGenerator('vertical', [[a, b]], []),
-      keyGenerator => new VerticalConstraint(a, b, keyGenerator),
-      _constraint => {}
-    );
-  }
-
-  static Length(a: Handle, b: Handle, length?: Variable) {
-    return Constraint.add(
-      new ConstraintKeyGenerator('length', [[a, b]], []),
-      keyGenerator =>
-        new LengthConstraint(
-          a,
-          b,
-          length ?? new Variable(Vec.dist(a.position, b.position)),
-          keyGenerator
-        ),
-      constraint => {
-        if (length) {
-          Constraint.VariableEquals(constraint.length, length);
+  // This is where we actually run the solver.
+  const result = numeric.uncmin((currState: number[]) => {
+    let error = 0;
+    for (const constraint of allConstraints) {
+      const positions = constraint.handles.map(handle => {
+        const xi = xIdx.get(handle);
+        const yi = yIdx.get(handle);
+        if (xi === undefined && yi === undefined) {
+          return handle.position;
+        } else {
+          return {
+            x: xi === undefined ? handle.position.x : currState[xi],
+            y: yi === undefined ? handle.position.y : currState[yi],
+          };
         }
-      }
-    );
-  }
+      });
+      const values = constraint.variables.map(variable => {
+        const vi = varIdx.get(variable);
+        return vi === undefined ? variable.value : currState[vi];
+      });
+      error += Math.pow(constraint.getError(positions, values), 2);
+    }
+    return error;
+  }, inputs);
 
-  // TODO: Angle
+  // Now we write the solution from the solver back into our handles and variables.
+  const outputs = result.solution;
+  for (const thing of things) {
+    if (thing instanceof Variable && !knowns.variables.has(thing)) {
+      thing.value = outputs.shift()!;
+    } else if (thing instanceof Handle) {
+      const knowX = knowns.xs.has(thing);
+      const knowY = knowns.ys.has(thing);
+      if (knowX && knowY) {
+        // no update required
+        continue;
+      }
+
+      const x = knowX ? thing.position.x : outputs.shift()!;
+      const y = knowY ? thing.position.y : outputs.shift()!;
+      thing.position = { x, y };
+    }
+  }
+}
+
+function computeKnowns() {
+  const knowns: Knowns = {
+    xs: new Set(),
+    ys: new Set(),
+    variables: new Set(),
+  };
+  while (true) {
+    let didSomething = false;
+    for (const constraint of allConstraints) {
+      if (constraint.propagateKnowns(knowns)) {
+        didSomething = true;
+      }
+    }
+    if (!didSomething) {
+      break;
+    }
+  }
+  return knowns;
+}
+
+function findConstraint<C extends Constraint>(key: string) {
+  return allConstraints.find(constraint => constraint.key === key) as
+    | C
+    | undefined;
+}
+
+function addConstraint<C extends Constraint>(
+  keyGenerator: ConstraintKeyGenerator,
+  createNew: (keyGenerator: ConstraintKeyGenerator) => C,
+  onClash: (constraint: C) => void
+): C {
+  let constraint = findConstraint<C>(keyGenerator.key);
+  if (constraint) {
+    onClash(constraint);
+  } else {
+    constraint = createNew(keyGenerator);
+  }
+  return constraint;
+}
+
+abstract class Constraint {
+  constructor(
+    public readonly handles: Handle[],
+    public readonly variables: Variable[],
+    private readonly keyGenerator: ConstraintKeyGenerator
+  ) {
+    allConstraints.push(this);
+  }
 
   get key() {
     return this.keyGenerator.key;
@@ -201,16 +255,12 @@ export abstract class Constraint {
     return this.keyGenerator.keyWithCanonicalHandleIds;
   }
 
-  constructor(
-    public readonly handles: Handle[],
-    public readonly variables: Variable[],
-    private readonly keyGenerator: ConstraintKeyGenerator
-  ) {
-    Constraint.newConstraintContainer.add(this);
-  }
-
   remove() {
-    Constraint.permanent.delete(this);
+    const idx = allConstraints.indexOf(this);
+    if (idx >= 0) {
+      allConstraints.splice(idx, 1);
+      forgetConstraintsForSolver();
+    }
   }
 
   /**
@@ -238,6 +288,16 @@ export abstract class Constraint {
   }
 }
 
+export function fixedValue(variable: Variable, value: number = variable.value) {
+  return addConstraint(
+    new ConstraintKeyGenerator('fixedValue', [], [[variable]]),
+    keyGenerator => new FixedValueConstraint(variable, value, keyGenerator),
+    constraint => {
+      constraint.value = value;
+    }
+  );
+}
+
 class FixedValueConstraint extends Constraint {
   constructor(
     private readonly variable: Variable,
@@ -261,6 +321,14 @@ class FixedValueConstraint extends Constraint {
     const [currentValue] = values;
     return currentValue - this.value;
   }
+}
+
+export function variableEquals(a: Variable, b: Variable) {
+  return addConstraint(
+    new ConstraintKeyGenerator('variableEquals', [], [[a, b]]),
+    keyGenerator => new VariableEqualsConstraint(a, b, keyGenerator),
+    _constraint => {}
+  );
 }
 
 class VariableEqualsConstraint extends Constraint {
@@ -292,6 +360,16 @@ class VariableEqualsConstraint extends Constraint {
   }
 }
 
+export function fixedPosition(handle: Handle, pos: Position = handle.position) {
+  return addConstraint(
+    new ConstraintKeyGenerator('fixedPosition', [[handle]], []),
+    keyGenerator => new FixedPositionConstraint(handle, pos, keyGenerator),
+    constraint => {
+      constraint.position = pos;
+    }
+  );
+}
+
 class FixedPositionConstraint extends Constraint {
   constructor(
     private readonly handle: Handle,
@@ -316,6 +394,14 @@ class FixedPositionConstraint extends Constraint {
     const [handlePos] = positions;
     return Vec.dist(handlePos, this.position);
   }
+}
+
+export function horizontal(a: Handle, b: Handle) {
+  return addConstraint(
+    new ConstraintKeyGenerator('horizontal', [[a, b]], []),
+    keyGenerator => new HorizontalConstraint(a, b, keyGenerator),
+    _constraint => {}
+  );
 }
 
 class HorizontalConstraint extends Constraint {
@@ -347,6 +433,14 @@ class HorizontalConstraint extends Constraint {
   }
 }
 
+export function vertical(a: Handle, b: Handle) {
+  return addConstraint(
+    new ConstraintKeyGenerator('vertical', [[a, b]], []),
+    keyGenerator => new VerticalConstraint(a, b, keyGenerator),
+    _constraint => {}
+  );
+}
+
 class VerticalConstraint extends Constraint {
   constructor(
     private readonly a: Handle,
@@ -376,6 +470,24 @@ class VerticalConstraint extends Constraint {
   }
 }
 
+export function length(a: Handle, b: Handle, length?: Variable) {
+  return addConstraint(
+    new ConstraintKeyGenerator('length', [[a, b]], []),
+    keyGenerator =>
+      new LengthConstraint(
+        a,
+        b,
+        length ?? new Variable(Vec.dist(a.position, b.position)),
+        keyGenerator
+      ),
+    constraint => {
+      if (length) {
+        variableEquals(constraint.length, length);
+      }
+    }
+  );
+}
+
 class LengthConstraint extends Constraint {
   constructor(
     public readonly a: Handle,
@@ -392,6 +504,11 @@ class LengthConstraint extends Constraint {
     return Vec.dist(aPos, bPos) - length;
   }
 }
+
+// TODO
+// export function angle(a1: Handle, a2: Handle, b1: Handle, b2: Handle, angle?: Variable) {
+//   ...
+// }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 class AngleConstraint extends Constraint {
@@ -438,142 +555,3 @@ class AngleConstraint extends Constraint {
       : Vec.angleBetweenClockwise(va, vb);
   }
 }
-
-export function runConstraintSolver(selection: Selection) {
-  // addSampleConstraints();
-
-  // Temporarily add fixed position constraints for each selected handle.
-  // This is the "finger of God" semantics that we've talked about.
-  Constraint.newOnesAreEphemeral();
-  for (const handle of selection.handles) {
-    Constraint.FixedPosition(handle);
-  }
-  Constraint.newOnesArePermanent();
-
-  try {
-    minimizeError();
-  } catch (e) {
-    console.log('error', e);
-    console.log(Constraint);
-    console.log('constraints:');
-    for (const constraint of Constraint.all) {
-      console.log(constraint);
-    }
-    throw e;
-  } finally {
-    Constraint.clearTemp();
-  }
-}
-
-function minimizeError() {
-  const things = [...Variable.all, ...Handle.all];
-  const knowns = computeKnowns();
-
-  // The state that goes into `inputs` is the stuff that can be modified by the solver.
-  // It excludes any value that we've already computed from known values like fixed position
-  // and fixed value constraints.
-  const inputs: number[] = [];
-  const varIdx = new Map<Variable, number>();
-  const xIdx = new Map<Handle, number>();
-  const yIdx = new Map<Handle, number>();
-  for (const thing of things) {
-    if (thing instanceof Variable && !knowns.variables.has(thing)) {
-      varIdx.set(thing, inputs.length);
-      inputs.push(thing.value);
-    } else if (thing instanceof Handle) {
-      if (!knowns.xs.has(thing)) {
-        xIdx.set(thing, inputs.length);
-        inputs.push(thing.position.x);
-      }
-      if (!knowns.ys.has(thing)) {
-        yIdx.set(thing, inputs.length);
-        inputs.push(thing.position.y);
-      }
-    }
-  }
-
-  // This is where we actually run the solver.
-  const result = numeric.uncmin((currState: number[]) => {
-    let error = 0;
-    for (const constraint of Constraint.all) {
-      const positions = constraint.handles.map(handle => {
-        const xi = xIdx.get(handle);
-        const yi = yIdx.get(handle);
-        if (xi === undefined && yi === undefined) {
-          return handle.position;
-        } else {
-          return {
-            x: xi === undefined ? handle.position.x : currState[xi],
-            y: yi === undefined ? handle.position.y : currState[yi],
-          };
-        }
-      });
-      const values = constraint.variables.map(variable => {
-        const vi = varIdx.get(variable);
-        return vi === undefined ? variable.value : currState[vi];
-      });
-      error += Math.pow(constraint.getError(positions, values), 2);
-    }
-    return error;
-  }, inputs);
-
-  // Now we write the solution from the solver back into our handles and variables.
-  const outputs = result.solution;
-  for (const thing of things) {
-    if (thing instanceof Variable && !knowns.variables.has(thing)) {
-      thing.value = outputs.shift()!;
-    } else if (thing instanceof Handle) {
-      const knowX = knowns.xs.has(thing);
-      const knowY = knowns.ys.has(thing);
-      if (knowX && knowY) {
-        // no update required
-        continue;
-      }
-
-      const x = knowX ? thing.position.x : outputs.shift()!;
-      const y = knowY ? thing.position.y : outputs.shift()!;
-      thing.position = { x, y };
-    }
-  }
-}
-
-function computeKnowns(): Knowns {
-  const knowns: Knowns = { xs: new Set(), ys: new Set(), variables: new Set() };
-  while (true) {
-    let didSomething = false;
-    for (const constraint of Constraint.all) {
-      if (constraint.propagateKnowns(knowns)) {
-        didSomething = true;
-      }
-    }
-    if (!didSomething) {
-      break;
-    }
-  }
-  return knowns;
-}
-
-// /** Adds a couple of constraints, if we don't have some already. */
-// function addSampleConstraints() {
-//   const unconstrainedHandles = Array.from(Handle.all).filter(
-//     handle =>
-//       !Array.from(Constraint.all).some(constraint =>
-//         constraint.involves(handle)
-//       )
-//   );
-//   while (Constraint.all.size === 0 && unconstrainedHandles.length >= 4) {
-//     const a1 = unconstrainedHandles.shift()!;
-//     const a2 = unconstrainedHandles.shift()!;
-//     const aLength = new LengthConstraint(a1, a2).length;
-//     // new FixedValueConstraint(aLength, aLength.value);
-
-//     const b1 = unconstrainedHandles.shift()!;
-//     const b2 = unconstrainedHandles.shift()!;
-//     const bLength = new LengthConstraint(b1, b2).length;
-
-//     new VariableEqualsConstraint(aLength, bLength);
-
-//     const angle = new AngleConstraint(a1, a2, b1, b2).angle;
-//     new FixedValueConstraint(angle, angle.value);
-//   }
-// }

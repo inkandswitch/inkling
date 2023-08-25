@@ -12,7 +12,7 @@ import ConstraintTool from './tools/ConstraintTool';
 import SVG from './Svg';
 import Handle from './strokes/Handle';
 import Stroke from './strokes/Stroke';
-import { runConstraintSolver } from './constraints';
+import * as constraints from './constraints';
 import { onEveryFrame } from '../lib/helpers';
 
 const events = new Events();
@@ -40,7 +40,7 @@ onEveryFrame(() => {
   freehandSelection.update(events);
   events.clear();
 
-  runConstraintSolver(selection);
+  constraints.solve(selection);
 
   // render everything
   toolPicker.selected?.render();
