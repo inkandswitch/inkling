@@ -1,4 +1,3 @@
-import EveryFrame from './EveryFrame';
 import Events from './NativeEvents';
 import Page from './Page';
 import Selection from './Selection';
@@ -14,6 +13,7 @@ import FormalTool from './tools/FormalTool';
 import FreehandTool from './tools/FreehandTool';
 import { runConstraintSolver } from './constraints';
 import { ConstraintTool } from './tools/ConstraintTool';
+import { onEveryFrame } from '../lib/helpers';
 
 const RUN_CONSTRAINT_SOLVER = true;
 
@@ -32,7 +32,7 @@ const toolPicker = new ToolPicker([
   new ConstraintTool('CONST', 30, 230, page),
 ]);
 
-EveryFrame(() => {
+onEveryFrame(() => {
   SVG.clearNow();
 
   toolPicker.update(events);

@@ -6,6 +6,25 @@ export function generateId() {
   return nextId++;
 }
 
+export function onEveryFrame(update: (dt: number, time: number) => void) {
+  let lastTime: number;
+
+  function frame(ms: number) {
+    const time = ms / 1000;
+    const dt = lastTime - time;
+    lastTime = time;
+
+    update(dt, time);
+
+    requestAnimationFrame(frame);
+  }
+
+  requestAnimationFrame(ms => {
+    lastTime = ms / 1000;
+    requestAnimationFrame(frame);
+  });
+}
+
 // A debug view of an object's properties. Clearing is useful when debugging a single object at 60hz.
 export function debugTable(obj: {}, clear = true) {
   if (clear) {
