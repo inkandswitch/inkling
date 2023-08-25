@@ -564,26 +564,48 @@ class LengthConstraint extends Constraint {
   }
 }
 
-// TODO
-// export function angle(a1: Handle, a2: Handle, b1: Handle, b2: Handle, angle?: Variable) {
-//   ...
-// }
+export function angle(
+  a1: Handle,
+  a2: Handle,
+  b1: Handle,
+  b2: Handle,
+  angle?: Variable
+) {
+  return addConstraint(
+    new ConstraintKeyGenerator(
+      'angle',
+      [
+        [a1, a2],
+        [b1, b2],
+      ],
+      []
+    ),
+    keyGenerator => {
+      if (!angle) {
+        angle = new Variable(
+          AngleConstraint.computeAngle(
+            a1.position,
+            a2.position,
+            b1.position,
+            b2.position
+          ) ?? 0
+        );
+      }
+      return new AngleConstraint(a1, a2, b1, b2, angle, keyGenerator);
+    },
+    _olderConstraint => {
+      throw new Error('TODO');
+    }
+  );
+}
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 class AngleConstraint extends Constraint {
   constructor(
     public readonly a1: Handle,
     public readonly a2: Handle,
     public readonly b1: Handle,
     public readonly b2: Handle,
-    public readonly angle = new Variable(
-      AngleConstraint.computeAngle(
-        a1.position,
-        a2.position,
-        b1.position,
-        b2.position
-      ) ?? 0
-    ),
+    public readonly angle: Variable,
     keyGenerator: ConstraintKeyGenerator
   ) {
     super([a1, a2, b1, b2], [angle], keyGenerator);
