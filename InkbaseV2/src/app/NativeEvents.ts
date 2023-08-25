@@ -42,11 +42,7 @@ type TouchPoint = {
 };
 
 export default class Events {
-  events: Event[] = [];
-
-  // These are unused, so Ivan commented them out as a precursor to deleting them.
-  // activePencil?: Position
-  // activeFingers: { [key: TouchId]: Position } = {}
+  private events: Event[] = [];
 
   constructor() {
     this.setupNativeEventHandler();
@@ -54,10 +50,6 @@ export default class Events {
 
   clear() {
     this.events = [];
-  }
-
-  add(event: Event) {
-    this.events.push(event);
   }
 
   find(
@@ -133,18 +125,7 @@ export default class Events {
                   ...sharedProperties,
                 };
 
-          this.add(event);
-
-          // This code is unused, so Ivan commented it out as a precursor to deleting it.
-          // if (event.type === "pencil") {
-          //   this.activePencil = state !== "ended" ? event.position : undefined
-          // } else {
-          //   if (state !== "ended") {
-          //     this.activeFingers[event.id] = event.position
-          //   } else {
-          //     delete this.activeFingers[event.id]
-          //   }
-          // }
+          this.events.push(event);
         }
       }
     };
