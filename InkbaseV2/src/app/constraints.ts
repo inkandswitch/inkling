@@ -71,7 +71,7 @@ interface Knowns {
   variables: Set<Variable>;
 }
 
-const allConstraints: Constraint[] = [];
+let allConstraints: Constraint[] = [];
 
 // #region constraints for solver
 
@@ -112,17 +112,33 @@ export function onHandlesReconfigured() {
 // #endregion constraints for solver
 
 export function solve(selection: Selection) {
-  // Temporarily add fixed position constraints for each selected handle.
-  // This is the "finger of God" semantics that we've talked about.
-  const oldNumConstraints = allConstraints.length;
+  const constraintsForSolver = getConstraintsForSolver();
+  const oldNumConstraints = constraintsForSolver.length;
+
+  // We temporarily add fixed position constraints for each selected handle.
+  // This is the "finger of God" semantics that we've talked about. I'm doing
+  // this with a terrible hack that makes the temporary constraints go into
+  // `constraintsForSolver` -- it's really ugly stuff!
+  // TODO: find a better way to do this.
+  const realAllConstraints = allConstraints;
+  allConstraints = constraintsForSolver;
   for (const handle of selection.handles) {
     fixedPosition(handle);
   }
+  // Adding new constraints makes us forget the the cached constraints for
+  // the solver. That's not what we want here, so we undo it w/ the following
+  // ugly assignment.
+  _constraintsForSolver = allConstraints;
+  // And finally, now that we're done adding temporary constraints, change
+  // `allConstraints` back to the real thing, that way any new constraints
+  // that are added by the user will go in the right place.
+  allConstraints = realAllConstraints;
 
   try {
     minimizeError();
   } finally {
-    allConstraints.length = oldNumConstraints;
+    // Remove the temporary fixed position constraints.
+    constraintsForSolver.length = oldNumConstraints;
   }
 }
 
@@ -245,14 +261,7 @@ abstract class Constraint {
     private readonly keyGenerator: ConstraintKeyGenerator
   ) {
     allConstraints.push(this);
-  }
-
-  get key() {
-    return this.keyGenerator.key;
-  }
-
-  get keyWithCanonicalHandleIds() {
-    return this.keyGenerator.keyWithCanonicalHandleIds;
+    forgetConstraintsForSolver();
   }
 
   remove() {
@@ -261,6 +270,14 @@ abstract class Constraint {
       allConstraints.splice(idx, 1);
       forgetConstraintsForSolver();
     }
+  }
+
+  get key() {
+    return this.keyGenerator.key;
+  }
+
+  get keyWithCanonicalHandleIds() {
+    return this.keyGenerator.keyWithCanonicalHandleIds;
   }
 
   /**
