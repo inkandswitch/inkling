@@ -10,6 +10,7 @@ import Vec from '../lib/vec';
 import Handle from './strokes/Handle';
 import Selection from './Selection';
 import generateId from './generateId';
+import { makeIterableIterator } from '../lib/helpers';
 
 class Variable {
   static readonly all: Variable[] = [];
@@ -78,16 +79,8 @@ export abstract class Constraint {
   private static readonly ephemeral = new Set<Constraint>();
   private static readonly permanent = new Set<Constraint>();
 
-  public static get all(): IterableIterator<Constraint> {
-    function* generator() {
-      for (const constraint of Constraint.ephemeral) {
-        yield constraint;
-      }
-      for (const constraint of Constraint.permanent) {
-        yield constraint;
-      }
-    }
-    return generator();
+  public static get all() {
+    return makeIterableIterator([Constraint.ephemeral, Constraint.permanent]);
   }
 
   // This is where constraints are added when you `new` them.

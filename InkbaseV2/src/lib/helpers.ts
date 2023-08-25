@@ -45,6 +45,30 @@ export function farthestPair<P extends Position>(points: P[]): [P, P] {
   return [mdp1!, mdp2!];
 }
 
+export function makeIterableIterator<T, S extends T>(
+  iterables: Iterable<T>[],
+  pred: (t: T) => t is S
+): IterableIterator<S>;
+export function makeIterableIterator<T>(
+  iterables: Iterable<T>[],
+  pred?: (t: T) => boolean
+): IterableIterator<T>;
+export function makeIterableIterator<T>(
+  iterables: Iterable<T>[],
+  pred: (t: T) => boolean = _t => true
+) {
+  function* generator() {
+    for (const ts of iterables) {
+      for (const t of ts) {
+        if (!pred || pred(t)) {
+          yield t;
+        }
+      }
+    }
+  }
+  return generator();
+}
+
 // Sorted Set
 // Guarantees unique items, and allows resorting of items when iterating
 export class SortedSet<T> {

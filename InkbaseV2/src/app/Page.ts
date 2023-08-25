@@ -8,6 +8,7 @@ import StrokeClusters from './StrokeClusters';
 import { Position, PositionWithPressure } from '../lib/types';
 import Handle from './strokes/Handle';
 import StrokeAnalyzer from './StrokeAnalyzer';
+import { makeIterableIterator } from '../lib/helpers';
 
 export default class Page {
   // Stroke clusters are possible stroke Groups
@@ -22,16 +23,11 @@ export default class Page {
   readonly strokeGroups: StrokeGroup[] = [];
   readonly strokes: Stroke[] = [];
 
-  get freehandStrokes(): IterableIterator<FreehandStroke> {
-    const strokes = this.strokes;
-    function* generator() {
-      for (const stroke of strokes) {
-        if (stroke instanceof FreehandStroke) {
-          yield stroke;
-        }
-      }
-    }
-    return generator();
+  get freehandStrokes() {
+    return makeIterableIterator(
+      [this.strokes],
+      (s: Stroke): s is FreehandStroke => s instanceof FreehandStroke
+    );
   }
 
   addLineSegment(aPos: Position, bPos: Position) {
