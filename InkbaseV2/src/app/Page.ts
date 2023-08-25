@@ -52,9 +52,9 @@ export default class Page {
     this.strokes.push(stroke);
     return stroke;
   }
-  
-  updatedStroke<S extends Stroke>(stroke: S) {
-    if(stroke instanceof FreehandStroke) {
+
+  onstrokeUpdated(stroke: Stroke) {
+    if (stroke instanceof FreehandStroke) {
       this.analyzer.addStroke(stroke);
     }
   }

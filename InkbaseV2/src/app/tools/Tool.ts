@@ -82,10 +82,12 @@ export default class Tool<S extends Stroke = Stroke> {
   }
 
   extendStroke(point: PositionWithPressure) {
+    this.page.onstrokeUpdated(this.stroke!);
     this.stroke!.points.push(point);
   }
 
   endStroke() {
+    this.page.onstrokeUpdated(this.stroke!);
     this.stroke = undefined;
   }
 
