@@ -1,3 +1,9 @@
+// TODO: Constraint.perm -> Constraint.raw
+// Constraint.perm needs to be recomputed before solving, if
+// a handle has been absorbed / broken off. The Handle class
+// will let Constraint know via Constraint.onHandlesChanged().
+// Constraint keys w/ canonical handle ids will come in handy.
+
 import numeric from 'numeric';
 import { Position } from '../lib/types';
 import Vec from '../lib/vec';
@@ -113,6 +119,10 @@ export abstract class Constraint {
     return null;
   }
 
+  static onHandlesChanged() {
+    // TODO
+  }
+
   private static add<C extends Constraint>(
     keyGenerator: ConstraintKeyGenerator,
     createNew: (keyGenerator: ConstraintKeyGenerator) => C,
@@ -155,8 +165,21 @@ export abstract class Constraint {
     );
   }
 
-  // TODO: Horizontal
-  // TODO: Vertical
+  static Horizontal(a: Handle, b: Handle) {
+    return Constraint.add(
+      new ConstraintKeyGenerator('horizontal', [[a, b]], []),
+      keyGenerator => new HorizontalConstraint(a, b, keyGenerator),
+      _constraint => {}
+    );
+  }
+
+  static Vertical(a: Handle, b: Handle) {
+    return Constraint.add(
+      new ConstraintKeyGenerator('vertical', [[a, b]], []),
+      keyGenerator => new VerticalConstraint(a, b, keyGenerator),
+      _constraint => {}
+    );
+  }
 
   static Length(a: Handle, b: Handle, length?: Variable) {
     return Constraint.add(
@@ -223,7 +246,7 @@ export abstract class Constraint {
   }
 }
 
-export class FixedValueConstraint extends Constraint {
+class FixedValueConstraint extends Constraint {
   constructor(
     private readonly variable: Variable,
     public value: number,
@@ -248,7 +271,7 @@ export class FixedValueConstraint extends Constraint {
   }
 }
 
-export class VariableEqualsConstraint extends Constraint {
+class VariableEqualsConstraint extends Constraint {
   constructor(
     private readonly a: Variable,
     private readonly b: Variable,
@@ -277,7 +300,7 @@ export class VariableEqualsConstraint extends Constraint {
   }
 }
 
-export class FixedPositionConstraint extends Constraint {
+class FixedPositionConstraint extends Constraint {
   constructor(
     private readonly handle: Handle,
     public position: Position,
@@ -303,7 +326,7 @@ export class FixedPositionConstraint extends Constraint {
   }
 }
 
-export class HorizontalConstraint extends Constraint {
+class HorizontalConstraint extends Constraint {
   constructor(
     private readonly a: Handle,
     private readonly b: Handle,
@@ -332,7 +355,7 @@ export class HorizontalConstraint extends Constraint {
   }
 }
 
-export class VerticalConstraint extends Constraint {
+class VerticalConstraint extends Constraint {
   constructor(
     private readonly a: Handle,
     private readonly b: Handle,
@@ -361,7 +384,7 @@ export class VerticalConstraint extends Constraint {
   }
 }
 
-export class LengthConstraint extends Constraint {
+class LengthConstraint extends Constraint {
   constructor(
     public readonly a: Handle,
     public readonly b: Handle,
@@ -378,7 +401,8 @@ export class LengthConstraint extends Constraint {
   }
 }
 
-export class AngleConstraint extends Constraint {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+class AngleConstraint extends Constraint {
   constructor(
     public readonly a1: Handle,
     public readonly a2: Handle,
