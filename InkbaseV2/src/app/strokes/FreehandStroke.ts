@@ -1,9 +1,9 @@
-import SVG from '../Svg';
-import generateId from '../generateId';
 import { Position, PositionWithPressure } from '../../lib/types';
+import { generateId } from '../../lib/helpers';
 import StrokeGroup from './StrokeGroup';
 import Vec from '../../lib/vec';
 import Stroke from './Stroke';
+import SVG from '../Svg';
 
 export default class FreehandStroke extends Stroke {
   readonly id = generateId();

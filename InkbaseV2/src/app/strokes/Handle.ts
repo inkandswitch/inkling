@@ -1,8 +1,8 @@
 import { Position } from '../../lib/types';
+import { generateId } from '../../lib/helpers';
 import Vec from '../../lib/vec';
 import SVG from '../Svg';
 import { Constraint } from '../constraints';
-import generateId from '../generateId';
 
 const SHOW_IDS = false;
 

@@ -6,11 +6,10 @@
 
 import numeric from 'numeric';
 import { Position } from '../lib/types';
+import { generateId, makeIterableIterator } from '../lib/helpers';
 import Vec from '../lib/vec';
 import Handle from './strokes/Handle';
 import Selection from './Selection';
-import generateId from './generateId';
-import { makeIterableIterator } from '../lib/helpers';
 
 class Variable {
   static readonly all: Variable[] = [];

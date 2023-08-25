@@ -1,6 +1,6 @@
 import { Position } from '../../lib/types';
+import { generateId } from '../../lib/helpers';
 import SVG from '../Svg';
-import generateId from '../generateId';
 import Handle from './Handle';
 
 export default class LineSegment {

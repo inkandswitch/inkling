@@ -1,6 +1,11 @@
 import { Position } from './types';
 import Vec from './vec';
 
+let nextId = 0;
+export function generateId() {
+  return nextId++;
+}
+
 // A debug view of an object's properties. Clearing is useful when debugging a single object at 60hz.
 export function debugTable(obj: {}, clear = true) {
   if (clear) {

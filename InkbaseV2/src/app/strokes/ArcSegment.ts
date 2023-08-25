@@ -1,8 +1,8 @@
-import generateId from '../generateId';
+import { Position } from '../../lib/types';
+import { generateId } from '../../lib/helpers';
 import Vec from '../../lib/vec';
 import SVG from '../Svg';
 import Handle from './Handle';
-import { Position } from '../../lib/types';
 
 export default class ArcSegment {
   readonly id = generateId();
