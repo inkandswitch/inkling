@@ -33,8 +33,9 @@ function getConstraintsForSolver() {
     const key = constraint.getKeyWithCanonicalHandleIds();
     const matchingConstraint = constraintByKey.get(key);
     if (matchingConstraint) {
-      // TODO: add "on clash" (can we reuse code from factories?)
-      // New constraints must go into the array that's returned by this method!!!
+      temporarilyMakeNewConstraintsGoInto(constraintsToProcess, () =>
+        matchingConstraint.onClash(constraint)
+      );
     } else {
       constraintByKey.set(key, constraint);
     }
