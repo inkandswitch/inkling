@@ -604,8 +604,10 @@ export function angle(
       }
       return new AngleConstraint(a1, a2, b1, b2, angle, keyGenerator);
     },
-    _olderConstraint => {
-      throw new Error('TODO');
+    olderConstraint => {
+      if (angle) {
+        olderConstraint.onClash(a1, a2, b1, b2, angle);
+      }
     }
   );
 }
@@ -634,8 +636,41 @@ class AngleConstraint extends Constraint {
     return currentAngle === null ? angle : currentAngle - angle;
   }
 
-  onClash(_newerConstraint: this): void {
-    throw new Error('TODO');
+  onClash(newerConstraint: this): void;
+  onClash(
+    a1: Handle,
+    a2: Handle,
+    b1: Handle,
+    b2: Handle,
+    angle: Variable
+  ): void;
+  onClash(
+    newerConstraintOrA1: this | Handle,
+    a2?: Handle,
+    b1?: Handle,
+    b2?: Handle,
+    angle?: Variable
+  ) {
+    let a1: Handle;
+    if (newerConstraintOrA1 instanceof AngleConstraint) {
+      // TODO: why can't I use a destructuring assignment for this??
+      a1 = newerConstraintOrA1.a1;
+      a2 = newerConstraintOrA1.a2;
+      b1 = newerConstraintOrA1.b1;
+      b2 = newerConstraintOrA1.b2;
+      angle = newerConstraintOrA1.angle;
+    } else {
+      a1 = newerConstraintOrA1;
+    }
+
+    const thatAngle =
+      AngleConstraint.computeAngle(
+        a1.position,
+        a2!.position,
+        b1!.position,
+        b2!.position
+      ) ?? 0;
+    variableEquals(this.angle, angle!, this.angle.value - thatAngle);
   }
 
   static computeAngle(
