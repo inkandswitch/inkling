@@ -63,24 +63,35 @@ export default class ConstraintTool extends Tool {
   }
 
   private onHandleMoved() {
-    if (!this.refStrokeGroup) {
-      return;
-    }
-
     for (const strokeGroup of this.page.strokeGroups) {
-      if (strokeGroup !== this.refStrokeGroup) {
-        this.addConstraintsRelativeToReferenceStrokeGroup(strokeGroup);
-      }
+      this.addConstraintsRelativeToReferenceStrokeGroup(strokeGroup);
     }
   }
 
   private addConstraintsRelativeToReferenceStrokeGroup(
     strokeGroup: StrokeGroup
   ) {
+    // add constraints based on this stroke group alone
+
     const a = strokeGroup.a;
     const b = strokeGroup.b;
-    const ra = this.refStrokeGroup!.a;
-    const rb = this.refStrokeGroup!.b;
+
+    if (a.position.x - b.position.x === 0) {
+      constraints.vertical(a, b);
+    }
+
+    if (a.position.y - b.position.y === 0) {
+      constraints.horizontal(a, b);
+    }
+
+    if (strokeGroup === this.refStrokeGroup || !this.refStrokeGroup) {
+      return;
+    }
+
+    // add constraints relative to the reference stroke group
+
+    const ra = this.refStrokeGroup.a;
+    const rb = this.refStrokeGroup.b;
 
     const refLen = Vec.dist(ra.position, rb.position);
     const len = Vec.dist(a.position, b.position);
