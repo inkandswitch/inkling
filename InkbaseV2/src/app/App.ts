@@ -1,18 +1,18 @@
 import Events from './NativeEvents';
 import Page from './Page';
+import Snaps from './Snaps';
 import Selection from './Selection';
 import FreehandSelection from './FreehandSelection';
-import Snaps from './Snaps';
-import SVG from './Svg';
 import ToolPicker from './ToolPicker';
-import Handle from './strokes/Handle';
-import Tool from './tools/Tool';
-import ColorTool from './tools/ColorTool';
-import Stroke from './strokes/Stroke';
-import FormalTool from './tools/FormalTool';
 import FreehandTool from './tools/FreehandTool';
+import FormalTool from './tools/FormalTool';
+import ColorTool from './tools/ColorTool';
+import Tool from './tools/Tool';
+import ConstraintTool from './tools/ConstraintTool';
+import SVG from './Svg';
+import Handle from './strokes/Handle';
+import Stroke from './strokes/Stroke';
 import { runConstraintSolver } from './constraints';
-import { ConstraintTool } from './tools/ConstraintTool';
 import { onEveryFrame } from '../lib/helpers';
 
 const events = new Events();

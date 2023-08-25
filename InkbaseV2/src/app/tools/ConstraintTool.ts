@@ -7,7 +7,7 @@ import FreehandStroke from '../strokes/FreehandStroke';
 import StrokeGroup from '../strokes/StrokeGroup';
 import Tool from './Tool';
 
-export class ConstraintTool extends Tool {
+export default class ConstraintTool extends Tool {
   private fingerDown?: Event;
   private fingerMoved?: Event;
   private refStrokeGroup: StrokeGroup | null = null;
