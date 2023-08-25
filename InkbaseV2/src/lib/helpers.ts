@@ -96,12 +96,10 @@ export function makeIterableIterator<T>(
 // Sorted Set
 // Guarantees unique items, and allows resorting of items when iterating
 export class SortedSet<T> {
-  private items: Array<T> = [];
+  constructor(private readonly items: T[] = []) {}
 
   static fromSet<T>(set: Set<T>) {
-    const ss = new SortedSet<T>();
-    ss.items = Array.from(set);
-    return ss;
+    return new SortedSet(Array.from(set));
   }
 
   add(item: T) {
