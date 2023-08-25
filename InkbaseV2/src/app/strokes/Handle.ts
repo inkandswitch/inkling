@@ -233,7 +233,7 @@ export default class Handle {
       handle.notifyListeners(listener => listener.onHandleMoved(that));
     }
 
-    Constraint.onHandlesChanged();
+    Constraint.onHandlesReconfigured();
   }
 
   absorbNearbyHandles() {
@@ -292,7 +292,7 @@ export default class Handle {
       throw new Error('called breakOff(h) but h is unrelated to receiver');
     }
 
-    Constraint.onHandlesChanged();
+    Constraint.onHandlesReconfigured();
   }
 
   render() {

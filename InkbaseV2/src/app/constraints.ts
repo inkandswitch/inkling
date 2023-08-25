@@ -75,15 +75,15 @@ interface Knowns {
 }
 
 export abstract class Constraint {
-  private static readonly temp = new Set<Constraint>();
-  private static readonly perm = new Set<Constraint>();
+  private static readonly ephemeral = new Set<Constraint>();
+  private static readonly permanent = new Set<Constraint>();
 
   public static get all(): IterableIterator<Constraint> {
     function* generator() {
-      for (const constraint of Constraint.temp) {
+      for (const constraint of Constraint.ephemeral) {
         yield constraint;
       }
-      for (const constraint of Constraint.perm) {
+      for (const constraint of Constraint.permanent) {
         yield constraint;
       }
     }
@@ -91,27 +91,27 @@ export abstract class Constraint {
   }
 
   // This is where constraints are added when you `new` them.
-  private static newConstraintContainer = Constraint.perm;
+  private static newConstraintContainer = Constraint.permanent;
 
-  static newOnesAreTemporary() {
-    Constraint.newConstraintContainer = Constraint.temp;
+  static newOnesAreEphemeral() {
+    Constraint.newConstraintContainer = Constraint.ephemeral;
   }
 
   static newOnesArePermanent() {
-    Constraint.newConstraintContainer = Constraint.perm;
+    Constraint.newConstraintContainer = Constraint.permanent;
   }
 
   static clearTemp() {
-    Constraint.temp.clear();
+    Constraint.ephemeral.clear();
   }
 
   private static find<C extends Constraint>(key: string) {
-    for (const constraint of this.temp) {
+    for (const constraint of this.ephemeral) {
       if (constraint.key === key) {
         return constraint as C;
       }
     }
-    for (const constraint of this.perm) {
+    for (const constraint of this.permanent) {
       if (constraint.key === key) {
         return constraint as C;
       }
@@ -119,7 +119,7 @@ export abstract class Constraint {
     return null;
   }
 
-  static onHandlesChanged() {
+  static onHandlesReconfigured() {
     // TODO
   }
 
@@ -218,7 +218,7 @@ export abstract class Constraint {
   }
 
   remove() {
-    Constraint.perm.delete(this);
+    Constraint.permanent.delete(this);
   }
 
   /**
@@ -452,7 +452,7 @@ export function runConstraintSolver(selection: Selection) {
 
   // Temporarily add fixed position constraints for each selected handle.
   // This is the "finger of God" semantics that we've talked about.
-  Constraint.newOnesAreTemporary();
+  Constraint.newOnesAreEphemeral();
   for (const handle of selection.handles) {
     Constraint.FixedPosition(handle);
   }
@@ -503,8 +503,8 @@ function minimizeError() {
   // This is where we actually run the solver.
   const result = numeric.uncmin((currState: number[]) => {
     let error = 0;
-    for (const c of Constraint.all) {
-      const positions = c.handles.map(handle => {
+    for (const constraint of Constraint.all) {
+      const positions = constraint.handles.map(handle => {
         const xi = xIdx.get(handle);
         const yi = yIdx.get(handle);
         if (xi === undefined && yi === undefined) {
@@ -516,11 +516,11 @@ function minimizeError() {
           };
         }
       });
-      const values = c.variables.map(variable => {
+      const values = constraint.variables.map(variable => {
         const vi = varIdx.get(variable);
         return vi === undefined ? variable.value : currState[vi];
       });
-      error += Math.pow(c.getError(positions, values), 2);
+      error += Math.pow(constraint.getError(positions, values), 2);
     }
     return error;
   }, inputs);
