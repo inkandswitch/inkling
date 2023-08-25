@@ -52,6 +52,33 @@ export function onHandlesReconfigured() {
 
 // #endregion constraints for solver
 
+/**
+ * Calls `fn`, and if that results in the creation of new constraints,
+ * they will go into `dest` instead of `allConstraints`.
+ */
+function temporarilyMakeNewConstraintsGoInto(
+  dest: Constraint[],
+  fn: () => void
+) {
+  // When new constraints are created, they normally go into `allConstraints`.
+  // The creation of new constraints also makes us forget the set of
+  // constraints that we've cached for use w/ the solver (`_constraintsForSolver`).
+  // So first, we need to save both of those things.
+  const constraintsForSolver = _constraintsForSolver;
+  const realAllConstraints = allConstraints;
+
+  // Now we temporarily make `dest` be `allConstraints`, so that new constraints
+  // will go where we want.
+  allConstraints = dest;
+  try {
+    fn();
+  } finally {
+    // Now that `fn` is done, restore things to the way they were before.
+    allConstraints = realAllConstraints;
+    _constraintsForSolver = constraintsForSolver;
+  }
+}
+
 // #region solving
 
 interface Knowns {
@@ -65,28 +92,18 @@ export function solve(selection: Selection) {
   const oldNumConstraints = constraintsForSolver.length;
 
   // We temporarily add fixed position constraints for each selected handle.
-  // This is the "finger of God" semantics that we've talked about. I'm doing
-  // this with a terrible hack that makes the temporary constraints go into
-  // `constraintsForSolver` -- it's really ugly stuff!
-  // TODO: find a better way to do this.
-  const realAllConstraints = allConstraints;
-  allConstraints = constraintsForSolver;
-  for (const handle of selection.handles) {
-    fixedPosition(handle);
-  }
-  // Adding new constraints makes us forget the the cached constraints for
-  // the solver. That's not what we want here, so we undo it w/ the following
-  // ugly assignment.
-  _constraintsForSolver = allConstraints;
-  // And finally, now that we're done adding temporary constraints, change
-  // `allConstraints` back to the real thing, that way any new constraints
-  // that are added by the user will go in the right place.
-  allConstraints = realAllConstraints;
+  // This is the "finger of God" semantics that we've talked about.
+  temporarilyMakeNewConstraintsGoInto(constraintsForSolver, () => {
+    for (const handle of selection.handles) {
+      fixedPosition(handle);
+    }
+  });
 
   try {
     minimizeError();
   } finally {
-    // Remove the temporary fixed position constraints.
+    // Remove the temporary fixed position constraints that we added to
+    // `constraintsForSolver`.
     constraintsForSolver.length = oldNumConstraints;
   }
 }
