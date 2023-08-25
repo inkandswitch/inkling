@@ -85,7 +85,6 @@ export class ConstraintTool extends Tool {
     const refLen = Vec.dist(ra.position, rb.position);
     const len = Vec.dist(a.position, b.position);
     const lenDiff = Math.abs(refLen - len);
-    console.log('lenDiff', lenDiff);
     if (lenDiff < 10) {
       const refLenVar = Constraint.Length(ra, rb).length;
       const newLenVar = Constraint.Length(a, b).length;
