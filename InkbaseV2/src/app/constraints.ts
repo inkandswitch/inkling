@@ -527,13 +527,12 @@ class VerticalConstraint extends Constraint {
 export function length(a: Handle, b: Handle, length?: Variable) {
   return addConstraint(
     new ConstraintKeyGenerator('length', [[a, b]], []),
-    keyGenerator =>
-      new LengthConstraint(
-        a,
-        b,
-        length ?? new Variable(Vec.dist(a.position, b.position)),
-        keyGenerator
-      ),
+    keyGenerator => {
+      if (!length) {
+        length = new Variable(Vec.dist(a.position, b.position));
+      }
+      return new LengthConstraint(a, b, length, keyGenerator);
+    },
     olderConstraint => {
       if (length) {
         olderConstraint.onClash(length);
