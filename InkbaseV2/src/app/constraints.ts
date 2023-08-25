@@ -42,6 +42,8 @@ function getConstraintsForSolver() {
   }
 
   _constraintsForSolver = Array.from(constraintByKey.values());
+  console.log('constraints', allConstraints);
+  console.log('for solver', _constraintsForSolver);
   return _constraintsForSolver;
 }
 
