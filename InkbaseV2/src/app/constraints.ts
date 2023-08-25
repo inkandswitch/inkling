@@ -215,7 +215,8 @@ class ConstraintKeyGenerator {
   constructor(
     private readonly type: string,
     private readonly handleGroups: Handle[][],
-    private readonly variableGroups: Variable[][]
+    private readonly variableGroups: Variable[][],
+    private readonly constantGroups: number[][]
   ) {
     this.key = this.generateKey();
   }
@@ -241,7 +242,10 @@ class ConstraintKeyGenerator {
           .join(',')
       )
       .map(variableIdGroup => `[${variableIdGroup}]`);
-    return `${this.type}(${handleIdGroups},${variableIdGroups})`;
+    const constantGroups = this.constantGroups
+      .map(constantGroup => constantGroup.sort().join(','))
+      .map(constantGroup => `[${constantGroup}]`);
+    return `${this.type}(${handleIdGroups},${variableIdGroups},${constantGroups})`;
   }
 }
 
@@ -271,6 +275,7 @@ abstract class Constraint {
   constructor(
     public readonly handles: Handle[],
     public readonly variables: Variable[],
+    public readonly constants: number[],
     private readonly keyGenerator: ConstraintKeyGenerator
   ) {
     allConstraints.push(this);
@@ -322,7 +327,7 @@ abstract class Constraint {
 
 export function fixedValue(variable: Variable, value: number = variable.value) {
   return addConstraint(
-    new ConstraintKeyGenerator('fixedValue', [], [[variable]]),
+    new ConstraintKeyGenerator('fixedValue', [], [[variable]], []),
     keyGenerator => new FixedValueConstraint(variable, value, keyGenerator),
     olderConstraint => olderConstraint.onClash(value)
   );
@@ -334,7 +339,7 @@ class FixedValueConstraint extends Constraint {
     public value: number,
     keyGenerator: ConstraintKeyGenerator
   ) {
-    super([], [variable], keyGenerator);
+    super([], [variable], [], keyGenerator);
   }
 
   propagateKnowns(knowns: Knowns): boolean {
@@ -362,7 +367,7 @@ class FixedValueConstraint extends Constraint {
 
 export function variableEquals(a: Variable, b: Variable) {
   return addConstraint(
-    new ConstraintKeyGenerator('variableEquals', [], [[a, b]]),
+    new ConstraintKeyGenerator('variableEquals', [], [[a, b]], []), // TODO: add k (a = b + k)
     keyGenerator => new VariableEqualsConstraint(a, b, keyGenerator),
     _olderConstraint => {}
   );
@@ -374,7 +379,7 @@ class VariableEqualsConstraint extends Constraint {
     private readonly b: Variable,
     keyGenerator: ConstraintKeyGenerator
   ) {
-    super([], [a, b], keyGenerator);
+    super([], [a, b], [], keyGenerator);
   }
 
   propagateKnowns(knowns: Knowns): boolean {
@@ -403,7 +408,7 @@ class VariableEqualsConstraint extends Constraint {
 
 export function fixedPosition(handle: Handle, pos: Position = handle.position) {
   return addConstraint(
-    new ConstraintKeyGenerator('fixedPosition', [[handle]], []),
+    new ConstraintKeyGenerator('fixedPosition', [[handle]], [], []),
     keyGenerator => new FixedPositionConstraint(handle, pos, keyGenerator),
     olderConstraint => olderConstraint.onClash(pos)
   );
@@ -415,7 +420,7 @@ class FixedPositionConstraint extends Constraint {
     public position: Position,
     keyGenerator: ConstraintKeyGenerator
   ) {
-    super([handle], [], keyGenerator);
+    super([handle], [], [], keyGenerator);
   }
 
   propagateKnowns(knowns: Knowns): boolean {
@@ -444,7 +449,7 @@ class FixedPositionConstraint extends Constraint {
 
 export function horizontal(a: Handle, b: Handle) {
   return addConstraint(
-    new ConstraintKeyGenerator('horizontal', [[a, b]], []),
+    new ConstraintKeyGenerator('horizontal', [[a, b]], [], []),
     keyGenerator => new HorizontalConstraint(a, b, keyGenerator),
     _olderConstraint => {}
   );
@@ -456,7 +461,7 @@ class HorizontalConstraint extends Constraint {
     private readonly b: Handle,
     keyGenerator: ConstraintKeyGenerator
   ) {
-    super([a, b], [], keyGenerator);
+    super([a, b], [], [], keyGenerator);
   }
 
   propagateKnowns(knowns: Knowns): boolean {
@@ -485,7 +490,7 @@ class HorizontalConstraint extends Constraint {
 
 export function vertical(a: Handle, b: Handle) {
   return addConstraint(
-    new ConstraintKeyGenerator('vertical', [[a, b]], []),
+    new ConstraintKeyGenerator('vertical', [[a, b]], [], []),
     keyGenerator => new VerticalConstraint(a, b, keyGenerator),
     _olderConstraint => {}
   );
@@ -497,7 +502,7 @@ class VerticalConstraint extends Constraint {
     private readonly b: Handle,
     keyGenerator: ConstraintKeyGenerator
   ) {
-    super([a, b], [], keyGenerator);
+    super([a, b], [], [], keyGenerator);
   }
 
   propagateKnowns(knowns: Knowns): boolean {
@@ -526,7 +531,7 @@ class VerticalConstraint extends Constraint {
 
 export function length(a: Handle, b: Handle, length?: Variable) {
   return addConstraint(
-    new ConstraintKeyGenerator('length', [[a, b]], []),
+    new ConstraintKeyGenerator('length', [[a, b]], [], []),
     keyGenerator => {
       if (!length) {
         length = new Variable(Vec.dist(a.position, b.position));
@@ -548,7 +553,7 @@ class LengthConstraint extends Constraint {
     public readonly length: Variable,
     keyGenerator: ConstraintKeyGenerator
   ) {
-    super([a, b], [length], keyGenerator);
+    super([a, b], [length], [], keyGenerator);
   }
 
   getError(positions: Position[], values: number[]): number {
@@ -580,6 +585,7 @@ export function angle(
         [a1, a2],
         [b1, b2],
       ],
+      [],
       []
     ),
     keyGenerator => {
@@ -610,7 +616,7 @@ class AngleConstraint extends Constraint {
     public readonly angle: Variable,
     keyGenerator: ConstraintKeyGenerator
   ) {
-    super([a1, a2, b1, b2], [angle], keyGenerator);
+    super([a1, a2, b1, b2], [angle], [], keyGenerator);
   }
 
   getError(positions: Position[], values: number[]): number {
