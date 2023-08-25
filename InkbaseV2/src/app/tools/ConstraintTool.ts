@@ -19,7 +19,7 @@ export class ConstraintTool extends Tool {
   update(events: Events) {
     super.update(events);
 
-    const fingerDown = events.did('finger', 'began');
+    const fingerDown = events.find('finger', 'began');
     if (fingerDown && !this.fingerDown) {
       this.fingerDown = fingerDown;
       setTimeout(() => {
@@ -33,7 +33,7 @@ export class ConstraintTool extends Tool {
       return;
     }
 
-    const fingerMoved = events.did('finger', 'moved');
+    const fingerMoved = events.find('finger', 'moved');
     if (fingerMoved) {
       if (fingerMoved.id === this.fingerDown.id) {
         // The finger that moved is the finger that went down first.
@@ -50,7 +50,7 @@ export class ConstraintTool extends Tool {
       // onHandleMoved() to react to higher-level events.
     }
 
-    const fingerEnded = events.did('finger', 'ended', this.fingerDown.id);
+    const fingerEnded = events.find('finger', 'ended', this.fingerDown.id);
     if (fingerEnded) {
       this.fingerDown = undefined;
       this.fingerMoved = undefined;

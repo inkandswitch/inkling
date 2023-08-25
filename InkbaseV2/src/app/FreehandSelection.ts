@@ -14,7 +14,7 @@ export default class FreehandSelection {
   constructor(private readonly page: Page) {}
 
   update(events: Events) {
-    const fingerDown = events.did('finger', 'began');
+    const fingerDown = events.find('finger', 'began');
     if (fingerDown) {
       this.fingerDown = fingerDown;
       const found = this.page.findFreehandStrokeNear(fingerDown.position);
@@ -38,12 +38,12 @@ export default class FreehandSelection {
     }
 
     if (this.fingerDown) {
-      const fingerMoved = events.did('finger', 'moved', this.fingerDown.id);
+      const fingerMoved = events.find('finger', 'moved', this.fingerDown.id);
       if (fingerMoved) {
         this.fingerMoved = fingerMoved;
       }
 
-      const fingerEnded = events.did('finger', 'ended', this.fingerDown.id);
+      const fingerEnded = events.find('finger', 'ended', this.fingerDown.id);
       if (fingerEnded) {
         this.fingerDown = null;
         this.fingerMoved = null;

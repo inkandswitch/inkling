@@ -42,34 +42,38 @@ export default class Tool<S extends Stroke = Stroke> {
   }
 
   update(events: Events) {
-    const pencilDown = events.did('pencil', 'began') as PencilEvent | undefined;
+    const pencilDown = events.find('pencil', 'began') as
+      | PencilEvent
+      | undefined;
     if (pencilDown) {
       this.startStroke({ ...pencilDown.position, ...pencilDown });
     }
 
-    const pencilMoves = events.didAll('pencil', 'moved') as PencilEvent[];
+    const pencilMoves = events.findAll('pencil', 'moved') as PencilEvent[];
     if (this.stroke) {
       pencilMoves.forEach(pencilMove => {
         this.extendStroke({ ...pencilMove.position, ...pencilMove });
       });
     }
 
-    const pencilUp = events.did('pencil', 'ended');
+    const pencilUp = events.find('pencil', 'ended');
     if (pencilUp && this.stroke) {
       this.endStroke();
     }
 
-    const fingerDown = events.did('finger', 'began') as FingerEvent | undefined;
+    const fingerDown = events.find('finger', 'began') as
+      | FingerEvent
+      | undefined;
     if (fingerDown) {
       this.startFinger({ ...fingerDown.position, ...fingerDown });
     }
 
-    const fingerMoves = events.didAll('finger', 'moved') as FingerEvent[];
+    const fingerMoves = events.findAll('finger', 'moved') as FingerEvent[];
     fingerMoves.forEach(fingerMove => {
       this.moveFinger({ ...fingerMove.position, ...fingerMove });
     });
 
-    const fingerUp = events.did('finger', 'ended');
+    const fingerUp = events.find('finger', 'ended');
     if (fingerUp) {
       this.endFinger();
     }

@@ -51,7 +51,7 @@ export default class FormalTool extends Tool {
 
   update(events: Events) {
     // PENCIL DOWN
-    const pencilDown = events.did('pencil', 'began');
+    const pencilDown = events.find('pencil', 'began');
     if (pencilDown) {
       this.inputPoints = [pencilDown.position];
       this.renderPoints = [Vec.clone(pencilDown.position)];
@@ -65,7 +65,7 @@ export default class FormalTool extends Tool {
     }
 
     // PENCIL MOVE
-    const pencilMoves = events.didAll('pencil', 'moved');
+    const pencilMoves = events.findAll('pencil', 'moved');
     pencilMoves.forEach(pencilMove => {
       // Compute speed
       const newSpeed = Vec.dist(this.previousPosition!, pencilMove.position);
@@ -130,7 +130,7 @@ export default class FormalTool extends Tool {
     });
 
     // PENCIL UP
-    const pencilUp = events.did('pencil', 'ended');
+    const pencilUp = events.find('pencil', 'ended');
     if (pencilUp) {
       if (this.mode !== 'fixed') {
         this.doFit();

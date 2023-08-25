@@ -10,7 +10,7 @@ export default class ToolPicker {
   }
 
   update(events: Events) {
-    const fingerDown = events.did('finger', 'began');
+    const fingerDown = events.find('finger', 'began');
     if (!fingerDown) {
       return;
     }

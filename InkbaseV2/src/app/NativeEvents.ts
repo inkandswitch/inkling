@@ -60,19 +60,19 @@ export default class Events {
     this.events.push(event);
   }
 
-  did(type: EventType, state: EventState, id?: TouchId) {
+  find(type: EventType, state: EventState, id?: TouchId) {
     return this.events.find(
       e => e.type === type && e.state === state && (!id || e.id === id)
     );
   }
 
-  didAll(type: EventType, state: EventState, id?: TouchId) {
+  findAll(type: EventType, state: EventState, id?: TouchId) {
     return this.events.filter(
       e => e.type === type && e.state === state && (!id || e.id === id)
     );
   }
 
-  didLast(type: EventType, state: EventState, id?: TouchId) {
+  findLast(type: EventType, state: EventState, id?: TouchId) {
     return this.events.findLast(
       e => e.type === type && e.state === state && (!id || e.id === id)
     );

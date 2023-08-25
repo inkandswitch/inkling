@@ -27,7 +27,7 @@ export default class Selection {
   }
 
   update(events: Events) {
-    const fingerDown = events.did('finger', 'began');
+    const fingerDown = events.find('finger', 'began');
     if (fingerDown) {
       // If we weren't already holding down a finger
       if (!this.firstFinger) {
@@ -79,13 +79,17 @@ export default class Selection {
 
     // If we're already holding down a finger, switch to pinch gesture
     if (this.firstFinger) {
-      const fingerMove = events.didLast('finger', 'moved', this.firstFinger.id);
+      const fingerMove = events.findLast(
+        'finger',
+        'moved',
+        this.firstFinger.id
+      );
       if (fingerMove) {
         this.firstFingerMoved = fingerMove;
         this.transformSelection();
       }
 
-      const fingerUp = events.did('finger', 'ended', this.firstFinger.id);
+      const fingerUp = events.find('finger', 'ended', this.firstFinger.id);
       if (fingerUp) {
         const shortTap = fingerUp.timestamp - this.firstFinger.timestamp < 0.2;
         if (shortTap) {
@@ -115,13 +119,13 @@ export default class Selection {
     }
 
     if (this.secondFinger) {
-      const fingerMove = events.did('finger', 'moved', this.secondFinger.id);
+      const fingerMove = events.find('finger', 'moved', this.secondFinger.id);
       if (fingerMove) {
         this.secondFingerMoved = fingerMove;
         this.transformSelection();
       }
 
-      const fingerTwoUp = events.did('finger', 'ended', this.secondFinger.id);
+      const fingerTwoUp = events.find('finger', 'ended', this.secondFinger.id);
       if (fingerTwoUp) {
         this.secondFinger = undefined;
         this.secondFingerMoved = undefined;
