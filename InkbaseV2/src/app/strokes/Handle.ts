@@ -105,10 +105,21 @@ export default class Handle {
 
   // methods that can be called on any handle
 
+  /**
+   * Returns this handle's id, if it's canonical,
+   * or the id of its canonical instance, if it's been absorbed.
+   */
   get id(): number {
     return !this.instanceState.isCanonical
       ? this.canonicalInstance.id
       : this.instanceState.id;
+  }
+
+  /** Returns this handle's own id, which doesn't change when the handle is absorbed. */
+  get ownId(): number {
+    return this.instanceState.isCanonical
+      ? this.instanceState.id
+      : this.instanceState.origId;
   }
 
   get type(): HandleType {
