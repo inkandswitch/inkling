@@ -365,10 +365,11 @@ class FixedValueConstraint extends Constraint {
   }
 }
 
-export function variableEquals(a: Variable, b: Variable) {
+/** a = b + k */
+export function variableEquals(a: Variable, b: Variable, k = 0) {
   return addConstraint(
-    new ConstraintKeyGenerator('variableEquals', [], [[a, b]], []), // TODO: add k (a = b + k)
-    keyGenerator => new VariableEqualsConstraint(a, b, keyGenerator),
+    new ConstraintKeyGenerator('variableEquals', [], [[a, b]], [[k]]),
+    keyGenerator => new VariableEqualsConstraint(a, b, k, keyGenerator),
     _olderConstraint => {}
   );
 }
@@ -377,6 +378,7 @@ class VariableEqualsConstraint extends Constraint {
   constructor(
     private readonly a: Variable,
     private readonly b: Variable,
+    private readonly k: number,
     keyGenerator: ConstraintKeyGenerator
   ) {
     super([], [a, b], [], keyGenerator);
@@ -384,11 +386,11 @@ class VariableEqualsConstraint extends Constraint {
 
   propagateKnowns(knowns: Knowns): boolean {
     if (!knowns.variables.has(this.a) && knowns.variables.has(this.b)) {
-      this.a.value = this.b.value;
+      this.a.value = this.b.value + this.k;
       knowns.variables.add(this.a);
       return true;
     } else if (knowns.variables.has(this.a) && !knowns.variables.has(this.b)) {
-      this.b.value = this.a.value;
+      this.b.value = this.a.value - this.k;
       knowns.variables.add(this.b);
       return true;
     } else {
@@ -398,7 +400,7 @@ class VariableEqualsConstraint extends Constraint {
 
   getError(_positions: Position[], values: number[]) {
     const [aValue, bValue] = values;
-    return aValue - bValue;
+    return aValue - (bValue + this.k);
   }
 
   onClash(_newerConstraint: this) {
