@@ -60,18 +60,40 @@ export default class Events {
     this.events.push(event);
   }
 
+  find(
+    type: 'pencil',
+    state: EventState,
+    id?: TouchId
+  ): PencilEvent | undefined;
+  find(
+    type: 'finger',
+    state: EventState,
+    id?: TouchId
+  ): FingerEvent | undefined;
   find(type: EventType, state: EventState, id?: TouchId) {
     return this.events.find(
       e => e.type === type && e.state === state && (!id || e.id === id)
     );
   }
 
+  findAll(type: 'pencil', state: EventState, id?: TouchId): PencilEvent[];
+  findAll(type: 'finger', state: EventState, id?: TouchId): FingerEvent[];
   findAll(type: EventType, state: EventState, id?: TouchId) {
     return this.events.filter(
       e => e.type === type && e.state === state && (!id || e.id === id)
     );
   }
 
+  findLast(
+    type: 'pencil',
+    state: EventState,
+    id?: TouchId
+  ): PencilEvent | undefined;
+  findLast(
+    type: 'finger',
+    state: EventState,
+    id?: TouchId
+  ): FingerEvent | undefined;
   findLast(type: EventType, state: EventState, id?: TouchId) {
     return this.events.findLast(
       e => e.type === type && e.state === state && (!id || e.id === id)
