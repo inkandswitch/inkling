@@ -42,14 +42,12 @@ export default class Tool<S extends Stroke = Stroke> {
   }
 
   update(events: Events) {
-    const pencilDown = events.find('pencil', 'began') as
-      | PencilEvent
-      | undefined;
+    const pencilDown = events.find('pencil', 'began');
     if (pencilDown) {
       this.startStroke({ ...pencilDown.position, ...pencilDown });
     }
 
-    const pencilMoves = events.findAll('pencil', 'moved') as PencilEvent[];
+    const pencilMoves = events.findAll('pencil', 'moved');
     if (this.stroke) {
       pencilMoves.forEach(pencilMove => {
         this.extendStroke({ ...pencilMove.position, ...pencilMove });
@@ -61,14 +59,12 @@ export default class Tool<S extends Stroke = Stroke> {
       this.endStroke();
     }
 
-    const fingerDown = events.find('finger', 'began') as
-      | FingerEvent
-      | undefined;
+    const fingerDown = events.find('finger', 'began');
     if (fingerDown) {
       this.startFinger({ ...fingerDown.position, ...fingerDown });
     }
 
-    const fingerMoves = events.findAll('finger', 'moved') as FingerEvent[];
+    const fingerMoves = events.findAll('finger', 'moved');
     fingerMoves.forEach(fingerMove => {
       this.moveFinger({ ...fingerMove.position, ...fingerMove });
     });
