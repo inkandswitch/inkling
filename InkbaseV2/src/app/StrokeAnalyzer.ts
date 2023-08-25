@@ -172,9 +172,6 @@ class StrokeGraph {
       const startStroke = partialStrokes.pop();
       const targetNodes = partialStrokes.map(ps=>ps.nodes[1]);
 
-      
-
-
       for(const targetNode of targetNodes) {
 
       }
@@ -228,40 +225,6 @@ class StrokeGraph {
     })
     
   }
-
-  // Find cycles using meet-in-the-middle
-  // findCyclesMIM(
-  //   startNode: StrokeGraphNode
-  // ){
-
-  // }
-
-  // findCycles(
-  //   startNode: StrokeGraphNode, 
-  //   currentNode: StrokeGraphNode, 
-  //   visited: Set<StrokeGraphNode> = new Set(), 
-  //   path: Array<StrokeGraphNode> = [], 
-  //   cycles: Array<Array<StrokeGraphNode>> = []
-  // ) {
-  //   visited.add(currentNode);
-  //   path.push(currentNode);
-
-
-
-  //   // // Find neighbours
-  //   for (const adjacentNode of this.getAdjacentNodes(currentNode)) {
-  //     if (adjacentNode === startNode && path.length > 2) {
-  //       cycles.push([...path, startNode]);
-  //     } else if(!visited.has(adjacentNode)) {
-  //       this.findCycles(startNode, adjacentNode, visited, path, cycles);
-  //     }
-  //   }
-
-  //   path.pop();
-  //   visited.delete(currentNode);
-
-  //   return cycles
-  // }
 }
 
 // **
@@ -281,18 +244,25 @@ export default class StrokeAnalyzer {
   }
 
   addStroke(stroke: FreehandStroke) {
+    console.log(stroke);
+    
     this.generateConnectionsForStroke(stroke);
     this.generateLoopsForStroke(stroke);
   }
+  
 
   generateConnectionsForStroke(stroke: FreehandStroke) {
     // Generate connections for this stroke
+    
     for (const otherStroke of this.page.freehandStrokes) {
+      
       if(stroke === otherStroke) {
         continue;
       }
+      
       const connectionZonesForStroke = findConnectionZonesBetweenStrokes(stroke.points, otherStroke.points);
       
+
       for(const connectionZone of connectionZonesForStroke) {
         // Compute position of connection zone
         const position = Vec.mulS(

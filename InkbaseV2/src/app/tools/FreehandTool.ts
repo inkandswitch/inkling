@@ -26,6 +26,14 @@ export default class FreehandTool extends Tool<FreehandStroke> {
     }
   }
 
+  endStroke() {
+    if(this.stroke !== undefined) {
+      this.page.updatedStroke(this.stroke);
+    }
+    
+    super.endStroke();
+  }
+
   onAction() {
     this.toggleModes();
   }
