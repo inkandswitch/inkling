@@ -116,7 +116,7 @@ export default class ConstraintTool extends Tool {
         ra.position,
         rb.position
       ) ?? 0;
-    if ((((angle + 2 * Math.PI) % (Math.PI / 4)) * 180) / Math.PI < 5) {
+    if ((((angle + 2 * Math.PI) % (Math.PI / 2)) * 180) / Math.PI < 5) {
       this.addConstraintCandidate('angle', strokeGroup);
     }
   }
@@ -152,20 +152,18 @@ export default class ConstraintTool extends Tool {
           SVG.now('polyline', {
             points: SVG.points([
               { x: a.position.x, y: 0 },
-              { x: a.position.x, y: 1_000_000 },
+              { x: a.position.x, y: 10_000 },
             ]),
-            stroke: 'rgba(0, 0, 255, 0.2)',
-            'stroke-dasharray': '10, 10',
+            stroke: 'rgba(0, 0, 255, 0.1)',
           });
           break;
         case 'horizontal':
           SVG.now('polyline', {
             points: SVG.points([
               { x: 0, y: a.position.y },
-              { x: 1_000_000, y: a.position.y },
+              { x: 10_000, y: a.position.y },
             ]),
-            stroke: 'rgba(0, 0, 255, 0.2)',
-            'stroke-dasharray': '10, 10',
+            stroke: 'rgba(0, 0, 255, 0.1)',
           });
           break;
         case 'length':
@@ -178,20 +176,18 @@ export default class ConstraintTool extends Tool {
         case 'angle': {
           SVG.now('polyline', {
             points: SVG.points([
-              Vec.lerp(a.position, b.position, 1_000_000),
-              Vec.lerp(a.position, b.position, -1_000_000),
+              Vec.lerp(a.position, b.position, 10_000),
+              Vec.lerp(a.position, b.position, -10_000),
             ]),
-            stroke: 'rgba(0, 0, 255, 0.2)',
-            'stroke-dasharray': '10, 10',
+            stroke: 'rgba(0, 0, 255, 0.1)',
           });
           const { a: ra, b: rb } = this.refStrokeGroup!;
           SVG.now('polyline', {
             points: SVG.points([
-              Vec.lerp(ra.position, rb.position, 1_000_000),
-              Vec.lerp(ra.position, rb.position, -1_000_000),
+              Vec.lerp(ra.position, rb.position, 10_000),
+              Vec.lerp(ra.position, rb.position, -10_000),
             ]),
-            stroke: 'rgba(0, 0, 255, 0.2)',
-            'stroke-dasharray': '10, 10',
+            stroke: 'rgba(0, 0, 255, 0.1)',
           });
           break;
         }
