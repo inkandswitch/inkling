@@ -96,6 +96,10 @@ export function solve(selection: Selection) {
   const constraintsForSolver = getConstraintsForSolver();
   const oldNumConstraints = constraintsForSolver.length;
 
+  if (constraintsForSolver.length === 0) {
+    return;
+  }
+
   // We temporarily add fixed position constraints for each selected handle.
   // This is the "finger of God" semantics that we've talked about.
   temporarilyMakeNewConstraintsGoInto(constraintsForSolver, () => {
@@ -106,6 +110,13 @@ export function solve(selection: Selection) {
 
   try {
     minimizeError(constraintsForSolver);
+  } catch (e) {
+    console.log('minimizeError threw', e);
+    for (const c of constraintsForSolver) {
+      console.log('c', c);
+    }
+    console.log('dassall');
+    throw e;
   } finally {
     // Remove the temporary fixed position constraints that we added to
     // `constraintsForSolver`.
@@ -114,7 +125,17 @@ export function solve(selection: Selection) {
 }
 
 function minimizeError(constraints: Constraint[]) {
-  const things = [...Variable.all, ...Handle.all];
+  const constrainedThings = new Set<Handle | Variable>();
+  for (const constraint of constraints) {
+    for (const variable of constraint.variables) {
+      constrainedThings.add(variable);
+    }
+    for (const handle of constraint.handles) {
+      constrainedThings.add(handle);
+    }
+  }
+
+  const things = Array.from(constrainedThings);
   const knowns = computeKnowns(constraints);
 
   // The state that goes into `inputs` is the stuff that can be modified by the solver.
@@ -141,7 +162,8 @@ function minimizeError(constraints: Constraint[]) {
   }
 
   // This is where we actually run the solver.
-  const result = numeric.uncmin((currState: number[]) => {
+
+  function computeTotalError(currState: number[]) {
     let error = 0;
     for (const constraint of constraints) {
       const positions = constraint.handles.map(handle => {
@@ -164,25 +186,51 @@ function minimizeError(constraints: Constraint[]) {
       error += Math.pow(constraint.getError(positions, values), 2);
     }
     return error;
-  }, inputs);
+  }
 
-  // Now we write the solution from the solver back into our handles and variables.
-  const outputs = result.solution;
-  for (const thing of things) {
-    if (thing instanceof Variable && !knowns.variables.has(thing)) {
-      thing.value = outputs.shift()!;
-    } else if (thing instanceof Handle) {
-      const knowX = knowns.xs.has(thing);
-      const knowY = knowns.ys.has(thing);
-      if (knowX && knowY) {
-        // no update required
-        continue;
-      }
+  const oldError = computeTotalError(inputs);
 
-      const x = knowX ? thing.position.x : outputs.shift()!;
-      const y = knowY ? thing.position.y : outputs.shift()!;
-      thing.position = { x, y };
+  // const grad = (state: number[]) => numeric.gradient(computeTotalError, state);
+  // const gradZero = (state: number[]) => grad(state).every(n => n === 0);
+  // if (gradZero(inputs)) {
+  //   return;
+  // }
+
+  try {
+    const result = numeric.uncmin(
+      computeTotalError,
+      inputs,
+      0.01,
+      undefined,
+      100
+    );
+    if (result.f > oldError) {
+      console.log(':(');
+      return;
     }
+
+    // Now we write the solution from the solver back into our handles and variables.
+    const outputs = result.solution;
+    for (const thing of things) {
+      if (thing instanceof Variable && !knowns.variables.has(thing)) {
+        thing.value = outputs.shift()!;
+      } else if (thing instanceof Handle) {
+        const knowX = knowns.xs.has(thing);
+        const knowY = knowns.ys.has(thing);
+        if (knowX && knowY) {
+          // no update required
+          continue;
+        }
+
+        const x = knowX ? thing.position.x : outputs.shift()!;
+        const y = knowY ? thing.position.y : outputs.shift()!;
+        thing.position = { x, y };
+      }
+    }
+  } catch (e) {
+    console.log('inputs', inputs);
+    console.log('knowns', knowns);
+    throw e;
   }
 }
 
@@ -667,7 +715,7 @@ export function computeAngle(
 ): number | null {
   const va = Vec.sub(a2Pos, a1Pos);
   const vb = Vec.sub(b2Pos, b1Pos);
-  return Vec.len(va) < 5 || Vec.len(vb) < 5
+  return Vec.len(va) < 1 || Vec.len(vb) < 1
     ? null
     : Vec.angleBetweenClockwise(va, vb);
 }

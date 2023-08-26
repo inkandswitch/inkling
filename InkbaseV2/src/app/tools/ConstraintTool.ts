@@ -75,7 +75,7 @@ export default class ConstraintTool extends Tool {
   }
 
   private onLongPress(pos: Position) {
-    this.refStrokeGroup = this.page.findStrokeGroupNear(pos);
+    this.refStrokeGroup = this.page.findStrokeGroupNear(pos, 40);
   }
 
   private onHandleMoved() {
@@ -117,16 +117,16 @@ export default class ConstraintTool extends Tool {
       this.addConstraintCandidate('length', strokeGroup);
     }
 
-    const angle =
-      constraints.computeAngle(
-        a.position,
-        b.position,
-        ra.position,
-        rb.position
-      ) ?? 0;
-    if ((((angle + 2 * Math.PI) % (Math.PI / 4)) * 180) / Math.PI < 5) {
-      this.addConstraintCandidate('angle', strokeGroup);
-    }
+    // const angle =
+    //   constraints.computeAngle(
+    //     a.position,
+    //     b.position,
+    //     ra.position,
+    //     rb.position
+    //   ) ?? 0;
+    // if ((((angle + 2 * Math.PI) % (Math.PI / 4)) * 180) / Math.PI < 5) {
+    //   this.addConstraintCandidate('angle', strokeGroup);
+    // }
   }
 
   private addConstraintCandidate(
@@ -186,8 +186,8 @@ export default class ConstraintTool extends Tool {
         case 'angle': {
           SVG.now('polyline', {
             points: SVG.points([
-              Vec.lerp(a.position, b.position, 1_000),
-              Vec.lerp(a.position, b.position, -1_000),
+              Vec.lerp(a.position, b.position, 1_000_000),
+              Vec.lerp(a.position, b.position, -1_000_000),
             ]),
             stroke: 'rgba(0, 0, 255, 0.2)',
             'stroke-dasharray': '10, 10',
@@ -195,8 +195,8 @@ export default class ConstraintTool extends Tool {
           const { a: ra, b: rb } = this.refStrokeGroup!;
           SVG.now('polyline', {
             points: SVG.points([
-              Vec.lerp(ra.position, rb.position, 1_000),
-              Vec.lerp(ra.position, rb.position, -1_000),
+              Vec.lerp(ra.position, rb.position, 1_000_000),
+              Vec.lerp(ra.position, rb.position, -1_000_000),
             ]),
             stroke: 'rgba(0, 0, 255, 0.2)',
             'stroke-dasharray': '10, 10',
