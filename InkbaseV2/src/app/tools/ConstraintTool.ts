@@ -93,13 +93,13 @@ export default class ConstraintTool extends Tool {
     const a = strokeGroup.a;
     const b = strokeGroup.b;
 
-    // if (Math.abs(a.position.x - b.position.x) < 5) {
-    //   this.addConstraintCandidate('vertical', strokeGroup);
-    // }
+    if (Math.abs(a.position.x - b.position.x) < 5) {
+      this.addConstraintCandidate('vertical', strokeGroup);
+    }
 
-    // if (Math.abs(a.position.y - b.position.y) < 5) {
-    //   this.addConstraintCandidate('horizontal', strokeGroup);
-    // }
+    if (Math.abs(a.position.y - b.position.y) < 5) {
+      this.addConstraintCandidate('horizontal', strokeGroup);
+    }
 
     if (strokeGroup === this.refStrokeGroup || !this.refStrokeGroup) {
       return;
