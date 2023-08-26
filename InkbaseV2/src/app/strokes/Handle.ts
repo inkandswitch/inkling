@@ -19,7 +19,7 @@ interface CanonicalInstanceState {
   absorbedHandles: Set<Handle>;
   position: Position;
   elements: { normal: SVGElement; selected: SVGElement; label: SVGTextElement };
-  selected: boolean;
+  isSelected: boolean;
   needsRerender: boolean;
   wasRemoved: boolean;
 }
@@ -86,7 +86,7 @@ export default class Handle {
           content: '?',
         }) as SVGTextElement,
       },
-      selected: false,
+      isSelected: false,
       needsRerender: true,
       wasRemoved: false,
     };
@@ -167,7 +167,7 @@ export default class Handle {
       return;
     }
 
-    this.instanceState.selected = true;
+    this.instanceState.isSelected = true;
     this.instanceState.needsRerender = true;
   }
 
@@ -177,8 +177,14 @@ export default class Handle {
       return;
     }
 
-    this.instanceState.selected = false;
+    this.instanceState.isSelected = false;
     this.instanceState.needsRerender = true;
+  }
+
+  get isSelected(): boolean {
+    return this.instanceState.isCanonical
+      ? this.instanceState.isSelected
+      : this.canonicalInstance.isSelected;
   }
 
   remove() {
@@ -312,7 +318,7 @@ export default class Handle {
 
     SVG.update(state.elements.selected, {
       transform: `translate(${state.position.x} ${state.position.y})`,
-      fill: state.selected ? 'rgba(180, 134, 255, 0.42)' : 'none',
+      fill: state.isSelected ? 'rgba(180, 134, 255, 0.42)' : 'none',
     });
 
     SVG.update(state.elements.label, {
