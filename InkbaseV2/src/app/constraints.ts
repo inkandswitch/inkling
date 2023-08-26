@@ -5,27 +5,119 @@ import Vec from '../lib/vec';
 import Handle from './strokes/Handle';
 import Selection from './Selection';
 
+type VariableInfo = ChildVariableInfo | ParentVariableInfo;
+
+interface ChildVariableInfo {
+  type: 'child';
+  parent: Variable;
+}
+
+interface ParentVariableInfo {
+  type: 'parent';
+  childToOffset: Map<Variable, number>;
+}
+
 class Variable {
   static readonly all: Variable[] = [];
 
   readonly id = generateId();
 
-  constructor(public value: number = 0) {
+  info: VariableInfo = {
+    type: 'parent',
+    childToOffset: new Map(),
+  };
+
+  constructor(private _value: number = 0) {
     Variable.all.push(this);
+  }
+
+  get value() {
+    return this._value;
+  }
+
+  set value(newValue: number) {
+    this._value = newValue;
+    if (this.info.type === 'parent') {
+      for (const [child, offset] of this.info.childToOffset.entries()) {
+        child.value = newValue + offset;
+      }
+    }
+  }
+
+  computeValueFromParentValue(parentValue: number): number {
+    if (this.info.type !== 'child') {
+      throw new Error(
+        'called computeValueFromParentValue() on parent variable'
+      );
+    }
+
+    const offset = (
+      this.info.parent.info as ParentVariableInfo
+    ).childToOffset.get(this)!;
+    return parentValue + offset;
+  }
+
+  adopt(child: Variable, offset: number) {
+    if (this.info.type !== 'parent') {
+      this.info.parent.adopt(child, offset);
+      return;
+    }
+
+    if (child.info.type === 'parent') {
+      for (const [
+        inheritedChild,
+        inheritedChildOffset,
+      ] of child.info.childToOffset.entries()) {
+        this.adopt(inheritedChild, inheritedChildOffset + offset);
+      }
+      child.info = { type: 'child', parent: this };
+    }
+
+    this.info.childToOffset.set(child, offset);
+  }
+
+  resetInfo() {
+    if (this.info.type === 'parent') {
+      this.info.childToOffset.clear();
+    } else {
+      this.info = {
+        type: 'parent',
+        childToOffset: new Map(),
+      };
+    }
   }
 }
 
 let allConstraints: Constraint[] = [];
 
-// #region constraints for solver
+// #region constraints and things for solver
 
-let _constraintsForSolver: Constraint[] | null = null;
+let _constraintsAndThingsForSolver: {
+  constraints: Constraint[];
+  things: Array<Handle | Variable>;
+} | null = null;
 
-function getConstraintsForSolver() {
-  if (_constraintsForSolver) {
-    return _constraintsForSolver;
+function getConstraintsAndThingsForSolver(): {
+  constraints: Constraint[];
+  things: Array<Handle | Variable>;
+} {
+  if (_constraintsAndThingsForSolver) {
+    return _constraintsAndThingsForSolver;
   }
 
+  const { constraints, variables } = getDedupedConstraintsAndVariables();
+  const handles = getHandlesIn(constraints);
+  const things = [...variables, ...handles];
+
+  console.log('constraints', constraints, 'things', things);
+  _constraintsAndThingsForSolver = {
+    constraints,
+    things,
+  };
+  return _constraintsAndThingsForSolver;
+}
+
+function getDedupedConstraintsAndVariables() {
   const constraintByKey = new Map<string, Constraint>();
   const constraintsToProcess = allConstraints.slice();
   while (constraintsToProcess.length > 0) {
@@ -41,21 +133,65 @@ function getConstraintsForSolver() {
     }
   }
 
-  _constraintsForSolver = Array.from(constraintByKey.values());
-  console.log('constraints', allConstraints);
-  console.log('for solver', _constraintsForSolver);
-  return _constraintsForSolver;
+  let constraints = Array.from(constraintByKey.values());
+  const variables = dedupVariables(constraints);
+
+  // Now discard VariableEqualsConstraints and variables that were "adopted" by other variables.
+  constraints = constraints.filter(
+    constraint => !(constraint instanceof VariableEqualsConstraint)
+  );
+
+  return { constraints, variables };
 }
 
-function forgetConstraintsForSolver() {
-  _constraintsForSolver = null;
+function dedupVariables(constraints: Constraint[]) {
+  for (const variable of Variable.all) {
+    variable.resetInfo();
+  }
+
+  // Gather all of the constrained variables.
+  const variables = new Set<Variable>();
+  for (const constraint of constraints) {
+    for (const variable of constraint.variables) {
+      variables.add(variable);
+    }
+  }
+
+  // This is there the deduping happens.
+  for (const constraint of constraints) {
+    if (constraint instanceof VariableEqualsConstraint) {
+      const { a, b, k } = constraint;
+      a.adopt(b, -k);
+    }
+  }
+  for (const variable of variables) {
+    if (variable.info.type === 'child') {
+      variables.delete(variable);
+    }
+  }
+
+  return variables;
+}
+
+function getHandlesIn(constraints: Constraint[]) {
+  const handles = new Set<Handle>();
+  for (const constraint of constraints) {
+    for (const handle of constraint.handles) {
+      handles.add(handle);
+    }
+  }
+  return handles;
+}
+
+function forgetConstraintsAndThingsForSolver() {
+  _constraintsAndThingsForSolver = null;
 }
 
 export function onHandlesReconfigured() {
-  forgetConstraintsForSolver();
+  forgetConstraintsAndThingsForSolver();
 }
 
-// #endregion constraints for solver
+// #endregion constraints and things for solver
 
 /**
  * Calls `fn`, and if that results in the creation of new constraints,
@@ -66,10 +202,10 @@ function temporarilyMakeNewConstraintsGoInto(
   fn: () => void
 ) {
   // When new constraints are created, they normally go into `allConstraints`.
-  // The creation of new constraints also makes us forget the set of
-  // constraints that we've cached for use w/ the solver (`_constraintsForSolver`).
+  // The creation of new constraints also makes us forget the set of constraints
+  // and things that we've cached for use w/ the solver (`_constraintsAndThingsForSolver`).
   // So first, we need to save both of those things.
-  const constraintsForSolver = _constraintsForSolver;
+  const constraintsAndThingsForSolver = _constraintsAndThingsForSolver;
   const realAllConstraints = allConstraints;
 
   // Now we temporarily make `dest` be `allConstraints`, so that new constraints
@@ -80,62 +216,82 @@ function temporarilyMakeNewConstraintsGoInto(
   } finally {
     // Now that `fn` is done, restore things to the way they were before.
     allConstraints = realAllConstraints;
-    _constraintsForSolver = constraintsForSolver;
+    _constraintsAndThingsForSolver = constraintsAndThingsForSolver;
   }
 }
 
 // #region solving
 
-interface Knowns {
-  xs: Set<Handle>;
-  ys: Set<Handle>;
-  variables: Set<Variable>;
+class Knowns {
+  private readonly xs = new Set<Handle>();
+  private readonly ys = new Set<Handle>();
+  private readonly vars = new Set<Variable>();
+
+  hasX(handle: Handle) {
+    return this.xs.has(handle);
+  }
+
+  hasY(handle: Handle) {
+    return this.ys.has(handle);
+  }
+
+  hasVar(variable: Variable) {
+    return this.vars.has(variable);
+  }
+
+  addX(handle: Handle) {
+    this.xs.add(handle);
+  }
+
+  addY(handle: Handle) {
+    this.ys.add(handle);
+  }
+
+  addVar(variable: Variable) {
+    this.vars.add(variable);
+    if (variable.info.type === 'parent') {
+      for (const child of variable.info.childToOffset.keys()) {
+        this.vars.add(child);
+      }
+    }
+  }
 }
 
 export function solve(selection: Selection) {
-  const constraintsForSolver = getConstraintsForSolver();
-  const oldNumConstraints = constraintsForSolver.length;
+  const { constraints, things } = getConstraintsAndThingsForSolver();
+  const oldNumConstraints = constraints.length;
 
-  if (constraintsForSolver.length === 0) {
+  if (constraints.length === 0) {
     return;
   }
 
   // We temporarily add fixed position constraints for each selected handle.
   // This is the "finger of God" semantics that we've talked about.
-  temporarilyMakeNewConstraintsGoInto(constraintsForSolver, () => {
+  temporarilyMakeNewConstraintsGoInto(constraints, () => {
     for (const handle of selection.handles) {
       fixedPosition(handle);
     }
   });
 
   try {
-    minimizeError(constraintsForSolver);
+    minimizeError(constraints, things);
   } catch (e) {
     console.log('minimizeError threw', e);
-    for (const c of constraintsForSolver) {
+    for (const c of constraints) {
       console.log('c', c);
     }
-    console.log('dassall');
+    console.log('and dassall');
     throw e;
   } finally {
-    // Remove the temporary fixed position constraints that we added to
-    // `constraintsForSolver`.
-    constraintsForSolver.length = oldNumConstraints;
+    // Remove the temporary fixed position constraints that we added to `constraints`.
+    constraints.length = oldNumConstraints;
   }
 }
 
-function minimizeError(constraints: Constraint[]) {
-  const constrainedThings = new Set<Handle | Variable>();
-  for (const constraint of constraints) {
-    for (const variable of constraint.variables) {
-      constrainedThings.add(variable);
-    }
-    for (const handle of constraint.handles) {
-      constrainedThings.add(handle);
-    }
-  }
-
-  const things = Array.from(constrainedThings);
+function minimizeError(
+  constraints: Constraint[],
+  things: Array<Handle | Variable>
+) {
   const knowns = computeKnowns(constraints);
 
   // The state that goes into `inputs` is the stuff that can be modified by the solver.
@@ -146,15 +302,15 @@ function minimizeError(constraints: Constraint[]) {
   const xIdx = new Map<Handle, number>();
   const yIdx = new Map<Handle, number>();
   for (const thing of things) {
-    if (thing instanceof Variable && !knowns.variables.has(thing)) {
+    if (thing instanceof Variable && !knowns.hasVar(thing)) {
       varIdx.set(thing, inputs.length);
       inputs.push(thing.value);
     } else if (thing instanceof Handle) {
-      if (!knowns.xs.has(thing)) {
+      if (!knowns.hasX(thing)) {
         xIdx.set(thing, inputs.length);
         inputs.push(thing.position.x);
       }
-      if (!knowns.ys.has(thing)) {
+      if (!knowns.hasY(thing)) {
         yIdx.set(thing, inputs.length);
         inputs.push(thing.position.y);
       }
@@ -180,8 +336,13 @@ function minimizeError(constraints: Constraint[]) {
         }
       });
       const values = constraint.variables.map(variable => {
-        const vi = varIdx.get(variable);
-        return vi === undefined ? variable.value : currState[vi];
+        const parent =
+          variable.info.type === 'parent' ? variable : variable.info.parent;
+        const vi = varIdx.get(parent);
+        const parentValue = vi === undefined ? parent.value : currState[vi];
+        return variable === parent
+          ? parentValue
+          : variable.computeValueFromParentValue(parentValue);
       });
       error += Math.pow(constraint.getError(positions, values), 2);
     }
@@ -212,11 +373,11 @@ function minimizeError(constraints: Constraint[]) {
     // Now we write the solution from the solver back into our handles and variables.
     const outputs = result.solution;
     for (const thing of things) {
-      if (thing instanceof Variable && !knowns.variables.has(thing)) {
+      if (thing instanceof Variable && !knowns.hasVar(thing)) {
         thing.value = outputs.shift()!;
       } else if (thing instanceof Handle) {
-        const knowX = knowns.xs.has(thing);
-        const knowY = knowns.ys.has(thing);
+        const knowX = knowns.hasX(thing);
+        const knowY = knowns.hasY(thing);
         if (knowX && knowY) {
           // no update required
           continue;
@@ -235,11 +396,7 @@ function minimizeError(constraints: Constraint[]) {
 }
 
 function computeKnowns(constraints: Constraint[]) {
-  const knowns: Knowns = {
-    xs: new Set(),
-    ys: new Set(),
-    variables: new Set(),
-  };
+  const knowns = new Knowns();
   while (true) {
     let didSomething = false;
     for (const constraint of constraints) {
@@ -328,14 +485,14 @@ abstract class Constraint {
     private readonly keyGenerator: ConstraintKeyGenerator
   ) {
     allConstraints.push(this);
-    forgetConstraintsForSolver();
+    forgetConstraintsAndThingsForSolver();
   }
 
   remove() {
     const idx = allConstraints.indexOf(this);
     if (idx >= 0) {
       allConstraints.splice(idx, 1);
-      forgetConstraintsForSolver();
+      forgetConstraintsAndThingsForSolver();
     }
   }
 
@@ -392,9 +549,9 @@ class FixedValueConstraint extends Constraint {
   }
 
   propagateKnowns(knowns: Knowns): boolean {
-    if (!knowns.variables.has(this.variable)) {
+    if (!knowns.hasVar(this.variable)) {
       this.variable.value = this.value;
-      knowns.variables.add(this.variable);
+      knowns.addVar(this.variable);
       return true;
     } else {
       return false;
@@ -425,22 +582,22 @@ export function variableEquals(a: Variable, b: Variable, k = 0) {
 
 class VariableEqualsConstraint extends Constraint {
   constructor(
-    private readonly a: Variable,
-    private readonly b: Variable,
-    private readonly k: number,
+    readonly a: Variable,
+    readonly b: Variable,
+    readonly k: number,
     keyGenerator: ConstraintKeyGenerator
   ) {
     super([], [a, b], [], keyGenerator);
   }
 
   propagateKnowns(knowns: Knowns): boolean {
-    if (!knowns.variables.has(this.a) && knowns.variables.has(this.b)) {
+    if (!knowns.hasVar(this.a) && knowns.hasVar(this.b)) {
       this.a.value = this.b.value + this.k;
-      knowns.variables.add(this.a);
+      knowns.addVar(this.a);
       return true;
-    } else if (knowns.variables.has(this.a) && !knowns.variables.has(this.b)) {
+    } else if (knowns.hasVar(this.a) && !knowns.hasVar(this.b)) {
       this.b.value = this.a.value - this.k;
-      knowns.variables.add(this.b);
+      knowns.addVar(this.b);
       return true;
     } else {
       return false;
@@ -475,10 +632,10 @@ class FixedPositionConstraint extends Constraint {
   }
 
   propagateKnowns(knowns: Knowns): boolean {
-    if (!knowns.xs.has(this.handle) || !knowns.ys.has(this.handle)) {
+    if (!knowns.hasX(this.handle) || !knowns.hasY(this.handle)) {
       this.handle.position = this.position;
-      knowns.xs.add(this.handle);
-      knowns.ys.add(this.handle);
+      knowns.addX(this.handle);
+      knowns.addY(this.handle);
       return true;
     } else {
       return false;
@@ -516,13 +673,13 @@ class HorizontalConstraint extends Constraint {
   }
 
   propagateKnowns(knowns: Knowns): boolean {
-    if (!knowns.ys.has(this.a) && knowns.ys.has(this.b)) {
+    if (!knowns.hasY(this.a) && knowns.hasY(this.b)) {
       this.a.position = { x: this.a.position.x, y: this.b.position.y };
-      knowns.ys.add(this.a);
+      knowns.addY(this.a);
       return true;
-    } else if (knowns.ys.has(this.a) && !knowns.ys.has(this.b)) {
+    } else if (knowns.hasY(this.a) && !knowns.hasY(this.b)) {
       this.b.position = { x: this.b.position.x, y: this.a.position.y };
-      knowns.ys.add(this.b);
+      knowns.addY(this.b);
       return true;
     } else {
       return false;
@@ -557,13 +714,13 @@ class VerticalConstraint extends Constraint {
   }
 
   propagateKnowns(knowns: Knowns): boolean {
-    if (!knowns.xs.has(this.a) && knowns.xs.has(this.b)) {
+    if (!knowns.hasX(this.a) && knowns.hasX(this.b)) {
       this.a.position = { x: this.b.position.x, y: this.a.position.y };
-      knowns.xs.add(this.a);
+      knowns.addX(this.a);
       return true;
-    } else if (knowns.xs.has(this.a) && !knowns.xs.has(this.b)) {
+    } else if (knowns.hasX(this.a) && !knowns.hasX(this.b)) {
       this.b.position = { x: this.a.position.x, y: this.b.position.y };
-      knowns.xs.add(this.b);
+      knowns.addX(this.b);
       return true;
     } else {
       return false;
