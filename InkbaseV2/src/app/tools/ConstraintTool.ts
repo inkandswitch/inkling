@@ -1,6 +1,5 @@
-import { Position } from '../../lib/types';
 import Vec from '../../lib/vec';
-import Events, { Event } from '../NativeEvents';
+import Events from '../NativeEvents';
 import Page from '../Page';
 import * as constraints from '../constraints';
 import FreehandStroke from '../strokes/FreehandStroke';
@@ -14,9 +13,16 @@ interface ConstraintCandidate {
   refStrokeGroup: StrokeGroup | null;
 }
 
+type LastTapInfo = {
+  timestampMillis: number;
+  strokeGroup: StrokeGroup | null;
+};
+
 export default class ConstraintTool extends Tool {
-  private fingerDown?: Event;
-  private fingerMoved?: Event;
+  private lastTapInfo: LastTapInfo = {
+    timestampMillis: 0,
+    strokeGroup: null,
+  };
   private refStrokeGroup: StrokeGroup | null = null;
   private readonly constraintCandidates = new Set<ConstraintCandidate>();
   private readonly appliedCandidates = new Set<ConstraintCandidate>();
@@ -30,33 +36,12 @@ export default class ConstraintTool extends Tool {
 
     const fingerDown = events.find('finger', 'began');
     if (fingerDown) {
-      this.fingerDown = fingerDown;
-      setTimeout(() => {
-        if (
-          this.fingerDown &&
-          (!this.fingerMoved ||
-            Vec.dist(this.fingerDown.position, this.fingerMoved.position) < 10)
-        ) {
-          this.onLongPress(this.fingerDown.position);
-        }
-      }, 1_500);
+      this.updateLastTap(
+        this.page.findStrokeGroupNear(fingerDown.position, 40)
+      );
     }
 
-    if (!this.fingerDown) {
-      return;
-    }
-
-    const firstFingerDownMoved = events.find(
-      'finger',
-      'moved',
-      this.fingerDown.id
-    );
-    if (firstFingerDownMoved) {
-      this.fingerMoved = firstFingerDownMoved;
-    }
-
-    const fingerMoved = events.find('finger', 'moved');
-    if (fingerMoved) {
+    if (events.find('finger', 'moved')) {
       // This will result in lots of false positives, i.e., it will call
       // onHandleMoved() when no handles were moved. It also won't tell me
       // which handle(s) moved. It's just an expedient way to get something
@@ -67,15 +52,22 @@ export default class ConstraintTool extends Tool {
       // onHandleMoved() to react to higher-level events.
     }
 
-    const fingerEnded = events.find('finger', 'ended'); //, this.fingerDown.id);
-    if (fingerEnded) {
-      this.fingerDown = undefined;
+    if (events.find('finger', 'ended')) {
       this.applyConstraintCandidates();
     }
   }
 
-  private onLongPress(pos: Position) {
-    this.refStrokeGroup = this.page.findStrokeGroupNear(pos, 40);
+  private updateLastTap(strokeGroup: StrokeGroup | null) {
+    const timestampMillis = Date.now();
+    const isDoubleTap =
+      timestampMillis - this.lastTapInfo.timestampMillis <= 250;
+    const oldStrokeGroup = this.lastTapInfo.strokeGroup;
+
+    if (isDoubleTap) {
+      this.refStrokeGroup = strokeGroup === oldStrokeGroup ? strokeGroup : null;
+    }
+
+    this.lastTapInfo = { timestampMillis, strokeGroup };
   }
 
   private onHandleMoved() {
@@ -117,16 +109,16 @@ export default class ConstraintTool extends Tool {
       this.addConstraintCandidate('length', strokeGroup);
     }
 
-    // const angle =
-    //   constraints.computeAngle(
-    //     a.position,
-    //     b.position,
-    //     ra.position,
-    //     rb.position
-    //   ) ?? 0;
-    // if ((((angle + 2 * Math.PI) % (Math.PI / 4)) * 180) / Math.PI < 5) {
-    //   this.addConstraintCandidate('angle', strokeGroup);
-    // }
+    const angle =
+      constraints.computeAngle(
+        a.position,
+        b.position,
+        ra.position,
+        rb.position
+      ) ?? 0;
+    if ((((angle + 2 * Math.PI) % (Math.PI / 4)) * 180) / Math.PI < 5) {
+      this.addConstraintCandidate('angle', strokeGroup);
+    }
   }
 
   private addConstraintCandidate(
