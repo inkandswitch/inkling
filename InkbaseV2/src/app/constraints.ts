@@ -594,12 +594,7 @@ export function angle(
     keyGenerator => {
       if (!angle) {
         angle = new Variable(
-          AngleConstraint.computeAngle(
-            a1.position,
-            a2.position,
-            b1.position,
-            b2.position
-          ) ?? 0
+          computeAngle(a1.position, a2.position, b1.position, b2.position) ?? 0
         );
       }
       return new AngleConstraint(a1, a2, b1, b2, angle, keyGenerator);
@@ -627,13 +622,8 @@ class AngleConstraint extends Constraint {
   getError(positions: Position[], values: number[]): number {
     const [a1Pos, a2Pos, b1Pos, b2Pos] = positions;
     const [angle] = values;
-    const currentAngle = AngleConstraint.computeAngle(
-      a1Pos,
-      a2Pos,
-      b1Pos,
-      b2Pos
-    );
-    return currentAngle === null ? angle : currentAngle - angle;
+    const currentAngle = computeAngle(a1Pos, a2Pos, b1Pos, b2Pos);
+    return currentAngle === null ? 0 : currentAngle - angle;
   }
 
   onClash(newerConstraint: this): void;
@@ -664,25 +654,20 @@ class AngleConstraint extends Constraint {
     }
 
     const thatAngle =
-      AngleConstraint.computeAngle(
-        a1.position,
-        a2!.position,
-        b1!.position,
-        b2!.position
-      ) ?? 0;
+      computeAngle(a1.position, a2!.position, b1!.position, b2!.position) ?? 0;
     variableEquals(this.angle, angle!, this.angle.value - thatAngle);
   }
+}
 
-  static computeAngle(
-    a1Pos: Position,
-    a2Pos: Position,
-    b1Pos: Position,
-    b2Pos: Position
-  ): number | null {
-    const va = Vec.sub(a2Pos, a1Pos);
-    const vb = Vec.sub(b2Pos, b1Pos);
-    return Vec.len(va) < 5 || Vec.len(vb) < 5
-      ? null
-      : Vec.angleBetweenClockwise(va, vb);
-  }
+export function computeAngle(
+  a1Pos: Position,
+  a2Pos: Position,
+  b1Pos: Position,
+  b2Pos: Position
+): number | null {
+  const va = Vec.sub(a2Pos, a1Pos);
+  const vb = Vec.sub(b2Pos, b1Pos);
+  return Vec.len(va) < 5 || Vec.len(vb) < 5
+    ? null
+    : Vec.angleBetweenClockwise(va, vb);
 }
