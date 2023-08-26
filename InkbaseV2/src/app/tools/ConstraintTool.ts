@@ -101,5 +101,17 @@ export default class ConstraintTool extends Tool {
       const newLenVar = constraints.length(a, b).length;
       constraints.variableEquals(refLenVar, newLenVar);
     }
+
+    const angle =
+      constraints.computeAngle(
+        a.position,
+        b.position,
+        ra.position,
+        rb.position
+      ) ?? 0;
+    if ((((angle + 2 * Math.PI) % (Math.PI / 4)) * 180) / Math.PI < 1) {
+      const angleVar = constraints.angle(a, b, ra, rb).angle;
+      constraints.fixedValue(angleVar);
+    }
   }
 }
