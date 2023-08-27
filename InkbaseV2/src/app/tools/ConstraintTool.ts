@@ -42,11 +42,7 @@ export default class ConstraintTool extends Tool {
     }
 
     if (events.find('finger', 'moved')) {
-      // This will result in lots of false positives, i.e., it will call
-      // onHandleMoved() when no handles were moved. It also won't tell me
-      // which handle(s) moved. It's just an expedient way to get something
-      // going.
-      this.onHandleMoved();
+      this.onFingerMoved();
 
       // TODO: it would be nice if a Tool could just override methods like
       // onHandleMoved() to react to higher-level events.
@@ -60,7 +56,7 @@ export default class ConstraintTool extends Tool {
   private updateLastTap(strokeGroup: StrokeGroup | null) {
     const timestampMillis = Date.now();
     const isDoubleTap =
-      timestampMillis - this.lastTapInfo.timestampMillis <= 250;
+      timestampMillis - this.lastTapInfo.timestampMillis <= 200;
     const oldStrokeGroup = this.lastTapInfo.strokeGroup;
 
     if (isDoubleTap) {
@@ -70,7 +66,7 @@ export default class ConstraintTool extends Tool {
     this.lastTapInfo = { timestampMillis, strokeGroup };
   }
 
-  private onHandleMoved() {
+  private onFingerMoved() {
     this.constraintCandidates.clear();
     for (const strokeGroup of this.page.strokeGroups) {
       if (strokeGroup.a.isSelected || strokeGroup.b.isSelected) {
@@ -109,16 +105,16 @@ export default class ConstraintTool extends Tool {
       this.addConstraintCandidate('length', strokeGroup);
     }
 
-    const angle =
-      constraints.computeAngle(
-        a.position,
-        b.position,
-        ra.position,
-        rb.position
-      ) ?? 0;
-    if ((((angle + 2 * Math.PI) % (Math.PI / 2)) * 180) / Math.PI < 5) {
-      this.addConstraintCandidate('angle', strokeGroup);
-    }
+    // const angle =
+    //   constraints.computeAngle(
+    //     a.position,
+    //     b.position,
+    //     ra.position,
+    //     rb.position
+    //   ) ?? 0;
+    // if ((((angle + 2 * Math.PI) % (Math.PI / 2)) * 180) / Math.PI < 5) {
+    //   this.addConstraintCandidate('angle', strokeGroup);
+    // }
   }
 
   private addConstraintCandidate(
