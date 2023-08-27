@@ -5,39 +5,35 @@ import Vec from '../lib/vec';
 import Handle from './strokes/Handle';
 import Selection from './Selection';
 
-type VariableInfo = ChildVariableInfo | ParentVariableInfo;
+type VariableInfo = CanonicalVariableInfo | AbsorbedVariableInfo;
 
-interface ChildVariableInfo {
-  type: 'child';
-  parent: Variable;
+interface CanonicalVariableInfo {
+  isCanonical: true;
+  absorbedVariables: Set<Variable>;
 }
 
-interface ParentVariableInfo {
-  type: 'parent';
-  children: Set<Variable>;
+interface AbsorbedVariableInfo {
+  isCanonical: false;
+  canonicalInstance: Variable;
 }
-
-// TODO: rename some variable stuff, e.g.:
-// - parent -> canonicalInstance
-//   (also add canonicalInstance getter -- basically follow what I did in Handle)
-// - adopt() -> absorb()
 
 class Variable {
   static readonly all: Variable[] = [];
 
+  // TODO: consider moving id and value into info, as in Handle
   readonly id = generateId();
 
   info: VariableInfo = {
-    type: 'parent',
-    children: new Set(),
+    isCanonical: true,
+    absorbedVariables: new Set(),
   };
 
   constructor(private _value: number = 0) {
     Variable.all.push(this);
   }
 
-  get parent(): Variable | null {
-    return this.info.type === 'child' ? this.info.parent : null;
+  get canonicalInstance(): Variable {
+    return this.info.isCanonical ? this : this.info.canonicalInstance;
   }
 
   get value() {
@@ -46,39 +42,41 @@ class Variable {
 
   set value(newValue: number) {
     this._value = newValue;
-    if (this.info.type === 'parent') {
-      for (const child of this.info.children) {
+    if (this.info.isCanonical) {
+      for (const child of this.info.absorbedVariables) {
         child.value = newValue;
       }
     }
   }
 
-  adopt(child: Variable) {
-    if (this.info.type !== 'parent') {
-      this.info.parent.adopt(child);
+  absorb(that: Variable) {
+    if (!this.info.isCanonical) {
+      this.info.canonicalInstance.absorb(that);
       return;
     }
 
-    if (child.info.type === 'parent') {
-      for (const inheritedChild of child.info.children) {
-        this.adopt(inheritedChild);
+    if (that.info.isCanonical) {
+      for (const otherVariable of that.info.absorbedVariables) {
+        this.absorb(otherVariable);
       }
-      child.info = { type: 'child', parent: this };
+      that.info = { isCanonical: false, canonicalInstance: this };
     } else {
-      child.info.parent = this;
+      (
+        that.info.canonicalInstance.info as CanonicalVariableInfo
+      ).absorbedVariables.delete(that);
+      that.info.canonicalInstance = this;
     }
 
-    // console.log(this.id, 'adopted', child.id);
-    this.info.children.add(child);
+    this.info.absorbedVariables.add(that);
   }
 
   resetInfo() {
-    if (this.info.type === 'parent') {
-      this.info.children.clear();
+    if (this.info.isCanonical) {
+      this.info.absorbedVariables.clear();
     } else {
       this.info = {
-        type: 'parent',
-        children: new Set(),
+        isCanonical: true,
+        absorbedVariables: new Set(),
       };
     }
   }
@@ -212,13 +210,12 @@ function dedupVariables(constraints: Constraint[]) {
   // This is there the deduping happens.
   for (const constraint of constraints) {
     if (constraint instanceof VariableEqualsConstraint) {
-      // console.log('because of', constraint);
       const { a, b } = constraint;
-      a.adopt(b);
+      a.absorb(b);
     }
   }
   for (const variable of variables) {
-    if (variable.info.type === 'child') {
+    if (!variable.info.isCanonical) {
       variables.delete(variable);
     }
   }
@@ -289,7 +286,7 @@ class Knowns {
   }
 
   hasVar(variable: Variable) {
-    return this.vars.has(variable.parent ?? variable);
+    return this.vars.has(variable.canonicalInstance);
   }
 
   addX(handle: Handle) {
@@ -301,12 +298,7 @@ class Knowns {
   }
 
   addVar(variable: Variable) {
-    this.vars.add(variable.parent ?? variable);
-    if (variable.info.type === 'parent') {
-      for (const child of variable.info.children) {
-        this.vars.add(child);
-      }
-    }
+    this.vars.add(variable.canonicalInstance);
   }
 }
 
@@ -398,10 +390,9 @@ function minimizeError(constraints: Constraint[], things: Thing[]) {
         }
       });
       const values = constraint.variables.map(variable => {
-        const parent =
-          variable.info.type === 'parent' ? variable : variable.info.parent;
-        const vi = varIdx.get(parent);
-        return vi === undefined ? parent.value : currState[vi];
+        variable = variable.canonicalInstance;
+        const vi = varIdx.get(variable);
+        return vi === undefined ? variable.value : currState[vi];
       });
       error += Math.pow(constraint.getError(positions, values), 2);
     }
@@ -502,9 +493,7 @@ class ConstraintKeyGenerator {
       .map(variableGroup =>
         variableGroup
           .map(variable =>
-            dedupHandlesAndVars
-              ? variable.parent?.id ?? variable.id
-              : variable.id
+            dedupHandlesAndVars ? variable.canonicalInstance.id : variable.id
           )
           .sort()
           .join(',')
@@ -583,7 +572,7 @@ abstract class Constraint {
   involves(thing: Variable | Handle): boolean {
     return thing instanceof Variable
       ? this.variables.some(
-          cVar => (cVar.parent ?? cVar) === (thing.parent ?? thing)
+          cVar => cVar.canonicalInstance === thing.canonicalInstance
         )
       : this.handles.some(
           cHandle => cHandle.canonicalInstance === thing.canonicalInstance
