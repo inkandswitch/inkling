@@ -4,9 +4,9 @@ TODO
 Constraints
 -----------
 
-* Think about VariableEqualsConstraint and "keys" /
-  variable de-duping. It's not quite right b/c of the offsets,
-  and I need to get that right before angles will work.
+* Add a new VarPlusConstraint (a = b + c). It's *that*
+  guy that will be used for angle constraints, along with
+  FixedValueConstraint for the difference.
 
 * Can we keep unconstrained variables from affecting the
   behavior of a constraint?
