@@ -31,6 +31,10 @@ class Variable {
     Variable.all.push(this);
   }
 
+  get parent(): Variable {
+    return this.info.type === 'child' ? this.info.parent : this;
+  }
+
   get value() {
     return this._value;
   }
@@ -71,8 +75,11 @@ class Variable {
         this.adopt(inheritedChild, inheritedChildOffset + offset);
       }
       child.info = { type: 'child', parent: this };
+    } else {
+      child.info.parent = this;
     }
 
+    // console.log(this.id, 'adopted', child.id);
     this.info.childToOffset.set(child, offset);
   }
 
@@ -89,6 +96,8 @@ class Variable {
 }
 
 let allConstraints: Constraint[] = [];
+(window as any).allConstraints = allConstraints;
+(window as any).allVariables = Variable.all;
 
 // #region constraints and things for solver
 
@@ -97,6 +106,10 @@ let _constraintsAndThingsForSolver: {
   things: Array<Handle | Variable>;
 } | null = null;
 
+// TODO: return an array of (constraints, things) so that we can call the solver multiple times:
+// once for each "cluster" of stuff that's constrained together. E.g., if all we have are 3
+// stroke groups, each with its own length constraint, then we don't have to solve all of
+// the constraints together -- it's better to just solve each one separately.
 function getConstraintsAndThingsForSolver(): {
   constraints: Constraint[];
   things: Array<Handle | Variable>;
@@ -109,7 +122,7 @@ function getConstraintsAndThingsForSolver(): {
   const handles = getHandlesIn(constraints);
   const things = [...variables, ...handles];
 
-  console.log('constraints', constraints, 'things', things);
+  // console.log('constraints', constraints, 'things', things);
   _constraintsAndThingsForSolver = {
     constraints,
     things,
@@ -118,13 +131,26 @@ function getConstraintsAndThingsForSolver(): {
 }
 
 function getDedupedConstraintsAndVariables() {
-  const constraintByKey = new Map<string, Constraint>();
+  for (const variable of Variable.all) {
+    variable.resetInfo();
+  }
+
+  // console.log('var eq constraints before');
+  let constraintByKey = new Map<string, Constraint>();
   const constraintsToProcess = allConstraints.slice();
   while (constraintsToProcess.length > 0) {
     const constraint = constraintsToProcess.shift()!;
-    const key = constraint.getKeyWithCanonicalHandleIds();
+    // if (constraint instanceof VariableEqualsConstraint) {
+    //   console.log(
+    //     've',
+    //     JSON.stringify(constraint.a.info),
+    //     JSON.stringify(constraint.b.info)
+    //   );
+    // }
+    const key = constraint.getKeyWithDedupedHandlesAndVars();
     const matchingConstraint = constraintByKey.get(key);
     if (matchingConstraint) {
+      // console.log('clash!', key, constraint, matchingConstraint);
       temporarilyMakeNewConstraintsGoInto(constraintsToProcess, () =>
         matchingConstraint.onClash(constraint)
       );
@@ -134,6 +160,14 @@ function getDedupedConstraintsAndVariables() {
   }
 
   let constraints = Array.from(constraintByKey.values());
+  // console.log('var eq constraints after');
+  for (const c of constraints) {
+    if (c instanceof VariableEqualsConstraint) {
+      console.log(c);
+    }
+  }
+
+  // console.log('deduping vars');
   const variables = dedupVariables(constraints);
 
   // Now discard VariableEqualsConstraints and variables that were "adopted" by other variables.
@@ -141,14 +175,20 @@ function getDedupedConstraintsAndVariables() {
     constraint => !(constraint instanceof VariableEqualsConstraint)
   );
 
+  // ... and get rid of constraints that are now duplicates because of adoped variables.
+  constraintByKey = new Map<string, Constraint>();
+  for (const constraint of constraints) {
+    constraintByKey.set(
+      constraint.getKeyWithDedupedHandlesAndVars(),
+      constraint
+    );
+  }
+  constraints = Array.from(constraintByKey.values());
+
   return { constraints, variables };
 }
 
 function dedupVariables(constraints: Constraint[]) {
-  for (const variable of Variable.all) {
-    variable.resetInfo();
-  }
-
   // Gather all of the constrained variables.
   const variables = new Set<Variable>();
   for (const constraint of constraints) {
@@ -157,10 +197,13 @@ function dedupVariables(constraints: Constraint[]) {
     }
   }
 
+  // console.log('constraints in dedupVars', constraints);
+
   // This is there the deduping happens.
   for (const constraint of constraints) {
     if (constraint instanceof VariableEqualsConstraint) {
       const { a, b, k } = constraint;
+      // console.log('because of', constraint);
       a.adopt(b, -k);
     }
   }
@@ -177,7 +220,7 @@ function getHandlesIn(constraints: Constraint[]) {
   const handles = new Set<Handle>();
   for (const constraint of constraints) {
     for (const handle of constraint.handles) {
-      handles.add(handle);
+      handles.add(handle.canonicalInstance);
     }
   }
   return handles;
@@ -427,15 +470,15 @@ class ConstraintKeyGenerator {
     this.key = this.generateKey();
   }
 
-  getKeyWithCanonicalHandleIds() {
+  getKeyWithDedupedHandlesAndVars() {
     return this.generateKey(true);
   }
 
-  private generateKey(useCanonicalHandleIds = false) {
+  private generateKey(dedupHandlesAndVars = false) {
     const handleIdGroups = this.handleGroups
       .map(handleGroup =>
         handleGroup
-          .map(handle => (useCanonicalHandleIds ? handle.id : handle.ownId))
+          .map(handle => (dedupHandlesAndVars ? handle.id : handle.ownId))
           .sort()
           .join(',')
       )
@@ -443,7 +486,10 @@ class ConstraintKeyGenerator {
     const variableIdGroups = this.variableGroups
       .map(variableGroup =>
         variableGroup
-          .map(variable => variable.id)
+          .map(variable =>
+            // TODO: this is not quite right, think about it!
+            dedupHandlesAndVars ? variable.parent.id : variable.id
+          )
           .sort()
           .join(',')
       )
@@ -451,7 +497,7 @@ class ConstraintKeyGenerator {
     const constantGroups = this.constantGroups
       .map(constantGroup => constantGroup.sort().join(','))
       .map(constantGroup => `[${constantGroup}]`);
-    return `${this.type}(${handleIdGroups},${variableIdGroups},${constantGroups})`;
+    return `${this.type}([${handleIdGroups}],[${variableIdGroups}],[${constantGroups}])`;
   }
 }
 
@@ -500,8 +546,8 @@ abstract class Constraint {
     return this.keyGenerator.key;
   }
 
-  getKeyWithCanonicalHandleIds() {
-    return this.keyGenerator.getKeyWithCanonicalHandleIds();
+  getKeyWithDedupedHandlesAndVars() {
+    return this.keyGenerator.getKeyWithDedupedHandlesAndVars();
   }
 
   /**
@@ -574,6 +620,7 @@ class FixedValueConstraint extends Constraint {
 /** a = b + k */
 export function variableEquals(a: Variable, b: Variable, k = 0) {
   return addConstraint(
+    // TODO: this is wrong now that a=b+k, e.g., ve(a, b, 5) != ve(b, a, 5)
     new ConstraintKeyGenerator('variableEquals', [], [[a, b]], [[k]]),
     keyGenerator => new VariableEqualsConstraint(a, b, k, keyGenerator),
     _olderConstraint => {}
