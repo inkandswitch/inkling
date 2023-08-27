@@ -4,6 +4,8 @@ import Page from './Page';
 import SVG from './Svg';
 import Handle from './strokes/Handle';
 
+const ENABLE_ALIGNMENT_SNAPS = false;
+
 export default class Snaps {
   private activeSnaps: Snap[] = [];
 
@@ -42,7 +44,7 @@ export default class Snaps {
         }
       }
 
-      if (snapVectors.length === 0) {
+      if (ENABLE_ALIGNMENT_SNAPS && snapVectors.length === 0) {
         // vertical alignment
         for (const snapHandle of connectedHandles) {
           if (snapHandle === handle) {
