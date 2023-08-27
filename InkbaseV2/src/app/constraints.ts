@@ -17,6 +17,11 @@ interface ParentVariableInfo {
   children: Set<Variable>;
 }
 
+// TODO: rename some variable stuff, e.g.:
+// - parent -> canonicalInstance
+//   (also add canonicalInstance getter -- basically follow what I did in Handle)
+// - adopt() -> absorb()
+
 class Variable {
   static readonly all: Variable[] = [];
 
@@ -276,27 +281,27 @@ class Knowns {
   private readonly vars = new Set<Variable>();
 
   hasX(handle: Handle) {
-    return this.xs.has(handle);
+    return this.xs.has(handle.canonicalInstance);
   }
 
   hasY(handle: Handle) {
-    return this.ys.has(handle);
+    return this.ys.has(handle.canonicalInstance);
   }
 
   hasVar(variable: Variable) {
-    return this.vars.has(variable);
+    return this.vars.has(variable.parent ?? variable);
   }
 
   addX(handle: Handle) {
-    this.xs.add(handle);
+    this.xs.add(handle.canonicalInstance);
   }
 
   addY(handle: Handle) {
-    this.ys.add(handle);
+    this.ys.add(handle.canonicalInstance);
   }
 
   addVar(variable: Variable) {
-    this.vars.add(variable);
+    this.vars.add(variable.parent ?? variable);
     if (variable.info.type === 'parent') {
       for (const child of variable.info.children) {
         this.vars.add(child);
@@ -577,7 +582,9 @@ abstract class Constraint {
 
   involves(thing: Variable | Handle): boolean {
     return thing instanceof Variable
-      ? this.variables.includes(thing)
+      ? this.variables.some(
+          cVar => (cVar.parent ?? cVar) === (thing.parent ?? thing)
+        )
       : this.handles.some(
           cHandle => cHandle.canonicalInstance === thing.canonicalInstance
         );
@@ -585,12 +592,12 @@ abstract class Constraint {
 
   operatesOnSameThingAs(that: Constraint) {
     for (const handle of this.handles) {
-      if (that.handles.includes(handle)) {
+      if (that.involves(handle)) {
         return true;
       }
     }
     for (const variable of this.variables) {
-      if (that.variables.includes(variable)) {
+      if (that.involves(variable)) {
         return true;
       }
     }
@@ -682,6 +689,8 @@ class VariableEqualsConstraint extends Constraint {
 /** a = b + c */
 export function variablePlus(_a: Variable, _b: Variable, _c: Variable) {
   // TODO: implement this!
+  // Note: a, b, and c should be in the same var group for the key generator.
+  // It should be up to onClash() to figure out how to ...
   throw new Error('TODO');
 }
 
