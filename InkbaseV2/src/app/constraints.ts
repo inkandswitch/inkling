@@ -96,48 +96,71 @@ class Variable {
 }
 
 let allConstraints: Constraint[] = [];
+
+// stuff for debugging
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 (window as any).allConstraints = allConstraints;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 (window as any).allVariables = Variable.all;
 
-// #region constraints and things for solver
+// #region constraint and thing clusters for solver
 
-let _constraintsAndThingsForSolver: {
+type Thing = Handle | Variable;
+
+// A group of constraints (and things that they operate on) that should be solved together.
+interface ClusterForSolver {
   constraints: Constraint[];
-  things: Array<Handle | Variable>;
-} | null = null;
-
-// TODO: return an array of (constraints, things) so that we can call the solver multiple times:
-// once for each "cluster" of stuff that's constrained together. E.g., if all we have are 3
-// stroke groups, each with its own length constraint, then we don't have to solve all of
-// the constraints together -- it's better to just solve each one separately.
-function getConstraintsAndThingsForSolver(): {
-  constraints: Constraint[];
-  things: Array<Handle | Variable>;
-} {
-  if (_constraintsAndThingsForSolver) {
-    return _constraintsAndThingsForSolver;
-  }
-
-  const { constraints, variables } = getDedupedConstraintsAndVariables();
-  const handles = getHandlesIn(constraints);
-  const things = [...variables, ...handles];
-
-  // console.log('constraints', constraints, 'things', things);
-  _constraintsAndThingsForSolver = {
-    constraints,
-    things,
-  };
-  return _constraintsAndThingsForSolver;
+  things: Thing[];
 }
 
-function getDedupedConstraintsAndVariables() {
+let _clustersForSolver: Set<ClusterForSolver> | null = null;
+
+function getClustersForSolver(): Set<ClusterForSolver> {
+  if (_clustersForSolver) {
+    return _clustersForSolver;
+  }
+
+  _clustersForSolver = new Set();
+
   for (const variable of Variable.all) {
     variable.resetInfo();
   }
 
+  const clusters = new Set<Constraint[]>();
+  for (const c of allConstraints) {
+    const clustersToMerge: Constraint[][] = [];
+    for (const cluster of clusters) {
+      if (cluster.some(constraint => constraint.operatesOnSameThingAs(c))) {
+        clusters.delete(cluster);
+        clustersToMerge.push(cluster);
+      }
+    }
+    const newCluster = clustersToMerge.flat();
+    newCluster.push(c);
+    clusters.add(newCluster);
+  }
+
+  for (let constraints of clusters) {
+    let variables: Set<Variable>;
+    ({ constraints, variables } =
+      getDedupedConstraintsAndVariables(constraints));
+    const handles = getHandlesIn(constraints);
+    const things = [...variables, ...handles];
+    _clustersForSolver?.add({
+      constraints,
+      things,
+    });
+  }
+
+  console.log('clusters', _clustersForSolver);
+
+  return _clustersForSolver;
+}
+
+function getDedupedConstraintsAndVariables(constraints: Constraint[]) {
   // console.log('var eq constraints before');
   let constraintByKey = new Map<string, Constraint>();
-  const constraintsToProcess = allConstraints.slice();
+  const constraintsToProcess = constraints.slice();
   while (constraintsToProcess.length > 0) {
     const constraint = constraintsToProcess.shift()!;
     // if (constraint instanceof VariableEqualsConstraint) {
@@ -159,13 +182,11 @@ function getDedupedConstraintsAndVariables() {
     }
   }
 
-  let constraints = Array.from(constraintByKey.values());
-  // console.log('var eq constraints after');
-  for (const c of constraints) {
-    if (c instanceof VariableEqualsConstraint) {
-      console.log(c);
-    }
-  }
+  constraints = Array.from(constraintByKey.values());
+  // console.log(
+  //   'var eq constraints after',
+  //   constraints.filter(c => c instanceof VariableEqualsConstraint)
+  // );
 
   // console.log('deduping vars');
   const variables = dedupVariables(constraints);
@@ -226,15 +247,15 @@ function getHandlesIn(constraints: Constraint[]) {
   return handles;
 }
 
-function forgetConstraintsAndThingsForSolver() {
-  _constraintsAndThingsForSolver = null;
+function forgetClustersForSolver() {
+  _clustersForSolver = null;
 }
 
 export function onHandlesReconfigured() {
-  forgetConstraintsAndThingsForSolver();
+  forgetClustersForSolver();
 }
 
-// #endregion constraints and things for solver
+// #endregion constraint and thing clusters for solver
 
 /**
  * Calls `fn`, and if that results in the creation of new constraints,
@@ -245,10 +266,10 @@ function temporarilyMakeNewConstraintsGoInto(
   fn: () => void
 ) {
   // When new constraints are created, they normally go into `allConstraints`.
-  // The creation of new constraints also makes us forget the set of constraints
-  // and things that we've cached for use w/ the solver (`_constraintsAndThingsForSolver`).
-  // So first, we need to save both of those things.
-  const constraintsAndThingsForSolver = _constraintsAndThingsForSolver;
+  // The creation of new constraints also makes us forget the set of clusters
+  // of related constraints and things that we've cached for use w/ the solver
+  // (`_clustersForSolver`). So first, we need to save both of those things.
+  const clustersForSolver = _clustersForSolver;
   const realAllConstraints = allConstraints;
 
   // Now we temporarily make `dest` be `allConstraints`, so that new constraints
@@ -259,7 +280,7 @@ function temporarilyMakeNewConstraintsGoInto(
   } finally {
     // Now that `fn` is done, restore things to the way they were before.
     allConstraints = realAllConstraints;
-    _constraintsAndThingsForSolver = constraintsAndThingsForSolver;
+    _clustersForSolver = clustersForSolver;
   }
 }
 
@@ -301,7 +322,17 @@ class Knowns {
 }
 
 export function solve(selection: Selection) {
-  const { constraints, things } = getConstraintsAndThingsForSolver();
+  const clusters = getClustersForSolver();
+  for (const cluster of clusters) {
+    solveCluster(selection, cluster.constraints, cluster.things);
+  }
+}
+
+function solveCluster(
+  selection: Selection,
+  constraints: Constraint[],
+  things: Thing[]
+) {
   const oldNumConstraints = constraints.length;
 
   if (constraints.length === 0) {
@@ -319,11 +350,13 @@ export function solve(selection: Selection) {
   try {
     minimizeError(constraints, things);
   } catch (e) {
-    console.log('minimizeError threw', e);
-    for (const c of constraints) {
-      console.log('c', c);
-    }
-    console.log('and dassall');
+    console.log(
+      'minimizeError threw',
+      e,
+      'while working on cluster with',
+      constraints,
+      things
+    );
     throw e;
   } finally {
     // Remove the temporary fixed position constraints that we added to `constraints`.
@@ -331,10 +364,7 @@ export function solve(selection: Selection) {
   }
 }
 
-function minimizeError(
-  constraints: Constraint[],
-  things: Array<Handle | Variable>
-) {
+function minimizeError(constraints: Constraint[], things: Thing[]) {
   const knowns = computeKnowns(constraints);
 
   // The state that goes into `inputs` is the stuff that can be modified by the solver.
@@ -531,14 +561,14 @@ abstract class Constraint {
     private readonly keyGenerator: ConstraintKeyGenerator
   ) {
     allConstraints.push(this);
-    forgetConstraintsAndThingsForSolver();
+    forgetClustersForSolver();
   }
 
   remove() {
     const idx = allConstraints.indexOf(this);
     if (idx >= 0) {
       allConstraints.splice(idx, 1);
-      forgetConstraintsAndThingsForSolver();
+      forgetClustersForSolver();
     }
   }
 
@@ -574,6 +604,20 @@ abstract class Constraint {
       : this.handles.some(
           cHandle => cHandle.canonicalInstance === thing.canonicalInstance
         );
+  }
+
+  operatesOnSameThingAs(that: Constraint) {
+    for (const handle of this.handles) {
+      if (that.handles.includes(handle)) {
+        return true;
+      }
+    }
+    for (const variable of this.variables) {
+      if (that.variables.includes(variable)) {
+        return true;
+      }
+    }
+    return false;
   }
 }
 
@@ -895,12 +939,7 @@ class AngleConstraint extends Constraint {
   ) {
     let a1: Handle;
     if (newerConstraintOrA1 instanceof AngleConstraint) {
-      // TODO: why can't I use a destructuring assignment for this??
-      a1 = newerConstraintOrA1.a1;
-      a2 = newerConstraintOrA1.a2;
-      b1 = newerConstraintOrA1.b1;
-      b2 = newerConstraintOrA1.b2;
-      angle = newerConstraintOrA1.angle;
+      ({ a1, a2, b1, b2, angle } = newerConstraintOrA1);
     } else {
       a1 = newerConstraintOrA1;
     }
