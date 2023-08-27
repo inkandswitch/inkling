@@ -4,16 +4,9 @@ TODO
 Constraints
 -----------
 
-* Numerical gradient sometimes fails, even w/o angle constraints.
-  - Try using VariableEquals to eliminate variables
-    (if a=b=c, we only need one of them to go to the solver,
-    it's like we should rewrite the constraints...)
-  - Unconstrained variables could be optimized away, too
-    (just need to compute their value at the end)
-  - Speaking of which, can have a post-solver
-    "propagate knowns" step where we compute things
-    whose values are determined from the solution
-    that came out of the solver.
+* Think about VariableEqualsConstraint and "keys" /
+  variable de-duping. It's not quite right b/c of the offsets,
+  and I need to get that right before angles will work.
 
 * Can we keep unconstrained variables from affecting the
   behavior of a constraint?
