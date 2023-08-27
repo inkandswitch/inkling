@@ -14,7 +14,7 @@ interface ChildVariableInfo {
 
 interface ParentVariableInfo {
   type: 'parent';
-  childToOffset: Map<Variable, number>;
+  children: Set<Variable>;
 }
 
 class Variable {
@@ -24,15 +24,15 @@ class Variable {
 
   info: VariableInfo = {
     type: 'parent',
-    childToOffset: new Map(),
+    children: new Set(),
   };
 
   constructor(private _value: number = 0) {
     Variable.all.push(this);
   }
 
-  get parent(): Variable {
-    return this.info.type === 'child' ? this.info.parent : this;
+  get parent(): Variable | null {
+    return this.info.type === 'child' ? this.info.parent : null;
   }
 
   get value() {
@@ -42,37 +42,21 @@ class Variable {
   set value(newValue: number) {
     this._value = newValue;
     if (this.info.type === 'parent') {
-      for (const [child, offset] of this.info.childToOffset.entries()) {
-        child.value = newValue + offset;
+      for (const child of this.info.children) {
+        child.value = newValue;
       }
     }
   }
 
-  computeValueFromParentValue(parentValue: number): number {
-    if (this.info.type !== 'child') {
-      throw new Error(
-        'called computeValueFromParentValue() on parent variable'
-      );
-    }
-
-    const offset = (
-      this.info.parent.info as ParentVariableInfo
-    ).childToOffset.get(this)!;
-    return parentValue + offset;
-  }
-
-  adopt(child: Variable, offset: number) {
+  adopt(child: Variable) {
     if (this.info.type !== 'parent') {
-      this.info.parent.adopt(child, offset);
+      this.info.parent.adopt(child);
       return;
     }
 
     if (child.info.type === 'parent') {
-      for (const [
-        inheritedChild,
-        inheritedChildOffset,
-      ] of child.info.childToOffset.entries()) {
-        this.adopt(inheritedChild, inheritedChildOffset + offset);
+      for (const inheritedChild of child.info.children) {
+        this.adopt(inheritedChild);
       }
       child.info = { type: 'child', parent: this };
     } else {
@@ -80,16 +64,16 @@ class Variable {
     }
 
     // console.log(this.id, 'adopted', child.id);
-    this.info.childToOffset.set(child, offset);
+    this.info.children.add(child);
   }
 
   resetInfo() {
     if (this.info.type === 'parent') {
-      this.info.childToOffset.clear();
+      this.info.children.clear();
     } else {
       this.info = {
         type: 'parent',
-        childToOffset: new Map(),
+        children: new Set(),
       };
     }
   }
@@ -223,9 +207,9 @@ function dedupVariables(constraints: Constraint[]) {
   // This is there the deduping happens.
   for (const constraint of constraints) {
     if (constraint instanceof VariableEqualsConstraint) {
-      const { a, b, k } = constraint;
       // console.log('because of', constraint);
-      a.adopt(b, -k);
+      const { a, b } = constraint;
+      a.adopt(b);
     }
   }
   for (const variable of variables) {
@@ -314,7 +298,7 @@ class Knowns {
   addVar(variable: Variable) {
     this.vars.add(variable);
     if (variable.info.type === 'parent') {
-      for (const child of variable.info.childToOffset.keys()) {
+      for (const child of variable.info.children) {
         this.vars.add(child);
       }
     }
@@ -412,10 +396,7 @@ function minimizeError(constraints: Constraint[], things: Thing[]) {
         const parent =
           variable.info.type === 'parent' ? variable : variable.info.parent;
         const vi = varIdx.get(parent);
-        const parentValue = vi === undefined ? parent.value : currState[vi];
-        return variable === parent
-          ? parentValue
-          : variable.computeValueFromParentValue(parentValue);
+        return vi === undefined ? parent.value : currState[vi];
       });
       error += Math.pow(constraint.getError(positions, values), 2);
     }
@@ -494,8 +475,7 @@ class ConstraintKeyGenerator {
   constructor(
     private readonly type: string,
     private readonly handleGroups: Handle[][],
-    private readonly variableGroups: Variable[][],
-    private readonly constantGroups: number[][]
+    private readonly variableGroups: Variable[][]
   ) {
     this.key = this.generateKey();
   }
@@ -517,17 +497,15 @@ class ConstraintKeyGenerator {
       .map(variableGroup =>
         variableGroup
           .map(variable =>
-            // TODO: this is not quite right, think about it!
-            dedupHandlesAndVars ? variable.parent.id : variable.id
+            dedupHandlesAndVars
+              ? variable.parent?.id ?? variable.id
+              : variable.id
           )
           .sort()
           .join(',')
       )
       .map(variableIdGroup => `[${variableIdGroup}]`);
-    const constantGroups = this.constantGroups
-      .map(constantGroup => constantGroup.sort().join(','))
-      .map(constantGroup => `[${constantGroup}]`);
-    return `${this.type}([${handleIdGroups}],[${variableIdGroups}],[${constantGroups}])`;
+    return `${this.type}([${handleIdGroups}],[${variableIdGroups}])`;
   }
 }
 
@@ -557,7 +535,6 @@ abstract class Constraint {
   constructor(
     public readonly handles: Handle[],
     public readonly variables: Variable[],
-    public readonly constants: number[],
     private readonly keyGenerator: ConstraintKeyGenerator
   ) {
     allConstraints.push(this);
@@ -623,7 +600,7 @@ abstract class Constraint {
 
 export function fixedValue(variable: Variable, value: number = variable.value) {
   return addConstraint(
-    new ConstraintKeyGenerator('fixedValue', [], [[variable]], []),
+    new ConstraintKeyGenerator('fixedValue', [], [[variable]]),
     keyGenerator => new FixedValueConstraint(variable, value, keyGenerator),
     olderConstraint => olderConstraint.onClash(value)
   );
@@ -635,7 +612,7 @@ class FixedValueConstraint extends Constraint {
     public value: number,
     keyGenerator: ConstraintKeyGenerator
   ) {
-    super([], [variable], [], keyGenerator);
+    super([], [variable], keyGenerator);
   }
 
   propagateKnowns(knowns: Knowns): boolean {
@@ -661,12 +638,10 @@ class FixedValueConstraint extends Constraint {
   }
 }
 
-/** a = b + k */
-export function variableEquals(a: Variable, b: Variable, k = 0) {
+export function variableEquals(a: Variable, b: Variable) {
   return addConstraint(
-    // TODO: this is wrong now that a=b+k, e.g., ve(a, b, 5) != ve(b, a, 5)
-    new ConstraintKeyGenerator('variableEquals', [], [[a, b]], [[k]]),
-    keyGenerator => new VariableEqualsConstraint(a, b, k, keyGenerator),
+    new ConstraintKeyGenerator('variableEquals', [], [[a, b]]),
+    keyGenerator => new VariableEqualsConstraint(a, b, keyGenerator),
     _olderConstraint => {}
   );
 }
@@ -675,19 +650,18 @@ class VariableEqualsConstraint extends Constraint {
   constructor(
     readonly a: Variable,
     readonly b: Variable,
-    readonly k: number,
     keyGenerator: ConstraintKeyGenerator
   ) {
-    super([], [a, b], [], keyGenerator);
+    super([], [a, b], keyGenerator);
   }
 
   propagateKnowns(knowns: Knowns): boolean {
     if (!knowns.hasVar(this.a) && knowns.hasVar(this.b)) {
-      this.a.value = this.b.value + this.k;
+      this.a.value = this.b.value;
       knowns.addVar(this.a);
       return true;
     } else if (knowns.hasVar(this.a) && !knowns.hasVar(this.b)) {
-      this.b.value = this.a.value - this.k;
+      this.b.value = this.a.value;
       knowns.addVar(this.b);
       return true;
     } else {
@@ -697,7 +671,7 @@ class VariableEqualsConstraint extends Constraint {
 
   getError(_positions: Position[], values: number[]) {
     const [aValue, bValue] = values;
-    return aValue - (bValue + this.k);
+    return aValue - bValue;
   }
 
   onClash(_newerConstraint: this) {
@@ -705,9 +679,15 @@ class VariableEqualsConstraint extends Constraint {
   }
 }
 
+/** a = b + c */
+export function variablePlus(_a: Variable, _b: Variable, _c: Variable) {
+  // TODO: implement this!
+  throw new Error('TODO');
+}
+
 export function fixedPosition(handle: Handle, pos: Position = handle.position) {
   return addConstraint(
-    new ConstraintKeyGenerator('fixedPosition', [[handle]], [], []),
+    new ConstraintKeyGenerator('fixedPosition', [[handle]], []),
     keyGenerator => new FixedPositionConstraint(handle, pos, keyGenerator),
     olderConstraint => olderConstraint.onClash(pos)
   );
@@ -719,7 +699,7 @@ class FixedPositionConstraint extends Constraint {
     public position: Position,
     keyGenerator: ConstraintKeyGenerator
   ) {
-    super([handle], [], [], keyGenerator);
+    super([handle], [], keyGenerator);
   }
 
   propagateKnowns(knowns: Knowns): boolean {
@@ -748,7 +728,7 @@ class FixedPositionConstraint extends Constraint {
 
 export function horizontal(a: Handle, b: Handle) {
   return addConstraint(
-    new ConstraintKeyGenerator('horizontal', [[a, b]], [], []),
+    new ConstraintKeyGenerator('horizontal', [[a, b]], []),
     keyGenerator => new HorizontalConstraint(a, b, keyGenerator),
     _olderConstraint => {}
   );
@@ -760,7 +740,7 @@ class HorizontalConstraint extends Constraint {
     private readonly b: Handle,
     keyGenerator: ConstraintKeyGenerator
   ) {
-    super([a, b], [], [], keyGenerator);
+    super([a, b], [], keyGenerator);
   }
 
   propagateKnowns(knowns: Knowns): boolean {
@@ -789,7 +769,7 @@ class HorizontalConstraint extends Constraint {
 
 export function vertical(a: Handle, b: Handle) {
   return addConstraint(
-    new ConstraintKeyGenerator('vertical', [[a, b]], [], []),
+    new ConstraintKeyGenerator('vertical', [[a, b]], []),
     keyGenerator => new VerticalConstraint(a, b, keyGenerator),
     _olderConstraint => {}
   );
@@ -801,7 +781,7 @@ class VerticalConstraint extends Constraint {
     private readonly b: Handle,
     keyGenerator: ConstraintKeyGenerator
   ) {
-    super([a, b], [], [], keyGenerator);
+    super([a, b], [], keyGenerator);
   }
 
   propagateKnowns(knowns: Knowns): boolean {
@@ -830,7 +810,7 @@ class VerticalConstraint extends Constraint {
 
 export function length(a: Handle, b: Handle, length?: Variable) {
   return addConstraint(
-    new ConstraintKeyGenerator('length', [[a, b]], [], []),
+    new ConstraintKeyGenerator('length', [[a, b]], []),
     keyGenerator => {
       if (!length) {
         length = new Variable(Vec.dist(a.position, b.position));
@@ -852,7 +832,7 @@ class LengthConstraint extends Constraint {
     public readonly length: Variable,
     keyGenerator: ConstraintKeyGenerator
   ) {
-    super([a, b], [length], [], keyGenerator);
+    super([a, b], [length], keyGenerator);
   }
 
   getError(positions: Position[], values: number[]): number {
@@ -880,11 +860,13 @@ export function angle(
   return addConstraint(
     new ConstraintKeyGenerator(
       'angle',
+      // TODO: think about this more, don't we want this to clash w/ [b1, b2], [a1, a2]?
+      // (I don't think we will if we leave this as is. May need an add'l sort() in key-
+      // generating code.)
       [
         [a1, a2],
         [b1, b2],
       ],
-      [],
       []
     ),
     keyGenerator => {
@@ -912,7 +894,7 @@ class AngleConstraint extends Constraint {
     public readonly angle: Variable,
     keyGenerator: ConstraintKeyGenerator
   ) {
-    super([a1, a2, b1, b2], [angle], [], keyGenerator);
+    super([a1, a2, b1, b2], [angle], keyGenerator);
   }
 
   getError(positions: Position[], values: number[]): number {
@@ -946,7 +928,9 @@ class AngleConstraint extends Constraint {
 
     const thatAngle =
       computeAngle(a1.position, a2!.position, b1!.position, b2!.position) ?? 0;
-    variableEquals(this.angle, angle!, this.angle.value - thatAngle);
+    const diff = new Variable(this.angle.value - thatAngle);
+    fixedValue(diff);
+    variablePlus(this.angle, angle!, diff);
   }
 }
 
