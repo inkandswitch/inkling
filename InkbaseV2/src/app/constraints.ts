@@ -676,11 +676,65 @@ class VariableEqualsConstraint extends Constraint {
 }
 
 /** a = b + c */
-export function variablePlus(_a: Variable, _b: Variable, _c: Variable) {
-  // TODO: implement this!
-  // Note: a, b, and c should be in the same var group for the key generator.
-  // It should be up to onClash() to figure out how to ...
-  throw new Error('TODO');
+export function variablePlus(a: Variable, b: Variable, c: Variable) {
+  return addConstraint(
+    new ConstraintKeyGenerator('variablePlus', [], [[a, b, c]]),
+    keyGenerator => new VariablePlusConstraint(a, b, c, keyGenerator),
+    olderConstraint => olderConstraint.onClash(a, b, c)
+  );
+}
+
+class VariablePlusConstraint extends Constraint {
+  constructor(
+    readonly a: Variable,
+    readonly b: Variable,
+    readonly c: Variable,
+    keyGenerator: ConstraintKeyGenerator
+  ) {
+    super([], [a, b, c], keyGenerator);
+  }
+
+  propagateKnowns(knowns: Knowns): boolean {
+    if (
+      !knowns.hasVar(this.a) &&
+      knowns.hasVar(this.b) &&
+      knowns.hasVar(this.c)
+    ) {
+      this.a.value = this.b.value + this.c.value;
+      knowns.addVar(this.a);
+      return true;
+    } else if (
+      knowns.hasVar(this.a) &&
+      !knowns.hasVar(this.b) &&
+      knowns.hasVar(this.c)
+    ) {
+      this.b.value = this.a.value - this.c.value;
+      knowns.addVar(this.b);
+      return true;
+    } else if (
+      knowns.hasVar(this.a) &&
+      knowns.hasVar(this.b) &&
+      !knowns.hasVar(this.c)
+    ) {
+      this.c.value = this.a.value - this.b.value;
+      knowns.addVar(this.c);
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  getError(_positions: Position[], values: number[]) {
+    const [aValue, bValue, cValue] = values;
+    return aValue - (bValue + cValue);
+  }
+
+  onClash(a: Variable, b: Variable, c: Variable): void;
+  onClash(newerConstraint: this): void;
+  onClash(_newerConstraintOrA: this | Variable, _b?: Variable, _c?: Variable) {
+    // TODO: implement this
+    throw new Error('TODO');
+  }
 }
 
 export function fixedPosition(handle: Handle, pos: Position = handle.position) {
