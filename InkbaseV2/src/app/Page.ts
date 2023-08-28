@@ -10,18 +10,26 @@ import Handle from './strokes/Handle';
 import StrokeAnalyzer from './StrokeAnalyzer';
 import { makeIterableIterator } from '../lib/helpers';
 
+interface Options {
+  strokeAnalyzer: boolean;
+}
+
 export default class Page {
   // Stroke clusters are possible stroke Groups
   readonly clusters = new StrokeClusters();
 
   // Stroke graph looks at the page and tries to be smart about finding structure
-  readonly analyzer = new StrokeAnalyzer(this);
+  readonly analyzer: StrokeAnalyzer | null;
 
   // TODO: figure out a better model for how to store different kinds of strokes
   // For now just keep them separate, until we have a better idea of what freehand strokes look like
   readonly lineSegments: Array<LineSegment | ArcSegment> = [];
   readonly strokeGroups: StrokeGroup[] = [];
   readonly strokes: Stroke[] = [];
+
+  constructor(options: Options = { strokeAnalyzer: true }) {
+    this.analyzer = options.strokeAnalyzer ? new StrokeAnalyzer(this) : null;
+  }
 
   get freehandStrokes() {
     return makeIterableIterator(
@@ -55,14 +63,14 @@ export default class Page {
 
   onstrokeUpdated(stroke: Stroke) {
     if (stroke instanceof FreehandStroke) {
-      this.analyzer.addStroke(stroke);
+      this.analyzer?.addStroke(stroke);
     }
   }
 
   addFreehandStroke(points: Array<PositionWithPressure>) {
     const s = new FreehandStroke(points);
     this.addStroke(s);
-    this.analyzer.addStroke(s);
+    this.analyzer?.addStroke(s);
     return s;
   }
 
@@ -157,7 +165,7 @@ export default class Page {
   render() {
     this.lineSegments.forEach(render);
     this.strokes.forEach(render);
-    this.analyzer.render();
+    this.analyzer?.render();
   }
 }
 
