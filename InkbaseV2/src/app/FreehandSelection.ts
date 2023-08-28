@@ -17,7 +17,8 @@ export default class FreehandSelection {
     const fingerDown = events.find('finger', 'began');
     if (fingerDown) {
       this.fingerDown = fingerDown;
-      const found = this.page.findFreehandStrokeNear(fingerDown.position);
+      const foundStroke = this.page.findFreehandStrokeNear(fingerDown.position);
+      const foundHandle = this.page.findHandleNear(fingerDown.position);
 
       // Register longpress
       window.setTimeout(() => {
@@ -30,8 +31,8 @@ export default class FreehandSelection {
         }
       }, 750);
 
-      if (found) {
-        this.fingerDownOnStroke(found);
+      if (foundStroke && !foundHandle) {
+        this.fingerDownOnStroke(foundStroke);
       } else {
         this.fingerDownOnEmptySpace();
       }
@@ -61,6 +62,9 @@ export default class FreehandSelection {
     );
     if (ungroupedStrokes.size > 0) {
       this.page.addStrokeGroup(ungroupedStrokes);
+      for (const stroke of ungroupedStrokes) {
+        stroke.deselect();
+      }
     }
   }
 
