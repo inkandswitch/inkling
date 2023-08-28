@@ -606,8 +606,7 @@ class FixedValueConstraint extends Constraint {
     }
   }
 
-  getError(_positions: Position[], values: number[]) {
-    const [currentValue] = values;
+  getError(_positions: Position[], [currentValue]: number[]) {
     return currentValue - this.value;
   }
 
@@ -713,8 +712,7 @@ class VariablePlusConstraint extends Constraint {
     }
   }
 
-  getError(_positions: Position[], values: number[]) {
-    const [aValue, bValue, cValue] = values;
+  getError(_positions: Position[], [aValue, bValue, cValue]: number[]) {
     return aValue - (bValue + cValue);
   }
 
@@ -758,8 +756,7 @@ class FixedPositionConstraint extends Constraint {
     }
   }
 
-  getError(positions: Position[], _values: number[]) {
-    const [handlePos] = positions;
+  getError([handlePos]: Position[], _values: number[]) {
     return Vec.dist(handlePos, this.position);
   }
 
@@ -803,8 +800,7 @@ class HorizontalConstraint extends Constraint {
     }
   }
 
-  getError(positions: Position[], _values: number[]) {
-    const [aPos, bPos] = positions;
+  getError([aPos, bPos]: Position[], _values: number[]) {
     return aPos.y - bPos.y;
   }
 
@@ -847,8 +843,7 @@ class VerticalConstraint extends Constraint {
     }
   }
 
-  getError(positions: Position[], _values: number[]) {
-    const [aPos, bPos] = positions;
+  getError([aPos, bPos]: Position[], _values: number[]) {
     return aPos.x - bPos.x;
   }
 
@@ -884,9 +879,7 @@ class LengthConstraint extends Constraint {
     super([a, b], [length], keyGenerator);
   }
 
-  getError(positions: Position[], values: number[]): number {
-    const [aPos, bPos] = positions;
-    const [length] = values;
+  getError([aPos, bPos]: Position[], [length]: number[]): number {
     return Vec.dist(aPos, bPos) - length;
   }
 
@@ -928,9 +921,10 @@ class AngleConstraint extends Constraint {
     super([a1, a2, b1, b2], [angle], keyGenerator);
   }
 
-  getError(positions: Position[], values: number[]): number {
-    const [a1Pos, a2Pos, b1Pos, b2Pos] = positions;
-    const [angle] = values;
+  getError(
+    [a1Pos, a2Pos, b1Pos, b2Pos]: Position[],
+    [angle]: number[]
+  ): number {
     const currentAngle = computeAngle(a1Pos, a2Pos, b1Pos, b2Pos);
     return currentAngle === null ? 0 : (currentAngle - angle) * 100;
   }
