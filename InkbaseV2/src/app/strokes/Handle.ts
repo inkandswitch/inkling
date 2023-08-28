@@ -264,7 +264,7 @@ export default class Handle {
 
   get absorbedHandles(): Set<Handle> {
     if (!this.instanceState.isCanonical) {
-      throw new Error('accessed hasAbsorbedHandles on absorbed handle');
+      throw new Error('accessed absorbedHandles on absorbed handle');
     }
 
     return this.instanceState.absorbedHandles;
