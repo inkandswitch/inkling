@@ -171,7 +171,7 @@ export default class ConstraintTool extends Tool {
           SVG.now('polyline', {
             points: SVG.points([a.position, b.position]),
             stroke: 'cornflowerblue',
-            'stroke-width': 4,
+            'stroke-width': 8,
           });
           break;
         case 'angle': {
@@ -199,8 +199,8 @@ export default class ConstraintTool extends Tool {
       const { a, b } = this.refStrokeGroup;
       SVG.now('polyline', {
         points: SVG.points([a.position, b.position]),
-        stroke: '#0F0',
-        'stroke-width': 4,
+        stroke: '#FF0',
+        'stroke-width': 8,
       });
     }
   }
