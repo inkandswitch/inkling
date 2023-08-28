@@ -17,7 +17,7 @@ import { onEveryFrame } from '../lib/helpers';
 
 const events = new Events();
 const page = new Page();
-const snaps = new Snaps(page);
+const snaps = new Snaps(page, { handleSnaps: true, alignmentSnaps: false });
 
 const selection = new Selection(page, snaps);
 const freehandSelection = new FreehandSelection(page);

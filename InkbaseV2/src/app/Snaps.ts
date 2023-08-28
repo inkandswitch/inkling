@@ -4,7 +4,10 @@ import Page from './Page';
 import SVG from './Svg';
 import Handle from './strokes/Handle';
 
-const ENABLE_ALIGNMENT_SNAPS = false;
+interface Options {
+  handleSnaps: boolean;
+  alignmentSnaps: boolean;
+}
 
 export default class Snaps {
   private activeSnaps: Snap[] = [];
@@ -13,7 +16,10 @@ export default class Snaps {
   private snapSvgElementById = new Map<string, SVGElement>();
   private needsRerender = false;
 
-  constructor(private page: Page) {}
+  constructor(
+    private page: Page,
+    private options: Options = { handleSnaps: true, alignmentSnaps: true }
+  ) {}
 
   snapPositions(transformedPositions: Map<Handle, Position>) {
     const snaps: Snap[] = [];
@@ -34,17 +40,19 @@ export default class Snaps {
 
       const snapVectors: Position[] = [];
 
-      // snap to handle
-      for (const snapHandle of snapHandles) {
-        const v = Vec.sub(snapHandle.position, transformedPosition);
-        if (Vec.len(v) < 10) {
-          snapVectors.push(v);
-          snaps.push(new HandleSnap(handle, snapHandle));
-          break;
+      if (this.options.handleSnaps) {
+        // snap to handle
+        for (const snapHandle of snapHandles) {
+          const v = Vec.sub(snapHandle.position, transformedPosition);
+          if (Vec.len(v) < 10) {
+            snapVectors.push(v);
+            snaps.push(new HandleSnap(handle, snapHandle));
+            break;
+          }
         }
       }
 
-      if (ENABLE_ALIGNMENT_SNAPS && snapVectors.length === 0) {
+      if (this.options.alignmentSnaps && snapVectors.length === 0) {
         // vertical alignment
         for (const snapHandle of connectedHandles) {
           if (snapHandle === handle) {
@@ -152,7 +160,7 @@ interface LineShape {
   };
 }
 
-class Snap {
+abstract class Snap {
   id: string;
 
   constructor(
@@ -162,9 +170,7 @@ class Snap {
     this.id = `${handle.id}.${snapHandle.id}.${this.constructor.name}`;
   }
 
-  getShape(): Shape {
-    throw new Error('subclass responsibility!');
-  }
+  abstract getShape(): Shape;
 }
 
 class HandleSnap extends Snap {
