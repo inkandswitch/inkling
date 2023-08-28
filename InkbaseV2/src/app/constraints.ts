@@ -4,6 +4,7 @@ import { generateId } from '../lib/helpers';
 import Vec from '../lib/vec';
 import Handle from './strokes/Handle';
 import Selection from './Selection';
+import SVG from './Svg';
 
 type VariableInfo = CanonicalVariableInfo | AbsorbedVariableInfo;
 
@@ -20,7 +21,6 @@ interface AbsorbedVariableInfo {
 class Variable {
   static readonly all: Variable[] = [];
 
-  // TODO: consider moving id and value into info, as in Handle
   readonly id = generateId();
 
   info: VariableInfo = {
@@ -140,6 +140,7 @@ function getClustersForSolver(): Set<ClusterForSolver> {
   }
 
   console.log('clusters', _clustersForSolver);
+  SVG.showStatus(`${clusters.size} clusters`);
 
   return _clustersForSolver;
 }
@@ -338,7 +339,8 @@ function solveCluster(
       constraints,
       things
     );
-    throw e;
+    displayText('' + e);
+    // throw e;
   } finally {
     // Remove the temporary fixed position constraints that we added to `constraints`.
     constraints.length = oldNumConstraints;
@@ -401,20 +403,8 @@ function minimizeError(constraints: Constraint[], things: Thing[]) {
 
   const oldError = computeTotalError(inputs);
 
-  // const grad = (state: number[]) => numeric.gradient(computeTotalError, state);
-  // const gradZero = (state: number[]) => grad(state).every(n => n === 0);
-  // if (gradZero(inputs)) {
-  //   return;
-  // }
-
   try {
-    const result = numeric.uncmin(
-      computeTotalError,
-      inputs,
-      0.01,
-      undefined,
-      100
-    );
+    const result = numeric.uncmin(computeTotalError, inputs);
     if (result.f > oldError) {
       console.log(':(');
       return;
@@ -503,6 +493,8 @@ class ConstraintKeyGenerator {
   }
 }
 
+// TODO: think about return value -- it's not so useful when onClash() happens
+// b/c you cannot get to the new vars, etc.
 function addConstraint<C extends Constraint>(
   keyGenerator: ConstraintKeyGenerator,
   createNew: (keyGenerator: ConstraintKeyGenerator) => C,
@@ -910,17 +902,7 @@ export function angle(
   angle?: Variable
 ) {
   return addConstraint(
-    new ConstraintKeyGenerator(
-      'angle',
-      // TODO: think about this more, don't we want this to clash w/ [b1, b2], [a1, a2]?
-      // (I don't think we will if we leave this as is. May need an add'l sort() in key-
-      // generating code.)
-      [
-        [a1, a2],
-        [b1, b2],
-      ],
-      []
-    ),
+    new ConstraintKeyGenerator('angle', [[a1, a2, b1, b2]], []),
     keyGenerator => {
       if (!angle) {
         angle = new Variable(
@@ -949,11 +931,25 @@ class AngleConstraint extends Constraint {
     super([a1, a2, b1, b2], [angle], keyGenerator);
   }
 
+  // private element: SVGElement | null = null;
+
   getError(positions: Position[], values: number[]): number {
     const [a1Pos, a2Pos, b1Pos, b2Pos] = positions;
     const [angle] = values;
     const currentAngle = computeAngle(a1Pos, a2Pos, b1Pos, b2Pos);
-    return currentAngle === null ? 0 : currentAngle - angle;
+    const error = currentAngle === null ? 0 : (currentAngle - angle) * 100;
+    // if (!this.element || !this.element.parentElement) {
+    //   this.element = SVG.now('text', {
+    //     x: 20,
+    //     y: window.innerHeight - 5,
+    //     content: `ca = ${currentAngle}, e = ${error}`,
+    //   });
+    // } else {
+    //   SVG.update(this.element, {
+    //     content: `ca = ${currentAngle}, e = ${error}`,
+    //   });
+    // }
+    return error;
   }
 
   onClash(newerConstraint: this): void;
@@ -978,11 +974,18 @@ class AngleConstraint extends Constraint {
       a1 = newerConstraintOrA1;
     }
 
-    const thatAngle =
-      computeAngle(a1.position, a2!.position, b1!.position, b2!.position) ?? 0;
-    const diff = new Variable(this.angle.value - thatAngle);
-    fixedValue(diff);
-    variablePlus(this.angle, angle!, diff);
+    if (this.a1 === a1 && this.a2 === a2 && this.b1 === b1 && this.b2 === b2) {
+      // exactly the same thing!
+      variableEquals(this.angle, angle!);
+    } else {
+      // same points but different order
+      const thatAngle =
+        computeAngle(a1.position, a2!.position, b1!.position, b2!.position) ??
+        0;
+      const diff = new Variable(this.angle.value - thatAngle);
+      fixedValue(diff);
+      variablePlus(this.angle, angle!, diff);
+    }
   }
 }
 
