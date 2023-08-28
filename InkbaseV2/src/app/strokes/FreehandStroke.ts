@@ -33,9 +33,12 @@ export default class FreehandStroke extends Stroke {
 
   render() {
     super.render();
-    SVG.update(this.element, {
-      stroke: this.selected ? 'rgba(255, 0, 0, .5)' : 'rgba(0, 0, 0, .5)',
-    });
+    SVG.update(
+      this.element,
+      this.selected
+        ? { stroke: 'rgba(255, 0, 0, .5)', 'stroke-width': 4 }
+        : { stroke: 'rgba(0, 0, 0, .5)', 'stroke-width': 2 }
+    );
   }
 
   getLocalDirection(index: number) {
