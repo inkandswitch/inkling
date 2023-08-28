@@ -81,11 +81,13 @@ export default class ConstraintTool extends Tool {
     const a = strokeGroup.a;
     const b = strokeGroup.b;
 
-    if (Math.abs(a.position.x - b.position.x) < 5) {
+    const vertical = Math.abs(a.position.x - b.position.x) < 5;
+    if (vertical) {
       this.addConstraintCandidate('vertical', strokeGroup);
     }
 
-    if (Math.abs(a.position.y - b.position.y) < 5) {
+    const horizontal = Math.abs(a.position.y - b.position.y) < 5;
+    if (horizontal) {
       this.addConstraintCandidate('horizontal', strokeGroup);
     }
 
@@ -101,20 +103,23 @@ export default class ConstraintTool extends Tool {
     const refLen = Vec.dist(ra.position, rb.position);
     const len = Vec.dist(a.position, b.position);
     const lenDiff = Math.abs(refLen - len);
-    if (lenDiff < 10) {
+    const length = lenDiff < 10;
+    if (length) {
       this.addConstraintCandidate('length', strokeGroup);
     }
 
-    // const angle =
-    //   constraints.computeAngle(
-    //     a.position,
-    //     b.position,
-    //     ra.position,
-    //     rb.position
-    //   ) ?? 0;
-    // if ((((angle + 2 * Math.PI) % (Math.PI / 2)) * 180) / Math.PI < 5) {
-    //   this.addConstraintCandidate('angle', strokeGroup);
-    // }
+    if (!vertical && !horizontal) {
+      const angle =
+        constraints.computeAngle(
+          a.position,
+          b.position,
+          ra.position,
+          rb.position
+        ) ?? 0;
+      if ((((angle + 2 * Math.PI) % (Math.PI / 2)) * 180) / Math.PI < 5) {
+        this.addConstraintCandidate('angle', strokeGroup);
+      }
+    }
   }
 
   private addConstraintCandidate(
