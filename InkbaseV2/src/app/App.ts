@@ -27,7 +27,12 @@ const toolPicker = new ToolPicker([
   new FormalTool('FORM', 30, 80, page, snaps),
   new ColorTool('COLOR', 30, 130, page),
   new Tool('🧠', 30, 180, page, Stroke),
-  new ConstraintTool('CONST', 30, 230, page),
+  new ConstraintTool('CONST', 30, 230, page, {
+    vertical: true,
+    horizontal: true,
+    length: true,
+    angle: false,
+  }),
 ]);
 
 onEveryFrame(() => {

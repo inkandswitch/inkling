@@ -13,6 +13,13 @@ interface ConstraintCandidate {
   refStrokeGroup: StrokeGroup | null;
 }
 
+interface Options {
+  vertical: boolean;
+  horizontal: boolean;
+  length: boolean;
+  angle: boolean;
+}
+
 type LastTapInfo = {
   timestampMillis: number;
   strokeGroup: StrokeGroup | null;
@@ -27,7 +34,13 @@ export default class ConstraintTool extends Tool {
   private readonly constraintCandidates = new Set<ConstraintCandidate>();
   private readonly appliedCandidates = new Set<ConstraintCandidate>();
 
-  constructor(label: string, buttonX: number, buttonY: number, page: Page) {
+  constructor(
+    label: string,
+    buttonX: number,
+    buttonY: number,
+    page: Page,
+    private options: Options
+  ) {
     super(label, buttonX, buttonY, page, FreehandStroke);
   }
 
@@ -81,12 +94,14 @@ export default class ConstraintTool extends Tool {
     const a = strokeGroup.a;
     const b = strokeGroup.b;
 
-    const vertical = Math.abs(a.position.x - b.position.x) < 5;
+    const vertical =
+      this.options.vertical && Math.abs(a.position.x - b.position.x) < 5;
     if (vertical) {
       this.addConstraintCandidate('vertical', strokeGroup);
     }
 
-    const horizontal = Math.abs(a.position.y - b.position.y) < 5;
+    const horizontal =
+      this.options.horizontal && Math.abs(a.position.y - b.position.y) < 5;
     if (horizontal) {
       this.addConstraintCandidate('horizontal', strokeGroup);
     }
@@ -103,12 +118,12 @@ export default class ConstraintTool extends Tool {
     const refLen = Vec.dist(ra.position, rb.position);
     const len = Vec.dist(a.position, b.position);
     const lenDiff = Math.abs(refLen - len);
-    const length = lenDiff < 10;
+    const length = this.options.length && lenDiff < 10;
     if (length) {
       this.addConstraintCandidate('length', strokeGroup);
     }
 
-    if (!vertical && !horizontal) {
+    if (this.options.angle && !vertical && !horizontal) {
       const angle =
         constraints.computeAngle(
           a.position,
