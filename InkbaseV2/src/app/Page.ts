@@ -27,7 +27,7 @@ export default class Page {
   readonly strokeGroups: StrokeGroup[] = [];
   readonly strokes: Stroke[] = [];
 
-  constructor(options: Options = { strokeAnalyzer: true }) {
+  constructor(options: Options) {
     this.analyzer = options.strokeAnalyzer ? new StrokeAnalyzer(this) : null;
   }
 

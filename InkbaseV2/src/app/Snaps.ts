@@ -18,7 +18,7 @@ export default class Snaps {
 
   constructor(
     private page: Page,
-    private options: Options = { handleSnaps: true, alignmentSnaps: true }
+    private options: Options
   ) {}
 
   snapPositions(transformedPositions: Map<Handle, Position>) {
