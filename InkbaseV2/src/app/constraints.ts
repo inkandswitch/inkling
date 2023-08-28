@@ -146,18 +146,10 @@ function getClustersForSolver(): Set<ClusterForSolver> {
 }
 
 function getDedupedConstraintsAndVariables(constraints: Constraint[]) {
-  // console.log('var eq constraints before');
   let constraintByKey = new Map<string, Constraint>();
   const constraintsToProcess = constraints.slice();
   while (constraintsToProcess.length > 0) {
     const constraint = constraintsToProcess.shift()!;
-    // if (constraint instanceof VariableEqualsConstraint) {
-    //   console.log(
-    //     've',
-    //     JSON.stringify(constraint.a.info),
-    //     JSON.stringify(constraint.b.info)
-    //   );
-    // }
     const key = constraint.getKeyWithDedupedHandlesAndVars();
     const matchingConstraint = constraintByKey.get(key);
     if (matchingConstraint) {
@@ -171,12 +163,7 @@ function getDedupedConstraintsAndVariables(constraints: Constraint[]) {
   }
 
   constraints = Array.from(constraintByKey.values());
-  // console.log(
-  //   'var eq constraints after',
-  //   constraints.filter(c => c instanceof VariableEqualsConstraint)
-  // );
 
-  // console.log('deduping vars');
   const variables = dedupVariables(constraints);
 
   // Now discard VariableEqualsConstraints and variables that were "adopted" by other variables.
@@ -205,8 +192,6 @@ function dedupVariables(constraints: Constraint[]) {
       variables.add(variable);
     }
   }
-
-  // console.log('constraints in dedupVars', constraints);
 
   // This is there the deduping happens.
   for (const constraint of constraints) {
@@ -331,16 +316,6 @@ function solveCluster(
 
   try {
     minimizeError(constraints, things);
-  } catch (e) {
-    console.log(
-      'minimizeError threw',
-      e,
-      'while working on cluster with',
-      constraints,
-      things
-    );
-    SVG.showStatus('' + e);
-    // throw e;
   } finally {
     // Remove the temporary fixed position constraints that we added to `constraints`.
     constraints.length = oldNumConstraints;
@@ -429,9 +404,19 @@ function minimizeError(constraints: Constraint[], things: Thing[]) {
       }
     }
   } catch (e) {
-    console.log('inputs', inputs);
-    console.log('knowns', knowns);
-    throw e;
+    console.log(
+      'minimizeError threw',
+      e,
+      'while working on cluster with',
+      constraints,
+      things,
+      'with inputs',
+      inputs,
+      'and knowns',
+      knowns
+    );
+    SVG.showStatus('' + e);
+    // throw e;
   }
 }
 
