@@ -7,17 +7,17 @@ import StrokeGroup from '../strokes/StrokeGroup';
 import Tool from './Tool';
 import SVG from '../Svg';
 
-interface ConstraintCandidate {
-  type: 'horizontal' | 'vertical' | 'length' | 'angle';
-  strokeGroup: StrokeGroup;
-  refStrokeGroup: StrokeGroup | null;
-}
-
 interface Options {
   vertical: boolean;
   horizontal: boolean;
   length: boolean;
   angle: boolean;
+}
+
+interface ConstraintCandidate {
+  type: 'horizontal' | 'vertical' | 'length' | 'angle';
+  strokeGroup: StrokeGroup;
+  refStrokeGroup: StrokeGroup | null;
 }
 
 type LastTapInfo = {
@@ -91,8 +91,7 @@ export default class ConstraintTool extends Tool {
   private addConstraintCandidates(strokeGroup: StrokeGroup) {
     // add constraints based on this stroke group alone
 
-    const a = strokeGroup.a;
-    const b = strokeGroup.b;
+    const { a, b } = strokeGroup;
 
     const vertical =
       this.options.vertical && Math.abs(a.position.x - b.position.x) < 5;
@@ -112,8 +111,7 @@ export default class ConstraintTool extends Tool {
 
     // add constraints relative to the reference stroke group
 
-    const ra = this.refStrokeGroup.a;
-    const rb = this.refStrokeGroup.b;
+    const { a: ra, b: rb } = this.refStrokeGroup;
 
     const refLen = Vec.dist(ra.position, rb.position);
     const len = Vec.dist(a.position, b.position);
@@ -161,8 +159,7 @@ export default class ConstraintTool extends Tool {
     super.render();
 
     for (const { type, strokeGroup } of this.constraintCandidates) {
-      const a = strokeGroup.a;
-      const b = strokeGroup.b;
+      const { a, b } = strokeGroup;
       switch (type) {
         case 'vertical':
           SVG.now('polyline', {
