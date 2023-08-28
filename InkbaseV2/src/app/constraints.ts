@@ -339,7 +339,7 @@ function solveCluster(
       constraints,
       things
     );
-    displayText('' + e);
+    SVG.showStatus('' + e);
     // throw e;
   } finally {
     // Remove the temporary fixed position constraints that we added to `constraints`.
