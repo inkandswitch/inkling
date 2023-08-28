@@ -150,7 +150,7 @@ export default class ConstraintTool extends Tool {
               { x: a.position.x, y: 0 },
               { x: a.position.x, y: 10_000 },
             ]),
-            stroke: 'rgba(0, 0, 255, 0.1)',
+            stroke: 'rgba(0, 0, 255, 0.2)',
           });
           break;
         case 'horizontal':
@@ -159,7 +159,7 @@ export default class ConstraintTool extends Tool {
               { x: 0, y: a.position.y },
               { x: 10_000, y: a.position.y },
             ]),
-            stroke: 'rgba(0, 0, 255, 0.1)',
+            stroke: 'rgba(0, 0, 255, 0.2)',
           });
           break;
         case 'length':
@@ -175,7 +175,7 @@ export default class ConstraintTool extends Tool {
               Vec.lerp(a.position, b.position, 10_000),
               Vec.lerp(a.position, b.position, -10_000),
             ]),
-            stroke: 'rgba(0, 0, 255, 0.1)',
+            stroke: 'rgba(0, 0, 255, 0.2)',
           });
           const { a: ra, b: rb } = this.refStrokeGroup!;
           SVG.now('polyline', {
@@ -183,7 +183,7 @@ export default class ConstraintTool extends Tool {
               Vec.lerp(ra.position, rb.position, 10_000),
               Vec.lerp(ra.position, rb.position, -10_000),
             ]),
-            stroke: 'rgba(0, 0, 255, 0.1)',
+            stroke: 'rgba(0, 0, 255, 0.2)',
           });
           break;
         }
