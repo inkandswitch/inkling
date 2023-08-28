@@ -78,6 +78,25 @@ function path(points: Position[] | PositionWithPressure[]) {
     .join(' ');
 }
 
+const statusElement = add('text', {
+  x: 20,
+  y: window.innerHeight - 5,
+  content: '',
+  stroke: '#bbb',
+});
+
+let statusHideTimeMillis = 0;
+
+function showStatus(text: string, time = 3_000) {
+  update(statusElement, { content: text, visibility: 'visible' });
+  statusHideTimeMillis = Date.now() + time;
+  setTimeout(() => {
+    if (Date.now() >= statusHideTimeMillis) {
+      update(statusElement, { visibility: 'hidden' });
+    }
+  }, time);
+}
+
 export default {
   add,
   update,
@@ -85,4 +104,5 @@ export default {
   clearNow,
   points,
   path,
+  showStatus,
 };
