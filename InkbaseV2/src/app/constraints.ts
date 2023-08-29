@@ -107,8 +107,6 @@ function getClustersForSolver(): Set<ClusterForSolver> {
     return _clustersForSolver;
   }
 
-  _clustersForSolver = new Set();
-
   for (const variable of Variable.all) {
     variable.resetInfo();
   }
@@ -127,17 +125,18 @@ function getClustersForSolver(): Set<ClusterForSolver> {
     clusters.add(newCluster);
   }
 
-  for (let constraints of clusters) {
-    let variables: Set<Variable>;
-    ({ constraints, variables } =
-      getDedupedConstraintsAndVariables(constraints));
-    const handles = getHandlesIn(constraints);
-    const things = [...variables, ...handles];
-    _clustersForSolver?.add({
-      constraints,
-      things,
-    });
-  }
+  _clustersForSolver = new Set(
+    Array.from(clusters).map(cluster => {
+      const { constraints, variables } =
+        getDedupedConstraintsAndVariables(cluster);
+      const handles = getHandlesIn(constraints);
+      const things = [...variables, ...handles];
+      return {
+        constraints,
+        things,
+      };
+    })
+  );
 
   console.log('clusters', _clustersForSolver);
   SVG.showStatus(`${clusters.size} clusters`);
@@ -146,7 +145,12 @@ function getClustersForSolver(): Set<ClusterForSolver> {
 }
 
 function getDedupedConstraintsAndVariables(constraints: Constraint[]) {
-  let constraintByKey = new Map<string, Constraint>();
+  constraints = dedupConstraints(constraints);
+  return dedupVariables(constraints);
+}
+
+function dedupConstraints(constraints: Constraint[]): Constraint[] {
+  const constraintByKey = new Map<string, Constraint>();
   const constraintsToProcess = constraints.slice();
   while (constraintsToProcess.length > 0) {
     const constraint = constraintsToProcess.shift()!;
@@ -161,27 +165,7 @@ function getDedupedConstraintsAndVariables(constraints: Constraint[]) {
       constraintByKey.set(key, constraint);
     }
   }
-
-  constraints = Array.from(constraintByKey.values());
-
-  const variables = dedupVariables(constraints);
-
-  // Now discard VariableEqualsConstraints and variables that were "adopted" by other variables.
-  constraints = constraints.filter(
-    constraint => !(constraint instanceof VariableEqualsConstraint)
-  );
-
-  // ... and get rid of constraints that are now duplicates because of adoped variables.
-  constraintByKey = new Map<string, Constraint>();
-  for (const constraint of constraints) {
-    constraintByKey.set(
-      constraint.getKeyWithDedupedHandlesAndVars(),
-      constraint
-    );
-  }
-  constraints = Array.from(constraintByKey.values());
-
-  return { constraints, variables };
+  return Array.from(constraintByKey.values());
 }
 
 function dedupVariables(constraints: Constraint[]) {
@@ -200,13 +184,30 @@ function dedupVariables(constraints: Constraint[]) {
       a.absorb(b);
     }
   }
+
+  // Now discard variables that were adopted by other variables...
   for (const variable of variables) {
     if (!variable.info.isCanonical) {
       variables.delete(variable);
     }
   }
 
-  return variables;
+  // ... VariableEqualsConstraints that made that happen
+  constraints = constraints.filter(
+    constraint => !(constraint instanceof VariableEqualsConstraint)
+  );
+
+  // ... and constraints that are now duplicates because of adoped variables.
+  const constraintByKey = new Map<string, Constraint>();
+  for (const constraint of constraints) {
+    constraintByKey.set(
+      constraint.getKeyWithDedupedHandlesAndVars(),
+      constraint
+    );
+  }
+  constraints = Array.from(constraintByKey.values());
+
+  return { variables, constraints };
 }
 
 function getHandlesIn(constraints: Constraint[]) {
