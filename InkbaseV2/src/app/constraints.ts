@@ -371,38 +371,14 @@ function minimizeError(constraints: Constraint[], things: Thing[]) {
         const vi = varIdx.get(variable);
         return vi === undefined ? variable.value : currState[vi];
       });
-      error += Math.pow(constraint.getError(positions, values), 2);
+      error += Math.pow(constraint.getError(positions, values, knowns), 2);
     }
     return error;
   }
 
-  const oldError = computeTotalError(inputs);
-
+  let result: ReturnType<typeof numeric.uncmin>;
   try {
-    const result = numeric.uncmin(computeTotalError, inputs);
-    if (result.f > oldError) {
-      console.log(':(');
-      return;
-    }
-
-    // Now we write the solution from the solver back into our handles and variables.
-    const outputs = result.solution;
-    for (const thing of things) {
-      if (thing instanceof Variable && !knowns.hasVar(thing)) {
-        thing.value = outputs.shift()!;
-      } else if (thing instanceof Handle) {
-        const knowX = knowns.hasX(thing);
-        const knowY = knowns.hasY(thing);
-        if (knowX && knowY) {
-          // no update required
-          continue;
-        }
-
-        const x = knowX ? thing.position.x : outputs.shift()!;
-        const y = knowY ? thing.position.y : outputs.shift()!;
-        thing.position = { x, y };
-      }
-    }
+    result = numeric.uncmin(computeTotalError, inputs);
   } catch (e) {
     console.log(
       'minimizeError threw',
@@ -417,6 +393,28 @@ function minimizeError(constraints: Constraint[], things: Thing[]) {
     );
     SVG.showStatus('' + e);
     // throw e;
+    return;
+  }
+
+  // SVG.showStatus(`${result.iterations} iterations`);
+
+  // Now we write the solution from the solver back into our handles and variables.
+  const outputs = result.solution;
+  for (const thing of things) {
+    if (thing instanceof Variable && !knowns.hasVar(thing)) {
+      thing.value = outputs.shift()!;
+    } else if (thing instanceof Handle) {
+      const knowX = knowns.hasX(thing);
+      const knowY = knowns.hasY(thing);
+      if (knowX && knowY) {
+        // no update required
+        continue;
+      }
+
+      const x = knowX ? thing.position.x : outputs.shift()!;
+      const y = knowY ? thing.position.y : outputs.shift()!;
+      thing.position = { x, y };
+    }
   }
 }
 
@@ -549,7 +547,8 @@ abstract class Constraint {
   /** Returns the current error for this constraint. (OK if it's negative.) */
   abstract getError(
     handlePositions: Position[],
-    variableValues: number[]
+    variableValues: number[],
+    knowns: Knowns
   ): number;
 
   abstract onClash(newerConstraint: this): Variable[];
@@ -577,6 +576,10 @@ abstract class Constraint {
     }
     return false;
   }
+}
+
+export function variable(value = 0) {
+  return new Variable(value);
 }
 
 export function fixedValue(variable: Variable, value: number = variable.value) {
@@ -896,16 +899,12 @@ class LengthConstraint extends Constraint {
 export function angle(
   a1: Handle,
   a2: Handle,
-  b1: Handle,
-  b2: Handle,
-  angle = new Variable(
-    computeAngle(a1.position, a2.position, b1.position, b2.position) ?? 0
-  )
+  angle = new Variable(Vec.angle(Vec.sub(a2.position, a1.position)))
 ) {
   return addConstraint(
-    new ConstraintKeyGenerator('angle', [[a1, a2, b1, b2]], []),
-    keyGenerator => new AngleConstraint(a1, a2, b1, b2, angle, keyGenerator),
-    olderConstraint => olderConstraint.onClash(a1, a2, b1, b2, angle)
+    new ConstraintKeyGenerator('angle', [[a1, a2]], []),
+    keyGenerator => new AngleConstraint(a1, a2, angle, keyGenerator),
+    olderConstraint => olderConstraint.onClash(a1, a2, angle)
   );
 }
 
@@ -913,47 +912,51 @@ class AngleConstraint extends Constraint {
   constructor(
     public readonly a1: Handle,
     public readonly a2: Handle,
-    public readonly b1: Handle,
-    public readonly b2: Handle,
     public readonly angle: Variable,
     keyGenerator: ConstraintKeyGenerator
   ) {
-    super([a1, a2, b1, b2], [angle], keyGenerator);
+    super([a1, a2], [angle], keyGenerator);
   }
 
   getError(
-    [a1Pos, a2Pos, b1Pos, b2Pos]: Position[],
-    [angle]: number[]
+    [a1Pos, a2Pos]: Position[],
+    [angle]: number[],
+    _knowns: Knowns
   ): number {
-    const currentAngle = computeAngle(a1Pos, a2Pos, b1Pos, b2Pos);
-    return currentAngle === null ? 0 : (currentAngle - angle) * 100;
+    const currentAngle = Vec.angle(Vec.sub(a2Pos, a1Pos));
+    return (currentAngle - angle) * 100;
+
+    // const r = Vec.dist(a1Pos, a2Pos);
+    // let error: number;
+    // if (!knowns.hasX(this.a2) && !knowns.hasY(this.a2)) {
+    //   const x = r * Math.cos(angle);
+    //   const y = r * Math.sin(angle);
+    //   error = Vec.dist(a2Pos, { x, y });
+    //   SVG.showStatus(`angle=${angle}, error1=${error}`);
+    // } else if (!knowns.hasX(this.a1) && !knowns.hasY(this.a1)) {
+    //   const x = r * Math.cos(angle - Math.PI);
+    //   const y = r * Math.sin(angle - Math.PI);
+    //   error = Vec.dist(a1Pos, { x, y });
+    //   SVG.showStatus(`angle=${angle}, error2=${error}`);
+    // } else {
+    //   throw new Error('TODO');
+    // }
+    // return error;
   }
 
   onClash(newerConstraint: this): Variable[];
-  onClash(
-    a1: Handle,
-    a2: Handle,
-    b1: Handle,
-    b2: Handle,
-    angle: Variable
-  ): Variable[];
-  onClash(
-    newerConstraintOrA1: this | Handle,
-    a2?: Handle,
-    b1?: Handle,
-    b2?: Handle,
-    angle?: Variable
-  ) {
+  onClash(a1: Handle, a2: Handle, angle: Variable): Variable[];
+  onClash(newerConstraintOrA1: this | Handle, a2?: Handle, angle?: Variable) {
     let a1: Handle;
     let thatAngle: Variable;
     if (newerConstraintOrA1 instanceof AngleConstraint) {
-      ({ a1, a2, b1, b2, angle: thatAngle } = newerConstraintOrA1);
+      ({ a1, a2, angle: thatAngle } = newerConstraintOrA1);
     } else {
       a1 = newerConstraintOrA1;
       thatAngle = angle!;
     }
 
-    if (this.a1 === a1 && this.a2 === a2 && this.b1 === b1 && this.b2 === b2) {
+    if (this.a1 === a1 && this.a2 === a2) {
       // exactly the same thing!
       variableEquals(this.angle, thatAngle);
     } else {
@@ -965,19 +968,6 @@ class AngleConstraint extends Constraint {
 
     return [thatAngle];
   }
-}
-
-export function computeAngle(
-  a1Pos: Position,
-  a2Pos: Position,
-  b1Pos: Position,
-  b2Pos: Position
-): number | null {
-  const va = Vec.sub(a2Pos, a1Pos);
-  const vb = Vec.sub(b2Pos, b1Pos);
-  return Vec.len(va) < 1 || Vec.len(vb) < 1
-    ? null
-    : Vec.angleBetweenClockwise(va, vb);
 }
 
 // TODO: PropertyPickerConstraint

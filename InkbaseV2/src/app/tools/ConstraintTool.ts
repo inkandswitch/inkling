@@ -123,13 +123,12 @@ export default class ConstraintTool extends Tool {
 
     if (this.options.angle && !vertical && !horizontal) {
       const angle =
-        constraints.computeAngle(
-          a.position,
-          b.position,
-          ra.position,
-          rb.position
-        ) ?? 0;
-      if ((((angle + 2 * Math.PI) % (Math.PI / 2)) * 180) / Math.PI < 5) {
+        ((Vec.angle(Vec.sub(rb.position, ra.position)) -
+          Vec.angle(Vec.sub(b.position, a.position))) *
+          180) /
+        Math.PI;
+
+      if (Math.abs(angle - nearestMultiple(angle, 90)) < 5) {
         this.addConstraintCandidate('angle', strokeGroup);
       }
     }
@@ -240,8 +239,16 @@ export default class ConstraintTool extends Tool {
           break;
         }
         case 'angle': {
-          const angleVar = constraints.angle(a, b, ra!, rb!).variables[0];
-          constraints.fixedValue(angleVar);
+          const refAngleVar = constraints.angle(ra!, rb!).variables[0];
+          const angleVar = constraints.angle(a, b).variables[0];
+          const diffVar = constraints.variablePlus(
+            refAngleVar,
+            angleVar,
+            constraints.variable(
+              nearestMultiple(refAngleVar.value - angleVar.value, Math.PI / 2)
+            )
+          ).variables[2];
+          constraints.fixedValue(diffVar);
           break;
         }
       }
@@ -249,4 +256,8 @@ export default class ConstraintTool extends Tool {
     }
     this.constraintCandidates.clear();
   }
+}
+
+function nearestMultiple(n: number, m: number) {
+  return Math.round(n / m) * m;
 }
