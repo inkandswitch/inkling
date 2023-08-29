@@ -16,6 +16,8 @@ interface CanonicalVariableInfo {
 interface AbsorbedVariableInfo {
   isCanonical: false;
   canonicalInstance: Variable;
+  // canonicalInstance.value === absorbedVariable.value + valueOffset
+  valueOffset: number;
 }
 
 class Variable {
@@ -36,6 +38,10 @@ class Variable {
     return this.info.isCanonical ? this : this.info.canonicalInstance;
   }
 
+  get valueOffset() {
+    return this.info.isCanonical ? 0 : this.info.valueOffset;
+  }
+
   get value() {
     return this._value;
   }
@@ -44,29 +50,32 @@ class Variable {
     this._value = newValue;
     if (this.info.isCanonical) {
       for (const child of this.info.absorbedVariables) {
-        child.value = newValue;
+        const valueOffset = (child.info as AbsorbedVariableInfo).valueOffset;
+        child.value = newValue - valueOffset;
       }
     }
   }
 
-  absorb(that: Variable) {
-    if (!this.info.isCanonical) {
-      this.info.canonicalInstance.absorb(that);
+  absorb(that: Variable, valueOffset = 0) {
+    if (this === that) {
+      return;
+    } else if (!this.info.isCanonical || !that.info.isCanonical) {
+      this.canonicalInstance.absorb(that.canonicalInstance, valueOffset);
       return;
     }
 
-    if (that.info.isCanonical) {
-      for (const otherVariable of that.info.absorbedVariables) {
-        this.absorb(otherVariable);
-      }
-      that.info = { isCanonical: false, canonicalInstance: this };
-    } else {
-      (
-        that.info.canonicalInstance.info as CanonicalVariableInfo
-      ).absorbedVariables.delete(that);
-      that.info.canonicalInstance = this;
+    for (const otherVariable of that.info.absorbedVariables) {
+      const otherVariableInfo = otherVariable.info as AbsorbedVariableInfo;
+      otherVariableInfo.canonicalInstance = this;
+      otherVariableInfo.valueOffset += valueOffset;
+      this.info.absorbedVariables.add(otherVariable);
     }
 
+    that.info = {
+      isCanonical: false,
+      canonicalInstance: this,
+      valueOffset: valueOffset,
+    };
     this.info.absorbedVariables.add(that);
   }
 
@@ -145,8 +154,17 @@ function getClustersForSolver(): Set<ClusterForSolver> {
 }
 
 function getDedupedConstraintsAndVariables(constraints: Constraint[]) {
-  constraints = dedupConstraints(constraints);
-  return dedupVariables(constraints);
+  // console.log('orig constraints', constraints);
+  while (true) {
+    const oldNumConstraints = constraints.length;
+    const result = dedupVariables(dedupConstraints(constraints));
+    // console.log('new len', result.constraints.length, 'old', oldNumConstraints);
+    if (result.constraints.length === oldNumConstraints) {
+      return result;
+    } else {
+      constraints = result.constraints;
+    }
+  }
 }
 
 function dedupConstraints(constraints: Constraint[]): Constraint[] {
@@ -177,35 +195,47 @@ function dedupVariables(constraints: Constraint[]) {
     }
   }
 
-  // This is there the deduping happens.
-  for (const constraint of constraints) {
+  // Dedup variables based on VariableEqualsConstraints
+  let idx = 0;
+  while (idx < constraints.length) {
+    const constraint = constraints[idx];
     if (constraint instanceof VariableEqualsConstraint) {
       const { a, b } = constraint;
       a.absorb(b);
+      constraints.splice(idx, 1);
+    } else {
+      idx++;
     }
   }
 
-  // Now discard variables that were adopted by other variables...
+  // Here's another kind of deduping that we can do for variables: when
+  // we have VariablePlusConstraint(a, b, c) and FixedValueConstraint(c),
+  // variable a can absorb b w/ an "offset" of c. (There's a lot more that
+  // we could do here, this is just an initial experiment.)
+  idx = 0;
+  while (idx < constraints.length) {
+    const constraint = constraints[idx];
+    if (!(constraint instanceof VariablePlusConstraint)) {
+      idx++;
+      continue;
+    }
+
+    const { a, b, c: k } = constraint;
+    const fixedValue = constraints.find(
+      c =>
+        c instanceof FixedValueConstraint &&
+        c.variables[0].canonicalInstance === k.canonicalInstance
+    ) as FixedValueConstraint;
+    a.absorb(b, fixedValue.value);
+    constraints.splice(idx, 1);
+  }
+
+  // Now discard variables that were absorbed by other variables.
   for (const variable of variables) {
     if (!variable.info.isCanonical) {
       variables.delete(variable);
     }
   }
-
-  // ... VariableEqualsConstraints that made that happen
-  constraints = constraints.filter(
-    constraint => !(constraint instanceof VariableEqualsConstraint)
-  );
-
-  // ... and constraints that are now duplicates because of adoped variables.
-  const constraintByKey = new Map<string, Constraint>();
-  for (const constraint of constraints) {
-    constraintByKey.set(
-      constraint.getKeyWithDedupedHandlesAndVars(),
-      constraint
-    );
-  }
-  constraints = Array.from(constraintByKey.values());
 
   return { variables, constraints };
 }
@@ -354,6 +384,13 @@ function minimizeError(constraints: Constraint[], things: Thing[]) {
   function computeTotalError(currState: number[]) {
     let error = 0;
     for (const constraint of constraints) {
+      if (
+        constraint instanceof FixedValueConstraint ||
+        constraint instanceof FixedPositionConstraint
+      ) {
+        // Ignore -- these guys already did their job in propagateKnowns().
+        continue;
+      }
       const positions = constraint.handles.map(handle => {
         handle = handle.canonicalInstance;
         const xi = xIdx.get(handle);
@@ -368,9 +405,12 @@ function minimizeError(constraints: Constraint[], things: Thing[]) {
         }
       });
       const values = constraint.variables.map(variable => {
+        const valueOffset = variable.valueOffset;
         variable = variable.canonicalInstance;
         const vi = varIdx.get(variable);
-        return vi === undefined ? variable.value : currState[vi];
+        return (
+          (vi === undefined ? variable.value : currState[vi]) - valueOffset
+        );
       });
       error += Math.pow(constraint.getError(positions, values, knowns), 2);
     }
@@ -610,8 +650,8 @@ class FixedValueConstraint extends Constraint {
     }
   }
 
-  getError(_positions: Position[], [currentValue]: number[]) {
-    return currentValue - this.value;
+  getError(_positions: Position[], _values: number[]): number {
+    throw new Error('FixedValueConstraint.getError() should never be called!');
   }
 
   onClash(newerConstraintOrValue: this | number) {
@@ -760,8 +800,10 @@ class FixedPositionConstraint extends Constraint {
     }
   }
 
-  getError([handlePos]: Position[], _values: number[]) {
-    return Vec.dist(handlePos, this.position);
+  getError(_positions: Position[], _values: number[]): number {
+    throw new Error(
+      'FixedPositionConstraint.getError() should never be called!'
+    );
   }
 
   onClash(newerConstraintOrPosition: this | Position): Variable[] {
