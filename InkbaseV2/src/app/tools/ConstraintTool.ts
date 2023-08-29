@@ -74,7 +74,14 @@ export default class ConstraintTool extends Tool {
     const oldStrokeGroup = this.lastTapInfo.strokeGroup;
 
     if (isDoubleTap) {
-      this.refStrokeGroup = strokeGroup === oldStrokeGroup ? strokeGroup : null;
+      if (strokeGroup && strokeGroup === oldStrokeGroup) {
+        for (const stroke of strokeGroup.strokes) {
+          stroke.deselect();
+        }
+        this.refStrokeGroup = strokeGroup;
+      } else {
+        this.refStrokeGroup = null;
+      }
     }
 
     this.lastTapInfo = { timestampMillis, strokeGroup };
@@ -181,7 +188,7 @@ export default class ConstraintTool extends Tool {
           SVG.now('polyline', {
             points: SVG.points([a.position, b.position]),
             stroke: 'cornflowerblue',
-            'stroke-width': 8,
+            'stroke-width': 12,
           });
           break;
         case 'angle': {
@@ -209,8 +216,8 @@ export default class ConstraintTool extends Tool {
       const { a, b } = this.refStrokeGroup;
       SVG.now('polyline', {
         points: SVG.points([a.position, b.position]),
-        stroke: '#FF0',
-        'stroke-width': 8,
+        stroke: 'rgba(243, 149, 57, 0.5)',
+        'stroke-width': 12,
       });
     }
   }

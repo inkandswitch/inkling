@@ -9,14 +9,16 @@ export default class FreehandStroke extends Stroke {
   readonly id = generateId();
   private selected = false;
   public group: StrokeGroup | null = null;
+  private highlight = SVG.add('polyline', {
+    fill: 'none',
+    stroke: 'rgba(255, 255, 0, 0.25)',
+    'stroke-width': 12,
+    visibility: 'hidden',
+  });
 
   constructor(points: PositionWithPressure[]) {
     super(points);
-    this.element = SVG.add('polyline', {
-      fill: 'none',
-      stroke: 'rgba(0, 0, 0, .5)',
-      'stroke-width': 2,
-    });
+    SVG.update(this.element, { stroke: 'rgba(0, 0, 0, .5)' });
   }
 
   updatePath(newPoints: Array<PositionWithPressure>) {
@@ -33,12 +35,10 @@ export default class FreehandStroke extends Stroke {
 
   render() {
     super.render();
-    SVG.update(
-      this.element,
-      this.selected
-        ? { stroke: 'rgba(255, 0, 0, .5)', 'stroke-width': 4 }
-        : { stroke: 'rgba(0, 0, 0, .5)', 'stroke-width': 2 }
-    );
+    SVG.update(this.highlight, {
+      points: this.element.getAttribute('points')!,
+      visibility: this.selected ? 'visible' : 'hidden',
+    });
   }
 
   getLocalDirection(index: number) {
