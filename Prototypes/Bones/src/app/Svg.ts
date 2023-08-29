@@ -27,6 +27,10 @@ export default class SVG {
   // • SVG.update(myTextElm, {content: "hello"})
   static update<T extends SVGElement>(elm: T, attributes: Record<string, AttributeValue>) {
     Object.entries(attributes).forEach(([key, value]) => {
+      let cache = ((elm as any).__cache ||= {});
+      if (cache[key] === value) return;
+      cache[key] = value;
+
       if (key === "content") {
         elm.innerHTML = "" + value;
       } else {

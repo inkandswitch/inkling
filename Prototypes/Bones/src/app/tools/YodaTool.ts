@@ -86,7 +86,7 @@ export default class Yoda extends Tool {
     }
 
     // Build a vector of the average direction of the most recent points
-    let nRecentPoints = 10;
+    let nRecentPoints = 2;
     let recentPoints = points.slice(0, nRecentPoints);
     let strokeDirection = recentPoints.reduce((acc, v, i) => {
       return i === 0 ? acc : Vec.add(acc, Vec.sub(recentPoints[i - 1], v));
@@ -114,14 +114,14 @@ export default class Yoda extends Tool {
 
     // If the pencil gets close to any of those points, we want to count that as a retraction
     // The further the point, the more generous the radius we'll look for
-    distancesToRecentPoints.forEach((dist, i) => {
-      if (dist < i / 2) {
-        while (i-- > 0) {
-          this.doRetract(this.point!, this.stroke!, "red");
-        }
-        return;
-      }
-    });
+    // distancesToRecentPoints.forEach((dist, i) => {
+    //   if (dist < i / 2) {
+    //     while (i-- > 0) {
+    //       this.doRetract(this.point!, this.stroke!, "red");
+    //     }
+    //     return;
+    //   }
+    // });
 
     // this.doExtend(position, this.point, this.stroke);
     // return;
@@ -132,7 +132,7 @@ export default class Yoda extends Tool {
     SVG.now("text", { x: 100, y: 150, fill: "red", content: dot });
 
     // If the pencil is moving in the same direction as the stroke, we should extend the stroke
-    if (dot > -0.9) {
+    if (dot > 0) {
       return this.doExtend(position, this.point, this.stroke);
     }
 

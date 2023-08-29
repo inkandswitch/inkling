@@ -32,8 +32,8 @@ export default class PullableStroke extends Stroke {
     this.dirty = false;
     SVG.update(this.element, { points: SVG.points(this.points) });
 
-    this.deadPoints.forEach((p) => {
-      SVG.now("circle", { cx: p.x, cy: p.y, fill: p.color, r: 2 });
-    });
+    // this.deadPoints.forEach((p) => {
+    //   SVG.now("circle", { cx: p.x, cy: p.y, fill: p.color, r: 2 });
+    // });
   }
 }

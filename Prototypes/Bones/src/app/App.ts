@@ -21,33 +21,28 @@ const page = new Page(svg);
 const snaps = new Snaps(page);
 const selection = new Selection(page, snaps);
 
-const tools = [YodaTool, MoveTool, BoneTool, FreehandTool, CombTool, PullableTool];
+const tools = [MoveTool, BoneTool, YodaTool, FreehandTool, CombTool, PullableTool];
 const toolPicker = new ToolPicker(tools.map((t, i) => new t(svg, 30, 30 + 50 * i, page)));
 
-// let bone: Bone | undefined = undefined;
-// let i = 0;
-// for (i; i <= 1; i += 1 / 100) {
-//   let point = {
-//     x: lerp(i, 0, 1, 200, 600),
-//     y: lerp(i, 0, 1, 800, 400),
-//   };
-//   if (bone) {
-//     bone.target = Object.assign({}, point);
-//     bone.finish();
-//   }
-//   let position = Object.assign({}, point);
-//   let target = Object.assign({}, point);
-//   bone = page.addObject(new Bone(svg, position, target, bone));
-// }
-
-// let point = {
-//   x: lerp(i, 0, 1, 200, 600),
-//   y: lerp(Math.pow(i, 5), 0, 1, 800, 400),
-// };
-// if (bone) {
-//   bone.target = Object.assign({}, point);
-//   bone.finish();
-// }
+let bone: Bone | undefined = undefined;
+let n = 10;
+for (let i = 0; i < n; i++) {
+  let point = {
+    x: lerp(i, 0, n, 600, 1000),
+    y: lerp(i, 0, n, 400, 400),
+  };
+  if (bone) {
+    bone.target = Object.assign({}, point);
+    bone.finish();
+  }
+  let position = Object.assign({}, point);
+  let target = Object.assign({}, point);
+  bone = page.addObject(new Bone(svg, position, target, bone));
+}
+if (bone) {
+  bone.target = { x: 1000, y: 400 };
+  bone.finish();
+}
 
 EveryFrame((dt, time) => {
   SVG.clearNow();
