@@ -6,6 +6,7 @@ import FreehandStroke from '../strokes/FreehandStroke';
 import StrokeGroup from '../strokes/StrokeGroup';
 import Tool from './Tool';
 import SVG from '../Svg';
+import { toDegrees } from '../../lib/helpers';
 
 interface Options {
   vertical: boolean;
@@ -122,12 +123,10 @@ export default class ConstraintTool extends Tool {
     }
 
     if (this.options.angle && !vertical && !horizontal) {
-      const angle =
-        ((Vec.angle(Vec.sub(rb.position, ra.position)) -
-          Vec.angle(Vec.sub(b.position, a.position))) *
-          180) /
-        Math.PI;
-
+      const angle = toDegrees(
+        Vec.angle(Vec.sub(rb.position, ra.position)) -
+          Vec.angle(Vec.sub(b.position, a.position))
+      );
       if (Math.abs(angle - nearestMultiple(angle, 90)) < 1) {
         this.addConstraintCandidate('angle', strokeGroup);
       }
