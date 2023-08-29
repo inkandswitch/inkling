@@ -70,7 +70,7 @@ export default class ConstraintTool extends Tool {
   private updateLastTap(strokeGroup: StrokeGroup | null) {
     const timestampMillis = Date.now();
     const isDoubleTap =
-      timestampMillis - this.lastTapInfo.timestampMillis <= 200;
+      timestampMillis - this.lastTapInfo.timestampMillis <= 150;
     const oldStrokeGroup = this.lastTapInfo.strokeGroup;
 
     if (isDoubleTap) {
@@ -247,13 +247,10 @@ export default class ConstraintTool extends Tool {
         case 'angle': {
           const refAngleVar = constraints.angle(ra!, rb!).variables[0];
           const angleVar = constraints.angle(a, b).variables[0];
-          const diffVar = constraints.variablePlus(
-            refAngleVar,
-            angleVar,
-            constraints.variable(
-              nearestMultiple(refAngleVar.value - angleVar.value, Math.PI / 2)
-            )
-          ).variables[2];
+          const diffVar = constraints.variable(
+            nearestMultiple(refAngleVar.value - angleVar.value, Math.PI / 2)
+          );
+          constraints.variablePlus(refAngleVar, angleVar, diffVar);
           constraints.fixedValue(diffVar);
           break;
         }
