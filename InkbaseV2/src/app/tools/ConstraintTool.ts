@@ -128,7 +128,7 @@ export default class ConstraintTool extends Tool {
           180) /
         Math.PI;
 
-      if (Math.abs(angle - nearestMultiple(angle, 90)) < 5) {
+      if (Math.abs(angle - nearestMultiple(angle, 90)) < 1) {
         this.addConstraintCandidate('angle', strokeGroup);
       }
     }
