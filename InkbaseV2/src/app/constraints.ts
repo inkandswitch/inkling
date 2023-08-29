@@ -921,27 +921,51 @@ class AngleConstraint extends Constraint {
   getError(
     [a1Pos, a2Pos]: Position[],
     [angle]: number[],
-    _knowns: Knowns
+    knowns: Knowns
   ): number {
-    const currentAngle = Vec.angle(Vec.sub(a2Pos, a1Pos));
-    return (currentAngle - angle) * 100;
+    // The old way, which has problems b/c errors are in terms of angles.
+    // const currentAngle = Vec.angle(Vec.sub(a2Pos, a1Pos));
+    // return (currentAngle - angle) * 100;
 
-    // const r = Vec.dist(a1Pos, a2Pos);
-    // let error: number;
-    // if (!knowns.hasX(this.a2) && !knowns.hasY(this.a2)) {
-    //   const x = r * Math.cos(angle);
-    //   const y = r * Math.sin(angle);
-    //   error = Vec.dist(a2Pos, { x, y });
-    //   SVG.showStatus(`angle=${angle}, error1=${error}`);
-    // } else if (!knowns.hasX(this.a1) && !knowns.hasY(this.a1)) {
-    //   const x = r * Math.cos(angle - Math.PI);
-    //   const y = r * Math.sin(angle - Math.PI);
-    //   error = Vec.dist(a1Pos, { x, y });
-    //   SVG.showStatus(`angle=${angle}, error2=${error}`);
-    // } else {
-    //   throw new Error('TODO');
-    // }
-    // return error;
+    // The new way, implemented in terms of the minimum amount of displacement
+    // required to satisfy the constraint.
+
+    const r = Vec.dist(a2Pos, a1Pos);
+    let error = Infinity;
+
+    if (!knowns.hasX(this.a2) && !knowns.hasY(this.a2)) {
+      const x = a1Pos.x + r * Math.cos(angle);
+      const y = a1Pos.y + r * Math.sin(angle);
+      error = Math.min(error, Vec.dist(a2Pos, { x, y }));
+    } else if (!knowns.hasX(this.a2)) {
+      const x = a1Pos.x + (a2Pos.y - a1Pos.y) / Math.tan(angle);
+      error = Math.min(error, Math.abs(x - a2Pos.x));
+    } else if (!knowns.hasY(this.a2)) {
+      const y = a1Pos.y + (a2Pos.x - a1Pos.x) * Math.tan(angle);
+      error = Math.min(error, Math.abs(y - a2Pos.y));
+    }
+
+    if (!knowns.hasX(this.a1) && !knowns.hasY(this.a1)) {
+      const x = a2Pos.x + r * Math.cos(angle + Math.PI);
+      const y = a2Pos.y + r * Math.sin(angle + Math.PI);
+      error = Math.min(error, Vec.dist(a1Pos, { x, y }));
+    } else if (!knowns.hasX(this.a1)) {
+      const x = a2Pos.x + (a1Pos.y - a2Pos.y) / Math.tan(angle + Math.PI);
+      error = Math.min(error, Math.abs(x - a1Pos.x));
+    } else if (!knowns.hasY(this.a2)) {
+      const y = a2Pos.y + (a1Pos.x - a2Pos.x) * Math.tan(angle + Math.PI);
+      error = Math.min(error, Math.abs(y - a1Pos.y));
+    }
+
+    if (!Number.isFinite(error)) {
+      // Can't move anything, but we'll return error that we'd get from moving a2.
+      // (This gets better results than returning zero.)
+      const x = a2Pos.x + r * Math.cos(angle + Math.PI);
+      const y = a2Pos.y + r * Math.sin(angle + Math.PI);
+      error = Vec.dist(a1Pos, { x, y });
+    }
+
+    return error;
   }
 
   onClash(newerConstraint: this): Variable[];
