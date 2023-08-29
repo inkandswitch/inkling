@@ -49,6 +49,10 @@ export function objectWithSortedKeys(obj: Obj) {
 
 export const notNull = <T>(x: T | null): x is T => !!x;
 
+export function toDegrees(radians: number) {
+  return (radians * 180) / Math.PI;
+}
+
 // this is O(n^2), but there is a O(n * log(n)) solution
 // that we can use if this ever becomes a bottleneck
 // https://www.baeldung.com/cs/most-distant-pair-of-points
