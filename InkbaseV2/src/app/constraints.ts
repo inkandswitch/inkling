@@ -433,8 +433,8 @@ function minimizeError(constraints: Constraint[], things: Thing[]) {
       knowns
     );
     SVG.showStatus('' + e);
-    // throw e;
-    return;
+    throw e;
+    // return;
   }
 
   // SVG.showStatus(`${result.iterations} iterations`);
@@ -1037,5 +1037,76 @@ class AngleConstraint extends Constraint {
   }
 }
 
-// TODO: PropertyPickerConstraint
-// (handle: Handle, property: 'x' | 'y', variable: Variable)
+export function property(handle: Handle, property: 'x' | 'y') {
+  return addConstraint(
+    new ConstraintKeyGenerator('property-' + property, [[handle]], []),
+    keyGenerator => new PropertyPickerConstraint(handle, p, keyGenerator),
+    olderConstraint => olderConstraint.onClash()
+  );
+}
+
+class PropertyPickerConstraint extends Constraint {
+  constructor(
+    public readonly handle: Handle,
+    private property: 'x' | 'y',
+    keyGenerator: ConstraintKeyGenerator
+  ) {
+    super([handle], [new Variable(handle.position[property])], keyGenerator);
+  }
+
+  get variable() {
+    return this.variables[0];
+  }
+
+  propagateKnowns(knowns: Knowns): boolean {
+    switch (this.property) {
+      case 'x':
+        if (!knowns.hasX(this.handle) && knowns.hasVar(this.variable)) {
+          this.handle.position = {
+            x: this.variable.value,
+            y: this.handle.position.y,
+          };
+          knowns.addX(this.handle);
+          return true;
+        } else if (knowns.hasX(this.handle) && !knowns.hasVar(this.variable)) {
+          this.variable.value = this.handle.position.x;
+          knowns.addVar(this.variable);
+          return true;
+        } else {
+          return false;
+        }
+      case 'y':
+        if (!knowns.hasY(this.handle) && knowns.hasVar(this.variable)) {
+          this.handle.position = {
+            x: this.handle.position.x,
+            y: this.variable.value,
+          };
+          knowns.addY(this.handle);
+          return true;
+        } else if (knowns.hasY(this.handle) && !knowns.hasVar(this.variable)) {
+          this.variable.value = this.handle.position.y;
+          knowns.addVar(this.variable);
+          return true;
+        } else {
+          return false;
+        }
+      default:
+        throw new Error('unsupported property ' + this.property);
+    }
+  }
+
+  getError([handlePos]: Position[], [varValue]: number[]) {
+    return handlePos[this.property] - varValue;
+  }
+
+  onClash(): Variable[];
+  onClash(newerConstraint: this): Variable[];
+  onClash(newerConstraint?: this) {
+    if (newerConstraint && this.variable !== newerConstraint.variable) {
+      variableEquals(this.variable, newerConstraint.variable);
+      return newerConstraint.variables;
+    } else {
+      return this.variables;
+    }
+  }
+}
