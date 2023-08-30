@@ -384,6 +384,7 @@ function minimizeError(constraints: Constraint[], things: Thing[]) {
   // It excludes any value that we've already computed from known values like fixed position
   // and fixed value constraints.
   const inputs: number[] = [];
+  const inputDescriptors: string[] = [];
   const varIdx = new Map<Variable, number>();
   const xIdx = new Map<Handle, number>();
   const yIdx = new Map<Handle, number>();
@@ -391,14 +392,22 @@ function minimizeError(constraints: Constraint[], things: Thing[]) {
     if (thing instanceof Variable && !knowns.hasVar(thing)) {
       varIdx.set(thing, inputs.length);
       inputs.push(thing.value);
+      inputDescriptors.push(`var ${thing.id}`);
     } else if (thing instanceof Handle) {
+      // TODO: there is a bug here.
+      // Even if we don't "know" this handle's x, there may be a constraint that forces it to have
+      // the same value as another handle's x. In which case only one of them should be in inputs.
+      // This is why sometimes the solver's gradient is failing!
+      // (The same goes for the y, of course.)
       if (!knowns.hasX(thing)) {
         xIdx.set(thing, inputs.length);
         inputs.push(thing.position.x);
+        inputDescriptors.push(`x ${thing.id}`);
       }
       if (!knowns.hasY(thing)) {
         yIdx.set(thing, inputs.length);
         inputs.push(thing.position.y);
+        inputDescriptors.push(`y ${thing.id}`);
       }
     }
   }
@@ -452,7 +461,7 @@ function minimizeError(constraints: Constraint[], things: Thing[]) {
       constraints,
       things,
       'with inputs',
-      inputs,
+      inputs.map((input, idx) => ({ input, is: inputDescriptors[idx] })),
       'and knowns',
       knowns.toJSON()
     );
