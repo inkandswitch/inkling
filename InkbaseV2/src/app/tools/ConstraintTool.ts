@@ -26,7 +26,7 @@ type LastTapInfo = {
   strokeGroup: StrokeGroup | null;
 };
 
-export default class ConstraintTool extends Tool {
+export default class ConstraintTool extends Tool<FreehandStroke> {
   private lastTapInfo: LastTapInfo = {
     timestampMillis: 0,
     strokeGroup: null,
@@ -159,6 +159,12 @@ export default class ConstraintTool extends Tool {
       }
     }
     this.constraintCandidates.add({ type, strokeGroup, refStrokeGroup });
+  }
+
+  endStroke() {
+    const stroke = this.stroke;
+    super.endStroke();
+    this.page.addStrokeGroup(new Set([stroke!]));
   }
 
   render() {
