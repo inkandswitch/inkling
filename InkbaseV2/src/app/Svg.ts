@@ -80,9 +80,12 @@ function path(points: Position[] | PositionWithPressure[]) {
 
 const statusElement = add('text', {
   x: 20,
-  y: window.innerHeight - 5,
   content: '',
   stroke: '#bbb',
+});
+
+window.addEventListener('orientationchange', () => {
+  update(statusElement, { y: window.innerHeight - 5 });
 });
 
 let statusHideTimeMillis = 0;
