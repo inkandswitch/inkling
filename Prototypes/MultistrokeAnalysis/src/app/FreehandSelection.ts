@@ -64,6 +64,8 @@ export default class FreehandSelection {
         } 
 
         this.selectedStrokes.addStroke(stroke);
+
+        this.page.addMesh(this.selectedStrokes);
     }
 
     clearSelection(){

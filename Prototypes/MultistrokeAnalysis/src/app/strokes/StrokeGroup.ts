@@ -4,7 +4,7 @@ import Voronoi from "voronoi"
 import Vec from "../../lib/vec";
 import simplify from "simplify-js";
 import {SkeletonBuilder} from 'straight-skeleton';
-
+import triangulate from 'delaunay-triangulate';
 
 
 var voronoi = new Voronoi();
@@ -17,13 +17,23 @@ export default class StrokeGroup {
 
   svgElements: SVGElement[] = [];
 
+  mesh: any;
+
   addStroke(stroke){
     this.strokes.add(stroke)
 
     // Generate outline shape
     //let points = rdp_simplify(stroke.points, 2)
-    let shape = new ClipperShape([rdp_simplify(stroke.points, 5)], false, true, true, true)
-    shape = shape.offset( 10, {
+    let shape = new ClipperShape([rdp_simplify(stroke.points, 1)], false, true, true, true)
+    shape = shape.offset( 15, {
+      jointType: 'jtSquare',
+      endType: 'etOpenSquare',
+      miterLimit: 2.0,
+      roundPrecision: 0.25
+    })
+
+    let extraoffsetshape = new ClipperShape([rdp_simplify(stroke.points, 1)], false, true, true, true)
+    extraoffsetshape = extraoffsetshape.offset( 20, {
       jointType: 'jtSquare',
       endType: 'etOpenSquare',
       miterLimit: 2.0,
@@ -38,10 +48,46 @@ export default class StrokeGroup {
 
     // Simplify outlines
     this.outlineShape.paths = this.outlineShape.paths.map(path=>{
-      return simplify(path.map(pt=>({x: pt.X, y: pt.Y})), 10).map(pt=>({X: pt.x, Y: pt.y}))
+      return simplify(path.map(pt=>({x: pt.X, y: pt.Y})), 1).map(pt=>({X: pt.x, Y: pt.y}))
     })
 
+    let simplifiedStroke = simplify(stroke.points, 2)
+
     //this.generateSkeleton();
+
+    // Generate mesh
+    //let points = poissonDiskSampling(this.outlineShape, 15);
+    let outlinePoints = this.outlineShape.paths.flatMap(path=>path.map(pt=>({x: pt.X, y: pt.Y})));
+    let points = simplifiedStroke.concat(outlinePoints)
+
+    let triangles = triangulate(points.map(pt=>([pt.x, pt.y])));
+
+    let edges: any[] = [];
+    triangles.forEach(triangle=>{
+      let edgesForTriangle = [
+        [triangle[0], triangle[1]],
+        [triangle[1], triangle[2]],
+        [triangle[2], triangle[0]]
+      ];
+
+      edgesForTriangle.forEach(edge=>{
+        if(!edges.find(e=>{
+          return (e[0] == edge[0] && e[1] == edge[1]) || (e[1] == edge[0] && e[0] == edge[1])
+        })) {
+          let midpoint = Vec.mulS(Vec.add(points[edge[0]], points[edge[1]]), 0.5);
+          if(extraoffsetshape.pointInShape(midpoint, true, true)) {
+            edges.push(edge);
+          }
+        }
+      })
+    })
+
+    this.mesh = {
+      points,
+      edges
+    }
+    //console.log(mesh);
+    
 
     this.dirty = true;
   }
@@ -140,6 +186,18 @@ export default class StrokeGroup {
         "stroke-width": "4"
       })
     ];
+
+    // this.mesh.triangles.forEach(tri=>{
+    //   let points = tri.map(pti=>this.mesh.points[pti]);
+      
+    //   let polylinePoints = points.map(pt=>`${pt.x} ${pt.y}`).join(' ')
+
+    //   this.svgElements.push(svg.addElement("polyline", {
+    //     points: polylinePoints,
+    //     fill: "none",
+    //     stroke: "rgba(0,0,255,1)",
+    //   }))
+    // })
 
     this.dirty = false;
   }
@@ -288,4 +346,92 @@ function generateGaussianKernel(size, sigma) {
   }
   
   return kernel;
+}
+
+function poissonDiskSampling(shape, minDistance) {
+  let bounds = shape.shapeBounds();
+  console.log(bounds);
+  
+  const left = bounds.left;
+  const top = bounds.top;
+  const width = bounds.right - bounds.left;
+  const height = bounds.bottom - bounds.top;
+  // const width = polygon.reduce((maxX, vertex) => Math.max(maxX, vertex.x), 0);
+  // const height = polygon.reduce((maxY, vertex) => Math.max(maxY, vertex.y), 0);
+  const cellSize = minDistance / Math.sqrt(2);
+
+  const gridWidth = Math.ceil(width / cellSize);
+  const gridHeight = Math.ceil(height / cellSize);
+
+  const grid = new Array(gridWidth * gridHeight).fill(null);
+  const activePoints = [];
+  const points = [];
+
+  function gridIndex(x, y) {
+    return Math.floor(x / cellSize) + Math.floor(y / cellSize) * gridWidth;
+  }
+
+  function isValidPoint(x, y) {
+    if (x < left || x >= left+width || y < top || y >= top+height) {
+      return false;
+    }
+
+    if(!shape.pointInShape({x, y}, true, true)) {
+      return false;
+    }
+
+    const index = gridIndex(x, y);
+    const neighbors = [-1, 0, 1];
+    for (let yOffset of neighbors) {
+      for (let xOffset of neighbors) {
+        const neighborIndex = index + xOffset + yOffset * gridWidth;
+        const neighbor = grid[neighborIndex];
+        if (neighbor) {
+          const dx = neighbor.x - x;
+          const dy = neighbor.y - y;
+          if (dx * dx + dy * dy < minDistance * minDistance) {
+            return false;
+          }
+        }
+      }
+    }
+    return true;
+  }
+
+  function addPoint(x, y) {
+    const point = { x, y };
+    activePoints.push(point);
+    points.push(point);
+    const index = gridIndex(x, y);
+    grid[index] = point;
+  }
+
+  // Choose a random starting point
+  const startX = left + Math.random() * width;
+  const startY = top + Math.random() * height;
+  addPoint(startX, startY);
+
+  while (activePoints.length > 0) {
+    const randomIndex = Math.floor(Math.random() * activePoints.length);
+    const currentPoint = activePoints[randomIndex];
+    let foundValidPoint = false;
+
+    for (let i = 0; i < 30; i++) {
+      const angle = Math.random() * 2 * Math.PI;
+      const distance = minDistance + Math.random() * minDistance;
+      const newX = currentPoint.x + distance * Math.cos(angle);
+      const newY = currentPoint.y + distance * Math.sin(angle);
+
+      if (isValidPoint(newX, newY)) {
+        addPoint(newX, newY);
+        foundValidPoint = true;
+      }
+    }
+
+    if (!foundValidPoint) {
+      activePoints.splice(randomIndex, 1);
+    }
+  }
+
+  return points;
 }

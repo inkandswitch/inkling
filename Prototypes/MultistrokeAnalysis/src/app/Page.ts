@@ -9,6 +9,8 @@ import ControlPoint from "./strokes/ControlPoint";
 
 import Groups from "./Groups";
 import { Position, PositionWithPressure } from "../lib/types";
+import StrokeGroup from "./strokes/StrokeGroup";
+import DeformMesh from "./DeformMesh";
 
 export default class Page {
   points: Point[] = [];
@@ -18,6 +20,7 @@ export default class Page {
   // For now just keep them separate, until we have a better idea of what freehand strokes look like
   lineSegments: Array<LineSegment | ArcSegment> = [];
   freehandStrokes: FreehandStroke[] = [];
+  meshes: DeformMesh[] = [];
 
   constructor(private svg: SVG) {}
 
@@ -43,6 +46,21 @@ export default class Page {
     const as = new ArcSegment(this.svg, a, b, c);
     this.lineSegments.push(as);
     return as;
+  }
+
+  addMesh(group) {
+    let stroke = Array.from(group.strokes)[0];
+    let start = stroke.points[0];
+    let end = stroke.points[stroke.points.length-1];
+
+    let controlPoints = [
+      this.addControlPoint(start),
+      this.addControlPoint(end)
+    ]
+
+    this.meshes.push(new DeformMesh(group.mesh, controlPoints));
+
+    console.log(this.meshes);
   }
 
   addFreehandStroke(points: Array<PositionWithPressure | null>) {
@@ -163,6 +181,7 @@ export default class Page {
     this.lineSegments.forEach((ls) => ls.render(svg));
     this.freehandStrokes.forEach((s) => s.render());
     this.points.forEach((p) => p.render());
+    this.meshes.forEach((m)=> m.render(svg));
 
     this.groups.render(svg);
   }

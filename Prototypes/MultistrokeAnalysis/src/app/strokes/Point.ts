@@ -46,7 +46,7 @@ export default class Point {
 
     updateSvgElement(this.elements.selected, {
       transform: `translate(${this.position.x} ${this.position.y})`,
-      fill: this.selected ? "rgba(180, 134, 255, 0.42)" : "none",
+      fill: this.selected ? "rgba(180, 134, 255, 0.42)" : "rgba(180, 134, 255, 0.12)",
     });
 
     this.dirty = false;

@@ -1,7 +1,8 @@
 import EveryFrame from "./EveryFrame";
 import Events from "./NativeEvents";
 import Page from "./Page";
-import Selection from "./FreehandSelection";
+import FreehandSelection from "./FreehandSelection";
+import Selection from "./Selection";
 import Snaps from "./Snaps";
 import SVG from "./Svg";
 import ToolPicker from "./ToolPicker";
@@ -14,8 +15,8 @@ const events = new Events();
 const svg = new SVG(root);
 const page = new Page(svg);
 const snaps = new Snaps(page);
-//const selection = new Selection(page, snaps);
-const selection = new Selection(page);
+const selection = new Selection(page, snaps);
+const freehandselection = new FreehandSelection(page);
 
 const tools = [new FreehandTool(svg, 30, 30, page), new FormalTool(svg, 30, 80, page, snaps)];
 
@@ -25,13 +26,20 @@ EveryFrame(() => {
   toolPicker.update(events);
   toolPicker.selected?.update(events);
   // morphing.update(events);
-  selection.update(events);
+
+  if(toolPicker.selected === tools[0]) {
+    freehandselection.update(events);
+  } else {
+    selection.update(events);
+  }
+  
+  //
   events.clear();
 
   toolPicker.selected?.render(svg);
   snaps.render(svg);
   page.render(svg);
-  selection.render(svg);
+  freehandselection.render(svg);
 });
 
 
