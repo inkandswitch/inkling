@@ -66,7 +66,9 @@ class Variable {
       return;
     }
 
+    // console.log(this.id, 'absorbing', that.id);
     for (const otherVariable of that.info.absorbedVariables) {
+      // console.log(this.id, 'absorbing', otherVariable.id);
       otherVariable.value = this.value;
       const otherVariableInfo = otherVariable.info as AbsorbedVariableInfo;
       otherVariableInfo.canonicalInstance = this;
@@ -199,14 +201,13 @@ function dedupVariables(constraints: Constraint[]) {
     }
   }
 
-  // Dedup variables based on VariableEqualsConstraints
+  // Dedup variables based on VariableEquals
   let idx = 0;
   while (idx < constraints.length) {
     const constraint = constraints[idx];
     if (constraint instanceof VariableEquals) {
       const { a, b } = constraint;
       a.absorb(b);
-      // console.log(a.id, 'absorbed', b.id);
       constraints.splice(idx, 1);
     } else {
       idx++;
@@ -214,9 +215,9 @@ function dedupVariables(constraints: Constraint[]) {
   }
 
   // Here's another kind of deduping that we can do for variables: when
-  // we have VariablePlusConstraint(a, b, c) and FixedValueConstraint(c),
-  // variable a can absorb b w/ an "offset" of c. (There's a lot more that
-  // we could do here, this is just an initial experiment.)
+  // we have VariablePlus(a, b, c) and FixedValue(c), variable a can absorb
+  // b w/ an "offset" of c. (There's a lot more that we could do here, this
+  // is just an initial experiment.)
   idx = 0;
   while (idx < constraints.length) {
     const constraint = constraints[idx];
