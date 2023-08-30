@@ -126,24 +126,30 @@ function getClustersForSolver(): Set<ClusterForSolver> {
     variable.resetInfo();
   }
 
-  const clusters = new Set<Constraint[]>();
-  for (const c of allConstraints) {
-    const clustersToMerge: Constraint[][] = [];
+  interface Cluster {
+    constraints: Constraint[];
+    manipulationSet: ManipulationSet;
+  }
+
+  const clusters = new Set<Cluster>();
+  for (const constraint of allConstraints) {
+    const constraints = [constraint];
+    const manipulationSet = constraint.getManipulationSet();
     for (const cluster of clusters) {
-      if (cluster.some(constraint => constraint.operatesOnSameThingAs(c))) {
+      if (cluster.manipulationSet.overlapsWith(manipulationSet)) {
+        constraints.push(...cluster.constraints);
+        manipulationSet.absorb(cluster.manipulationSet);
         clusters.delete(cluster);
-        clustersToMerge.push(cluster);
       }
     }
-    const newCluster = clustersToMerge.flat();
-    newCluster.push(c);
-    clusters.add(newCluster);
+    clusters.add({ constraints, manipulationSet });
   }
 
   _clustersForSolver = new Set(
     Array.from(clusters).map(cluster => {
-      const { constraints, variables } =
-        getDedupedConstraintsAndVariables(cluster);
+      const { constraints, variables } = getDedupedConstraintsAndVariables(
+        cluster.constraints
+      );
       const handles = getHandlesIn(constraints);
       const things = [...variables, ...handles];
       return {
@@ -152,6 +158,10 @@ function getClustersForSolver(): Set<ClusterForSolver> {
       };
     })
   );
+
+  // for debugging
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (window as any).clusters = _clustersForSolver;
 
   console.log('clusters', _clustersForSolver);
   SVG.showStatus(`${clusters.size} clusters`);
@@ -563,6 +573,46 @@ function findConstraint<C extends Constraint>(key: string) {
 
 // #endregion adding constraints
 
+class ManipulationSet {
+  // Important: canonical handles and vars only!!
+  constructor(
+    public readonly xs: Set<Handle>,
+    public readonly ys: Set<Handle>,
+    public readonly vars: Set<Variable>
+  ) {}
+
+  overlapsWith(that: ManipulationSet) {
+    for (const h of that.xs) {
+      if (this.xs.has(h)) {
+        return true;
+      }
+    }
+    for (const h of that.ys) {
+      if (this.ys.has(h)) {
+        return true;
+      }
+    }
+    for (const v of that.vars) {
+      if (this.vars.has(v)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  absorb(that: ManipulationSet) {
+    for (const h of that.xs) {
+      this.xs.add(h);
+    }
+    for (const h of that.ys) {
+      this.ys.add(h);
+    }
+    for (const v of that.vars) {
+      this.vars.add(v);
+    }
+  }
+}
+
 abstract class Constraint {
   constructor(
     public readonly handles: Handle[],
@@ -608,28 +658,12 @@ abstract class Constraint {
 
   abstract onClash(newerConstraint: this): Variable[];
 
-  involves(thing: Variable | Handle): boolean {
-    return thing instanceof Variable
-      ? this.variables.some(
-          cVar => cVar.canonicalInstance === thing.canonicalInstance
-        )
-      : this.handles.some(
-          cHandle => cHandle.canonicalInstance === thing.canonicalInstance
-        );
-  }
-
-  operatesOnSameThingAs(that: Constraint) {
-    for (const handle of this.handles) {
-      if (that.involves(handle)) {
-        return true;
-      }
-    }
-    for (const variable of this.variables) {
-      if (that.involves(variable)) {
-        return true;
-      }
-    }
-    return false;
+  getManipulationSet(): ManipulationSet {
+    return new ManipulationSet(
+      new Set(this.handles.map(h => h.canonicalInstance)), // xs
+      new Set(this.handles.map(h => h.canonicalInstance)), // ys
+      new Set(this.variables.map(v => v.canonicalInstance)) // yars
+    );
   }
 }
 
@@ -1037,6 +1071,15 @@ class PropertyPicker extends Constraint {
 
   getError([handlePos]: Position[], [varValue]: number[]) {
     return handlePos[this.property] - varValue;
+  }
+
+  getManipulationSet(): ManipulationSet {
+    const handles = this.handles.map(h => h.canonicalInstance);
+    return new ManipulationSet(
+      new Set(this.property === 'x' ? handles : []), // xs
+      new Set(this.property === 'y' ? handles : []), // ys
+      new Set([this.variable.canonicalInstance]) // vars
+    );
   }
 
   onClash(): Variable[];
