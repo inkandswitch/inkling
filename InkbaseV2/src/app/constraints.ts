@@ -112,7 +112,10 @@ type Thing = Handle | Variable;
 // A group of constraints (and things that they operate on) that should be solved together.
 interface ClusterForSolver {
   constraints: Constraint[];
-  things: Thing[];
+  variables: Variable[];
+  handles: Handle[];
+  handleGetsXFrom: Map<Handle, Variable>;
+  handleGetsYFrom: Map<Handle, Variable>;
 }
 
 let _clustersForSolver: Set<ClusterForSolver> | null = null;
@@ -147,14 +150,14 @@ function getClustersForSolver(): Set<ClusterForSolver> {
 
   _clustersForSolver = new Set(
     Array.from(clusters).map(cluster => {
-      const { constraints, variables } = getDedupedConstraintsAndVariables(
-        cluster.constraints
-      );
-      const handles = getHandlesIn(constraints);
-      const things = [...variables, ...handles];
+      const { constraints, variables, handleGetsXFrom, handleGetsYFrom } =
+        getDedupedConstraintsAndVariables(cluster.constraints);
       return {
         constraints,
-        things,
+        variables,
+        handles: getHandlesIn(constraints),
+        handleGetsXFrom,
+        handleGetsYFrom,
       };
     })
   );
@@ -253,7 +256,13 @@ function dedupVariables(constraints: Constraint[]) {
     }
   }
 
-  return { variables, constraints };
+  return {
+    variables: Array.from(variables),
+    constraints,
+    // TODO: populate these
+    handleGetsXFrom: new Map<Handle, Variable>(),
+    handleGetsYFrom: new Map<Handle, Variable>(),
+  };
 }
 
 function getHandlesIn(constraints: Constraint[]) {
@@ -263,7 +272,7 @@ function getHandlesIn(constraints: Constraint[]) {
       handles.add(handle.canonicalInstance);
     }
   }
-  return handles;
+  return Array.from(handles);
 }
 
 function forgetClustersForSolver() {
@@ -346,69 +355,76 @@ class Knowns {
 export function solve(selection: Selection) {
   const clusters = getClustersForSolver();
   for (const cluster of clusters) {
-    solveCluster(selection, cluster.constraints, cluster.things);
+    solveCluster(selection, cluster);
   }
 }
 
-function solveCluster(
-  selection: Selection,
-  constraints: Constraint[],
-  things: Thing[]
-) {
-  const oldNumConstraints = constraints.length;
+function solveCluster(selection: Selection, cluster: ClusterForSolver) {
+  const oldNumConstraints = cluster.constraints.length;
 
-  if (constraints.length === 0) {
+  if (cluster.constraints.length === 0) {
+    // nothing to solve!
     return;
   }
 
   // We temporarily add fixed position constraints for each selected handle.
   // This is the "finger of God" semantics that we've talked about.
-  temporarilyMakeNewConstraintsGoInto(constraints, () => {
+  temporarilyMakeNewConstraintsGoInto(cluster.constraints, () => {
     for (const handle of selection.handles) {
       fixedPosition(handle);
     }
   });
 
   try {
-    minimizeError(constraints, things);
+    minimizeError(cluster);
   } finally {
     // Remove the temporary fixed position constraints that we added to `constraints`.
-    constraints.length = oldNumConstraints;
+    cluster.constraints.length = oldNumConstraints;
   }
 }
 
-function minimizeError(constraints: Constraint[], things: Thing[]) {
+function minimizeError({
+  constraints,
+  variables,
+  handles,
+  handleGetsXFrom,
+  handleGetsYFrom,
+}: ClusterForSolver) {
   const knowns = computeKnowns(constraints);
 
   // The state that goes into `inputs` is the stuff that can be modified by the solver.
   // It excludes any value that we've already computed from known values like fixed position
   // and fixed value constraints.
   const inputs: number[] = [];
-  const inputDescriptors: string[] = [];
+  const inputDescriptions: string[] = [];
   const varIdx = new Map<Variable, number>();
+  for (const variable of variables) {
+    if (!knowns.hasVar(variable)) {
+      varIdx.set(variable, inputs.length);
+      inputs.push(variable.value);
+      inputDescriptions.push(`var ${variable.id}`);
+    }
+  }
   const xIdx = new Map<Handle, number>();
   const yIdx = new Map<Handle, number>();
-  for (const thing of things) {
-    if (thing instanceof Variable && !knowns.hasVar(thing)) {
-      varIdx.set(thing, inputs.length);
-      inputs.push(thing.value);
-      inputDescriptors.push(`var ${thing.id}`);
-    } else if (thing instanceof Handle) {
-      // TODO: there is a bug here.
-      // Even if we don't "know" this handle's x, there may be a constraint that forces it to have
-      // the same value as another handle's x. In which case only one of them should be in inputs.
-      // This is why sometimes the solver's gradient is failing!
-      // (The same goes for the y, of course.)
-      if (!knowns.hasX(thing)) {
-        xIdx.set(thing, inputs.length);
-        inputs.push(thing.position.x);
-        inputDescriptors.push(`x ${thing.id}`);
-      }
-      if (!knowns.hasY(thing)) {
-        yIdx.set(thing, inputs.length);
-        inputs.push(thing.position.y);
-        inputDescriptors.push(`y ${thing.id}`);
-      }
+  for (const handle of handles) {
+    if (knowns.hasX(handle)) {
+      // no op
+    } else if (handleGetsXFrom.has(handle)) {
+      xIdx.set(handle, varIdx.get(handleGetsXFrom.get(handle)!)!);
+    } else {
+      xIdx.set(handle, inputs.length);
+      inputs.push(handle.position.x);
+      inputDescriptions.push(`x ${handle.id}`);
+    }
+    if (knowns.hasY(handle)) {
+      // no op
+    } else if (handleGetsYFrom.has(handle)) {
+      yIdx.set(handle, varIdx.get(handleGetsYFrom.get(handle)!)!);
+    } else {
+      yIdx.set(handle, inputs.length);
+      inputs.push(handle.position.y);
+      inputDescriptions.push(`y ${handle.id}`);
     }
   }
 
@@ -459,9 +475,10 @@ function minimizeError(constraints: Constraint[], things: Thing[]) {
       e,
       'while working on cluster with',
       constraints,
-      things,
+      variables,
+      handles,
       'with inputs',
-      inputs.map((input, idx) => ({ input, is: inputDescriptors[idx] })),
+      inputs.map((input, idx) => ({ input, is: inputDescriptions[idx] })),
       'and knowns',
       knowns.toJSON()
     );
@@ -472,23 +489,25 @@ function minimizeError(constraints: Constraint[], things: Thing[]) {
 
   // SVG.showStatus(`${result.iterations} iterations`);
 
-  // Now we write the solution from the solver back into our handles and variables.
+  // Now we write the solution from the solver back into our variables and handles.
   const outputs = result.solution;
-  for (const thing of things) {
-    if (thing instanceof Variable && !knowns.hasVar(thing)) {
-      thing.value = outputs.shift()!;
-    } else if (thing instanceof Handle) {
-      const knowX = knowns.hasX(thing);
-      const knowY = knowns.hasY(thing);
-      if (knowX && knowY) {
-        // no update required
-        continue;
-      }
-
-      const x = knowX ? thing.position.x : outputs.shift()!;
-      const y = knowY ? thing.position.y : outputs.shift()!;
-      thing.position = { x, y };
+  for (const variable of variables) {
+    if (!knowns.hasVar(variable)) {
+      variable.value = outputs.shift()!;
     }
+  }
+  for (const handle of handles) {
+    const x = knowns.hasX(handle)
+      ? handle.position.x
+      : handleGetsXFrom.has(handle)
+      ? handleGetsXFrom.get(handle)!.value
+      : outputs.shift()!;
+    const y = knowns.hasY(handle)
+      ? handle.position.y
+      : handleGetsYFrom.has(handle)
+      ? handleGetsYFrom.get(handle)!.value
+      : outputs.shift()!;
+    handle.position = { x, y };
   }
 }
 
