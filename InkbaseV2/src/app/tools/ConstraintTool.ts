@@ -130,11 +130,15 @@ export default class ConstraintTool extends Tool {
     }
 
     if (this.options.angle && !vertical && !horizontal) {
-      const angle = toDegrees(
-        Vec.angle(Vec.sub(rb.position, ra.position)) -
-          Vec.angle(Vec.sub(b.position, a.position))
-      );
-      if (Math.abs(angle - nearestMultiple(angle, 90)) < 1) {
+      const refAngle = toDegrees(Vec.angle(Vec.sub(rb.position, ra.position)));
+      const angle = toDegrees(Vec.angle(Vec.sub(b.position, a.position)));
+      const diff = refAngle - angle;
+      if (
+        Math.abs(diff - nearestMultiple(diff, 90)) < 1 &&
+        // ... but don't sugest nearly vertical or horizontal angles,
+        // since there are better constraints for that.
+        Math.abs(refAngle - nearestMultiple(refAngle, 90)) > 5
+      ) {
         this.addConstraintCandidate('angle', strokeGroup);
       }
     }
@@ -197,7 +201,7 @@ export default class ConstraintTool extends Tool {
               Vec.lerp(a.position, b.position, 10_000),
               Vec.lerp(a.position, b.position, -10_000),
             ]),
-            stroke: 'rgba(0, 0, 255, 0.2)',
+            stroke: 'rgba(255, 0, 0, 0.2)',
           });
           const { a: ra, b: rb } = this.refStrokeGroup!;
           SVG.now('polyline', {
@@ -205,7 +209,7 @@ export default class ConstraintTool extends Tool {
               Vec.lerp(ra.position, rb.position, 10_000),
               Vec.lerp(ra.position, rb.position, -10_000),
             ]),
-            stroke: 'rgba(0, 0, 255, 0.2)',
+            stroke: 'rgba(255, 0, 0, 0.2)',
           });
           break;
         }
@@ -239,14 +243,14 @@ export default class ConstraintTool extends Tool {
           constraints.horizontal(a, b);
           break;
         case 'length': {
-          const refLenVar = constraints.length(ra!, rb!).constraint.length;
-          const newLenVar = constraints.length(a, b).constraint.length;
+          const refLenVar = constraints.length(ra!, rb!).variables[0];
+          const newLenVar = constraints.length(a, b).variables[0];
           constraints.variableEquals(refLenVar, newLenVar);
           break;
         }
         case 'angle': {
-          const refAngleVar = constraints.angle(ra!, rb!).constraint.angle;
-          const angleVar = constraints.angle(a, b).constraint.angle;
+          const refAngleVar = constraints.angle(ra!, rb!).variables[0];
+          const angleVar = constraints.angle(a, b).variables[0];
           const diffVar = constraints.variable(
             nearestMultiple(refAngleVar.value - angleVar.value, Math.PI / 2)
           );
