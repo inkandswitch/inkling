@@ -229,7 +229,7 @@ function dedupVariables(constraints: Constraint[]) {
     const fixedValue = constraints.find(
       c =>
         c instanceof FixedValue &&
-        c.variables[0].canonicalInstance === k.canonicalInstance
+        c.variable.canonicalInstance === k.canonicalInstance
     ) as FixedValue;
     a.absorb(b, fixedValue.value);
     constraints.splice(idx, 1);
@@ -646,7 +646,7 @@ export function fixedValue(variable: Variable, value: number = variable.value) {
 
 class FixedValue extends Constraint {
   constructor(
-    private readonly variable: Variable,
+    public readonly variable: Variable,
     public value: number,
     keyGenerator: ConstraintKeyGenerator
   ) {
