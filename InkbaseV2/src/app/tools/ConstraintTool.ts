@@ -73,15 +73,13 @@ export default class ConstraintTool extends Tool<FreehandStroke> {
       timestampMillis - this.lastTapInfo.timestampMillis <= 150;
     const oldStrokeGroup = this.lastTapInfo.strokeGroup;
 
-    if (isDoubleTap) {
-      if (strokeGroup && strokeGroup === oldStrokeGroup) {
+    if (isDoubleTap && strokeGroup === oldStrokeGroup) {
+      if (strokeGroup) {
         for (const stroke of strokeGroup.strokes) {
           stroke.deselect();
         }
-        this.refStrokeGroup = strokeGroup;
-      } else {
-        this.refStrokeGroup = null;
       }
+      this.refStrokeGroup = strokeGroup;
     }
 
     this.lastTapInfo = { timestampMillis, strokeGroup };
