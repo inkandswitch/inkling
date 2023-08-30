@@ -107,8 +107,6 @@ let allConstraints: Constraint[] = [];
 
 // #region constraint and thing clusters for solver
 
-type Thing = Handle | Variable;
-
 // A group of constraints (and things that they operate on) that should be solved together.
 interface ClusterForSolver {
   constraints: Constraint[];
@@ -172,16 +170,34 @@ function getClustersForSolver(): Set<ClusterForSolver> {
   return _clustersForSolver;
 }
 
+// TODO: this function works, but it's gross. Refactor.
 function getDedupedConstraintsAndVariables(constraints: Constraint[]) {
   // console.log('orig constraints', constraints);
+  let result: Omit<ClusterForSolver, 'handles'> | null = null;
   while (true) {
-    const oldNumConstraints = constraints.length;
-    const result = dedupVariables(dedupConstraints(constraints));
+    const oldNumConstraints = result
+      ? result.constraints.length
+      : constraints.length;
+    const handleGetsXFrom = result
+      ? result.handleGetsXFrom
+      : new Map<Handle, Variable>();
+    const handleGetsYFrom = result
+      ? result.handleGetsYFrom
+      : new Map<Handle, Variable>();
+    result = dedupVariables(dedupConstraints(constraints));
+    for (const [handle, variable] of handleGetsXFrom) {
+      if (!result.handleGetsXFrom.has(handle)) {
+        result.handleGetsXFrom.set(handle, variable);
+      }
+    }
+    for (const [handle, variable] of handleGetsYFrom) {
+      if (!result.handleGetsYFrom.has(handle)) {
+        result.handleGetsYFrom.set(handle, variable);
+      }
+    }
     // console.log('new len', result.constraints.length, 'old', oldNumConstraints);
     if (result.constraints.length === oldNumConstraints) {
       return result;
-    } else {
-      constraints = result.constraints;
     }
   }
 }
@@ -215,15 +231,28 @@ function dedupVariables(constraints: Constraint[]) {
   }
 
   // Dedup variables based on VariableEquals
+  const handleGetsXFrom = new Map<Handle, Variable>();
+  const handleGetsYFrom = new Map<Handle, Variable>();
   let idx = 0;
+  // TODO: change this loop and the next one to `for`
   while (idx < constraints.length) {
     const constraint = constraints[idx];
-    if (constraint instanceof VariableEquals) {
-      const { a, b } = constraint;
-      a.absorb(b);
-      constraints.splice(idx, 1);
-    } else {
+    if (!(constraint instanceof VariableEquals)) {
       idx++;
+      continue;
+    }
+
+    const { a, b } = constraint;
+    a.absorb(b);
+    constraints.splice(idx, 1);
+
+    for (const c of constraints) {
+      if (c instanceof PropertyPicker && c.variable.canonicalInstance === a) {
+        (c.property === 'x' ? handleGetsXFrom : handleGetsYFrom).set(
+          c.handle.canonicalInstance,
+          a
+        );
+      }
     }
   }
 
@@ -259,9 +288,8 @@ function dedupVariables(constraints: Constraint[]) {
   return {
     variables: Array.from(variables),
     constraints,
-    // TODO: populate these
-    handleGetsXFrom: new Map<Handle, Variable>(),
-    handleGetsYFrom: new Map<Handle, Variable>(),
+    handleGetsXFrom,
+    handleGetsYFrom,
   };
 }
 
@@ -1061,7 +1089,7 @@ export function property(handle: Handle, property: 'x' | 'y') {
 class PropertyPicker extends Constraint {
   constructor(
     public readonly handle: Handle,
-    private property: 'x' | 'y',
+    public property: 'x' | 'y',
     keyGenerator: ConstraintKeyGenerator
   ) {
     super([handle], [new Variable(handle.position[property])], keyGenerator);
