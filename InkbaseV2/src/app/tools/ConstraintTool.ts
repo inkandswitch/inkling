@@ -239,14 +239,14 @@ export default class ConstraintTool extends Tool {
           constraints.horizontal(a, b);
           break;
         case 'length': {
-          const refLenVar = constraints.length(ra!, rb!).variables[0];
-          const newLenVar = constraints.length(a, b).variables[0];
+          const refLenVar = constraints.length(ra!, rb!).constraint.length;
+          const newLenVar = constraints.length(a, b).constraint.length;
           constraints.variableEquals(refLenVar, newLenVar);
           break;
         }
         case 'angle': {
-          const refAngleVar = constraints.angle(ra!, rb!).variables[0];
-          const angleVar = constraints.angle(a, b).variables[0];
+          const refAngleVar = constraints.angle(ra!, rb!).constraint.angle;
+          const angleVar = constraints.angle(a, b).constraint.angle;
           const diffVar = constraints.variable(
             nearestMultiple(refAngleVar.value - angleVar.value, Math.PI / 2)
           );
