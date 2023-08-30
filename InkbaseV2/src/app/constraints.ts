@@ -574,12 +574,23 @@ function findConstraint<C extends Constraint>(key: string) {
 // #endregion adding constraints
 
 class ManipulationSet {
-  // Important: canonical handles and vars only!!
-  constructor(
-    public readonly xs: Set<Handle>,
-    public readonly ys: Set<Handle>,
-    public readonly vars: Set<Variable>
-  ) {}
+  readonly xs: Set<Handle>;
+  readonly ys: Set<Handle>;
+  readonly vars: Set<Variable>;
+
+  constructor({
+    xs,
+    ys,
+    vars,
+  }: {
+    xs: Handle[];
+    ys: Handle[];
+    vars: Variable[];
+  }) {
+    this.xs = new Set(xs.map(handle => handle.canonicalInstance));
+    this.ys = new Set(ys.map(handle => handle.canonicalInstance));
+    this.vars = new Set(vars.map(variable => variable.canonicalInstance));
+  }
 
   overlapsWith(that: ManipulationSet) {
     for (const h of that.xs) {
@@ -659,11 +670,11 @@ abstract class Constraint {
   abstract onClash(newerConstraint: this): Variable[];
 
   getManipulationSet(): ManipulationSet {
-    return new ManipulationSet(
-      new Set(this.handles.map(h => h.canonicalInstance)), // xs
-      new Set(this.handles.map(h => h.canonicalInstance)), // ys
-      new Set(this.variables.map(v => v.canonicalInstance)) // yars
-    );
+    return new ManipulationSet({
+      xs: this.handles,
+      ys: this.handles,
+      vars: this.variables,
+    });
   }
 }
 
@@ -1075,11 +1086,11 @@ class PropertyPicker extends Constraint {
 
   getManipulationSet(): ManipulationSet {
     const handles = this.handles.map(h => h.canonicalInstance);
-    return new ManipulationSet(
-      new Set(this.property === 'x' ? handles : []), // xs
-      new Set(this.property === 'y' ? handles : []), // ys
-      new Set([this.variable.canonicalInstance]) // vars
-    );
+    return new ManipulationSet({
+      xs: this.property === 'x' ? handles : [],
+      ys: this.property === 'y' ? handles : [],
+      vars: this.variables,
+    });
   }
 
   onClash(): Variable[];
