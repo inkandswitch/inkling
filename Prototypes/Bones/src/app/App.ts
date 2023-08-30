@@ -13,6 +13,7 @@ import CombTool from "./tools/CombTool";
 import PullableTool from "./tools/PullableTool";
 import YodaTool from "./tools/YodaTool";
 import Bone from "./strokes/Bone";
+import Dot from "./strokes/Dot";
 import { lerp } from "../lib/math";
 
 const events = new Events();
@@ -21,28 +22,24 @@ const page = new Page(svg);
 const snaps = new Snaps(page);
 const selection = new Selection(page, snaps);
 
-const tools = [MoveTool, BoneTool, YodaTool, FreehandTool, CombTool, PullableTool];
+const tools = [BoneTool, MoveTool, YodaTool, FreehandTool, CombTool, PullableTool];
 const toolPicker = new ToolPicker(tools.map((t, i) => new t(svg, 30, 30 + 50 * i, page)));
 
 let bone: Bone | undefined = undefined;
-let n = 10;
-for (let i = 0; i < n; i++) {
-  let point = {
-    x: lerp(i, 0, n, 600, 1000),
-    y: lerp(i, 0, n, 400, 400),
-  };
-  if (bone) {
-    bone.target = Object.assign({}, point);
-    bone.finish();
-  }
-  let position = Object.assign({}, point);
-  let target = Object.assign({}, point);
-  bone = page.addObject(new Bone(svg, position, target, bone));
-}
-if (bone) {
-  bone.target = { x: 1000, y: 400 };
-  bone.finish();
-}
+
+// let n = 10;
+// let x = 600;
+// let y = 400;
+// let a = page.addObject(new Dot({ x, y }));
+// for (let i = 1; i < n; i++) {
+//   let pos = {
+//     x: x + lerp(i, 0, n, 0, 300),
+//     y: y + lerp(i, 0, n, 0, 0),
+//   };
+//   let b = page.addObject(new Dot(pos));
+//   page.addObject(new Bone(a, b));
+//   a = b;
+// }
 
 EveryFrame((dt, time) => {
   SVG.clearNow();

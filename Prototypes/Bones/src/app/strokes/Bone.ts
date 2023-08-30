@@ -1,96 +1,120 @@
-import { Position, PositionWithPressure } from "../../lib/types";
+import { Position } from "../../lib/types";
 import Vec from "../../lib/vec";
-import { lerp, clip } from "../../lib/math";
-import SVG, { updateSvgElement } from "../Svg";
+import { TAU, lerp, clip } from "../../lib/math";
+import SVG from "../Svg";
 import Page from "../Page";
 import generateId from "../generateId";
-import TransformationMatrix from "../../lib/transform_matrix";
+import Dot from "./Dot";
+import Config from "../Config";
 
 export default class Bone {
   id = generateId();
-  posElm: SVGElement;
-  tarElm: SVGElement;
-  armElm: SVGElement;
-  arrowElm: SVGElement;
-  length = 0;
-  angle = 0;
 
-  children: Bone[] = [];
+  length: number;
+  angle: number;
+  diff = 0;
 
-  constructor(svg: SVG, public position: Position, public target: Position, public parent?: Bone) {
-    let elm = svg.addElement("g", {});
-    this.posElm = svg.addElement("circle", { r: 3, fill: "green" }, elm);
-    this.tarElm = svg.addElement("circle", { r: 3, stroke: "red" }, elm);
-    this.armElm = svg.addElement(
-      "polyline",
-      { stroke: "hsla(0, 0%, 0%, 1)", "stroke-width": 1, "stroke-dasharray": "5 2" },
-      elm
-    );
-    this.arrowElm = svg.addElement(
-      "polyline",
-      { stroke: "hsla(0, 0%, 0%, 1)", "stroke-width": 1 },
-      elm
-    );
-
-    // this.angle = Vec.angle(Vec.sub(this.target, this.position));
-
-    if (parent) {
-      parent.children.push(this);
-
-      // this.angle = Vec.angleBetween(Vec.sub(target, position), Vec.sub(parent.target, parent.position));
-    }
+  constructor(public a: Dot, public b: Dot) {
+    this.length = Vec.dist(a, b) * Config.lengthMultiple;
+    this.angle = Vec.pointAngle(a, b);
+    a.bones.push(this);
+    b.bones.push(this);
   }
 
-  finish() {
-    this.length = Vec.dist(this.position, this.target);
-    this.angle = Vec.angle(Vec.sub(this.target, this.position));
-    this.update();
+  neighbours() {
+    return this.a.bones.concat(this.b.bones).filter((bone) => bone !== this);
   }
 
-  move(newPos: Position, depth: number, page: Page) {
-    this.position = newPos;
+  dir() {
+    return Vec.polar(this.angle, 1);
   }
 
   update() {
-    if (this.parent) {
-      this.position = this.parent.target;
+    let { a, b, angle, length } = this;
+
+    if (a.locked && b.locked) return;
+
+    let newDir = Vec.normalize(Vec.sub(b, a));
+    let oldDir = this.dir();
+
+    let avg = Vec.avg(newDir, oldDir);
+
+    // Try to straighten out
+    this.diff = 0;
+
+    // if (this.neighbours().length > 1) {
+    //   let hintDir = Vec.normalize(
+    //     this.neighbours()
+    //       .map((bone) => bone.dir())
+    //       .reduce(Vec.add)
+    //   );
+
+    //   this.diff = Vec.angle(hintDir) - angle;
+    // }
+
+    this.angle = Vec.angle(avg);
+
+    let a_B = Vec.polar(this.angle, length);
+
+    let B = Vec.add(a, a_B);
+
+    let b_B = Vec.sub(B, b);
+
+    if (a.locked) {
+      this.b.at(Vec.add(b, Vec.half(b_B)));
+    } else if (b.locked) {
+      this.a.at(Vec.sub(a, Vec.half(b_B)));
+    } else {
+      this.a.at(Vec.sub(a, Vec.half(b_B)));
+      this.b.at(Vec.add(b, Vec.half(b_B)));
     }
+  }
 
-    let newAngle = Vec.angle(Vec.sub(this.target, this.position));
-
-    newAngle = (this.angle + newAngle) / 2;
-
-    this.angle += (newAngle - this.angle) / 10;
-
-    let newPosToTar = {
-      x: this.length * Math.cos(newAngle),
-      y: this.length * Math.sin(newAngle),
-    };
-
-    this.target = Vec.add(this.position, newPosToTar);
-
-    // Update bones that were close to the target
-    // page.objects
-    //   .filter((b) => b instanceof Bone && b.parent === this)
-    //   .forEach((bone: Bone) => bone.move(Object.assign({}, this.target), depth + 1, page));
+  physics() {
+    this.update();
   }
 
   render() {
-    if (isNaN(this.position.x)) throw "STOP";
-    if (isNaN(this.target.x)) throw "STOP";
-    if (isNaN(this.angle)) throw "STOP";
-
-    this.update();
-
-    updateSvgElement(this.posElm, { cx: this.position.x, cy: this.position.y });
-    updateSvgElement(this.tarElm, { cx: this.target.x, cy: this.target.y });
-
-    updateSvgElement(this.armElm, { points: SVG.points(this.position, this.target) });
-    updateSvgElement(this.arrowElm, {
-      points: SVG.points(
-        this.position,
-        Vec.add(this.position, Vec.renormalize(Vec.sub(this.target, this.position), 20))
-      ),
+    SVG.now("polyline", {
+      stroke: "#000",
+      // "stroke-dasharray": "5 2",
+      "stroke-width": Config.thinWhenStretched
+        ? (Config.boneWidth * this.length) / Vec.dist(this.a, this.b)
+        : Config.boneWidth,
+      points: SVG.points(this.a, this.b),
     });
+
+    let pos = Vec.add(Vec.avg(this.a, this.b), Vec.polar(this.angle - TAU / 4, 10));
+
+    // SVG.now("text", {
+    //   content: (100 * this.diff).toFixed(2),
+    //   x: pos.x,
+    //   y: pos.y,
+    //   fill: "red",
+    //   "font-size": 8,
+    //   transform: `rotate(${(this.angle * 180) / Math.PI - 90}, ${pos.x}, ${pos.y})`,
+    // });
+
+    let off = Vec.polar(this.angle + TAU / 4, 10);
+
+    // get a's neighbour(s)
+    // for each of them, figure out the angle difference.
+    // Draw a little pointer based on the size of the diff, and color it
+    // this.a.connections().forEach(([bone, dot]) => {
+    //   if (bone === this) return;
+
+    // })
+
+    // let good = false;
+
+    // SVG.now("polyline", {
+    //   fill: good ? "#0F45" : "#F405",
+    //   points: SVG.points(Vec.add(this.b, off), this.a, Vec.sub(this.b, off)),
+    // });
+
+    // SVG.now("polyline", {
+    //   fill: good ? "#0F45" : "#F405",
+    //   points: SVG.points(Vec.add(this.a, off), this.b, Vec.sub(this.a, off)),
+    // });
   }
 }

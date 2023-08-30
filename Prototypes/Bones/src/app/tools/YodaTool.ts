@@ -5,6 +5,7 @@ import SVG from "../Svg";
 import YodaStroke from "../strokes/YodaStroke";
 import { Tool } from "./Tool";
 import Point from "../strokes/Point";
+import Config from "../Config";
 
 export default class Yoda extends Tool {
   stroke?: YodaStroke;
@@ -18,7 +19,7 @@ export default class Yoda extends Tool {
 
   startStroke(position: PositionWithPressure) {
     // Grab an existing stroke if we start drawing near it's endpoint
-    this.point = this.page.findPointNear(position, 8);
+    this.point = this.page.findPointNear(position, Config.yodaAttachDist);
 
     if (this.point) {
       this.stroke = this.point.stroke;
@@ -43,16 +44,16 @@ export default class Yoda extends Tool {
     let currentVelocity = Vec.sub(position, this.lastPosition);
 
     // If the pencil hasn't yet moved far enough, bail
-    if (Vec.len(currentVelocity) < 1) return;
+    if (Vec.len(currentVelocity) < 5) return;
 
     // Cut down on noise from handling multiple pencil events per frame
-    SVG.clearNow();
+    // SVG.clearNow();
 
     // Add the new pencil movement into the list of recent velocities
     this.recentVelocities.unshift(currentVelocity);
 
     // Track the overall velocity of the pencil by averaging up to this many recent events
-    let nRecentVelocities = 10;
+    let nRecentVelocities = 1;
 
     // Keep the list of recent velocities short
     this.recentVelocities.splice(nRecentVelocities, Infinity);
@@ -93,8 +94,8 @@ export default class Yoda extends Tool {
     }, Vec());
 
     // Visualize
-    debugLine("red", points[0], Vec.add(points[0], Vec.renormalize(strokeDirection, 100)));
-    debugLine("blue", position, Vec.add(position, Vec.renormalize(pencilVelocity, 100)));
+    // debugLine("red", points[0], Vec.add(points[0], Vec.renormalize(strokeDirection, 100)));
+    // debugLine("blue", position, Vec.add(position, Vec.renormalize(pencilVelocity, 100)));
 
     // Look at how far away the pencil is from the last few points in the stroke
 
@@ -129,14 +130,14 @@ export default class Yoda extends Tool {
     // Figure out how much overlap we have between the stroke direction and pencil velocity
     let dot = Vec.dot(Vec.normalize(strokeDirection), Vec.normalize(pencilVelocity));
 
-    SVG.now("text", { x: 100, y: 150, fill: "red", content: dot });
+    // SVG.now("text", { x: 100, y: 150, fill: "red", content: dot });
 
     // If the pencil is moving in the same direction as the stroke, we should extend the stroke
     if (dot > 0) {
       return this.doExtend(position, this.point, this.stroke);
     }
 
-    SVG.now("text", { x: 300, y: 100, fill: "black", content: "YOLO" });
+    // SVG.now("text", { x: 300, y: 100, fill: "black", content: "YOLO" });
 
     // If the pencil is moving backward toward the existing stroke, retract
     // The rate that the pencil is moving determines how far we can be from the stroke while still culling
@@ -151,7 +152,7 @@ export default class Yoda extends Tool {
     let cullRadius = Math.max(15, 10 * pencilSpeed);
 
     // Visualize
-    SVG.now("text", { x: 100, y: 100, fill: "black", content: cullRadius });
+    // SVG.now("text", { x: 100, y: 100, fill: "black", content: cullRadius });
 
     if (Vec.dist(position, points[0]) < cullRadius) {
       this.doRetract(this.point, this.stroke, "yellow");

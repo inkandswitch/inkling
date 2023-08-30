@@ -10,6 +10,7 @@ import ControlPoint, { ControlPointListener } from "./strokes/ControlPoint";
 
 import StrokeGraph from "./strokes/StrokeGraph";
 import { Position, PositionWithPressure } from "../lib/types";
+import Config from "./Config";
 
 export default class Page {
   points: Point[] = [];
@@ -30,7 +31,7 @@ export default class Page {
     return p;
   }
 
-  addObject(obj: any) {
+  addObject<T>(obj: T) {
     this.objects.push(obj);
     return obj;
   }
@@ -77,6 +78,14 @@ export default class Page {
     }
 
     return closestItem;
+  }
+
+  findObjectTypeNear(position: Position, dist = 20, type: any) {
+    return this.findObjectNear(
+      position,
+      dist,
+      this.objects.filter((o) => o instanceof type)
+    );
   }
 
   findPointNear(position: Position, dist = 20) {
@@ -126,6 +135,8 @@ export default class Page {
   }
 
   render(svg: SVG) {
+    for (let i = 0; i < Config.iterations; i++) this.objects.forEach((o) => o.physics());
+
     this.lineSegments.forEach((ls) => ls.render());
     this.freehandStrokes.forEach((s) => s.render());
     this.strokes.forEach((s) => s.render());

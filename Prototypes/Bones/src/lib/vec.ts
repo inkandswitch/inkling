@@ -75,7 +75,10 @@ Vec.scalarProjection = (p: Position, a: Vector, b: Vector): Position => {
 // Piecewise Vector Arithmetic ////////////////////////////////////////////////
 
 Vec.add = (a: Vector, b: Vector) => Vec(a.x + b.x, a.y + b.y);
-Vec.div = (a: Vector, b: Vector) => Vec(a.x / b.x, a.y / b.y);
+Vec.div = (a: Vector, b: Vector) => {
+  if (b.x === 0 || b.y === 0) throw "Vec.div doesn't want you to divide by zero";
+  return Vec(a.x / b.x, a.y / b.y);
+};
 Vec.mul = (a: Vector, b: Vector) => Vec(a.x * b.x, a.y * b.y);
 Vec.sub = (a: Vector, b: Vector) => Vec(a.x - b.x, a.y - b.y);
 
@@ -132,6 +135,8 @@ Vec.lerp = (a: Vector, b: Vector, t: number) => Vec.add(a, Vec.Smul(t, Vec.sub(b
 Vec.max = (a: Vector, b: Vector) => Vec.map2(Math.max, a, b);
 Vec.min = (a: Vector, b: Vector) => Vec.map2(Math.min, a, b);
 
+Vec.clerp = (a: Vector, b: Vector, t: number) => Vec.normalize(Vec.lerp(a, b, t));
+
 // Reflections ///////////////////////////////////////////////////////////////////
 
 Vec.abs = (v: Vector) => Vec.map(Math.abs, v);
@@ -166,6 +171,8 @@ Vec.rotateAround = (vector: Vector, point: Position, angle: number): Position =>
 
 Vec.angle = (v: Vector) => Math.atan2(v.y, v.x);
 
+Vec.pointAngle = (a: Vector, b: Vector) => Vec.angle(Vec.sub(b, a));
+
 Vec.angleBetween = (a: Vector, b: Vector) => {
   // Calculate the dot product of the two vectors
   const dotProduct = Vec.dot(a, b);
@@ -175,12 +182,7 @@ Vec.angleBetween = (a: Vector, b: Vector) => {
   const magnitudeB = Vec.len(b);
 
   // Calculate the angle between the vectors using the dot product and magnitudes
-  const angleInRadians = Math.acos(dotProduct / (magnitudeA * magnitudeB));
-
-  // Convert the angle from radians to degrees
-  const angleInDegrees = (angleInRadians * 180) / Math.PI;
-
-  return angleInDegrees;
+  return Math.acos(dotProduct / (magnitudeA * magnitudeB));
 };
 
 Vec.angleBetweenClockwise = (a: Vector, b: Vector) => {
