@@ -47,12 +47,14 @@ class Variable {
   }
 
   set value(newValue: number) {
-    this._value = newValue;
     if (this.info.isCanonical) {
+      this._value = newValue;
       for (const child of this.info.absorbedVariables) {
         const valueOffset = (child.info as AbsorbedVariableInfo).valueOffset;
-        child.value = newValue - valueOffset;
+        child._value = newValue - valueOffset;
       }
+    } else {
+      this.info.canonicalInstance.value = newValue + this.info.valueOffset;
     }
   }
 
@@ -65,12 +67,14 @@ class Variable {
     }
 
     for (const otherVariable of that.info.absorbedVariables) {
+      otherVariable.value = this.value;
       const otherVariableInfo = otherVariable.info as AbsorbedVariableInfo;
       otherVariableInfo.canonicalInstance = this;
       otherVariableInfo.valueOffset += valueOffset;
       this.info.absorbedVariables.add(otherVariable);
     }
 
+    that.value = this.value;
     that.info = {
       isCanonical: false,
       canonicalInstance: this,
@@ -202,6 +206,7 @@ function dedupVariables(constraints: Constraint[]) {
     if (constraint instanceof VariableEqualsConstraint) {
       const { a, b } = constraint;
       a.absorb(b);
+      // console.log(a.id, 'absorbed', b.id);
       constraints.splice(idx, 1);
     } else {
       idx++;
@@ -317,6 +322,14 @@ class Knowns {
   addVar(variable: Variable) {
     this.vars.add(variable.canonicalInstance);
   }
+
+  toJSON() {
+    return {
+      vars: Array.from(this.vars).map(v => ({ id: v.id, value: v.value })),
+      xs: Array.from(this.xs).map(h => ({ id: h.id, x: h.position.x })),
+      ys: Array.from(this.ys).map(h => ({ id: h.id, y: h.position.y })),
+    };
+  }
 }
 
 export function solve(selection: Selection) {
@@ -430,11 +443,11 @@ function minimizeError(constraints: Constraint[], things: Thing[]) {
       'with inputs',
       inputs,
       'and knowns',
-      knowns
+      knowns.toJSON()
     );
     SVG.showStatus('' + e);
-    throw e;
-    // return;
+    // throw e;
+    return;
   }
 
   // SVG.showStatus(`${result.iterations} iterations`);
@@ -816,89 +829,15 @@ class FixedPositionConstraint extends Constraint {
 }
 
 export function horizontal(a: Handle, b: Handle) {
-  return addConstraint(
-    new ConstraintKeyGenerator('horizontal', [[a, b]], []),
-    keyGenerator => new HorizontalConstraint(a, b, keyGenerator),
-    olderConstraint => olderConstraint.onClash(a, b)
-  );
-}
-
-class HorizontalConstraint extends Constraint {
-  constructor(
-    private readonly a: Handle,
-    private readonly b: Handle,
-    keyGenerator: ConstraintKeyGenerator
-  ) {
-    super([a, b], [], keyGenerator);
-  }
-
-  propagateKnowns(knowns: Knowns): boolean {
-    if (!knowns.hasY(this.a) && knowns.hasY(this.b)) {
-      this.a.position = { x: this.a.position.x, y: this.b.position.y };
-      knowns.addY(this.a);
-      return true;
-    } else if (knowns.hasY(this.a) && !knowns.hasY(this.b)) {
-      this.b.position = { x: this.b.position.x, y: this.a.position.y };
-      knowns.addY(this.b);
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  getError([aPos, bPos]: Position[], _values: number[]) {
-    return aPos.y - bPos.y;
-  }
-
-  onClash(a: Handle, b: Handle): Variable[];
-  onClash(newerConstraint: this): Variable[];
-  onClash(_newerConstraintOrA: this | Handle, _b?: Handle) {
-    // no op
-    return this.variables;
-  }
+  const ay = property(a, 'y').constraint.variable;
+  const by = property(b, 'y').constraint.variable;
+  return variableEquals(ay, by);
 }
 
 export function vertical(a: Handle, b: Handle) {
-  return addConstraint(
-    new ConstraintKeyGenerator('vertical', [[a, b]], []),
-    keyGenerator => new VerticalConstraint(a, b, keyGenerator),
-    olderConstraint => olderConstraint.onClash(a, b)
-  );
-}
-
-class VerticalConstraint extends Constraint {
-  constructor(
-    private readonly a: Handle,
-    private readonly b: Handle,
-    keyGenerator: ConstraintKeyGenerator
-  ) {
-    super([a, b], [], keyGenerator);
-  }
-
-  propagateKnowns(knowns: Knowns): boolean {
-    if (!knowns.hasX(this.a) && knowns.hasX(this.b)) {
-      this.a.position = { x: this.b.position.x, y: this.a.position.y };
-      knowns.addX(this.a);
-      return true;
-    } else if (knowns.hasX(this.a) && !knowns.hasX(this.b)) {
-      this.b.position = { x: this.a.position.x, y: this.b.position.y };
-      knowns.addX(this.b);
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  getError([aPos, bPos]: Position[], _values: number[]) {
-    return aPos.x - bPos.x;
-  }
-
-  onClash(a: Handle, b: Handle): Variable[];
-  onClash(newerConstraint: this): Variable[];
-  onClash(_newerConstraintOrA: this | Handle, _b?: Handle) {
-    // no op
-    return this.variables;
-  }
+  const ax = property(a, 'x').constraint.variable;
+  const bx = property(b, 'x').constraint.variable;
+  return variableEquals(ax, bx);
 }
 
 export function length(
@@ -1040,7 +979,8 @@ class AngleConstraint extends Constraint {
 export function property(handle: Handle, property: 'x' | 'y') {
   return addConstraint(
     new ConstraintKeyGenerator('property-' + property, [[handle]], []),
-    keyGenerator => new PropertyPickerConstraint(handle, p, keyGenerator),
+    keyGenerator =>
+      new PropertyPickerConstraint(handle, property, keyGenerator),
     olderConstraint => olderConstraint.onClash()
   );
 }
