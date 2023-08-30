@@ -126,7 +126,7 @@ export default class ConstraintTool extends Tool {
     const lenDiff = Math.abs(refLen - len);
     const length = this.options.length && lenDiff < 10;
     if (length) {
-      this.addConstraintCandidate('length', strokeGroup);
+      this.addConstraintCandidate('length', strokeGroup, this.refStrokeGroup);
     }
 
     if (this.options.angle && !vertical && !horizontal) {
@@ -139,29 +139,26 @@ export default class ConstraintTool extends Tool {
         // since there are better constraints for that.
         Math.abs(refAngle - nearestMultiple(refAngle, 90)) > 5
       ) {
-        this.addConstraintCandidate('angle', strokeGroup);
+        this.addConstraintCandidate('angle', strokeGroup, this.refStrokeGroup);
       }
     }
   }
 
   private addConstraintCandidate(
     type: ConstraintCandidate['type'],
-    strokeGroup: StrokeGroup
+    strokeGroup: StrokeGroup,
+    refStrokeGroup: StrokeGroup | null = null
   ) {
     for (const applied of this.appliedCandidates) {
       if (
         applied.type === type &&
         applied.strokeGroup === strokeGroup &&
-        applied.refStrokeGroup === this.refStrokeGroup
+        applied.refStrokeGroup === refStrokeGroup
       ) {
         return;
       }
     }
-    this.constraintCandidates.add({
-      type,
-      strokeGroup,
-      refStrokeGroup: this.refStrokeGroup,
-    });
+    this.constraintCandidates.add({ type, strokeGroup, refStrokeGroup });
   }
 
   render() {
@@ -231,6 +228,7 @@ export default class ConstraintTool extends Tool {
     const rb = this.refStrokeGroup?.b;
 
     for (const candidate of this.constraintCandidates) {
+      // console.log('applying constraint candidate', candidate);
       const {
         type,
         strokeGroup: { a, b },
