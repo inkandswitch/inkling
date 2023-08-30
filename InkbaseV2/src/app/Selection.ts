@@ -206,19 +206,9 @@ export default class Selection {
       const newPos = snappedPositions.get(handle)!;
       const handleThatBreaksOff = this.getHandleThatBreaksOff(handle, newPos);
       if (handleThatBreaksOff) {
-        // console.log(
-        //   'breaking off',
-        //   JSON.stringify(handleThatBreaksOff),
-        //   'from',
-        //   JSON.stringify(handle)
-        // );
+        // console.log('breaking off', handleThatBreaksOff, 'from', handle);
         handle.breakOff(handleThatBreaksOff);
-        // console.log(
-        //   'broke off handle',
-        //   JSON.stringify(handleThatBreaksOff),
-        //   'from',
-        //   JSON.stringify(handle)
-        // );
+        // console.log('broke off handle', handleThatBreaksOff, 'from', handle);
         handleThatBreaksOff.position = newPos;
 
         // deselect the original angle and remove it from the set of
