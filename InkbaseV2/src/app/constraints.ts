@@ -203,7 +203,7 @@ function dedupVariables(constraints: Constraint[]) {
   let idx = 0;
   while (idx < constraints.length) {
     const constraint = constraints[idx];
-    if (constraint instanceof VariableEqualsConstraint) {
+    if (constraint instanceof VariableEquals) {
       const { a, b } = constraint;
       a.absorb(b);
       // console.log(a.id, 'absorbed', b.id);
@@ -220,7 +220,7 @@ function dedupVariables(constraints: Constraint[]) {
   idx = 0;
   while (idx < constraints.length) {
     const constraint = constraints[idx];
-    if (!(constraint instanceof VariablePlusConstraint)) {
+    if (!(constraint instanceof VariablePlus)) {
       idx++;
       continue;
     }
@@ -228,9 +228,9 @@ function dedupVariables(constraints: Constraint[]) {
     const { a, b, c: k } = constraint;
     const fixedValue = constraints.find(
       c =>
-        c instanceof FixedValueConstraint &&
+        c instanceof FixedValue &&
         c.variables[0].canonicalInstance === k.canonicalInstance
-    ) as FixedValueConstraint;
+    ) as FixedValue;
     a.absorb(b, fixedValue.value);
     constraints.splice(idx, 1);
   }
@@ -398,8 +398,8 @@ function minimizeError(constraints: Constraint[], things: Thing[]) {
     let error = 0;
     for (const constraint of constraints) {
       if (
-        constraint instanceof FixedValueConstraint ||
-        constraint instanceof FixedPositionConstraint
+        constraint instanceof FixedValue ||
+        constraint instanceof FixedPosition
       ) {
         // Ignore -- these guys already did their job in propagateKnowns().
         continue;
@@ -639,12 +639,12 @@ export function variable(value = 0) {
 export function fixedValue(variable: Variable, value: number = variable.value) {
   return addConstraint(
     new ConstraintKeyGenerator('fixedValue', [], [[variable]]),
-    keyGenerator => new FixedValueConstraint(variable, value, keyGenerator),
+    keyGenerator => new FixedValue(variable, value, keyGenerator),
     olderConstraint => olderConstraint.onClash(value)
   );
 }
 
-class FixedValueConstraint extends Constraint {
+class FixedValue extends Constraint {
   constructor(
     private readonly variable: Variable,
     public value: number,
@@ -669,7 +669,7 @@ class FixedValueConstraint extends Constraint {
 
   onClash(newerConstraintOrValue: this | number) {
     this.value =
-      newerConstraintOrValue instanceof FixedValueConstraint
+      newerConstraintOrValue instanceof FixedValue
         ? newerConstraintOrValue.value
         : newerConstraintOrValue;
     return this.variables;
@@ -679,12 +679,12 @@ class FixedValueConstraint extends Constraint {
 export function variableEquals(a: Variable, b: Variable) {
   return addConstraint(
     new ConstraintKeyGenerator('variableEquals', [], [[a, b]]),
-    keyGenerator => new VariableEqualsConstraint(a, b, keyGenerator),
+    keyGenerator => new VariableEquals(a, b, keyGenerator),
     olderConstraint => olderConstraint.onClash(a, b)
   );
 }
 
-class VariableEqualsConstraint extends Constraint {
+class VariableEquals extends Constraint {
   constructor(
     readonly a: Variable,
     readonly b: Variable,
@@ -724,12 +724,12 @@ class VariableEqualsConstraint extends Constraint {
 export function variablePlus(a: Variable, b: Variable, c: Variable) {
   return addConstraint(
     new ConstraintKeyGenerator('variablePlus', [], [[a, b, c]]),
-    keyGenerator => new VariablePlusConstraint(a, b, c, keyGenerator),
+    keyGenerator => new VariablePlus(a, b, c, keyGenerator),
     olderConstraint => olderConstraint.onClash(a, b, c)
   );
 }
 
-class VariablePlusConstraint extends Constraint {
+class VariablePlus extends Constraint {
   constructor(
     readonly a: Variable,
     readonly b: Variable,
@@ -788,12 +788,12 @@ class VariablePlusConstraint extends Constraint {
 export function fixedPosition(handle: Handle, pos: Position = handle.position) {
   return addConstraint(
     new ConstraintKeyGenerator('fixedPosition', [[handle]], []),
-    keyGenerator => new FixedPositionConstraint(handle, pos, keyGenerator),
+    keyGenerator => new FixedPosition(handle, pos, keyGenerator),
     olderConstraint => olderConstraint.onClash(pos)
   );
 }
 
-class FixedPositionConstraint extends Constraint {
+class FixedPosition extends Constraint {
   constructor(
     private readonly handle: Handle,
     public position: Position,
@@ -821,7 +821,7 @@ class FixedPositionConstraint extends Constraint {
 
   onClash(newerConstraintOrPosition: this | Position): Variable[] {
     this.position =
-      newerConstraintOrPosition instanceof FixedPositionConstraint
+      newerConstraintOrPosition instanceof FixedPosition
         ? newerConstraintOrPosition.position
         : newerConstraintOrPosition;
     return this.variables;
@@ -848,13 +848,13 @@ export function length(
   return addConstraint(
     new ConstraintKeyGenerator('length', [[a, b]], []),
     keyGenerator => {
-      return new LengthConstraint(a, b, length, keyGenerator);
+      return new Length(a, b, length, keyGenerator);
     },
     olderConstraint => olderConstraint.onClash(length)
   );
 }
 
-class LengthConstraint extends Constraint {
+class Length extends Constraint {
   constructor(
     public readonly a: Handle,
     public readonly b: Handle,
@@ -870,7 +870,7 @@ class LengthConstraint extends Constraint {
 
   onClash(newerConstraintOrLength: this | Variable): Variable[] {
     const thatLength =
-      newerConstraintOrLength instanceof LengthConstraint
+      newerConstraintOrLength instanceof Length
         ? newerConstraintOrLength.length
         : newerConstraintOrLength;
     variableEquals(this.length, thatLength);
@@ -885,12 +885,12 @@ export function angle(
 ) {
   return addConstraint(
     new ConstraintKeyGenerator('angle', [[a1, a2]], []),
-    keyGenerator => new AngleConstraint(a1, a2, angle, keyGenerator),
+    keyGenerator => new Angle(a1, a2, angle, keyGenerator),
     olderConstraint => olderConstraint.onClash(a1, a2, angle)
   );
 }
 
-class AngleConstraint extends Constraint {
+class Angle extends Constraint {
   constructor(
     public readonly a1: Handle,
     public readonly a2: Handle,
@@ -955,7 +955,7 @@ class AngleConstraint extends Constraint {
   onClash(newerConstraintOrA1: this | Handle, a2?: Handle, angle?: Variable) {
     let a1: Handle;
     let thatAngle: Variable;
-    if (newerConstraintOrA1 instanceof AngleConstraint) {
+    if (newerConstraintOrA1 instanceof Angle) {
       ({ a1, a2, angle: thatAngle } = newerConstraintOrA1);
     } else {
       a1 = newerConstraintOrA1;
@@ -979,13 +979,12 @@ class AngleConstraint extends Constraint {
 export function property(handle: Handle, property: 'x' | 'y') {
   return addConstraint(
     new ConstraintKeyGenerator('property-' + property, [[handle]], []),
-    keyGenerator =>
-      new PropertyPickerConstraint(handle, property, keyGenerator),
+    keyGenerator => new PropertyPicker(handle, property, keyGenerator),
     olderConstraint => olderConstraint.onClash()
   );
 }
 
-class PropertyPickerConstraint extends Constraint {
+class PropertyPicker extends Constraint {
   constructor(
     public readonly handle: Handle,
     private property: 'x' | 'y',
