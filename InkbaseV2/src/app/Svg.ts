@@ -84,14 +84,14 @@ const statusElement = add('text', {
   stroke: '#bbb',
 });
 
-window.addEventListener('orientationchange', () => {
-  update(statusElement, { y: window.innerHeight - 5 });
-});
-
 let statusHideTimeMillis = 0;
 
 function showStatus(text: string, time = 3_000) {
-  update(statusElement, { content: text, visibility: 'visible' });
+  update(statusElement, {
+    content: text,
+    visibility: 'visible',
+    y: window.innerHeight - 5,
+  });
   statusHideTimeMillis = Date.now() + time;
   setTimeout(() => {
     if (Date.now() >= statusHideTimeMillis) {
