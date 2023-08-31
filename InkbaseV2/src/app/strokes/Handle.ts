@@ -229,7 +229,7 @@ export default class Handle {
       handle.instanceState = {
         isCanonical: false,
         canonicalInstance: this,
-        origId: handle.id,
+        origId: handle.ownId,
       };
 
       // add it to my absorbed set
