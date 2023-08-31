@@ -511,8 +511,7 @@ function minimizeError({
       knowns.toJSON()
     );
     SVG.showStatus('' + e);
-    // throw e;
-    return;
+    throw e;
   }
 
   // SVG.showStatus(`${result.iterations} iterations`);
