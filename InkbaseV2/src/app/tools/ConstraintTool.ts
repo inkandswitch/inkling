@@ -165,6 +165,24 @@ export default class ConstraintTool extends Tool<FreehandStroke> {
     this.page.addStrokeGroup(new Set([stroke!]));
   }
 
+  onAction() {
+    let prevPos = { x: 50, y: 500 };
+    for (let idx = 0; idx < 10; idx++) {
+      const nextPos = Vec.add(prevPos, {
+        x: 50,
+        y: idx % 2 === 0 ? 100 : -100,
+      });
+      const stroke = this.page.addStroke(
+        new FreehandStroke([prevPos, nextPos].map(p => ({ ...p, pressure: 1 })))
+      );
+      const strokeGroup = this.page.addStrokeGroup(new Set([stroke]));
+      const lengthVar = constraints.length(strokeGroup.a, strokeGroup.b)
+        .variables[0];
+      constraints.fixedValue(lengthVar);
+      prevPos = nextPos;
+    }
+  }
+
   render() {
     super.render();
 
