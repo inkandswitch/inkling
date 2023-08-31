@@ -1,4 +1,4 @@
-import numeric from 'numeric';
+import { minimize } from '../lib/g9';
 import { Position } from '../lib/types';
 import { generateId } from '../lib/helpers';
 import Vec from '../lib/vec';
@@ -494,9 +494,9 @@ function minimizeError({
     return error;
   }
 
-  let result: ReturnType<typeof numeric.uncmin>;
+  let result: ReturnType<typeof minimize>;
   try {
-    result = numeric.uncmin(computeTotalError, inputs);
+    result = minimize(computeTotalError, inputs);
   } catch (e) {
     console.log(
       'minimizeError threw',
