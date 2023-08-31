@@ -443,6 +443,7 @@ function minimizeError({
       xIdx.set(handle, inputs.length);
       inputs.push(handle.position.x);
       inputDescriptions.push(`x ${handle.id}`);
+    }
 
     if (knowns.hasY(handle)) {
       // no op
