@@ -234,7 +234,6 @@ function dedupVariables(constraints: Constraint[]) {
   const handleGetsXFrom = new Map<Handle, Variable>();
   const handleGetsYFrom = new Map<Handle, Variable>();
   let idx = 0;
-  // TODO: change this loop and the next one to `for`
   while (idx < constraints.length) {
     const constraint = constraints[idx];
     if (!(constraint instanceof VariableEquals)) {
@@ -444,7 +443,7 @@ function minimizeError({
       xIdx.set(handle, inputs.length);
       inputs.push(handle.position.x);
       inputDescriptions.push(`x ${handle.id}`);
-    }
+
     if (knowns.hasY(handle)) {
       // no op
     } else if (handleGetsYFrom.has(handle)) {
