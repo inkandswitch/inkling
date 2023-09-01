@@ -341,7 +341,7 @@ function temporarilyMakeNewConstraintsGoInto(
 
 // #region solving
 
-class Knowns {
+class StateSet {
   private readonly xs = new Set<Handle>();
   private readonly ys = new Set<Handle>();
   private readonly vars = new Set<Variable>();
@@ -539,7 +539,7 @@ function minimizeError({
 }
 
 function computeKnowns(constraints: Constraint[]) {
-  const knowns = new Knowns();
+  const knowns = new StateSet();
   while (true) {
     let didSomething = false;
     for (const constraint of constraints) {
@@ -711,7 +711,7 @@ abstract class Constraint {
    * of those things, add them to the `knowns` object, and return `true`.
    * Otherwise, it should return `false`.
    */
-  propagateKnowns(_knowns: Knowns): boolean {
+  propagateKnowns(_knowns: StateSet): boolean {
     return false;
   }
 
@@ -719,7 +719,7 @@ abstract class Constraint {
   abstract getError(
     handlePositions: Position[],
     variableValues: number[],
-    knowns: Knowns
+    knowns: StateSet
   ): number;
 
   abstract onClash(newerConstraint: this): Variable[];
@@ -754,7 +754,7 @@ class FixedValue extends Constraint {
     super([], [variable], keyGenerator);
   }
 
-  propagateKnowns(knowns: Knowns): boolean {
+  propagateKnowns(knowns: StateSet): boolean {
     if (!knowns.hasVar(this.variable)) {
       this.variable.value = this.value;
       knowns.addVar(this.variable);
@@ -794,7 +794,7 @@ class VariableEquals extends Constraint {
     super([], [a, b], keyGenerator);
   }
 
-  propagateKnowns(knowns: Knowns): boolean {
+  propagateKnowns(knowns: StateSet): boolean {
     if (!knowns.hasVar(this.a) && knowns.hasVar(this.b)) {
       this.a.value = this.b.value;
       knowns.addVar(this.a);
@@ -840,7 +840,7 @@ class VariablePlus extends Constraint {
     super([], [a, b, c], keyGenerator);
   }
 
-  propagateKnowns(knowns: Knowns): boolean {
+  propagateKnowns(knowns: StateSet): boolean {
     if (
       !knowns.hasVar(this.a) &&
       knowns.hasVar(this.b) &&
@@ -903,7 +903,7 @@ class FixedPosition extends Constraint {
     super([handle], [], keyGenerator);
   }
 
-  propagateKnowns(knowns: Knowns): boolean {
+  propagateKnowns(knowns: StateSet): boolean {
     if (!knowns.hasX(this.handle) || !knowns.hasY(this.handle)) {
       this.handle.position = this.position;
       knowns.addX(this.handle);
@@ -1004,7 +1004,7 @@ class Angle extends Constraint {
   getError(
     [a1Pos, a2Pos]: Position[],
     [angle]: number[],
-    knowns: Knowns
+    knowns: StateSet
   ): number {
     // The old way, which has problems b/c errors are in terms of angles.
     // const currentAngle = Vec.angle(Vec.sub(a2Pos, a1Pos));
@@ -1098,7 +1098,7 @@ class PropertyPicker extends Constraint {
     return this.variables[0];
   }
 
-  propagateKnowns(knowns: Knowns): boolean {
+  propagateKnowns(knowns: StateSet): boolean {
     switch (this.property) {
       case 'x':
         if (!knowns.hasX(this.handle) && knowns.hasVar(this.variable)) {
