@@ -1147,11 +1147,21 @@ class Angle extends Constraint {
     }
 
     if (!Number.isFinite(error)) {
-      // Can't move anything, but we'll return error that we'd get from moving a2.
+      // We can't move anything, but we'll ignore that and return a "reasonable" error.
       // (This gets better results than returning zero.)
-      const x = bPos.x + r * Math.cos(angle + Math.PI);
-      const y = bPos.y + r * Math.sin(angle + Math.PI);
-      error = Vec.dist(aPos, { x, y });
+
+      error = Math.min(
+        // error we'd get from moving b to satisfy the constraint
+        Vec.dist(bPos, {
+          x: aPos.x + r * Math.cos(angle),
+          y: aPos.y + r * Math.sin(angle),
+        }),
+        // error we'd get from moving a to satisfy the constraint
+        Vec.dist(aPos, {
+          x: bPos.x + r * Math.cos(angle + Math.PI),
+          y: Math.sin(angle + Math.PI),
+        })
+      );
     }
 
     return error;
