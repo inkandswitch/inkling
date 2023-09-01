@@ -684,6 +684,8 @@ class ManipulationSet {
 }
 
 abstract class Constraint {
+  protected readonly ownedVariables: Variable[] = [];
+
   constructor(
     public readonly handles: Handle[],
     public readonly variables: Variable[],
@@ -694,6 +696,7 @@ abstract class Constraint {
   }
 
   remove() {
+    // TODO: also remove owned variables and any constraint on them
     const idx = allConstraints.indexOf(this);
     if (idx >= 0) {
       allConstraints.splice(idx, 1);
@@ -708,6 +711,8 @@ abstract class Constraint {
   getKeyWithDedupedHandlesAndVars() {
     return this.keyGenerator.getKeyWithDedupedHandlesAndVars();
   }
+
+  abstract addConstrainedState(constrainedState: StateSet): void;
 
   /**
    * If this constraint can determine the values of any xs, ys, or variables
@@ -759,6 +764,10 @@ class Constant extends Constraint {
     super([], [variable], keyGenerator);
   }
 
+  addConstrainedState(constrainedState: StateSet): void {
+    constrainedState.addVar(this.variable);
+  }
+
   propagateKnowns(knowns: StateSet): boolean {
     if (!knowns.hasVar(this.variable)) {
       this.variable.value = this.value;
@@ -797,6 +806,11 @@ class Equals extends Constraint {
     keyGenerator: ConstraintKeyGenerator
   ) {
     super([], [a, b], keyGenerator);
+  }
+
+  addConstrainedState(constrainedState: StateSet): void {
+    constrainedState.addVar(this.a);
+    constrainedState.addVar(this.b);
   }
 
   propagateKnowns(knowns: StateSet): boolean {
@@ -843,6 +857,12 @@ class Sum extends Constraint {
     keyGenerator: ConstraintKeyGenerator
   ) {
     super([], [a, b, c], keyGenerator);
+  }
+
+  addConstrainedState(constrainedState: StateSet): void {
+    constrainedState.addVar(this.a);
+    constrainedState.addVar(this.b);
+    constrainedState.addVar(this.c);
   }
 
   propagateKnowns(knowns: StateSet): boolean {
@@ -908,6 +928,11 @@ class Pin extends Constraint {
     super([handle], [], keyGenerator);
   }
 
+  addConstrainedState(constrainedState: StateSet): void {
+    constrainedState.addX(this.handle);
+    constrainedState.addY(this.handle);
+  }
+
   propagateKnowns(knowns: StateSet): boolean {
     if (!knowns.hasX(this.handle) || !knowns.hasY(this.handle)) {
       this.handle.position = this.position;
@@ -965,10 +990,18 @@ class Length extends Constraint {
       [new Variable(Vec.dist(a.position, b.position))],
       keyGenerator
     );
+    this.ownedVariables.push(this.length);
   }
 
   get length() {
     return this.variables[0];
+  }
+
+  addConstrainedState(constrainedState: StateSet): void {
+    constrainedState.addX(this.a);
+    constrainedState.addY(this.a);
+    constrainedState.addX(this.b);
+    constrainedState.addY(this.b);
   }
 
   getError([aPos, bPos]: Position[], [length]: number[]): number {
@@ -1004,10 +1037,18 @@ class Angle extends Constraint {
       [new Variable(Vec.angle(Vec.sub(a2.position, a1.position)))],
       keyGenerator
     );
+    this.ownedVariables.push(this.angle);
   }
 
   get angle() {
     return this.variables[0];
+  }
+
+  addConstrainedState(constrainedState: StateSet): void {
+    constrainedState.addX(this.a1);
+    constrainedState.addY(this.a1);
+    constrainedState.addX(this.a2);
+    constrainedState.addY(this.a2);
   }
 
   getError(
@@ -1111,6 +1152,14 @@ class PropertyPicker extends Constraint {
 
   get variable() {
     return this.variables[0];
+  }
+
+  addConstrainedState(constrainedState: StateSet): void {
+    if (this.property === 'x') {
+      constrainedState.addX(this.handle);
+    } else {
+      constrainedState.addY(this.handle);
+    }
   }
 
   propagateKnowns(knowns: StateSet): boolean {
