@@ -34,6 +34,8 @@ class Variable {
     Variable.all.push(this);
   }
 
+  // TODO: add remove(), which will remove this variable and  any constraints that reference it
+
   get canonicalInstance(): Variable {
     return this.info.isCanonical ? this : this.info.canonicalInstance;
   }
