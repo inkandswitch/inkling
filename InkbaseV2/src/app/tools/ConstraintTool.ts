@@ -178,7 +178,7 @@ export default class ConstraintTool extends Tool<FreehandStroke> {
       const strokeGroup = this.page.addStrokeGroup(new Set([stroke]));
       const lengthVar = constraints.length(strokeGroup.a, strokeGroup.b)
         .variables[0];
-      constraints.fixedValue(lengthVar);
+      constraints.constant(lengthVar);
       prevPos = nextPos;
     }
   }
@@ -265,7 +265,7 @@ export default class ConstraintTool extends Tool<FreehandStroke> {
         case 'length': {
           const refLenVar = constraints.length(ra!, rb!).variables[0];
           const newLenVar = constraints.length(a, b).variables[0];
-          constraints.variableEquals(refLenVar, newLenVar);
+          constraints.equals(refLenVar, newLenVar);
           break;
         }
         case 'angle': {
@@ -274,8 +274,8 @@ export default class ConstraintTool extends Tool<FreehandStroke> {
           const diffVar = constraints.variable(
             nearestMultiple(refAngleVar.value - angleVar.value, Math.PI / 2)
           );
-          constraints.variablePlus(refAngleVar, angleVar, diffVar);
-          constraints.fixedValue(diffVar);
+          constraints.sum(refAngleVar, angleVar, diffVar);
+          constraints.constant(diffVar);
           break;
         }
       }
