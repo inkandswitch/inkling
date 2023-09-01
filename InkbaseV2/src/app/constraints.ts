@@ -116,7 +116,7 @@ interface ClusterForSolver {
   handles: Handle[];
   handleGetsXFrom: Map<Handle, Variable>;
   handleGetsYFrom: Map<Handle, Variable>;
-  // constrainedState: StateSet;
+  constrainedState: StateSet;
 }
 
 let _clustersForSolver: Set<ClusterForSolver> | null = null;
@@ -151,20 +151,26 @@ function getClustersForSolver(): Set<ClusterForSolver> {
 
   _clustersForSolver = new Set(
     Array.from(clusters).map(cluster => {
-      const {
-        constraints,
-        variables,
-        handleGetsXFrom,
-        handleGetsYFrom,
-        // constrainedState,
-      } = getDedupedConstraintsAndVariables(cluster.constraints);
+      const origConstraints = cluster.constraints;
+      const { constraints, variables, handleGetsXFrom, handleGetsYFrom } =
+        getDedupedConstraintsAndVariables(origConstraints);
+
+      const constrainedState = new StateSet();
+      // TODO: do we really need to look at origConstraints when computing the constrained state?
+      // I'm doing this because some constraints are removed in deduping, but it's possible that
+      // there's enough info in the deduped constraints. On the other hand, also looking at
+      // origConstraints doesn't hurt so I'm leaving it here for now. (Think about this later.)
+      for (const constraint of [...origConstraints, ...constraints]) {
+        constraint.addConstrainedState(constrainedState);
+      }
+
       return {
         constraints,
         variables,
         handles: getHandlesIn(constraints),
         handleGetsXFrom,
         handleGetsYFrom,
-        // constrainedState,
+        constrainedState,
       };
     })
   );
@@ -182,7 +188,8 @@ function getClustersForSolver(): Set<ClusterForSolver> {
 // TODO: this function works, but it's gross. Refactor.
 function getDedupedConstraintsAndVariables(constraints: Constraint[]) {
   // console.log('orig constraints', constraints);
-  let result: Omit<ClusterForSolver, 'handles'> | null = null;
+  let result: Omit<ClusterForSolver, 'handles' | 'constrainedState'> | null =
+    null;
   while (true) {
     const oldNumConstraints = result
       ? result.constraints.length
@@ -268,6 +275,7 @@ function dedupVariables(constraints: Constraint[]) {
   // we have Sum(a, b, c) and Constant(c), variable a can absorb b w/
   // an "offset" of c. (There's a lot more that we could do here, this
   // is just an initial experiment.)
+  // TODO: handle all possible cases.
   idx = 0;
   while (idx < constraints.length) {
     const constraint = constraints[idx];
