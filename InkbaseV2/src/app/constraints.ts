@@ -363,16 +363,25 @@ class StateSet {
   private readonly ys = new Set<Handle>();
   private readonly vars = new Set<Variable>();
 
-  hasX(handle: Handle) {
-    return this.xs.has(handle.canonicalInstance);
+  /**
+   * Returns a new state set. If `parent` is supplied, the new state set will include
+   * every x, y, and variable that is in the parent state set, but adding new things to
+   * the new state set does not change the parent state set.
+   */
+  constructor(private readonly parent?: StateSet) {}
+
+  hasX(handle: Handle): boolean {
+    return this.parent?.hasX(handle) || this.xs.has(handle.canonicalInstance);
   }
 
-  hasY(handle: Handle) {
-    return this.ys.has(handle.canonicalInstance);
+  hasY(handle: Handle): boolean {
+    return this.parent?.hasY(handle) || this.ys.has(handle.canonicalInstance);
   }
 
-  hasVar(variable: Variable) {
-    return this.vars.has(variable.canonicalInstance);
+  hasVar(variable: Variable): boolean {
+    return (
+      this.parent?.hasVar(variable) || this.vars.has(variable.canonicalInstance)
+    );
   }
 
   addX(handle: Handle) {
@@ -389,9 +398,15 @@ class StateSet {
 
   toJSON() {
     return {
-      vars: Array.from(this.vars).map(v => ({ id: v.id, value: v.value })),
-      xs: Array.from(this.xs).map(h => ({ id: h.id, x: h.position.x })),
-      ys: Array.from(this.ys).map(h => ({ id: h.id, y: h.position.y })),
+      vars: Array.from(
+        new Set([...this.vars, ...(this.parent?.vars ?? [])])
+      ).map(v => ({ id: v.id, value: v.value })),
+      xs: Array.from(new Set([...this.xs, ...(this.parent?.xs ?? [])])).map(
+        h => ({ id: h.id, x: h.position.x })
+      ),
+      ys: Array.from(new Set([...this.ys, ...(this.parent?.ys ?? [])])).map(
+        h => ({ id: h.id, y: h.position.y })
+      ),
     };
   }
 }
@@ -411,31 +426,36 @@ function solveCluster(selection: Selection, cluster: ClusterForSolver) {
     return;
   }
 
+  const constrainedState = new StateSet(cluster.constrainedState);
+
   // We temporarily add pin constraints for each selected handle.
   // This is the "finger of God" semantics that we've talked about.
   temporarilyMakeNewConstraintsGoInto(cluster.constraints, () => {
     for (const handle of selection.handles) {
-      pin(handle);
+      const { constraint } = pin(handle);
+      constraint.addConstrainedState(constrainedState);
     }
   });
 
   try {
-    minimizeError(cluster);
+    minimizeError(cluster, constrainedState);
   } finally {
     // Remove the temporary pin constraints that we added to `constraints`.
     cluster.constraints.length = oldNumConstraints;
   }
 }
 
-function minimizeError({
-  constraints,
-  variables,
-  handles,
-  handleGetsXFrom,
-  handleGetsYFrom,
-}: ClusterForSolver) {
-  const knowns = computeKnowns(constraints);
-  const unconstrained = new StateSet(); // TODO
+function minimizeError(
+  {
+    constraints,
+    variables,
+    handles,
+    handleGetsXFrom,
+    handleGetsYFrom,
+  }: ClusterForSolver,
+  constrainedState: StateSet
+) {
+  const knownState = computeKnownState(constraints);
 
   // The state that goes into `inputs` is the stuff that can be modified by the solver.
   // It excludes any value that we've already computed from known values like pin and
@@ -444,7 +464,7 @@ function minimizeError({
   const inputDescriptions: string[] = [];
   const varIdx = new Map<Variable, number>();
   for (const variable of variables) {
-    if (!knowns.hasVar(variable)) {
+    if (!knownState.hasVar(variable) && constrainedState.hasVar(variable)) {
       varIdx.set(variable, inputs.length);
       inputs.push(variable.value);
       inputDescriptions.push(`var ${variable.id}`);
@@ -453,7 +473,7 @@ function minimizeError({
   const xIdx = new Map<Handle, number>();
   const yIdx = new Map<Handle, number>();
   for (const handle of handles) {
-    if (knowns.hasX(handle)) {
+    if (knownState.hasX(handle) || !constrainedState.hasX(handle)) {
       // no op
     } else if (handleGetsXFrom.has(handle)) {
       xIdx.set(handle, varIdx.get(handleGetsXFrom.get(handle)!)!);
@@ -463,7 +483,7 @@ function minimizeError({
       inputDescriptions.push(`x ${handle.id}`);
     }
 
-    if (knowns.hasY(handle)) {
+    if (knownState.hasY(handle) || !constrainedState.hasY(handle)) {
       // no op
     } else if (handleGetsYFrom.has(handle)) {
       yIdx.set(handle, varIdx.get(handleGetsYFrom.get(handle)!)!);
@@ -480,7 +500,7 @@ function minimizeError({
     let error = 0;
     for (const constraint of constraints) {
       if (constraint instanceof Constant || constraint instanceof Pin) {
-        // Ignore -- these guys already did their job in propagateKnowns().
+        // Ignore -- these guys already did their job in propagateKnownState().
         continue;
       }
       const positions = constraint.handles.map(handle => {
@@ -505,7 +525,7 @@ function minimizeError({
         );
       });
       error += Math.pow(
-        constraint.getError(positions, values, knowns, unconstrained),
+        constraint.getError(positions, values, knownState, constrainedState),
         2
       );
     }
@@ -525,8 +545,10 @@ function minimizeError({
       handles,
       'with inputs',
       inputs.map((input, idx) => ({ input, is: inputDescriptions[idx] })),
-      'and knowns',
-      knowns.toJSON()
+      'known state',
+      knownState.toJSON(),
+      'and constrained state',
+      constrainedState.toJSON()
     );
     SVG.showStatus('' + e);
     throw e;
@@ -537,31 +559,33 @@ function minimizeError({
   // Now we write the solution from the solver back into our variables and handles.
   const outputs = result.solution;
   for (const variable of variables) {
-    if (!knowns.hasVar(variable)) {
+    if (!knownState.hasVar(variable) && constrainedState.hasVar(variable)) {
       variable.value = outputs.shift()!;
     }
   }
   for (const handle of handles) {
-    const x = knowns.hasX(handle)
-      ? handle.position.x
-      : handleGetsXFrom.has(handle)
-      ? handleGetsXFrom.get(handle)!.value
-      : outputs.shift()!;
-    const y = knowns.hasY(handle)
-      ? handle.position.y
-      : handleGetsYFrom.has(handle)
-      ? handleGetsYFrom.get(handle)!.value
-      : outputs.shift()!;
+    const x =
+      knownState.hasX(handle) || !constrainedState.hasX(handle)
+        ? handle.position.x
+        : handleGetsXFrom.has(handle)
+        ? handleGetsXFrom.get(handle)!.value
+        : outputs.shift()!;
+    const y =
+      knownState.hasY(handle) || !constrainedState.hasY(handle)
+        ? handle.position.y
+        : handleGetsYFrom.has(handle)
+        ? handleGetsYFrom.get(handle)!.value
+        : outputs.shift()!;
     handle.position = { x, y };
   }
 }
 
-function computeKnowns(constraints: Constraint[]) {
-  const knowns = new StateSet();
+function computeKnownState(constraints: Constraint[]) {
+  const knownState = new StateSet();
   while (true) {
     let didSomething = false;
     for (const constraint of constraints) {
-      if (constraint.propagateKnowns(knowns)) {
+      if (constraint.propagateKnownState(knownState)) {
         didSomething = true;
       }
     }
@@ -569,7 +593,7 @@ function computeKnowns(constraints: Constraint[]) {
       break;
     }
   }
-  return knowns;
+  return knownState;
 }
 
 // #endregion solving
@@ -726,20 +750,25 @@ abstract class Constraint {
 
   /**
    * If this constraint can determine the values of any xs, ys, or variables
-   * based on other things that are already known, it should set the values
-   * of those things, add them to the `knowns` object, and return `true`.
+   * based on other state that is already known, it should set the values
+   * of those things, add them to the known state set, and return `true`.
    * Otherwise, it should return `false`.
    */
-  propagateKnowns(_knowns: StateSet): boolean {
+  propagateKnownState(_knownState: StateSet): boolean {
     return false;
   }
 
-  /** Returns the current error for this constraint. (OK if it's negative.) */
+  /**
+   * Returns the current error for this constraint. (OK if it's negative.)
+   * If this constraint owns a variable whose state is not constrained,
+   * ignore the corresponding value in `variableValues` and instead set
+   * the value of that variable to make the error equal to zero.
+   */
   abstract getError(
     handlePositions: Position[],
     variableValues: number[],
-    knowns: StateSet,
-    unconstrained: StateSet
+    knownState: StateSet,
+    constrainedState: StateSet
   ): number;
 
   abstract onClash(constraint: this): Variable[];
@@ -778,10 +807,10 @@ class Constant extends Constraint {
     constrainedState.addVar(this.variable);
   }
 
-  propagateKnowns(knowns: StateSet): boolean {
-    if (!knowns.hasVar(this.variable)) {
+  propagateKnownState(knownState: StateSet): boolean {
+    if (!knownState.hasVar(this.variable)) {
       this.variable.value = this.value;
-      knowns.addVar(this.variable);
+      knownState.addVar(this.variable);
       return true;
     } else {
       return false;
@@ -823,14 +852,14 @@ class Equals extends Constraint {
     constrainedState.addVar(this.b);
   }
 
-  propagateKnowns(knowns: StateSet): boolean {
-    if (!knowns.hasVar(this.a) && knowns.hasVar(this.b)) {
+  propagateKnownState(knownState: StateSet): boolean {
+    if (!knownState.hasVar(this.a) && knownState.hasVar(this.b)) {
       this.a.value = this.b.value;
-      knowns.addVar(this.a);
+      knownState.addVar(this.a);
       return true;
-    } else if (knowns.hasVar(this.a) && !knowns.hasVar(this.b)) {
+    } else if (knownState.hasVar(this.a) && !knownState.hasVar(this.b)) {
       this.b.value = this.a.value;
-      knowns.addVar(this.b);
+      knownState.addVar(this.b);
       return true;
     } else {
       return false;
@@ -875,30 +904,30 @@ class Sum extends Constraint {
     constrainedState.addVar(this.c);
   }
 
-  propagateKnowns(knowns: StateSet): boolean {
+  propagateKnownState(knownState: StateSet): boolean {
     if (
-      !knowns.hasVar(this.a) &&
-      knowns.hasVar(this.b) &&
-      knowns.hasVar(this.c)
+      !knownState.hasVar(this.a) &&
+      knownState.hasVar(this.b) &&
+      knownState.hasVar(this.c)
     ) {
       this.a.value = this.b.value + this.c.value;
-      knowns.addVar(this.a);
+      knownState.addVar(this.a);
       return true;
     } else if (
-      knowns.hasVar(this.a) &&
-      !knowns.hasVar(this.b) &&
-      knowns.hasVar(this.c)
+      knownState.hasVar(this.a) &&
+      !knownState.hasVar(this.b) &&
+      knownState.hasVar(this.c)
     ) {
       this.b.value = this.a.value - this.c.value;
-      knowns.addVar(this.b);
+      knownState.addVar(this.b);
       return true;
     } else if (
-      knowns.hasVar(this.a) &&
-      knowns.hasVar(this.b) &&
-      !knowns.hasVar(this.c)
+      knownState.hasVar(this.a) &&
+      knownState.hasVar(this.b) &&
+      !knownState.hasVar(this.c)
     ) {
       this.c.value = this.a.value - this.b.value;
-      knowns.addVar(this.c);
+      knownState.addVar(this.c);
       return true;
     } else {
       return false;
@@ -943,11 +972,11 @@ class Pin extends Constraint {
     constrainedState.addY(this.handle);
   }
 
-  propagateKnowns(knowns: StateSet): boolean {
-    if (!knowns.hasX(this.handle) || !knowns.hasY(this.handle)) {
+  propagateKnownState(knownState: StateSet): boolean {
+    if (!knownState.hasX(this.handle) || !knownState.hasY(this.handle)) {
       this.handle.position = this.position;
-      knowns.addX(this.handle);
-      knowns.addY(this.handle);
+      knownState.addX(this.handle);
+      knownState.addY(this.handle);
       return true;
     } else {
       return false;
@@ -1014,8 +1043,19 @@ class Length extends Constraint {
     constrainedState.addY(this.b);
   }
 
-  getError([aPos, bPos]: Position[], [length]: number[]): number {
-    return Vec.dist(aPos, bPos) - length;
+  getError(
+    [aPos, bPos]: Position[],
+    [length]: number[],
+    _knownState: StateSet,
+    constrainedState: StateSet
+  ): number {
+    const currDist = Vec.dist(aPos, bPos);
+    if (!constrainedState.hasVar(this.length)) {
+      this.length.value = currDist;
+      return 0;
+    } else {
+      return currDist - length;
+    }
   }
 
   onClash(newerConstraint?: this): Variable[] {
@@ -1064,7 +1104,8 @@ class Angle extends Constraint {
   getError(
     [aPos, bPos]: Position[],
     [angle]: number[],
-    knowns: StateSet
+    knownState: StateSet,
+    constrainedState: StateSet
   ): number {
     // The old way, which has problems b/c errors are in terms of angles.
     // const currentAngle = Vec.angle(Vec.sub(bPos, aPos));
@@ -1073,29 +1114,34 @@ class Angle extends Constraint {
     // The new way, implemented in terms of the minimum amount of displacement
     // required to satisfy the constraint.
 
+    if (!constrainedState.hasVar(this.angle)) {
+      this.angle.value = Vec.angle(Vec.sub(this.b.position, this.a.position));
+      return 0;
+    }
+
     const r = Vec.dist(bPos, aPos);
     let error = Infinity;
 
-    if (!knowns.hasX(this.b) && !knowns.hasY(this.b)) {
+    if (!knownState.hasX(this.b) && !knownState.hasY(this.b)) {
       const x = aPos.x + r * Math.cos(angle);
       const y = aPos.y + r * Math.sin(angle);
       error = Math.min(error, Vec.dist(bPos, { x, y }));
-    } else if (!knowns.hasX(this.b)) {
+    } else if (!knownState.hasX(this.b)) {
       const x = aPos.x + (bPos.y - aPos.y) / Math.tan(angle);
       error = Math.min(error, Math.abs(x - bPos.x));
-    } else if (!knowns.hasY(this.b)) {
+    } else if (!knownState.hasY(this.b)) {
       const y = aPos.y + (bPos.x - aPos.x) * Math.tan(angle);
       error = Math.min(error, Math.abs(y - bPos.y));
     }
 
-    if (!knowns.hasX(this.a) && !knowns.hasY(this.a)) {
+    if (!knownState.hasX(this.a) && !knownState.hasY(this.a)) {
       const x = bPos.x + r * Math.cos(angle + Math.PI);
       const y = bPos.y + r * Math.sin(angle + Math.PI);
       error = Math.min(error, Vec.dist(aPos, { x, y }));
-    } else if (!knowns.hasX(this.a)) {
+    } else if (!knownState.hasX(this.a)) {
       const x = bPos.x + (aPos.y - bPos.y) / Math.tan(angle + Math.PI);
       error = Math.min(error, Math.abs(x - aPos.x));
-    } else if (!knowns.hasY(this.b)) {
+    } else if (!knownState.hasY(this.b)) {
       const y = bPos.y + (aPos.x - bPos.x) * Math.tan(angle + Math.PI);
       error = Math.min(error, Math.abs(y - aPos.y));
     }
@@ -1158,6 +1204,7 @@ class PropertyPicker extends Constraint {
     keyGenerator: ConstraintKeyGenerator
   ) {
     super([handle], [new Variable(handle.position[property])], keyGenerator);
+    this.ownedVariables.push(this.variable);
   }
 
   get variable() {
@@ -1172,34 +1219,40 @@ class PropertyPicker extends Constraint {
     }
   }
 
-  propagateKnowns(knowns: StateSet): boolean {
+  propagateKnownState(knownState: StateSet): boolean {
     switch (this.property) {
       case 'x':
-        if (!knowns.hasX(this.handle) && knowns.hasVar(this.variable)) {
+        if (!knownState.hasX(this.handle) && knownState.hasVar(this.variable)) {
           this.handle.position = {
             x: this.variable.value,
             y: this.handle.position.y,
           };
-          knowns.addX(this.handle);
+          knownState.addX(this.handle);
           return true;
-        } else if (knowns.hasX(this.handle) && !knowns.hasVar(this.variable)) {
+        } else if (
+          knownState.hasX(this.handle) &&
+          !knownState.hasVar(this.variable)
+        ) {
           this.variable.value = this.handle.position.x;
-          knowns.addVar(this.variable);
+          knownState.addVar(this.variable);
           return true;
         } else {
           return false;
         }
       case 'y':
-        if (!knowns.hasY(this.handle) && knowns.hasVar(this.variable)) {
+        if (!knownState.hasY(this.handle) && knownState.hasVar(this.variable)) {
           this.handle.position = {
             x: this.handle.position.x,
             y: this.variable.value,
           };
-          knowns.addY(this.handle);
+          knownState.addY(this.handle);
           return true;
-        } else if (knowns.hasY(this.handle) && !knowns.hasVar(this.variable)) {
+        } else if (
+          knownState.hasY(this.handle) &&
+          !knownState.hasVar(this.variable)
+        ) {
           this.variable.value = this.handle.position.y;
-          knowns.addVar(this.variable);
+          knownState.addVar(this.variable);
           return true;
         } else {
           return false;
@@ -1209,8 +1262,19 @@ class PropertyPicker extends Constraint {
     }
   }
 
-  getError([handlePos]: Position[], [varValue]: number[]) {
-    return handlePos[this.property] - varValue;
+  getError(
+    [handlePos]: Position[],
+    [varValue]: number[],
+    _knownState: StateSet,
+    constrainedState: StateSet
+  ) {
+    const currValue = handlePos[this.property];
+    if (!constrainedState.hasVar(this.variable)) {
+      this.variable.value = currValue;
+      return 0;
+    } else {
+      return currValue - varValue;
+    }
   }
 
   getManipulationSet(): ManipulationSet {
