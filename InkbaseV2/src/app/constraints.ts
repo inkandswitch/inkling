@@ -1028,13 +1028,13 @@ export function angle(a1: Handle, a2: Handle) {
 
 class Angle extends Constraint {
   constructor(
-    public readonly a1: Handle,
-    public readonly a2: Handle,
+    public readonly a: Handle,
+    public readonly b: Handle,
     keyGenerator: ConstraintKeyGenerator
   ) {
     super(
-      [a1, a2],
-      [new Variable(Vec.angle(Vec.sub(a2.position, a1.position)))],
+      [a, b],
+      [new Variable(Vec.angle(Vec.sub(b.position, a.position)))],
       keyGenerator
     );
     this.ownedVariables.push(this.angle);
@@ -1045,74 +1045,74 @@ class Angle extends Constraint {
   }
 
   addConstrainedState(constrainedState: StateSet): void {
-    constrainedState.addX(this.a1);
-    constrainedState.addY(this.a1);
-    constrainedState.addX(this.a2);
-    constrainedState.addY(this.a2);
+    constrainedState.addX(this.a);
+    constrainedState.addY(this.a);
+    constrainedState.addX(this.b);
+    constrainedState.addY(this.b);
   }
 
   getError(
-    [a1Pos, a2Pos]: Position[],
+    [aPos, bPos]: Position[],
     [angle]: number[],
     knowns: StateSet
   ): number {
     // The old way, which has problems b/c errors are in terms of angles.
-    // const currentAngle = Vec.angle(Vec.sub(a2Pos, a1Pos));
+    // const currentAngle = Vec.angle(Vec.sub(bPos, aPos));
     // return (currentAngle - angle) * 100;
 
     // The new way, implemented in terms of the minimum amount of displacement
     // required to satisfy the constraint.
 
-    const r = Vec.dist(a2Pos, a1Pos);
+    const r = Vec.dist(bPos, aPos);
     let error = Infinity;
 
-    if (!knowns.hasX(this.a2) && !knowns.hasY(this.a2)) {
-      const x = a1Pos.x + r * Math.cos(angle);
-      const y = a1Pos.y + r * Math.sin(angle);
-      error = Math.min(error, Vec.dist(a2Pos, { x, y }));
-    } else if (!knowns.hasX(this.a2)) {
-      const x = a1Pos.x + (a2Pos.y - a1Pos.y) / Math.tan(angle);
-      error = Math.min(error, Math.abs(x - a2Pos.x));
-    } else if (!knowns.hasY(this.a2)) {
-      const y = a1Pos.y + (a2Pos.x - a1Pos.x) * Math.tan(angle);
-      error = Math.min(error, Math.abs(y - a2Pos.y));
+    if (!knowns.hasX(this.b) && !knowns.hasY(this.b)) {
+      const x = aPos.x + r * Math.cos(angle);
+      const y = aPos.y + r * Math.sin(angle);
+      error = Math.min(error, Vec.dist(bPos, { x, y }));
+    } else if (!knowns.hasX(this.b)) {
+      const x = aPos.x + (bPos.y - aPos.y) / Math.tan(angle);
+      error = Math.min(error, Math.abs(x - bPos.x));
+    } else if (!knowns.hasY(this.b)) {
+      const y = aPos.y + (bPos.x - aPos.x) * Math.tan(angle);
+      error = Math.min(error, Math.abs(y - bPos.y));
     }
 
-    if (!knowns.hasX(this.a1) && !knowns.hasY(this.a1)) {
-      const x = a2Pos.x + r * Math.cos(angle + Math.PI);
-      const y = a2Pos.y + r * Math.sin(angle + Math.PI);
-      error = Math.min(error, Vec.dist(a1Pos, { x, y }));
-    } else if (!knowns.hasX(this.a1)) {
-      const x = a2Pos.x + (a1Pos.y - a2Pos.y) / Math.tan(angle + Math.PI);
-      error = Math.min(error, Math.abs(x - a1Pos.x));
-    } else if (!knowns.hasY(this.a2)) {
-      const y = a2Pos.y + (a1Pos.x - a2Pos.x) * Math.tan(angle + Math.PI);
-      error = Math.min(error, Math.abs(y - a1Pos.y));
+    if (!knowns.hasX(this.a) && !knowns.hasY(this.a)) {
+      const x = bPos.x + r * Math.cos(angle + Math.PI);
+      const y = bPos.y + r * Math.sin(angle + Math.PI);
+      error = Math.min(error, Vec.dist(aPos, { x, y }));
+    } else if (!knowns.hasX(this.a)) {
+      const x = bPos.x + (aPos.y - bPos.y) / Math.tan(angle + Math.PI);
+      error = Math.min(error, Math.abs(x - aPos.x));
+    } else if (!knowns.hasY(this.b)) {
+      const y = bPos.y + (aPos.x - bPos.x) * Math.tan(angle + Math.PI);
+      error = Math.min(error, Math.abs(y - aPos.y));
     }
 
     if (!Number.isFinite(error)) {
       // Can't move anything, but we'll return error that we'd get from moving a2.
       // (This gets better results than returning zero.)
-      const x = a2Pos.x + r * Math.cos(angle + Math.PI);
-      const y = a2Pos.y + r * Math.sin(angle + Math.PI);
-      error = Vec.dist(a1Pos, { x, y });
+      const x = bPos.x + r * Math.cos(angle + Math.PI);
+      const y = bPos.y + r * Math.sin(angle + Math.PI);
+      error = Vec.dist(aPos, { x, y });
     }
 
     return error;
   }
 
   onClash(newerConstraint: this): Variable[];
-  onClash(a1: Handle, a2: Handle): Variable[];
-  onClash(newerConstraintOrA1: this | Handle, a2?: Handle) {
-    let a1: Handle, angle: Variable | undefined;
-    if (newerConstraintOrA1 instanceof Angle) {
-      ({ a1, a2, angle } = newerConstraintOrA1);
+  onClash(a: Handle, b: Handle): Variable[];
+  onClash(newerConstraintOrA: this | Handle, b?: Handle) {
+    let a: Handle, angle: Variable | undefined;
+    if (newerConstraintOrA instanceof Angle) {
+      ({ a, b, angle } = newerConstraintOrA);
     } else {
-      a1 = newerConstraintOrA1;
-      a2 = a2!; // help the type checker understand that this is not undefined
+      a = newerConstraintOrA;
+      b = b!; // help the type checker understand that this is not undefined
     }
 
-    if (this.a1 === a1 && this.a2 === a2) {
+    if (this.a === a && this.b === b) {
       // exactly the same thing!
       if (angle) {
         equals(this.angle, angle);
@@ -1122,7 +1122,7 @@ class Angle extends Constraint {
     } else {
       // same points but different order
       if (!angle) {
-        angle = new Variable(Vec.angle(Vec.sub(a2.position, a1.position)));
+        angle = new Variable(Vec.angle(Vec.sub(b.position, a.position)));
       }
       const diff = new Variable(this.angle.value - angle.value);
       constant(diff);
