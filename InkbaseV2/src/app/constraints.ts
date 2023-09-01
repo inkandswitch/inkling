@@ -425,6 +425,7 @@ function minimizeError({
   handleGetsYFrom,
 }: ClusterForSolver) {
   const knowns = computeKnowns(constraints);
+  const unconstrained = new StateSet(); // TODO
 
   // The state that goes into `inputs` is the stuff that can be modified by the solver.
   // It excludes any value that we've already computed from known values like pin and
@@ -493,7 +494,10 @@ function minimizeError({
           (vi === undefined ? variable.value : currState[vi]) - valueOffset
         );
       });
-      error += Math.pow(constraint.getError(positions, values, knowns), 2);
+      error += Math.pow(
+        constraint.getError(positions, values, knowns, unconstrained),
+        2
+      );
     }
     return error;
   }
@@ -719,7 +723,8 @@ abstract class Constraint {
   abstract getError(
     handlePositions: Position[],
     variableValues: number[],
-    knowns: StateSet
+    knowns: StateSet,
+    unconstrained: StateSet
   ): number;
 
   abstract onClash(constraint: this): Variable[];
