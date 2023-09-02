@@ -4,7 +4,7 @@ import Vec from '../../lib/vec';
 import SVG from '../Svg';
 import * as constraints from '../constraints';
 
-const SHOW_IDS = false;
+const SHOW_DEBUG_INFO = false;
 
 export interface HandleListener {
   onHandleMoved(moved: Handle): void;
@@ -82,7 +82,7 @@ export default class Handle {
         label: SVG.add('text', {
           x: 0,
           y: 0,
-          visibility: SHOW_IDS ? 'visible' : 'hidden',
+          visibility: SHOW_DEBUG_INFO ? 'visible' : 'hidden',
           content: '?',
         }) as SVGTextElement,
       },
@@ -325,7 +325,9 @@ export default class Handle {
       transform: `translate(${
         state.position.x - state.elements.label.getBBox().width / 2
       } ${state.position.y - 10})`,
-      content: '' + this.id,
+      content: `${this.id}@(${Math.round(this.position.x)}, ${Math.round(
+        this.position.y
+      )})`,
     });
 
     state.needsRerender = false;
