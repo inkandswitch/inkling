@@ -238,14 +238,6 @@ function dedupConstraints(constraints: Constraint[]): Constraint[] {
 }
 
 function dedupVariables(constraints: Constraint[]) {
-  // Gather all of the constrained variables.
-  const variables = new Set<Variable>();
-  for (const constraint of constraints) {
-    for (const variable of constraint.variables) {
-      variables.add(variable);
-    }
-  }
-
   // Dedup variables based on Equals
   let idx = 0;
   while (idx < constraints.length) {
@@ -296,10 +288,11 @@ function dedupVariables(constraints: Constraint[]) {
     constraints.splice(idx, 1);
   }
 
-  // Now discard variables that were absorbed by other variables.
-  for (const variable of variables) {
-    if (!variable.info.isCanonical) {
-      variables.delete(variable);
+  // Gather all deduped variables.
+  const variables = new Set<Variable>();
+  for (const constraint of constraints) {
+    for (const variable of constraint.variables) {
+      variables.add(variable.canonicalInstance);
     }
   }
 
