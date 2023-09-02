@@ -45,6 +45,45 @@ export default class ConstraintTool extends Tool<FreehandStroke> {
     super(label, buttonX, buttonY, page, FreehandStroke);
   }
 
+  onAction() {
+    const stroke = this.page.addStroke(
+      new FreehandStroke([
+        { x: 100, y: 500, pressure: 1 },
+        { x: 400, y: 400, pressure: 1 },
+      ])
+    );
+    const { a, b } = this.page.addStrokeGroup(new Set([stroke]));
+    const ax = constraints.property(a, 'x').variables[0];
+    const ax2 = constraints.formula([ax], ([ax]) => ax * 2).variables[0];
+    const by = constraints.property(b, 'y').variables[0];
+    constraints.equals(by, ax2);
+
+    // const stroke = this.page.addStroke(
+    //   new FreehandStroke([
+    //     { x: 100, y: 500, pressure: 1 },
+    //     { x: 400, y: 400, pressure: 1 },
+    //   ])
+    // );
+    // const { a, b } = this.page.addStrokeGroup(new Set([stroke]));
+    // constraints.length(a, b);
+
+    // let prevPos = { x: 50, y: 500 };
+    // for (let idx = 0; idx < 10; idx++) {
+    //   const nextPos = Vec.add(prevPos, {
+    //     x: 50,
+    //     y: idx % 2 === 0 ? 100 : -100,
+    //   });
+    //   const stroke = this.page.addStroke(
+    //     new FreehandStroke([prevPos, nextPos].map(p => ({ ...p, pressure: 1 })))
+    //   );
+    //   const strokeGroup = this.page.addStrokeGroup(new Set([stroke]));
+    //   const lengthVar = constraints.length(strokeGroup.a, strokeGroup.b)
+    //     .variables[0];
+    //   constraints.constant(lengthVar);
+    //   prevPos = nextPos;
+    // }
+  }
+
   update(events: Events) {
     super.update(events);
 
@@ -163,33 +202,6 @@ export default class ConstraintTool extends Tool<FreehandStroke> {
     const stroke = this.stroke;
     super.endStroke();
     this.page.addStrokeGroup(new Set([stroke!]));
-  }
-
-  onAction() {
-    // const stroke = this.page.addStroke(
-    //   new FreehandStroke([
-    //     { x: 100, y: 500, pressure: 1 },
-    //     { x: 400, y: 400, pressure: 1 },
-    //   ])
-    // );
-    // const strokeGroup = this.page.addStrokeGroup(new Set([stroke]));
-    // constraints.length(strokeGroup.a, strokeGroup.b);
-
-    let prevPos = { x: 50, y: 500 };
-    for (let idx = 0; idx < 10; idx++) {
-      const nextPos = Vec.add(prevPos, {
-        x: 50,
-        y: idx % 2 === 0 ? 100 : -100,
-      });
-      const stroke = this.page.addStroke(
-        new FreehandStroke([prevPos, nextPos].map(p => ({ ...p, pressure: 1 })))
-      );
-      const strokeGroup = this.page.addStrokeGroup(new Set([stroke]));
-      const lengthVar = constraints.length(strokeGroup.a, strokeGroup.b)
-        .variables[0];
-      constraints.constant(lengthVar);
-      prevPos = nextPos;
-    }
   }
 
   render() {
