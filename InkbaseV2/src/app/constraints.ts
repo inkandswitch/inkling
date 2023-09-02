@@ -265,7 +265,7 @@ function dedupVariables(constraints: Constraint[]) {
   const handleGetsXFrom = new Map<Handle, Variable>();
   const handleGetsYFrom = new Map<Handle, Variable>();
   for (const c of constraints) {
-    if (c instanceof PropertyPicker) {
+    if (c instanceof Property) {
       (c.property === 'x' ? handleGetsXFrom : handleGetsYFrom).set(
         c.handle.canonicalInstance,
         c.variable.canonicalInstance
@@ -1204,12 +1204,12 @@ class Angle extends Constraint {
 export function property(handle: Handle, property: 'x' | 'y') {
   return addConstraint(
     new ConstraintKeyGenerator('property-' + property, [[handle]], []),
-    keyGenerator => new PropertyPicker(handle, property, keyGenerator),
+    keyGenerator => new Property(handle, property, keyGenerator),
     existingConstraint => existingConstraint.onClash()
   );
 }
 
-class PropertyPicker extends Constraint {
+class Property extends Constraint {
   constructor(
     public readonly handle: Handle,
     public property: 'x' | 'y',
