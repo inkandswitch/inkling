@@ -247,8 +247,6 @@ function dedupVariables(constraints: Constraint[]) {
   }
 
   // Dedup variables based on Equals
-  const handleGetsXFrom = new Map<Handle, Variable>();
-  const handleGetsYFrom = new Map<Handle, Variable>();
   let idx = 0;
   while (idx < constraints.length) {
     const constraint = constraints[idx];
@@ -260,14 +258,18 @@ function dedupVariables(constraints: Constraint[]) {
     const { a, b } = constraint;
     a.absorb(b);
     constraints.splice(idx, 1);
+  }
 
-    for (const c of constraints) {
-      if (c instanceof PropertyPicker && c.variable.canonicalInstance === a) {
-        (c.property === 'x' ? handleGetsXFrom : handleGetsYFrom).set(
-          c.handle.canonicalInstance,
-          a
-        );
-      }
+  // When properties are used, unify the state from the handle
+  // with that of the variable that is associated with it.
+  const handleGetsXFrom = new Map<Handle, Variable>();
+  const handleGetsYFrom = new Map<Handle, Variable>();
+  for (const c of constraints) {
+    if (c instanceof PropertyPicker) {
+      (c.property === 'x' ? handleGetsXFrom : handleGetsYFrom).set(
+        c.handle.canonicalInstance,
+        c.variable.canonicalInstance
+      );
     }
   }
 
@@ -1305,5 +1307,74 @@ class PropertyPicker extends Constraint {
     } else {
       return this.variables;
     }
+  }
+}
+
+export function formula(args: Variable[], fn: (xs: number[]) => number) {
+  const result = new Variable(fn(args.map(arg => arg.value)));
+  return addConstraint(
+    new ConstraintKeyGenerator(
+      'formula#' + generateId(),
+      [],
+      args.map(v => [v])
+    ),
+    keyGenerator => new Formula(args, result, fn, keyGenerator),
+    existingConstraint => existingConstraint.onClash()
+  );
+}
+
+class Formula extends Constraint {
+  constructor(
+    public readonly args: Variable[],
+    public readonly result: Variable,
+    private readonly fn: (xs: number[]) => number,
+    keyGenerator: ConstraintKeyGenerator
+  ) {
+    super([], [result, ...args], keyGenerator);
+    this.ownedVariables.push(this.result);
+  }
+
+  addConstrainedState(constrainedState: StateSet): void {
+    for (const arg of this.args) {
+      constrainedState.addVar(arg);
+    }
+  }
+
+  propagateKnownState(knownState: StateSet): boolean {
+    if (
+      !knownState.hasVar(this.result) &&
+      this.args.every(arg => knownState.hasVar(arg))
+    ) {
+      this.result.value = this.computeResult();
+      knownState.addVar(this.result);
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  getError(
+    _handlePositions: Position[],
+    variableValues: number[],
+    _knownState: StateSet,
+    constrainedState: StateSet
+  ): number {
+    const currValue = this.computeResult(variableValues.slice(1));
+    if (!constrainedState.hasVar(this.result)) {
+      this.result.value = currValue;
+      return 0;
+    } else {
+      return currValue - this.result.value;
+    }
+  }
+
+  onClash(_constraint?: this): Variable[] {
+    throw new Error('Formula.onClash() should never be called!');
+  }
+
+  private computeResult(
+    xs: number[] = this.args.map(arg => arg.value)
+  ): number {
+    return this.fn(xs);
   }
 }

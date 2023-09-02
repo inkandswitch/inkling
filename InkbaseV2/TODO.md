@@ -4,11 +4,6 @@ TODO
 Constraints
 -----------
 
-* Formula constraint:
-  - arguments: Variable[]
-  - result: Variable
-  - (constrains arguments, owns result)
-
 * (Variable | Constraint).remove()
   - on variable, should remove all associated constraints, too.
   - what about on a constraint? need to ref. count variables?
