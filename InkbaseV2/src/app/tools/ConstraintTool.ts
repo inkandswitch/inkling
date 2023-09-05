@@ -57,20 +57,28 @@ export default class ConstraintTool extends Tool<FreehandStroke> {
   }
 
   onAction() {
-    const { a, b } = this.addStrokeGroup(
-      { x: 100, y: 500 },
-      { x: 400, y: 400 }
-    );
-    const [ax] = constraints.property(a, 'x').variables;
-    const [ax2] = constraints.formula([ax], ([ax]) => ax * 2).variables;
-    const [by] = constraints.property(b, 'y').variables;
-    constraints.equals(by, ax2);
-
     // const { a, b } = this.addStrokeGroup(
     //   { x: 100, y: 500 },
     //   { x: 400, y: 400 }
     // );
-    // constraints.length(a, b);
+    // const [ax] = constraints.property(a, 'x').variables;
+    // const [ax2] = constraints.formula([ax], ([ax]) => ax * 2).variables;
+    // const [by] = constraints.property(b, 'y').variables;
+    // constraints.equals(by, ax2);
+
+    const { a: a1, b: b1 } = this.addStrokeGroup(
+      { x: 100, y: 500 },
+      { x: 400, y: 400 }
+    );
+    const { a: a2, b: b2 } = this.addStrokeGroup(
+      { x: 400, y: 400 },
+      { x: 500, y: 200 }
+    );
+    const [angle1, length1] = constraints.polarVector(a1, b1).variables;
+    const [angle2, length2] = constraints.polarVector(a2, b2).variables;
+    constraints.constant(angle1);
+    constraints.constant(angle2);
+    constraints.equals(length1, length2);
 
     // let prevPos = { x: 50, y: 500 };
     // for (let idx = 0; idx < 10; idx++) {
