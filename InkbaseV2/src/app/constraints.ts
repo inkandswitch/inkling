@@ -1194,6 +1194,27 @@ class Angle extends Constraint {
   }
 }
 
+// This is a quick hack to get ivan going!
+export function polarVector(a: Handle, b: Handle) {
+  const {
+    constraint: angleConstraint,
+    variables: [angleVariable],
+  } = angle(a, b);
+  const {
+    constraint: lengthConstraint,
+    variables: [lengthVariable],
+  } = length(a, b);
+  return {
+    constraint: {
+      remove() {
+        angleConstraint.remove();
+        lengthConstraint.remove();
+      },
+    },
+    variables: [angleVariable, lengthVariable],
+  };
+}
+
 export function property(handle: Handle, property: 'x' | 'y') {
   return addConstraint(
     new ConstraintKeyGenerator('property-' + property, [[handle]], []),
