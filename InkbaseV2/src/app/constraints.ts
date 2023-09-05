@@ -1063,11 +1063,11 @@ class Length extends Constraint {
   }
 }
 
-export function angle(a1: Handle, a2: Handle) {
+export function angle(a: Handle, b: Handle) {
   return addConstraint(
-    new ConstraintKeyGenerator('angle', [[a1, a2]], []),
-    keyGenerator => new Angle(a1, a2, keyGenerator),
-    existingConstraint => existingConstraint.onClash(a1, a2)
+    new ConstraintKeyGenerator('angle', [[a, b]], []),
+    keyGenerator => new Angle(a, b, keyGenerator),
+    existingConstraint => existingConstraint.onClash(a, b)
   );
 }
 
@@ -1306,11 +1306,7 @@ class Property extends Constraint {
 export function formula(args: Variable[], fn: (xs: number[]) => number) {
   const result = new Variable(fn(args.map(arg => arg.value)));
   return addConstraint(
-    new ConstraintKeyGenerator(
-      'formula#' + generateId(),
-      [],
-      args.map(v => [v])
-    ),
+    new ConstraintKeyGenerator('formula#' + generateId(), [], []),
     keyGenerator => new Formula(args, result, fn, keyGenerator),
     existingConstraint => existingConstraint.onClash()
   );
