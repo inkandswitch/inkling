@@ -237,7 +237,7 @@ export default class Selection {
   getHandleThatBreaksOff(handle: Handle, newPos: Position): Handle | null {
     if (
       // TODO: decide based on acceleration?
-      Vec.dist(handle.position, newPos) < 30 ||
+      Vec.dist(handle.position, newPos) < 60 ||
       handle.absorbedHandles.size === 0
     ) {
       return null;
