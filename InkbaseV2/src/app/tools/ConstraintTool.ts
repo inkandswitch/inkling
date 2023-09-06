@@ -12,12 +12,12 @@ import { Position } from '../../lib/types';
 interface Options {
   vertical: boolean;
   horizontal: boolean;
-  length: boolean;
+  distance: boolean;
   angle: boolean;
 }
 
 interface ConstraintCandidate {
-  type: 'horizontal' | 'vertical' | 'length' | 'angle';
+  type: 'horizontal' | 'vertical' | 'distance' | 'angle';
   strokeGroup: StrokeGroup;
   refStrokeGroup: StrokeGroup | null;
 }
@@ -179,12 +179,11 @@ export default class ConstraintTool extends Tool<FreehandStroke> {
 
     const { a: ra, b: rb } = this.refStrokeGroup;
 
-    const refLen = Vec.dist(ra.position, rb.position);
-    const len = Vec.dist(a.position, b.position);
-    const lenDiff = Math.abs(refLen - len);
-    const length = this.options.length && lenDiff < 10;
-    if (length) {
-      this.addConstraintCandidate('length', strokeGroup, this.refStrokeGroup);
+    const refDist = Vec.dist(ra.position, rb.position);
+    const dist = Vec.dist(a.position, b.position);
+    const diff = Math.abs(refDist - dist);
+    if (this.options.distance && diff < 10) {
+      this.addConstraintCandidate('distance', strokeGroup, this.refStrokeGroup);
     }
 
     if (this.options.angle && !vertical && !horizontal) {
@@ -249,7 +248,7 @@ export default class ConstraintTool extends Tool<FreehandStroke> {
             stroke: 'rgba(0, 0, 255, 0.2)',
           });
           break;
-        case 'length':
+        case 'distance':
           SVG.now('polyline', {
             points: SVG.points([a.position, b.position]),
             stroke: 'cornflowerblue',
@@ -304,8 +303,8 @@ export default class ConstraintTool extends Tool<FreehandStroke> {
         case 'horizontal':
           constraints.horizontal(a, b);
           break;
-        case 'length': {
-          constraints.equalLength(ra!, rb!, a, b);
+        case 'distance': {
+          constraints.equalDistance(ra!, rb!, a, b);
           break;
         }
         case 'angle': {

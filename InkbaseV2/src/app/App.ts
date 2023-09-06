@@ -30,7 +30,7 @@ const toolPicker = new ToolPicker([
   new ConstraintTool('CONST', 30, 230, page, {
     vertical: true,
     horizontal: true,
-    length: true,
+    distance: true,
     angle: true,
   }),
 ]);

@@ -1022,21 +1022,21 @@ export function vertical(a: Handle, b: Handle) {
   return equals(ax, bx);
 }
 
-export function length(a: Handle, b: Handle) {
+export function distance(a: Handle, b: Handle) {
   return addConstraint(
-    new ConstraintKeyGenerator('length', [[a, b]], []),
-    keyGenerator => new Length(a, b, keyGenerator),
+    new ConstraintKeyGenerator('distance', [[a, b]], []),
+    keyGenerator => new Distance(a, b, keyGenerator),
     existingConstraint => existingConstraint.onClash()
   );
 }
 
-export function equalLength(a1: Handle, a2: Handle, b1: Handle, b2: Handle) {
-  const { length: lengthA } = length(a1, a2).variables;
-  const { length: lengthB } = length(b1, b2).variables;
-  return equals(lengthA, lengthB);
+export function equalDistance(a1: Handle, a2: Handle, b1: Handle, b2: Handle) {
+  const { distance: distanceA } = distance(a1, a2).variables;
+  const { distance: distanceB } = distance(b1, b2).variables;
+  return equals(distanceA, distanceB);
 }
 
-class Length extends Constraint<'length'> {
+class Distance extends Constraint<'distance'> {
   constructor(
     public readonly a: Handle,
     public readonly b: Handle,
@@ -1049,9 +1049,9 @@ class Length extends Constraint<'length'> {
     );
   }
 
-  readonly ownedVariables = { length: this.length };
+  readonly ownedVariables = { distance: this.distance };
 
-  get length() {
+  get distance() {
     return this.variables[0];
   }
 
@@ -1069,19 +1069,19 @@ class Length extends Constraint<'length'> {
     constrainedState: StateSet
   ): number {
     const currDist = Vec.dist(aPos, bPos);
-    if (!constrainedState.hasVar(this.length)) {
-      this.length.value = currDist;
+    if (!constrainedState.hasVar(this.distance)) {
+      this.distance.value = currDist;
       return 0;
     } else {
       return currDist - length;
     }
   }
 
-  onClash(that: this): AddConstraintResult<'length'>;
-  onClash(): AddConstraintResult<'length'>;
-  onClash(that?: this): AddConstraintResult<'length'> {
+  onClash(that: this): AddConstraintResult<'distance'>;
+  onClash(): AddConstraintResult<'distance'>;
+  onClash(that?: this): AddConstraintResult<'distance'> {
     if (that) {
-      const eq = equals(this.length, that.length);
+      const eq = equals(this.distance, that.distance);
       return {
         constraints: [that, ...eq.constraints],
         variables: that.ownedVariables,
@@ -1295,11 +1295,11 @@ export function polarVector(a: Handle, b: Handle) {
   } = angle(a, b);
   const {
     constraints: [lengthConstraint],
-    variables: { length: lengthVariable },
-  } = length(a, b);
+    variables: { distance: distanceVariable },
+  } = distance(a, b);
   return {
     constraints: [angleConstraint, lengthConstraint],
-    variables: { angle: angleVariable, length: lengthVariable },
+    variables: { angle: angleVariable, length: distanceVariable },
     remove() {
       angleConstraint.remove();
       lengthConstraint.remove();
