@@ -57,29 +57,41 @@ export default class ConstraintTool extends Tool<FreehandStroke> {
   }
 
   onAction() {
-    // const { a, b } = this.addStrokeGroup(
-    //   { x: 100, y: 500 },
-    //   { x: 400, y: 400 }
-    // );
-    // const [ax] = constraints.property(a, 'x').variables;
-    // const [ax2] = constraints.formula([ax], ([ax]) => ax * 2).variables;
-    // const [by] = constraints.property(b, 'y').variables;
-    // constraints.equals(by, ax2);
-
-    const { a: a1, b: b1 } = this.addStrokeGroup(
+    // --- formula example ---
+    const { a, b } = this.addStrokeGroup(
       { x: 100, y: 500 },
       { x: 400, y: 400 }
     );
-    const { a: a2, b: b2 } = this.addStrokeGroup(
-      { x: 400, y: 400 },
-      { x: 500, y: 200 }
-    );
-    const [angle1, length1] = constraints.polarVector(a1, b1).variables;
-    const [angle2, length2] = constraints.polarVector(a2, b2).variables;
-    constraints.constant(angle1);
-    constraints.constant(angle2);
-    constraints.equals(length1, length2);
+    const { variable: ax } = constraints.property(a, 'x').variables;
+    const { result: ax2 } = constraints.formula(
+      [ax],
+      ([ax]) => ax * 2
+    ).variables;
+    const { variable: by } = constraints.property(b, 'y').variables;
+    constraints.equals(by, ax2);
 
+    // // --- polar vector example ---
+    // const { a: a1, b: b1 } = this.addStrokeGroup(
+    //   { x: 100, y: 500 },
+    //   { x: 400, y: 400 }
+    // );
+    // const { a: a2, b: b2 } = this.addStrokeGroup(
+    //   { x: 400, y: 400 },
+    //   { x: 500, y: 200 }
+    // );
+    // const { angle: angle1, length: length1 } = constraints.polarVector(
+    //   a1,
+    //   b1
+    // ).variables;
+    // const { angle: angle2, length: length2 } = constraints.polarVector(
+    //   a2,
+    //   b2
+    // ).variables;
+    // constraints.constant(angle1);
+    // constraints.constant(angle2);
+    // constraints.equals(length1, length2);
+
+    // // --- length example ---
     // let prevPos = { x: 50, y: 500 };
     // for (let idx = 0; idx < 10; idx++) {
     //   const nextPos = Vec.add(prevPos, {
@@ -87,7 +99,7 @@ export default class ConstraintTool extends Tool<FreehandStroke> {
     //     y: idx % 2 === 0 ? 100 : -100,
     //   });
     //   const { a, b } = this.addStrokeGroup(prevPos, nextPos);
-    //   const [length] = constraints.length(a, b).variables;
+    //   const { length } = constraints.length(a, b).variables;
     //   constraints.constant(length);
     //   prevPos = nextPos;
     // }
@@ -293,19 +305,21 @@ export default class ConstraintTool extends Tool<FreehandStroke> {
           constraints.horizontal(a, b);
           break;
         case 'length': {
-          const refLenVar = constraints.length(ra!, rb!).variables[0];
-          const newLenVar = constraints.length(a, b).variables[0];
-          constraints.equals(refLenVar, newLenVar);
+          constraints.equalLength(ra!, rb!, a, b);
           break;
         }
         case 'angle': {
-          const refAngleVar = constraints.angle(ra!, rb!).variables[0];
-          const angleVar = constraints.angle(a, b).variables[0];
-          const diffVar = constraints.variable(
-            nearestMultiple(refAngleVar.value - angleVar.value, Math.PI / 2)
+          constraints.fixedAngle(
+            ra!,
+            rb!,
+            a,
+            b,
+            nearestMultiple(
+              Vec.angle(Vec.sub(rb!.position, ra!.position)) -
+                Vec.angle(Vec.sub(b.position, a.position)),
+              Math.PI / 2
+            )
           );
-          constraints.sum(refAngleVar, angleVar, diffVar);
-          constraints.constant(diffVar);
           break;
         }
       }
