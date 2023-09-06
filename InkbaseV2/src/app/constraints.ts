@@ -1299,7 +1299,7 @@ export function polarVector(a: Handle, b: Handle) {
   } = distance(a, b);
   return {
     constraints: [angleConstraint, lengthConstraint],
-    variables: { angle: angleVariable, length: distanceVariable },
+    variables: { angle: angleVariable, distance: distanceVariable },
     remove() {
       angleConstraint.remove();
       lengthConstraint.remove();

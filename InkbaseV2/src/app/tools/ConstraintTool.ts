@@ -70,7 +70,7 @@ export default class ConstraintTool extends Tool<FreehandStroke> {
     const { variable: by } = constraints.property(b, 'y').variables;
     constraints.equals(by, ax2);
 
-    // // --- polar vector example ---
+    // --- polar vector example ---
     // const { a: a1, b: b1 } = this.addStrokeGroup(
     //   { x: 100, y: 500 },
     //   { x: 400, y: 400 }
@@ -79,19 +79,19 @@ export default class ConstraintTool extends Tool<FreehandStroke> {
     //   { x: 400, y: 400 },
     //   { x: 500, y: 200 }
     // );
-    // const { angle: angle1, length: length1 } = constraints.polarVector(
+    // const { angle: angle1, distance: distance1 } = constraints.polarVector(
     //   a1,
     //   b1
     // ).variables;
-    // const { angle: angle2, length: length2 } = constraints.polarVector(
+    // const { angle: angle2, distance: distance2 } = constraints.polarVector(
     //   a2,
     //   b2
     // ).variables;
     // constraints.constant(angle1);
     // constraints.constant(angle2);
-    // constraints.equals(length1, length2);
+    // constraints.equals(distance1, distance2);
 
-    // // --- length example ---
+    // --- length example ---
     // let prevPos = { x: 50, y: 500 };
     // for (let idx = 0; idx < 10; idx++) {
     //   const nextPos = Vec.add(prevPos, {
@@ -99,8 +99,8 @@ export default class ConstraintTool extends Tool<FreehandStroke> {
     //     y: idx % 2 === 0 ? 100 : -100,
     //   });
     //   const { a, b } = this.addStrokeGroup(prevPos, nextPos);
-    //   const { length } = constraints.length(a, b).variables;
-    //   constraints.constant(length);
+    //   const { distance } = constraints.distance(a, b).variables;
+    //   constraints.constant(distance);
     //   prevPos = nextPos;
     // }
   }
