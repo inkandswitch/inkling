@@ -728,6 +728,8 @@ class ManipulationSet {
 }
 
 abstract class Constraint<OwnedVariableNames extends string = never> {
+  wasRemoved = false;
+
   constructor(
     public readonly handles: Handle[],
     public readonly variables: Variable[],
@@ -741,12 +743,23 @@ abstract class Constraint<OwnedVariableNames extends string = never> {
     [Key in OwnedVariableNames]: Variable;
   };
 
+  /** Removes this constraint, any variables that it owns, and any constraint that references one of those variables. */
   remove() {
-    // TODO: also remove owned variables and any constraint on them
+    if (this.wasRemoved) {
+      return;
+    }
+
+    // Remove me.
     const idx = allConstraints.indexOf(this);
     if (idx >= 0) {
       allConstraints.splice(idx, 1);
       forgetClustersForSolver();
+    }
+    this.wasRemoved = true;
+
+    // Remove the variabler that I own and any constraint that references them.
+    for (const variable of Object.values(this.ownedVariables)) {
+      (variable as Variable).remove();
     }
   }
 
