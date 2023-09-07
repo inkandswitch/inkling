@@ -1,9 +1,8 @@
 import { minimize } from '../lib/g9';
 import { Position } from '../lib/types';
-import { generateId } from '../lib/helpers';
+import { generateId, removeOne } from '../lib/helpers';
 import Vec from '../lib/vec';
 import Handle from './strokes/Handle';
-import Selection from './Selection';
 import SVG from './Svg';
 
 type VariableInfo = CanonicalVariableInfo | AbsorbedVariableInfo;
@@ -42,7 +41,7 @@ export class Variable {
 
     Variable.all.delete(this);
     this.wasRemoved = true;
-    for (const constraint of allConstraints) {
+    for (const constraint of Constraint.all) {
       if (constraint.variables.includes(this)) {
         constraint.remove();
       }
@@ -112,14 +111,6 @@ export class Variable {
   }
 }
 
-let allConstraints: Constraint[] = [];
-
-// stuff for debugging
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-(window as any).allConstraints = allConstraints;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-(window as any).allVariables = Variable.all;
-
 // #region constraint and thing clusters for solver
 
 // A group of constraints (and things that they operate on) that should be solved together.
@@ -149,7 +140,7 @@ function getClustersForSolver(): Set<ClusterForSolver> {
   }
 
   const clusters = new Set<Cluster>();
-  for (const constraint of allConstraints) {
+  for (const constraint of Constraint.all) {
     const constraints = [constraint];
     const manipulationSet = constraint.getManipulationSet();
     for (const cluster of clusters) {
@@ -192,7 +183,7 @@ function getClustersForSolver(): Set<ClusterForSolver> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (window as any).clusters = _clustersForSolver;
 
-  console.log('clusters', _clustersForSolver);
+  // console.log('clusters', _clustersForSolver);
   SVG.showStatus(`${clusters.size} clusters`);
 
   return _clustersForSolver;
@@ -233,14 +224,17 @@ function getDedupedConstraintsAndVariables(constraints: Constraint[]) {
 
 function dedupConstraints(constraints: Constraint[]): Constraint[] {
   const constraintByKey = new Map<string, Constraint>();
-  const constraintsToProcess = constraints.slice();
-  while (constraintsToProcess.length > 0) {
-    const constraint = constraintsToProcess.shift()!;
+  const constraintsToProcess = new Set(constraints);
+  while (true) {
+    const constraint = removeOne(constraintsToProcess);
+    if (!constraint) {
+      break;
+    }
+
     const key = constraint.getKeyWithDedupedHandlesAndVars();
     const matchingConstraint = constraintByKey.get(key);
     if (matchingConstraint) {
-      // console.log('clash!', key, constraint, matchingConstraint);
-      temporarilyMakeNewConstraintsGoInto(constraintsToProcess, () =>
+      captureNewConstraints(constraintsToProcess, () =>
         matchingConstraint.onClash(constraint)
       );
     } else {
@@ -339,28 +333,14 @@ export function onHandlesReconfigured() {
 
 /**
  * Calls `fn`, and if that results in the creation of new constraints,
- * they will go into `dest` instead of `allConstraints`.
+ * they will be added to `dest`, in addition to `Constraint.all`.
  */
-function temporarilyMakeNewConstraintsGoInto(
-  dest: Constraint[],
-  fn: () => void
-) {
-  // When new constraints are created, they normally go into `allConstraints`.
-  // The creation of new constraints also makes us forget the set of clusters
-  // of related constraints and things that we've cached for use w/ the solver
-  // (`_clustersForSolver`). So first, we need to save both of those things.
-  const clustersForSolver = _clustersForSolver;
-  const realAllConstraints = allConstraints;
-
-  // Now we temporarily make `dest` be `allConstraints`, so that new constraints
-  // will go where we want.
-  allConstraints = dest;
+function captureNewConstraints(dest: Set<Constraint>, fn: () => void) {
+  newConstraintAccumulator = dest;
   try {
     fn();
   } finally {
-    // Now that `fn` is done, restore things to the way they were before.
-    allConstraints = realAllConstraints;
-    _clustersForSolver = clustersForSolver;
+    newConstraintAccumulator = undefined;
   }
 }
 
@@ -419,14 +399,14 @@ class StateSet {
   }
 }
 
-export function solve(selection: Selection) {
+export function solve() {
   const clusters = getClustersForSolver();
   for (const cluster of clusters) {
-    solveCluster(selection, cluster);
+    solveCluster(cluster);
   }
 }
 
-function solveCluster(selection: Selection, cluster: ClusterForSolver) {
+function solveCluster(cluster: ClusterForSolver) {
   const oldNumConstraints = cluster.constraints.length;
 
   if (cluster.constraints.length === 0) {
@@ -435,17 +415,6 @@ function solveCluster(selection: Selection, cluster: ClusterForSolver) {
   }
 
   const constrainedState = new StateSet(cluster.constrainedState);
-
-  // We temporarily add pin constraints for each selected handle.
-  // This is the "finger of God" semantics that we've talked about.
-  temporarilyMakeNewConstraintsGoInto(cluster.constraints, () => {
-    for (const handle of selection.handles) {
-      const { constraints } = pin(handle);
-      for (const constraint of constraints) {
-        constraint.addConstrainedState(constrainedState);
-      }
-    }
-  });
 
   try {
     minimizeError(cluster, constrainedState);
@@ -666,7 +635,7 @@ function addConstraint<
   createNew: (keyGenerator: ConstraintKeyGenerator) => C,
   onClash: (existingConstraint: C) => AddConstraintResult<OwnedVariableNames>
 ): AddConstraintResult<OwnedVariableNames> {
-  const constraint = allConstraints.find(
+  const constraint = Constraint.find(
     constraint => constraint.key === keyGenerator.key
   ) as C | undefined;
   return constraint
@@ -727,7 +696,22 @@ class ManipulationSet {
   }
 }
 
+let newConstraintAccumulator: Set<Constraint> | undefined;
+
 abstract class Constraint<OwnedVariableNames extends string = never> {
+  static readonly all = new Set<Constraint>();
+
+  static find(
+    pred: (constraint: Constraint) => boolean
+  ): Constraint | undefined {
+    for (const constraint of Constraint.all) {
+      if (pred(constraint)) {
+        return constraint;
+      }
+    }
+    return undefined;
+  }
+
   wasRemoved = false;
 
   constructor(
@@ -735,7 +719,8 @@ abstract class Constraint<OwnedVariableNames extends string = never> {
     public readonly variables: Variable[],
     private readonly keyGenerator: ConstraintKeyGenerator
   ) {
-    allConstraints.push(this);
+    Constraint.all.add(this);
+    newConstraintAccumulator?.add(this);
     forgetClustersForSolver();
   }
 
@@ -750,14 +735,12 @@ abstract class Constraint<OwnedVariableNames extends string = never> {
     }
 
     // Remove me.
-    const idx = allConstraints.indexOf(this);
-    if (idx >= 0) {
-      allConstraints.splice(idx, 1);
+    if (Constraint.all.delete(this)) {
       forgetClustersForSolver();
     }
     this.wasRemoved = true;
 
-    // Remove the variabler that I own and any constraint that references them.
+    // Remove the variables that I own and any constraint that references them.
     for (const variable of Object.values(this.ownedVariables)) {
       (variable as Variable).remove();
     }
@@ -1548,3 +1531,31 @@ class Formula extends Constraint<'result'> {
     return this.fn(xs);
   }
 }
+
+// #region temporary constraints
+
+const tempConstraints = new Set<Constraint>();
+
+export const now = {
+  clear() {
+    for (const constraint of tempConstraints) {
+      tempConstraints.delete(constraint);
+      constraint.remove();
+    }
+  },
+
+  pin(handle: Handle, pos: Position = handle.position) {
+    return captureNewConstraints(tempConstraints, () => pin(handle, pos));
+  },
+};
+
+// #endregion temporary constraints
+
+// #region debugging
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(window as any).allConstraints = Constraint.all;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(window as any).allVariables = Variable.all;
+
+// #endregion debugging

@@ -35,8 +35,9 @@ const toolPicker = new ToolPicker([
   }),
 ]);
 
-onEveryFrame((dt, t) => {
+onEveryFrame((_dt, t) => {
   SVG.clearNow(t);
+  constraints.now.clear();
 
   // handle events
   toolPicker.update(events);
@@ -45,7 +46,10 @@ onEveryFrame((dt, t) => {
   freehandSelection.update(events);
   events.clear();
 
-  constraints.solve(selection);
+  for (const handle of selection.handles) {
+    constraints.now.pin(handle);
+  }
+  constraints.solve();
 
   // render everything
   toolPicker.selected?.render();
