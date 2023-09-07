@@ -21,20 +21,33 @@ interface AbsorbedVariableInfo {
 }
 
 export class Variable {
-  static readonly all: Variable[] = [];
+  static readonly all = new Set<Variable>();
 
   readonly id = generateId();
-
   info: VariableInfo = {
     isCanonical: true,
     absorbedVariables: new Set(),
   };
+  wasRemoved = false;
 
   constructor(private _value: number = 0) {
-    Variable.all.push(this);
+    Variable.all.add(this);
   }
 
-  // TODO: add remove(), which will remove this variable and  any constraints that reference it
+  /** Removes this variable and any constraint that reference it. */
+  remove() {
+    if (this.wasRemoved) {
+      return;
+    }
+
+    Variable.all.delete(this);
+    this.wasRemoved = true;
+    for (const constraint of allConstraints) {
+      if (constraint.variables.includes(this)) {
+        constraint.remove();
+      }
+    }
+  }
 
   get canonicalInstance(): Variable {
     return this.info.isCanonical ? this : this.info.canonicalInstance;
