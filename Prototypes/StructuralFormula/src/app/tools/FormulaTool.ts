@@ -16,6 +16,7 @@ export default class FormulaTool extends Tool<Stroke> {
   recognizing = false;
   
   initGestures: any[] = formulaChars;
+  pencilDown = false;
   
 
   value: any[] = [
@@ -64,13 +65,14 @@ export default class FormulaTool extends Tool<Stroke> {
       this.initGestures.push(gesture);
     }
 
-    window.PrintGestures = ()=>{
+    window.printGestures = ()=>{
       console.log(JSON.stringify(this.initGestures));  
     }
   }
 
   startStroke(point: PositionWithPressure) {
     super.startStroke(point);
+    this.pencilDown = true;
   }
 
   extendStroke(point: PositionWithPressure) {
@@ -79,6 +81,7 @@ export default class FormulaTool extends Tool<Stroke> {
 
   endStroke(): void {
     console.log(this.tokenStrokes);
+    this.pencilDown = false;
     if(this.recognizing == false) {
       this.tokenStrokes = []
       this.recognizing = true;
@@ -90,32 +93,34 @@ export default class FormulaTool extends Tool<Stroke> {
   render(dt: number, time: number): void {
     // Timed recognition
     this.time = time
-    if(this.recognizing && this.time - this.recognizedTime > 0.5 ) {
+    if(!this.pencilDown && this.recognizing && this.time - this.recognizedTime > 0.3 ) {
 
       let r = this.recognizer.RecognizeStrokes(this.tokenStrokes);
       this.recognized = r;
 
-      if(["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"].indexOf(r.Name) > -1) {
-        let last = this.value[this.value.length-1]
-        if(last && last.type == "number") {
-          last.value += r.Name
-        } else {
-          this.value.push({type: "number", value: r.Name})
-        }
-      } else {
-        this.value.push({type: "op", value: r.Name})
-      }
+      
+
+      console.log(r);
+      // if(r.Score < 0.2) {
+      //   // Compute width of drawn characters
+      //   let {width} = getStrokesBoundingBox(this.tokenStrokes)
+      //   this.page.formulas[0].increaseSpace(width)
+      //   return
+      // }
+
+      // Add it to the formula
+      this.page.formulas[0].addChar(r.Name)
+      
       
       // Remove drawn strokes
       this.tokenStrokes.forEach(stroke=>{
         this.page.removeStroke(stroke);
       })
 
-      //SVG.showStatus(`Recognized: ${this.recognized.map(r=>r.name).join(", ")}`);
-
-      console.log("timeout");
       this.recognizing = false;
     }
+
+    return
 
     // Rendering
     let totalLength = this.value.reduce((acc, v)=>{
@@ -129,7 +134,6 @@ export default class FormulaTool extends Tool<Stroke> {
       rx: 10
     })
 
-    
     let offset = Vec(200, 200)
     this.value.forEach((value, i)=>{
       
@@ -169,6 +173,7 @@ export default class FormulaTool extends Tool<Stroke> {
   }
 
   renderToken(offset, name: string){
+    return
     let strokes = formulaChars.find(s=>s.name == name)!.strokes
 
     strokes.forEach(stroke=>{
@@ -184,4 +189,21 @@ export default class FormulaTool extends Tool<Stroke> {
   }
 
 
+}
+
+function getStrokesBoundingBox(strokes: Array<Stroke>) {
+  let minX = Infinity
+  let maxX = -Infinity
+
+  for(const stroke of strokes) {
+    for(const point of stroke.points) {
+      if(point.x < minX) minX = point.x
+      if(point.x > maxX) maxX = point.x
+    }
+  }
+
+  return {
+    minX, maxX,
+    width: maxX-minX
+  }
 }

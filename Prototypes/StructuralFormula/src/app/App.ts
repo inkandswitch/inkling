@@ -16,6 +16,7 @@ import * as constraints from './constraints';
 import { onEveryFrame } from '../lib/helpers';
 import FormulaTool from './tools/FormulaTool';
 import Formula from './strokes/Formula';
+import FormulaSelection from './FormulaSelection';
 
 const events = new Events();
 const page = new Page({ strokeAnalyzer: false });
@@ -23,8 +24,8 @@ const snaps = new Snaps(page, { handleSnaps: true, alignmentSnaps: false });
 
 const selection = new Selection(page, snaps);
 const freehandSelection = new FreehandSelection(page);
+const formulaSelection = new FormulaSelection(page);
 
-const formulaTool = new FormulaTool('1+2', 30, 280, page);
 
 const toolPicker = new ToolPicker([
   new FreehandTool('FREE', 30, 30, page),
@@ -37,7 +38,7 @@ const toolPicker = new ToolPicker([
     length: true,
     angle: true,
   }),
-  formulaTool
+  new FormulaTool('1+2', 30, 280, page)
 ]);
 
 onEveryFrame((dt, time) => {
@@ -48,26 +49,21 @@ onEveryFrame((dt, time) => {
   toolPicker.selected?.update(events);
   selection.update(events);
   freehandSelection.update(events);
+  formulaSelection.update(events);
   events.clear();
 
   constraints.solve(selection);
 
   // render everything
-  toolPicker.selected?.render();
+  toolPicker.selected?.render(dt, time);
   snaps.render();
-  page.render();
+  page.render(dt, time);
   for (const handle of Handle.all) {
     handle.render();
   }
 
-  // Render Formula Tool
-  formulaTool.render(dt, time);
 });
 
 
 let formula = new Formula({x: 400, y: 100});
-formula.addChar("5")
-formula.addChar("0")
-formula.addChar("+")
-formula.addChar("1")
 page.addFormula(formula);

@@ -11,7 +11,7 @@ export function onEveryFrame(update: (dt: number, time: number) => void) {
 
   function frame(ms: number) {
     const time = ms / 1000;
-    const dt = lastTime - time;
+    const dt = time - lastTime;
     lastTime = time;
 
     update(dt, time);

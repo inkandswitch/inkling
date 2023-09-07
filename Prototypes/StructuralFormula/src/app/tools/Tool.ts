@@ -103,7 +103,7 @@ export default class Tool<S extends Stroke = Stroke> {
     // no op by default, but can be overridden by subclass
   }
 
-  render() {
+  render(dt: number, time: number) {
     // no op by default, but can be overridden by subclass
   }
 

@@ -74,6 +74,13 @@ export default class Page {
     this.formulas.push(formula)
   }
 
+  findFormulaTokenNear(position: Position) {
+    for(const formula of this.formulas) {
+      let found = formula.findTokenNear(position);
+      if(found) return found
+    }
+  }
+
   onstrokeUpdated(stroke: Stroke) {
     if (stroke instanceof FreehandStroke) {
       this.analyzer?.addStroke(stroke);
@@ -175,11 +182,13 @@ export default class Page {
     return closestStrokeGroup;
   }
 
-  render() {
+  render(dt: number, time: number) {
     this.lineSegments.forEach(render);
     this.strokes.forEach(render);
     this.analyzer?.render();
-    this.formulas.forEach(render);
+    this.formulas.forEach(s=>{
+      s.render(dt, time);
+    });
   }
 }
 
