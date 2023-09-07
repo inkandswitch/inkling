@@ -117,6 +117,14 @@ export function makeIterableIterator<T>(
   return generator();
 }
 
+export function removeOne<T>(set: Set<T>): T | undefined {
+  for (const element of set) {
+    set.delete(element);
+    return element;
+  }
+  return undefined;
+}
+
 // Sorted Set
 // Guarantees unique items, and allows resorting of items when iterating
 export class SortedSet<T> {
