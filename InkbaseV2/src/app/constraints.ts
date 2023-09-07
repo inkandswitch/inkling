@@ -776,9 +776,7 @@ abstract class Constraint<OwnedVariableNames extends string = never> {
     return {
       constraints: [this],
       variables: this.ownedVariables,
-      remove() {
-        this.remove();
-      },
+      remove: () => this.remove(),
     };
   }
 
