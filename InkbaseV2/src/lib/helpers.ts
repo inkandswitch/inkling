@@ -17,8 +17,8 @@ export function onEveryFrame(update: (dt: number, time: number) => void) {
 
   // Internal state
   let lastRafTime: number;
-  let accumulatedTime: number = 0; // Time is added to this by RAF, and consumed by running updates
-  let elapsedUpdates: number = 0; // How many updates have we run — used to measure elapsed time
+  let accumulatedTime = 0; // Time is added to this by RAF, and consumed by running updates
+  let elapsedUpdates = 0; // How many updates have we run — used to measure elapsed time
   const secondsPerUpdate = 1 / updatesPerSecond;
 
   function frame(ms: number) {
