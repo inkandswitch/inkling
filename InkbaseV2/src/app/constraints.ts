@@ -1034,12 +1034,14 @@ class Pin extends Constraint<never> {
 export function horizontal(a: Handle, b: Handle): AddConstraintResult<never> {
   const ay = property(a, 'y').variables.variable;
   const by = property(b, 'y').variables.variable;
+  // TODO: the result should include the two variables!
   return equals(ay, by);
 }
 
 export function vertical(a: Handle, b: Handle): AddConstraintResult<never> {
   const ax = property(a, 'x').variables.variable;
   const bx = property(b, 'x').variables.variable;
+  // TODO: the result should include the two variables!
   return equals(ax, bx);
 }
 
