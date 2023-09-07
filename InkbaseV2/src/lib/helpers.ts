@@ -14,7 +14,7 @@ export function onEveryFrame(update: (dt: number, time: number) => void) {
 
   // You CAN change this at runtime for slow-mo / speed-up effects, eg for debugging.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (window as any).timeScale = 1;
+  (window as any).timeScale ||= 1;
 
   // Internal state
   let lastRafTime: number;
