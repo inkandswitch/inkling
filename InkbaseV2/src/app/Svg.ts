@@ -50,11 +50,12 @@ let lastTime = 0;
  * Include a `life` attribute to specify a minimum duration until the element is removed.
  */
 function now(type: string, attributes: Attributes) {
-  let life = +attributes.life || 0;
+  const life = +attributes.life || 0;
   delete attributes.life;
 
-  let elm = add(type, attributes, nowElm);
+  const elm = add(type, attributes, nowElm);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (elm as any).__expiry = lastTime + life;
 
   return elm;
@@ -65,13 +66,14 @@ function now(type: string, attributes: Attributes) {
  * (E.g.: at the top of a loop body, so that only elements from the final iteration are shown).
  * Passing `currentTime` allows elements with a "life" to not be cleared until their time has passed.
  */
-function clearNow(currentTime: number = Infinity) {
+function clearNow(currentTime = Infinity) {
   if (isFinite(currentTime)) {
     lastTime = currentTime;
   }
 
   for (const elm of Array.from(nowElm.children)) {
-    let expiry = (elm as any).__expiry || 0;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const expiry = (elm as any).__expiry || 0;
     if (currentTime > expiry) {
       elm.remove();
     }
