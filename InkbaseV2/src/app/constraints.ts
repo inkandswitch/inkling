@@ -335,10 +335,10 @@ export function onHandlesReconfigured() {
  * Calls `fn`, and if that results in the creation of new constraints,
  * they will be added to `dest`, in addition to `Constraint.all`.
  */
-function captureNewConstraints(dest: Set<Constraint>, fn: () => void) {
+function captureNewConstraints<T>(dest: Set<Constraint>, fn: () => T): T {
   newConstraintAccumulator = dest;
   try {
-    fn();
+    return fn();
   } finally {
     newConstraintAccumulator = undefined;
   }
@@ -1062,6 +1062,7 @@ export function equalDistance(
 ): AddConstraintResult<never> {
   const { distance: distanceA } = distance(a1, a2).variables;
   const { distance: distanceB } = distance(b1, b2).variables;
+  // TODO: the result should include the two variables!
   return equals(distanceA, distanceB);
 }
 
@@ -1544,8 +1545,68 @@ export const now = {
     }
   },
 
+  constant(variable: Variable, value: number = variable.value) {
+    return captureNewConstraints(tempConstraints, () =>
+      constant(variable, value)
+    );
+  },
+
+  equals(a: Variable, b: Variable) {
+    return captureNewConstraints(tempConstraints, () => equals(a, b));
+  },
+
+  sum(a: Variable, b: Variable, c: Variable) {
+    return captureNewConstraints(tempConstraints, () => sum(a, b, c));
+  },
+
   pin(handle: Handle, pos: Position = handle.position) {
     return captureNewConstraints(tempConstraints, () => pin(handle, pos));
+  },
+
+  horizontal(a: Handle, b: Handle) {
+    return captureNewConstraints(tempConstraints, () => horizontal(a, b));
+  },
+
+  vertical(a: Handle, b: Handle) {
+    return captureNewConstraints(tempConstraints, () => vertical(a, b));
+  },
+
+  distance(a: Handle, b: Handle) {
+    return captureNewConstraints(tempConstraints, () => distance(a, b));
+  },
+
+  equalDistance(a1: Handle, a2: Handle, b1: Handle, b2: Handle) {
+    return captureNewConstraints(tempConstraints, () =>
+      equalDistance(a1, a2, b1, b2)
+    );
+  },
+
+  angle(a: Handle, b: Handle) {
+    return captureNewConstraints(tempConstraints, () => angle(a, b));
+  },
+
+  fixedAngle(
+    a1: Handle,
+    a2: Handle,
+    b1: Handle,
+    b2: Handle,
+    angleValue: number
+  ) {
+    return captureNewConstraints(tempConstraints, () =>
+      fixedAngle(a1, a2, b1, b2, angleValue)
+    );
+  },
+
+  polarVector(a: Handle, b: Handle) {
+    return captureNewConstraints(tempConstraints, () => polarVector(a, b));
+  },
+
+  property(handle: Handle, p: 'x' | 'y') {
+    return captureNewConstraints(tempConstraints, () => property(handle, p));
+  },
+
+  formula(args: Variable[], fn: (xs: number[]) => number) {
+    return captureNewConstraints(tempConstraints, () => formula(args, fn));
   },
 };
 
