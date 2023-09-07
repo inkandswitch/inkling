@@ -15,6 +15,7 @@ import Stroke from './strokes/Stroke';
 import * as constraints from './constraints';
 import { onEveryFrame } from '../lib/helpers';
 import FormulaTool from './tools/FormulaTool';
+import Formula from './strokes/Formula';
 
 const events = new Events();
 const page = new Page({ strokeAnalyzer: false });
@@ -62,3 +63,11 @@ onEveryFrame((dt, time) => {
   // Render Formula Tool
   formulaTool.render(dt, time);
 });
+
+
+let formula = new Formula({x: 400, y: 100});
+formula.addChar("5")
+formula.addChar("0")
+formula.addChar("+")
+formula.addChar("1")
+page.addFormula(formula);

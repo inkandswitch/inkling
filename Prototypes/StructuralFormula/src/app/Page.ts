@@ -9,6 +9,7 @@ import { Position, PositionWithPressure } from '../lib/types';
 import Handle from './strokes/Handle';
 import StrokeAnalyzer from './StrokeAnalyzer';
 import { makeIterableIterator } from '../lib/helpers';
+import Formula from './strokes/Formula';
 
 interface Options {
   strokeAnalyzer: boolean;
@@ -26,6 +27,7 @@ export default class Page {
   readonly lineSegments: Array<LineSegment | ArcSegment> = [];
   readonly strokeGroups: StrokeGroup[] = [];
   readonly strokes: Stroke[] = [];
+  readonly formulas: Formula[] = [];
 
   constructor(options: Options) {
     this.analyzer = options.strokeAnalyzer ? new StrokeAnalyzer(this) : null;
@@ -59,6 +61,17 @@ export default class Page {
   addStroke<S extends Stroke>(stroke: S) {
     this.strokes.push(stroke);
     return stroke;
+  }
+
+  removeStroke<S extends Stroke>(stroke: S) {
+    let index = this.strokes.findIndex(s=> s == stroke);
+    
+    this.strokes[index].remove();
+    this.strokes.splice(index, 1);
+  }
+
+  addFormula(formula: Formula){
+    this.formulas.push(formula)
   }
 
   onstrokeUpdated(stroke: Stroke) {
@@ -166,6 +179,7 @@ export default class Page {
     this.lineSegments.forEach(render);
     this.strokes.forEach(render);
     this.analyzer?.render();
+    this.formulas.forEach(render);
   }
 }
 

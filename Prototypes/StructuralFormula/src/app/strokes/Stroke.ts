@@ -10,6 +10,10 @@ export default class Stroke {
 
   constructor(public points: PositionWithPressure[]) {}
 
+  remove(){
+    this.element.remove()  
+  }
+
   render(): void {
     SVG.update(this.element, { points: SVG.points(this.points) });
   }

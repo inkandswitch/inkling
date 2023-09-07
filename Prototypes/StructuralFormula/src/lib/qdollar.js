@@ -201,7 +201,13 @@ function QDollarRecognizer(initGestures) // constructor
 	// 	new Point(540,530,2),new Point(536,529,2),new Point(533,528,2),new Point(529,529,2),new Point(524,530,2),new Point(520,532,2),new Point(515,535,2),new Point(511,539,2),new Point(508,545,2),new Point(506,548,2),new Point(506,554,2),new Point(509,558,2),new Point(512,561,2),new Point(517,564,2),new Point(521,564,2),new Point(527,563,2),new Point(531,560,2),new Point(535,557,2),new Point(538,553,2),new Point(542,548,2),new Point(544,544,2),new Point(546,540,2),new Point(546,536,2)
 	// ));
 
-	this.RecognizeStokes = function(strokes)
+
+	//
+	// The $Q Point-Cloud Recognizer API begins here -- 3 methods: Recognize(), AddGesture(), DeleteUserGestures()
+	//
+
+	// Marcel added this function
+	this.RecognizeStrokes = function(strokes)
 	{
 		let points = [];
 		for(const [i, stroke] of strokes.entries()) {
@@ -212,9 +218,23 @@ function QDollarRecognizer(initGestures) // constructor
 
 		return this.Recognize(points);
 	}
-	//
-	// The $Q Point-Cloud Recognizer API begins here -- 3 methods: Recognize(), AddGesture(), DeleteUserGestures()
-	//
+
+	// Marcel added this function
+	this.RecognizeSorted = function(points) {
+		var candidate = new PointCloud("", points);
+		var b = +Infinity;
+		var matches = this.PointClouds.map(pointCloud=>{
+			return {
+				score: CloudMatch(candidate, pointCloud, b),
+				name: pointCloud.Name
+			}
+		}).sort((a, b)=>{
+			return a.score - b.score
+		})
+
+		return matches
+	}
+
 	this.Recognize = function(points)
 	{
 		var t0 = Date.now();
@@ -234,6 +254,7 @@ function QDollarRecognizer(initGestures) // constructor
 		return (u == -1) ? new Result("No match.", 0.0, t1-t0) : new Result(this.PointClouds[u].Name, b > 1.0 ? 1.0 / b : 1.0, t1-t0);
 	}
 
+	// Marcel added this function
 	this.AddGestureLoad = function(name, strokes)
 	{
 		let points = [];
@@ -246,6 +267,7 @@ function QDollarRecognizer(initGestures) // constructor
 		return this.AddGesture(name, points);
 	}
 
+	// Marcel added this function
 	this.AddGestureStokes = function(name, strokes)
 	{
 		let points = [];
