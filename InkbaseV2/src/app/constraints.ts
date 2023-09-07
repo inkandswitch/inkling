@@ -20,7 +20,7 @@ interface AbsorbedVariableInfo {
   valueOffset: number;
 }
 
-class Variable {
+export class Variable {
   static readonly all: Variable[] = [];
 
   readonly id = generateId();
@@ -635,7 +635,7 @@ class ConstraintKeyGenerator {
   }
 }
 
-interface AddConstraintResult<OwnedVariableNames extends string> {
+export interface AddConstraintResult<OwnedVariableNames extends string> {
   constraints: Constraint[];
   variables: { [Key in OwnedVariableNames]: Variable };
   remove(): void;
@@ -787,11 +787,14 @@ abstract class Constraint<OwnedVariableNames extends string = never> {
   }
 }
 
-export function variable(value = 0) {
+export function variable(value = 0): Variable {
   return new Variable(value);
 }
 
-export function constant(variable: Variable, value: number = variable.value) {
+export function constant(
+  variable: Variable,
+  value: number = variable.value
+): AddConstraintResult<never> {
   return addConstraint(
     new ConstraintKeyGenerator('constant', [], [[variable]]),
     keyGenerator => new Constant(variable, value, keyGenerator),
@@ -839,7 +842,7 @@ class Constant extends Constraint {
   }
 }
 
-export function equals(a: Variable, b: Variable) {
+export function equals(a: Variable, b: Variable): AddConstraintResult<never> {
   return addConstraint(
     new ConstraintKeyGenerator('equals', [], [[a, b]]),
     keyGenerator => new Equals(a, b, keyGenerator),
@@ -888,7 +891,11 @@ class Equals extends Constraint<never> {
 }
 
 /** a = b + c */
-export function sum(a: Variable, b: Variable, c: Variable) {
+export function sum(
+  a: Variable,
+  b: Variable,
+  c: Variable
+): AddConstraintResult<never> {
   return addConstraint(
     new ConstraintKeyGenerator('sum', [], [[a], [b, c]]),
     keyGenerator => new Sum(a, b, c, keyGenerator),
@@ -960,7 +967,10 @@ class Sum extends Constraint<never> {
   }
 }
 
-export function pin(handle: Handle, pos: Position = handle.position) {
+export function pin(
+  handle: Handle,
+  pos: Position = handle.position
+): AddConstraintResult<never> {
   return addConstraint(
     new ConstraintKeyGenerator('pin', [[handle]], []),
     keyGenerator => new Pin(handle, pos, keyGenerator),
@@ -1010,19 +1020,22 @@ class Pin extends Constraint<never> {
   }
 }
 
-export function horizontal(a: Handle, b: Handle) {
+export function horizontal(a: Handle, b: Handle): AddConstraintResult<never> {
   const ay = property(a, 'y').variables.variable;
   const by = property(b, 'y').variables.variable;
   return equals(ay, by);
 }
 
-export function vertical(a: Handle, b: Handle) {
+export function vertical(a: Handle, b: Handle): AddConstraintResult<never> {
   const ax = property(a, 'x').variables.variable;
   const bx = property(b, 'x').variables.variable;
   return equals(ax, bx);
 }
 
-export function distance(a: Handle, b: Handle) {
+export function distance(
+  a: Handle,
+  b: Handle
+): AddConstraintResult<'distance'> {
   return addConstraint(
     new ConstraintKeyGenerator('distance', [[a, b]], []),
     keyGenerator => new Distance(a, b, keyGenerator),
@@ -1030,7 +1043,12 @@ export function distance(a: Handle, b: Handle) {
   );
 }
 
-export function equalDistance(a1: Handle, a2: Handle, b1: Handle, b2: Handle) {
+export function equalDistance(
+  a1: Handle,
+  a2: Handle,
+  b1: Handle,
+  b2: Handle
+): AddConstraintResult<never> {
   const { distance: distanceA } = distance(a1, a2).variables;
   const { distance: distanceB } = distance(b1, b2).variables;
   return equals(distanceA, distanceB);
@@ -1096,7 +1114,7 @@ class Distance extends Constraint<'distance'> {
   }
 }
 
-export function angle(a: Handle, b: Handle) {
+export function angle(a: Handle, b: Handle): AddConstraintResult<'angle'> {
   return addConstraint(
     new ConstraintKeyGenerator('angle', [[a, b]], []),
     keyGenerator => new Angle(a, b, keyGenerator),
@@ -1110,7 +1128,7 @@ export function fixedAngle(
   b1: Handle,
   b2: Handle,
   angleValue: number
-) {
+): AddConstraintResult<'diff'> {
   const {
     constraints: [angleAConstraint],
     variables: { angle: angleA },
@@ -1123,7 +1141,12 @@ export function fixedAngle(
   const s = sum(angleA, angleB, diff);
   const k = constant(diff);
   return {
-    constraints: [angleAConstraint, angleBConstraint, s, k],
+    constraints: [
+      angleAConstraint,
+      angleBConstraint,
+      ...s.constraints,
+      ...k.constraints,
+    ],
     variables: { diff },
     remove() {
       s.remove();
@@ -1288,7 +1311,10 @@ class Angle extends Constraint<'angle'> {
 }
 
 // This is a quick hack to get ivan going!
-export function polarVector(a: Handle, b: Handle) {
+export function polarVector(
+  a: Handle,
+  b: Handle
+): AddConstraintResult<'angle' | 'distance'> {
   const {
     constraints: [angleConstraint],
     variables: { angle: angleVariable },
@@ -1424,7 +1450,10 @@ class Property extends Constraint<'variable'> {
   }
 }
 
-export function formula(args: Variable[], fn: (xs: number[]) => number) {
+export function formula(
+  args: Variable[],
+  fn: (xs: number[]) => number
+): AddConstraintResult<'result'> {
   const result = new Variable(fn(args.map(arg => arg.value)));
   return addConstraint(
     new ConstraintKeyGenerator('formula#' + generateId(), [], []),
