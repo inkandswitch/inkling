@@ -2,18 +2,13 @@ import Vec, { Vector } from '../../lib/vec';
 import SVG from '../Svg';
 import formulaChars from "../tools/FormulaToolChars"
 import { Position } from '../../lib/types';
+import * as constraints from '../constraints';
 
 
 const HEIGHT = 50;
 const CHARWIDTH = 35;
 const MARGIN = 5;
 const TOKEN_MIDDLE = Vec(CHARWIDTH/2, HEIGHT/2)
-
-
-// interface FormulaToken {
-//   type: ("number" | "op"),
-//   value: string
-// }
 
 export type FormulaToken = FormulaNumber | FormulaOp;
 
@@ -27,7 +22,26 @@ export default class Formula {
 
   active: boolean = true;
 
-  constructor(private position: Position) {}
+
+  constructor(private position: Position) {
+    this.addChar("1")
+    this.addChar("5")
+    this.addChar("+")
+    this.addChar("1")
+    this.addChar("5")
+    this.addChar("=")
+    this.addChar("3")
+    this.addChar("0")
+
+    let a = this.tokens[0].constraintVariable;
+    let b = this.tokens[2].constraintVariable;
+    let c = this.tokens[4].constraintVariable;
+
+    console.log(a, b, c);
+    
+    const aPlusB = constraints.formula([a, b], ([a, b]) => a + b).variables.result;
+    constraints.equals(c, aPlusB);
+  }
 
   addChar(char: string){
     const isNumeric = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"].indexOf(char) > -1;
@@ -65,6 +79,21 @@ export default class Formula {
   }
 
   render(dt: number, time: number){
+    // Update loop
+    this.tokens.forEach(token=>{
+      if(token.type == "number") {
+        token.updateLoop();
+      }
+    })
+
+    // Reflow
+    let offsetPosition = Vec.clone(this.position)
+    this.tokens.forEach(token=>{
+      token.position = Vec.clone(offsetPosition)
+      offsetPosition.x += token.width
+    })
+
+
     const fullWidthInChars = this.expressionWidthInChars + this.emptySpaceInChars;
     if(this.animatedWidthInChars < fullWidthInChars) {
       this.animatedWidthInChars += dt * 5;
@@ -102,6 +131,7 @@ export class FormulaNumber {
   stringValue: string = "";
   numericValue: number | null = null;
   width = 0;
+  constraintVariable: constraints.Variable = constraints.variable(5);
 
   constructor(public position: Position, char: string){
     this.addChar(char);
@@ -113,6 +143,7 @@ export class FormulaNumber {
     this.width = tokens.length*(CHARWIDTH);
 
     this.numericValue = parseInt(this.stringValue);
+    this.constraintVariable.value = this.numericValue;
   }
 
   updateValue(value: number){
@@ -120,6 +151,7 @@ export class FormulaNumber {
     this.stringValue = this.numericValue.toString();
     let tokens = this.stringValue.split("");
     this.width = tokens.length*(CHARWIDTH);
+    this.constraintVariable.value = this.numericValue;
   }
 
   isInside(position: Position) {
@@ -127,6 +159,12 @@ export class FormulaNumber {
             position.y > this.position.y &&
             position.x < this.position.x+this.width &&
             position.y < this.position.y+HEIGHT
+  }
+
+  updateLoop(){
+    if(this.constraintVariable.value != this.numericValue) {
+      this.updateValue(this.constraintVariable.value)
+    }
   }
 
   render(){
