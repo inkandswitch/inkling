@@ -13,6 +13,7 @@ export function onEveryFrame(update: (dt: number, time: number) => void) {
   const updatesPerSecond = 60;
 
   // You CAN change this at runtime for slow-mo / speed-up effects, eg for debugging.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (window as any).timeScale = 1;
 
   // Internal state
@@ -24,6 +25,7 @@ export function onEveryFrame(update: (dt: number, time: number) => void) {
   function frame(ms: number) {
     const currentRafTime = ms / 1000;
     const deltaRafTime = currentRafTime - lastRafTime;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     accumulatedTime += deltaRafTime * (window as any).timeScale;
 
     while (accumulatedTime > secondsPerUpdate) {
