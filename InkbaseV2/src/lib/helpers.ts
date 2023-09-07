@@ -7,20 +7,38 @@ export function generateId() {
 }
 
 export function onEveryFrame(update: (dt: number, time: number) => void) {
-  let lastTime: number;
+  // Set this to the number of updates you'd like to run per second.
+  // Should be at least as high as the device frame rate to ensure smooth motion.
+  // Must not be modified at runtime, because it's used to calculate elapsed time.
+  const updatesPerSecond = 60;
+
+  // You CAN change this at runtime for slow-mo / speed-up effects, eg for debugging.
+  (window as any).timeScale = 1;
+
+  // Internal state
+  let lastRafTime: number;
+  let accumulatedTime: number = 0; // Time is added to this by RAF, and consumed by running updates
+  let elapsedUpdates: number = 0; // How many updates have we run — used to measure elapsed time
+  const secondsPerUpdate = 1 / updatesPerSecond;
 
   function frame(ms: number) {
-    const time = ms / 1000;
-    const dt = time - lastTime;
-    lastTime = time;
+    const currentRafTime = ms / 1000;
+    const deltaRafTime = currentRafTime - lastRafTime;
+    accumulatedTime += deltaRafTime * (window as any).timeScale;
 
-    update(dt, time);
+    while (accumulatedTime > secondsPerUpdate) {
+      accumulatedTime -= secondsPerUpdate;
+      elapsedUpdates++;
+      update(secondsPerUpdate, elapsedUpdates * secondsPerUpdate);
+    }
+
+    lastRafTime = currentRafTime;
 
     requestAnimationFrame(frame);
   }
 
   requestAnimationFrame(ms => {
-    lastTime = ms / 1000;
+    lastRafTime = ms / 1000;
     requestAnimationFrame(frame);
   });
 }
