@@ -35,8 +35,8 @@ const toolPicker = new ToolPicker([
   }),
 ]);
 
-onEveryFrame(() => {
-  SVG.clearNow();
+onEveryFrame((dt, t) => {
+  SVG.clearNow(t);
 
   // handle events
   toolPicker.update(events);
