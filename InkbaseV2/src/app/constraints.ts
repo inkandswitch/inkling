@@ -635,9 +635,13 @@ class ConstraintKeyGenerator {
   }
 }
 
+export type OwnedVariables<OwnedVariableNames extends string> = {
+  [Key in OwnedVariableNames]: Variable;
+};
+
 export interface AddConstraintResult<OwnedVariableNames extends string> {
   constraints: Constraint[];
-  variables: { [Key in OwnedVariableNames]: Variable };
+  variables: OwnedVariables<OwnedVariableNames>;
   remove(): void;
 }
 
