@@ -10,18 +10,18 @@ import FreehandStroke from './strokes/FreehandStroke';
 import * as constraints from './constraints';
 import Line from '../lib/line';
 
-let stroke = {
+const stroke = {
   fill: 'none',
   'stroke-linecap': 'round',
 };
 
-let green = {
+const green = {
   ...stroke,
   stroke: 'color(display-p3 0 1 0.8)',
   'stroke-width': 6,
 };
 
-let blue = {
+const blue = {
   ...stroke,
   stroke: 'color(display-p3 0.8 0.8 0.8)',
   'stroke-width': 6,
@@ -49,8 +49,8 @@ class GizmoInstance {
   }
 
   updateLine() {
-    let { a, b } = this;
-    let a_b = Vec.renormalize(Vec.sub(b.position, a.position), 10000);
+    const { a, b } = this;
+    const a_b = Vec.renormalize(Vec.sub(b.position, a.position), 10000);
     return (this.line = Line(
       Vec.sub(a.position, a_b),
       Vec.add(b.position, a_b)
@@ -88,8 +88,12 @@ class GizmoInstance {
     const fingerUp = events.find('finger', 'ended');
 
     if (fingerUp) {
-      if (Vec.dist(this.a.position, fingerUp.position) < 20) return true;
-      if (Vec.dist(this.b.position, fingerUp.position) < 20) return true;
+      if (Vec.dist(this.a.position, fingerUp.position) < 20) {
+        return true;
+      }
+      if (Vec.dist(this.b.position, fingerUp.position) < 20) {
+        return true;
+      }
 
       if (Line.distToPoint(this.line, fingerUp.position) < 20) {
         if (!this.distanceConstraint) {
@@ -105,7 +109,7 @@ class GizmoInstance {
         return true;
       }
 
-      let d = Vec.dist(this.center, fingerUp.position);
+      const d = Vec.dist(this.center, fingerUp.position);
       if (Math.abs(d - this.radius) < 20) {
         if (!this.angleConstraint) {
           this.angleConstraint = constraints.constant(
@@ -124,12 +128,14 @@ class GizmoInstance {
     return false;
   }
 
-  render(dt: number, t: number) {
+  render(_dt: number, _t: number) {
     this.updateLine();
     this.updateCenter();
     this.updateRadius();
 
-    if (!this.visible) return;
+    if (!this.visible) {
+      return;
+    }
 
     SVG.now('polyline', {
       points: SVG.points(this.line.a, this.line.b),
@@ -153,7 +159,9 @@ export default class Gizmo {
     public selection: Selection,
     public enabled = true
   ) {
-    if (!enabled) return;
+    if (!enabled) {
+      return;
+    }
     this.createStructure(
       { x: 100, y: 500 },
       { x: 400, y: 400 },
@@ -181,14 +189,16 @@ export default class Gizmo {
 
   private createStructure(...positions: Position[]) {
     for (let i = 1; i < positions.length; i++) {
-      let a = positions[i - 1];
-      let b = positions[i];
+      const a = positions[i - 1];
+      const b = positions[i];
       const { a: a1, b: b1 } = this.addStrokeGroup(a, b);
     }
   }
 
   update(events: Events) {
-    if (!this.enabled) return;
+    if (!this.enabled) {
+      return;
+    }
 
     // Assume all gizmos will be hidden
     // this.all.forEach(v => (v.visible = false));
@@ -198,9 +208,9 @@ export default class Gizmo {
     this.page.strokeGroups.forEach(strokeGroup => {
       const { a, b } = strokeGroup;
       if (a.isSelected || b.isSelected) {
-        let gizmo = this.findOrCreate(a, b);
+        const gizmo = this.findOrCreate(a, b);
         gizmo.visible = true; // Show this gizmo
-        let didTouch = gizmo.update(events);
+        const didTouch = gizmo.update(events);
         this.selection.touchingGizmo ||= didTouch;
       }
     });
@@ -208,9 +218,13 @@ export default class Gizmo {
 
   private findOrCreate(a: Handle, b: Handle) {
     // Sort a and b so that a has the lower id
-    if (a.id > b.id) [a, b] = [b, a];
-    let giz = this.all.find(gizmo => gizmo.a == a && gizmo.b == b);
-    if (!giz) this.all.push((giz = new GizmoInstance(a, b)));
+    if (a.id > b.id) {
+      [a, b] = [b, a];
+    }
+    let giz = this.all.find(gizmo => gizmo.a === a && gizmo.b === b);
+    if (!giz) {
+      this.all.push((giz = new GizmoInstance(a, b)));
+    }
     return giz;
   }
 
