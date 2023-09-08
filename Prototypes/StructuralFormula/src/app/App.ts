@@ -43,6 +43,7 @@ const toolPicker = new ToolPicker([
 
 onEveryFrame((dt, time) => {
   SVG.clearNow();
+  constraints.now.clear();
 
   // handle events
   toolPicker.update(events);
