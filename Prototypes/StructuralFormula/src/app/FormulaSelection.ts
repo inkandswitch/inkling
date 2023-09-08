@@ -5,7 +5,6 @@ import { FormulaNumber } from './strokes/Formula';
 export default class FormulaSelection { 
   // Interaction State
   private fingerDown: Event | null = null;
-  private fingerMoved: Event | null = null;
   private token: FormulaNumber | null = null 
   private tokenDownValue: number = 0;
 
@@ -29,6 +28,12 @@ export default class FormulaSelection {
       if(fingerMoved) {
         let delta = this.fingerDown.position.y - fingerMoved.position.y;
         this.token!.updateValue(this.tokenDownValue + delta/5);
+      }
+
+      const fingerUp = events.find('finger', 'ended', this.fingerDown.id);
+      if(fingerUp) {
+        this.token = null;
+        this.fingerDown = null;
       }
     }
   }

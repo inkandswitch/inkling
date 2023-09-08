@@ -17,6 +17,8 @@ export default class FormulaTool extends Tool<Stroke> {
   
   initGestures: any[] = formulaChars;
   pencilDown = false;
+
+  isUnknown = false;
   
 
   value: any[] = [
@@ -91,6 +93,15 @@ export default class FormulaTool extends Tool<Stroke> {
   }
 
   render(dt: number, time: number): void {
+    // Render
+    if(this.isUnknown) {
+      let pos = this.page.formulas[0].position
+      SVG.now('circle', {
+        cx: pos.x+17, cy: pos.y+65,
+        r: 10, fill: "green"
+      })
+    }
+
     // Timed recognition
     this.time = time
     if(!this.pencilDown && this.recognizing && this.time - this.recognizedTime > 0.3 ) {
@@ -98,20 +109,17 @@ export default class FormulaTool extends Tool<Stroke> {
       let r = this.recognizer.RecognizeStrokes(this.tokenStrokes);
       this.recognized = r;
 
-      
-
-      console.log(r);
-      // if(r.Score < 0.2) {
-      //   // Compute width of drawn characters
-      //   let {width} = getStrokesBoundingBox(this.tokenStrokes)
-      //   this.page.formulas[0].increaseSpace(width)
-      //   return
-      // }
+      if(r.Score < 0.2) {
+        // Compute width of drawn characters
+        let {width} = getStrokesBoundingBox(this.tokenStrokes)
+        this.page.formulas[0].increaseSpace(width)
+        this.isUnknown = true;
+        return
+      }
 
       // Add it to the formula
       this.page.formulas[0].addChar(r.Name)
-      
-      
+         
       // Remove drawn strokes
       this.tokenStrokes.forEach(stroke=>{
         this.page.removeStroke(stroke);
@@ -119,76 +127,7 @@ export default class FormulaTool extends Tool<Stroke> {
 
       this.recognizing = false;
     }
-
-    return
-
-    // Rendering
-    let totalLength = this.value.reduce((acc, v)=>{
-      return acc+v.value.length*20 + 5
-    }, 0)
-
-    SVG.now("rect", {
-      x: 200 - 15, y: 200 - 25,
-      width: totalLength+35, height: 50,
-      stroke: "none", fill: "#4A9FC4",
-      rx: 10
-    })
-
-    let offset = Vec(200, 200)
-    this.value.forEach((value, i)=>{
-      
-      if(value.type == "number") {
-        SVG.now("rect", {
-          x: offset.x - 10, y: offset.y - 20,
-          width: value.value.length*20, height: 40,
-          stroke: "none", fill: "#3B7E9B",
-          rx: 10
-        })  
-      }
-
-      let tokens = value.value.split('')
-      tokens.forEach(token=>{
-        this.renderToken(offset, token)
-        offset.x += 20
-      })
-
-      
-      offset.x += 5
-      
-    })
-
-    
-
-
-
-    // for (let i = 0; i < 20; i++) {
-    //   SVG.now("rect", {
-    //     x: 200 + i*30, y: 200,
-    //     width: 20, height: 30,
-    //     stroke: "grey", fill: "none"
-    //   })  
-    // }
-
-    
   }
-
-  renderToken(offset, name: string){
-    return
-    let strokes = formulaChars.find(s=>s.name == name)!.strokes
-
-    strokes.forEach(stroke=>{
-      let offsetStroke = stroke.map(pt=>Vec.add(pt, offset))
-
-      SVG.now("polyline", {
-        points: SVG.points(offsetStroke),
-        fill: 'none',
-        stroke: 'white',
-        'stroke-width': 2,
-      })
-    })
-  }
-
-
 }
 
 function getStrokesBoundingBox(strokes: Array<Stroke>) {

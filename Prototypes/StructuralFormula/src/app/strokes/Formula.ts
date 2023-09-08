@@ -3,6 +3,7 @@ import SVG from '../Svg';
 import formulaChars from "../tools/FormulaToolChars"
 import { Position } from '../../lib/types';
 import * as constraints from '../constraints';
+import Stroke from './Stroke';
 
 
 const HEIGHT = 50;
@@ -15,7 +16,7 @@ export type FormulaToken = FormulaNumber | FormulaOp;
 export default class Formula { 
 
   expressionWidthInChars = 0;
-  emptySpaceInChars = 2;
+  emptySpaceInChars = 1;
   animatedWidthInChars = 2;
 
   tokens: Array<FormulaToken> = new Array();
@@ -23,7 +24,7 @@ export default class Formula {
   active: boolean = true;
 
 
-  constructor(private position: Position) {
+  constructor(public position: Position) {
     this.addChar("1")
     this.addChar("5")
     this.addChar("+")
@@ -39,8 +40,8 @@ export default class Formula {
 
     console.log(a, b, c);
     
-    const aPlusB = constraints.formula([a, b], ([a, b]) => a + b).variables.result;
-    constraints.equals(c, aPlusB);
+    this.tokens[4].constraintVariable = constraints.formula([a, b], ([a, b]) => a + b).variables.result;
+    // constraints.equals(c, aPlusB);
   }
 
   addChar(char: string){
@@ -103,6 +104,7 @@ export default class Formula {
 
     let fullWidth = CHARWIDTH * this.animatedWidthInChars;
 
+    // Background
     SVG.now("rect", {
       x: this.position.x, y: this.position.y,
       width: fullWidth, height: HEIGHT,
@@ -151,7 +153,11 @@ export class FormulaNumber {
     this.stringValue = this.numericValue.toString();
     let tokens = this.stringValue.split("");
     this.width = tokens.length*(CHARWIDTH);
+
+    // Update constraints
+    
     this.constraintVariable.value = this.numericValue;
+    constraints.now.constant(this.constraintVariable);
   }
 
   isInside(position: Position) {
@@ -206,6 +212,43 @@ export class FormulaOp {
     let offset = Vec.clone(this.position);
     let charOffset = Vec.add(offset, TOKEN_MIDDLE)
     renderChar(charOffset, this.stringValue, "black")
+  }
+}
+
+export class FormulaVariable {
+  // static variableValues = new Map();
+  // static ids = 0;
+
+  type = "variable";
+  width = 0;
+
+  strokes: Position[][] = [];
+
+  constructor(public position: Position, char: string){
+    
+  }
+
+  isInside(position: Position) {
+    return  position.x > this.position.x &&
+            position.y > this.position.y &&
+            position.x < this.position.x+this.width &&
+            position.y < this.position.y+HEIGHT
+  }
+
+  render(){
+    let offset = Vec.clone(this.position);
+    let charOffset = Vec.add(offset, TOKEN_MIDDLE)
+    
+    this.strokes.forEach(stroke=>{
+      let offsetStroke = stroke.map(pt=>Vec.add(pt, offset))
+  
+      SVG.now("polyline", {
+        points: SVG.points(offsetStroke),
+        fill: 'none',
+        stroke: 'black',
+        'stroke-width': 2,
+      })
+    })
   }
 }
 

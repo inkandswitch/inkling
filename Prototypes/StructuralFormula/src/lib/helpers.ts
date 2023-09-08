@@ -7,20 +7,40 @@ export function generateId() {
 }
 
 export function onEveryFrame(update: (dt: number, time: number) => void) {
-  let lastTime: number;
+  // Set this to the number of updates you'd like to run per second.
+  // Should be at least as high as the device frame rate to ensure smooth motion.
+  // Must not be modified at runtime, because it's used to calculate elapsed time.
+  const updatesPerSecond = 60;
+
+  // You CAN change this at runtime for slow-mo / speed-up effects, eg for debugging.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (window as any).timeScale ||= 1;
+
+  // Internal state
+  let lastRafTime: number;
+  let accumulatedTime = 0; // Time is added to this by RAF, and consumed by running updates
+  let elapsedUpdates = 0; // How many updates have we run — used to measure elapsed time
+  const secondsPerUpdate = 1 / updatesPerSecond;
 
   function frame(ms: number) {
-    const time = ms / 1000;
-    const dt = time - lastTime;
-    lastTime = time;
+    const currentRafTime = ms / 1000;
+    const deltaRafTime = currentRafTime - lastRafTime;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    accumulatedTime += deltaRafTime * (window as any).timeScale;
 
-    update(dt, time);
+    while (accumulatedTime > secondsPerUpdate) {
+      accumulatedTime -= secondsPerUpdate;
+      elapsedUpdates++;
+      update(secondsPerUpdate, elapsedUpdates * secondsPerUpdate);
+    }
+
+    lastRafTime = currentRafTime;
 
     requestAnimationFrame(frame);
   }
 
   requestAnimationFrame(ms => {
-    lastTime = ms / 1000;
+    lastRafTime = ms / 1000;
     requestAnimationFrame(frame);
   });
 }
@@ -95,6 +115,14 @@ export function makeIterableIterator<T>(
     }
   }
   return generator();
+}
+
+export function removeOne<T>(set: Set<T>): T | undefined {
+  for (const element of set) {
+    set.delete(element);
+    return element;
+  }
+  return undefined;
 }
 
 // Sorted Set
