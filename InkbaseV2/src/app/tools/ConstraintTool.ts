@@ -8,6 +8,7 @@ import Tool from './Tool';
 import SVG from '../Svg';
 import { toDegrees } from '../../lib/helpers';
 import { Position } from '../../lib/types';
+import Handle from '../strokes/Handle';
 
 interface Options {
   vertical: boolean;
@@ -56,19 +57,43 @@ export default class ConstraintTool extends Tool<FreehandStroke> {
     return this.page.addStrokeGroup(new Set([stroke]));
   }
 
+  onActionState: { result: constraints.Variable } | undefined = undefined;
+
   onAction() {
+    if (!this.onActionState) {
+      const a = Handle.create('informal', { x: 100, y: 100 });
+      const { variable: ay } = constraints.property(a, 'y').variables;
+      const b = Handle.create('informal', { x: 200, y: 100 });
+      const { variable: by } = constraints.property(b, 'y').variables;
+      const { result } = (this.onActionState = constraints.formula(
+        [ay, by],
+        ([ay, by]) => ay + by
+      ).variables);
+      setInterval(() => {
+        SVG.showStatus(
+          `ay=${ay.value}, by=${by.value}, result=${result.value}`
+        );
+      }, 10);
+    } else {
+      const { result } = this.onActionState;
+      result.value = 450;
+      console.log('set result value to', result.value);
+      constraints.now.constant(result);
+      console.log('added temp constant constraint on result');
+    }
+
     // --- formula example ---
-    const { a, b } = this.addStrokeGroup(
-      { x: 100, y: 500 },
-      { x: 400, y: 400 }
-    );
-    const { variable: ax } = constraints.property(a, 'x').variables;
-    const { result: ax2 } = constraints.formula(
-      [ax],
-      ([ax]) => ax * 2
-    ).variables;
-    const { variable: by } = constraints.property(b, 'y').variables;
-    constraints.equals(by, ax2);
+    // const { a, b } = this.addStrokeGroup(
+    //   { x: 100, y: 500 },
+    //   { x: 400, y: 400 }
+    // );
+    // const { variable: ax } = constraints.property(a, 'x').variables;
+    // const { result: ax2 } = constraints.formula(
+    //   [ax],
+    //   ([ax]) => ax * 2
+    // ).variables;
+    // const { variable: by } = constraints.property(b, 'y').variables;
+    // constraints.equals(by, ax2);
 
     // --- polar vector example ---
     // const { a: a1, b: b1 } = this.addStrokeGroup(
