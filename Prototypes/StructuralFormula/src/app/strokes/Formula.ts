@@ -140,24 +140,29 @@ export class FormulaNumber {
   }
 
   addChar(char: string){
-    this.stringValue += char;
-    let tokens = this.stringValue.split("");
-    this.width = tokens.length*(CHARWIDTH);
+    // Old version was:
+    //
+    // this.stringValue += char;
+    // let tokens = this.stringValue.split("");
+    // this.width = tokens.length*(CHARWIDTH);
+    //
+    // this.numericValue = parseInt(this.stringValue);
+    // this.constraintVariable.value = this.numericValue;
 
-    this.numericValue = parseInt(this.stringValue);
-    this.constraintVariable.value = this.numericValue;
+    // I think we can replace it with:
+    this.updateValue(parseInt(this.stringValue + char));
   }
 
-  updateValue(value: number){
+  updateValue(value: number, updateConstraints = true){
     this.numericValue = Math.round(Math.abs(value));
     this.stringValue = this.numericValue.toString();
     let tokens = this.stringValue.split("");
     this.width = tokens.length*(CHARWIDTH);
 
-    // Update constraints
-    
-    this.constraintVariable.value = this.numericValue;
-    constraints.now.constant(this.constraintVariable);
+    if (updateConstraints) {
+      this.constraintVariable.value = this.numericValue;
+      constraints.now.constant(this.constraintVariable);
+    }
   }
 
   isInside(position: Position) {
@@ -169,7 +174,7 @@ export class FormulaNumber {
 
   updateLoop(){
     if(this.constraintVariable.value != this.numericValue) {
-      this.updateValue(this.constraintVariable.value)
+      this.updateValue(this.constraintVariable.value, false)
     }
   }
 
