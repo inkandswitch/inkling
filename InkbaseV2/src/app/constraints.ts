@@ -351,25 +351,16 @@ class StateSet {
   private readonly ys = new Set<Handle>();
   private readonly vars = new Set<Variable>();
 
-  /**
-   * Returns a new state set. If `parent` is supplied, the new state set will include
-   * every x, y, and variable that is in the parent state set, but adding new things to
-   * the new state set does not change the parent state set.
-   */
-  constructor(private readonly parent?: StateSet) {}
-
   hasX(handle: Handle): boolean {
-    return this.parent?.hasX(handle) || this.xs.has(handle.canonicalInstance);
+    return this.xs.has(handle.canonicalInstance);
   }
 
   hasY(handle: Handle): boolean {
-    return this.parent?.hasY(handle) || this.ys.has(handle.canonicalInstance);
+    return this.ys.has(handle.canonicalInstance);
   }
 
   hasVar(variable: Variable): boolean {
-    return (
-      this.parent?.hasVar(variable) || this.vars.has(variable.canonicalInstance)
-    );
+    return this.vars.has(variable.canonicalInstance);
   }
 
   addX(handle: Handle) {
@@ -386,15 +377,9 @@ class StateSet {
 
   toJSON() {
     return {
-      vars: Array.from(
-        new Set([...this.vars, ...(this.parent?.vars ?? [])])
-      ).map(v => ({ id: v.id, value: v.value })),
-      xs: Array.from(new Set([...this.xs, ...(this.parent?.xs ?? [])])).map(
-        h => ({ id: h.id, x: h.position.x })
-      ),
-      ys: Array.from(new Set([...this.ys, ...(this.parent?.ys ?? [])])).map(
-        h => ({ id: h.id, y: h.position.y })
-      ),
+      vars: Array.from(this.vars).map(v => ({ id: v.id, value: v.value })),
+      xs: Array.from(this.xs).map(h => ({ id: h.id, x: h.position.x })),
+      ys: Array.from(this.ys).map(h => ({ id: h.id, y: h.position.y })),
     };
   }
 }
@@ -406,34 +391,19 @@ export function solve() {
   }
 }
 
-function solveCluster(cluster: ClusterForSolver) {
-  const oldNumConstraints = cluster.constraints.length;
-
-  if (cluster.constraints.length === 0) {
+function solveCluster({
+  constraints,
+  variables,
+  handles,
+  handleGetsXFrom,
+  handleGetsYFrom,
+  constrainedState,
+}: ClusterForSolver) {
+  if (constraints.length === 0) {
     // nothing to solve!
     return;
   }
 
-  const constrainedState = new StateSet(cluster.constrainedState);
-
-  try {
-    minimizeError(cluster, constrainedState);
-  } finally {
-    // Remove the temporary pin constraints that we added to `constraints`.
-    cluster.constraints.length = oldNumConstraints;
-  }
-}
-
-function minimizeError(
-  {
-    constraints,
-    variables,
-    handles,
-    handleGetsXFrom,
-    handleGetsYFrom,
-  }: ClusterForSolver,
-  constrainedState: StateSet
-) {
   const knownState = computeKnownState(constraints);
 
   // The state that goes into `inputs` is the stuff that can be modified by the solver.
