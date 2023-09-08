@@ -1513,14 +1513,9 @@ class Formula extends Constraint<'result'> {
     const currValue = this.computeResult(variableValues);
     if (!constrainedState.hasVar(this.result)) {
       this.result.value = currValue;
-      SVG.showStatus("Ans: something else");
-      console.log("something else")
       return 0;
     } else {
-
-      const ans = currValue - this.result.value;
-      SVG.showStatus("Ans: "+ans);
-      return ans
+      return currValue - this.result.value;
     }
   }
 
