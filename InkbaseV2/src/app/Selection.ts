@@ -17,6 +17,8 @@ export default class Selection {
   secondFinger?: Event;
   secondFingerMoved?: Event;
 
+  touchingGizmo = false;
+
   constructor(
     private readonly page: Page,
     private readonly snaps: Snaps
@@ -26,7 +28,7 @@ export default class Selection {
     return this.handles.has(handle.canonicalInstance);
   }
 
-  update(events: Events) {
+  update1(events: Events) {
     const fingerDown = events.find('finger', 'began');
     if (fingerDown) {
       // If we weren't already holding down a finger
@@ -76,7 +78,9 @@ export default class Selection {
         }
       }
     }
+  }
 
+  update2(events: Events) {
     // If we're already holding down a finger, switch to pinch gesture
     if (this.firstFinger) {
       const fingerMove = events.findLast(
@@ -84,7 +88,7 @@ export default class Selection {
         'moved',
         this.firstFinger.id
       );
-      if (fingerMove) {
+      if (fingerMove && !this.touchingGizmo) {
         this.firstFingerMoved = fingerMove;
         this.transformSelection();
       }
@@ -93,7 +97,7 @@ export default class Selection {
       if (fingerUp) {
         const shortTap = fingerUp.timestamp - this.firstFinger.timestamp < 0.2;
         if (shortTap) {
-          const tappedOnEmptySpace = !this.tappedOn;
+          const tappedOnEmptySpace = !this.tappedOn && !this.touchingGizmo;
           if (tappedOnEmptySpace) {
             this.clearSelection();
           }

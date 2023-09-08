@@ -14,6 +14,7 @@ import Handle from './strokes/Handle';
 import Stroke from './strokes/Stroke';
 import * as constraints from './constraints';
 import { onEveryFrame } from '../lib/helpers';
+import Gizmo from './Gizmo';
 
 const events = new Events();
 const page = new Page({ strokeAnalyzer: false });
@@ -21,6 +22,8 @@ const snaps = new Snaps(page, { handleSnaps: true, alignmentSnaps: false });
 
 const selection = new Selection(page, snaps);
 const freehandSelection = new FreehandSelection(page);
+
+const gizmo = new Gizmo(page, selection, false);
 
 const toolPicker = new ToolPicker([
   new FreehandTool('FREE', 30, 30, page),
@@ -35,14 +38,16 @@ const toolPicker = new ToolPicker([
   }),
 ]);
 
-onEveryFrame((_dt, t) => {
+onEveryFrame((dt, t) => {
   SVG.clearNow(t);
   constraints.now.clear();
 
   // handle events
   toolPicker.update(events);
   toolPicker.selected?.update(events);
-  selection.update(events);
+  selection.update1(events);
+  gizmo.update(events);
+  selection.update2(events);
   freehandSelection.update(events);
   events.clear();
 
@@ -58,4 +63,6 @@ onEveryFrame((_dt, t) => {
   for (const handle of Handle.all) {
     handle.render();
   }
+
+  gizmo.render(dt, t);
 });
