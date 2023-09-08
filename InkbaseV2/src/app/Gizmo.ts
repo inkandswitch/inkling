@@ -10,22 +10,17 @@ import FreehandStroke from './strokes/FreehandStroke';
 import * as constraints from './constraints';
 import Line from '../lib/line';
 
-const stroke = {
-  fill: 'none',
-  'stroke-linecap': 'round',
-};
+function stroke(color: string, width = 6) {
+  return {
+    stroke: color,
+    fill: 'none',
+    'stroke-linecap': 'round',
+    'stroke-width': width,
+  };
+}
 
-const green = {
-  ...stroke,
-  stroke: 'color(display-p3 0 1 0.8)',
-  'stroke-width': 6,
-};
-
-const blue = {
-  ...stroke,
-  stroke: 'color(display-p3 0.8 0.8 0.8)',
-  'stroke-width': 6,
-};
+const green = 'color(display-p3 0 1 0.8)';
+const grey = 'color(display-p3 0.8 0.8 0.8)';
 
 class GizmoInstance {
   private line: Line;
@@ -50,11 +45,12 @@ class GizmoInstance {
 
   updateLine() {
     const { a, b } = this;
-    const a_b = Vec.renormalize(Vec.sub(b.position, a.position), 10000);
-    return (this.line = Line(
-      Vec.sub(a.position, a_b),
-      Vec.add(b.position, a_b)
-    ));
+    // let a_b = Vec.renormalize(Vec.sub(b.position, a.position), 10000);
+    // return (this.line = Line(
+    //   Vec.sub(a.position, a_b),
+    //   Vec.add(b.position, a_b)
+    // ));
+    return (this.line = Line(a.position, b.position));
   }
 
   updateCenter() {
@@ -67,7 +63,7 @@ class GizmoInstance {
     // let curved = 0.5 + 0.5 * unscaled ** 2;
     // let scaled = lerp(curved, 0, 1, 100, 200, true);
     // return (this.radius = Math.max(d, scaled));
-    return (this.radius = 50);
+    return (this.radius = 20);
   }
 
   update(events: Events) {
@@ -95,20 +91,6 @@ class GizmoInstance {
         return true;
       }
 
-      if (Line.distToPoint(this.line, fingerUp.position) < 20) {
-        if (!this.distanceConstraint) {
-          this.distanceConstraint = constraints.constant(
-            this.polarVectorConstraint.variables.distance,
-            Vec.dist(this.a.position, this.b.position)
-          );
-        } else {
-          this.distanceConstraint.remove();
-          this.distanceConstraint = undefined;
-        }
-
-        return true;
-      }
-
       const d = Vec.dist(this.center, fingerUp.position);
       if (Math.abs(d - this.radius) < 20) {
         if (!this.angleConstraint) {
@@ -119,6 +101,20 @@ class GizmoInstance {
         } else {
           this.angleConstraint.remove();
           this.angleConstraint = undefined;
+        }
+
+        return true;
+      }
+
+      if (Line.distToPoint(this.line, fingerUp.position) < 20) {
+        if (!this.distanceConstraint) {
+          this.distanceConstraint = constraints.constant(
+            this.polarVectorConstraint.variables.distance,
+            Vec.dist(this.a.position, this.b.position)
+          );
+        } else {
+          this.distanceConstraint.remove();
+          this.distanceConstraint = undefined;
         }
 
         return true;
@@ -137,16 +133,21 @@ class GizmoInstance {
       return;
     }
 
-    SVG.now('polyline', {
-      points: SVG.points(this.line.a, this.line.b),
-      ...(this.distanceConstraint ? green : blue),
-    });
-
     SVG.now('circle', {
       cx: this.center.x,
       cy: this.center.y,
       r: this.radius,
-      ...(this.angleConstraint ? green : blue),
+      ...stroke(this.angleConstraint ? green : grey),
+    });
+
+    SVG.now('polyline', {
+      points: SVG.points(this.line.a, this.line.b),
+      ...stroke('#fff', 20),
+    });
+
+    SVG.now('polyline', {
+      points: SVG.points(this.line.a, this.line.b),
+      ...stroke(this.distanceConstraint ? green : grey, 3),
     });
   }
 }
@@ -207,11 +208,13 @@ export default class Gizmo {
 
     this.page.strokeGroups.forEach(strokeGroup => {
       const { a, b } = strokeGroup;
-      if (a.isSelected || b.isSelected) {
-        const gizmo = this.findOrCreate(a, b);
+      const gizmo = this.findOrCreate(a, b);
+      if (gizmo.visible || a.isSelected || b.isSelected) {
         gizmo.visible = true; // Show this gizmo
         const didTouch = gizmo.update(events);
         this.selection.touchingGizmo ||= didTouch;
+      } else {
+        gizmo.visible = false;
       }
     });
   }
