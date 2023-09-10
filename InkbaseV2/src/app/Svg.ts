@@ -1,4 +1,6 @@
+import { clip } from '../lib/math';
 import { Position, PositionWithPressure } from '../lib/types';
+import Vec from '../lib/vec';
 
 type Attributes = Record<string, string | number>;
 
@@ -92,6 +94,36 @@ function points(...positions: Array<Position | Position[]>) {
     .join(' ');
 }
 
+/**
+ * Helps you build the path for a semicircular arc, which is normally a huge pain.
+ * NB: Can only draw up to a half circle when mirror is false.
+ */
+function arcPath(
+  center: Position, // Center of the (semi)circle
+  radius: number, // Radius of the (semi)circle
+  angle: number, // Direction to start the arc. Radians, 0 is rightward.
+  rotation: number, // Arc size of the (semi)circle. 0 to PI radians.
+  mirror = true // Mirror the arc across the start. Required to draw more than a half-circle.
+) {
+  // Values outside this range produce nonsense arcs
+  rotation = clip(rotation, -Math.PI, Math.PI);
+
+  let S = Vec.add(center, Vec.polar(angle, radius));
+  let path = '';
+
+  if (mirror) {
+    let B = Vec.add(center, Vec.polar(angle - rotation, radius));
+    path += `M ${B.x}, ${B.y} A ${radius},${radius} 0 0,1 ${S.x}, ${S.y}`;
+  } else {
+    path += `M ${S.x}, ${S.y}`;
+  }
+
+  let A = Vec.add(center, Vec.polar(angle + rotation, radius));
+  path += `A ${radius},${radius} 0 0,1 ${A.x}, ${A.y}`;
+
+  return path;
+}
+
 /** Returns a string that can be used as the 'd' attribute of an SVG path element. */
 function path(points: Position[] | PositionWithPressure[]) {
   return points
@@ -127,6 +159,7 @@ export default {
   now,
   clearNow,
   points,
+  arcPath,
   path,
   showStatus,
 };
