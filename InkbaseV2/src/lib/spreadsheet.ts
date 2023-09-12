@@ -153,8 +153,7 @@ const spreadsheet = new Spreadsheet<string, { n: number; v: string }>(
   {
     n: {
       first: () => 1,
-      middle: cell =>
-        cell.value !== 'x' ? 0 : (cell.prev.get('n') as number) + 1,
+      middle: cell => (cell.value !== 'x' ? 0 : cell.prev.get('n') + 1),
     },
     v: {
       middle: cell =>
