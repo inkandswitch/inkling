@@ -4,7 +4,7 @@ type Formula<V, PVs, T> = (cell: Cell<V, PVs>) => T;
 
 interface FormulasForProperty<V, PVs, T> {
   first?: Formula<V, PVs, T>;
-  middle?: Formula<V, PVs, T>;
+  middle?: Formula<V, PVs, T> | Formula<V, PVs, T>[];
   last?: Formula<V, PVs, T>;
 }
 
@@ -73,7 +73,11 @@ class Cell<V, PVs> {
     } else if (!this._next && formulas.last) {
       return this.computePropertyWithFormula(property, formulas.last);
     } else if (formulas.middle) {
-      return this.computePropertyWithFormula(property, formulas.middle);
+      const middles =
+        formulas.middle instanceof Array ? formulas.middle : [formulas.middle];
+      return middles.some(middle =>
+        this.computePropertyWithFormula(property, middle)
+      );
     } else {
       return false;
     }
@@ -130,6 +134,7 @@ class Spreadsheet<V, PVs> {
         break;
       }
     }
+    // console.log('done in', n, 'iterations');
   }
 
   getCellValues(): object[] {
