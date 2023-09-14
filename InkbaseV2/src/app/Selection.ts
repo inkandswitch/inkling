@@ -38,7 +38,7 @@ export default class Selection {
 
         const handle = this.page.findHandleNear(fingerDown.position);
         if (handle) {
-          this.selectHandle(handle);
+          // this.selectHandle(handle); // Extracted to Input.ts
           this.tappedOn = handle;
         } else {
           this.tappedOn = undefined;
@@ -88,6 +88,7 @@ export default class Selection {
         'moved',
         this.firstFinger.id
       );
+
       if (fingerMove && !this.touchingGizmo) {
         this.firstFingerMoved = fingerMove;
         this.transformSelection();
@@ -95,17 +96,18 @@ export default class Selection {
 
       const fingerUp = events.find('finger', 'ended', this.firstFinger.id);
       if (fingerUp) {
-        const shortTap = fingerUp.timestamp - this.firstFinger.timestamp < 0.2;
-        if (shortTap) {
-          const tappedOnEmptySpace = !this.tappedOn && !this.touchingGizmo;
-          if (tappedOnEmptySpace) {
-            this.clearSelection();
-          }
-        } else {
-          if (this.tappedOn && this.handles.size === 1) {
-            this.clearSelection();
-          }
-        }
+        // Extracted to Input.ts
+        // const shortTap = fingerUp.timestamp - this.firstFinger.timestamp < 0.2;
+        // if (shortTap) {
+        //   const tappedOnEmptySpace = !this.tappedOn && !this.touchingGizmo;
+        //   if (tappedOnEmptySpace) {
+        //     this.clearSelection();
+        //   }
+        // } else {
+        //   if (this.tappedOn && this.handles.size === 1) {
+        //     this.clearSelection();
+        //   }
+        // }
 
         for (const handle of this.handles) {
           handle.absorbNearbyHandles();
@@ -141,19 +143,19 @@ export default class Selection {
     }
   }
 
-  private selectHandle(handle: Handle) {
+  selectHandle(handle: Handle) {
     handle.select();
     this.handles.add(handle.canonicalInstance);
     this.updateLineSelections();
   }
 
-  private deselectHandle(handle: Handle) {
+  deselectHandle(handle: Handle) {
     handle.deselect();
     this.handles.delete(handle.canonicalInstance);
     this.updateLineSelections();
   }
 
-  private updateLineSelections() {
+  updateLineSelections() {
     for (const ls of this.page.lineSegments) {
       if (
         this.handles.has(ls.a.canonicalInstance) &&
@@ -166,7 +168,7 @@ export default class Selection {
     }
   }
 
-  private clearSelection() {
+  clearSelection() {
     for (const handle of this.handles) {
       handle.deselect();
     }

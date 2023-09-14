@@ -23,23 +23,17 @@ class MultiGestureRecognizer: UIGestureRecognizer {
         let location = touch.preciseLocation(in: view)
         let azimuth = touch.azimuthAngle(in: view)
 
-        var type = "touch"
-
-        if touch.type == .pencil {
-            type = "pencil"
-        } else if touch.type == .stylus {
-            type = "stylus"
-        }
-
         return [
-            "x": location.x,
-            "y": location.y,
+            "position": [
+                "x": location.x,
+                "y": location.y,
+            ],
             "timestamp": touch.timestamp,
             "altitude": touch.altitudeAngle,
             "azimuth": azimuth,
             "radius": touch.majorRadius,
-            "force": touch.force,
-            "type": type,
+            "pressure": touch.force,
+            "type": touch.type == .pencil ? "pencil" : "finger",
         ]
     }
 

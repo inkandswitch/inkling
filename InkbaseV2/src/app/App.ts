@@ -1,4 +1,4 @@
-import Events from './NativeEvents';
+import Events, { Event, InputState } from './NativeEvents';
 import Page from './Page';
 import Snaps from './Snaps';
 import Selection from './Selection';
@@ -15,8 +15,13 @@ import Stroke from './strokes/Stroke';
 import * as constraints from './constraints';
 import { onEveryFrame } from '../lib/helpers';
 import Gizmo from './Gizmo';
+import { applyEvent } from './Input';
 
-const events = new Events();
+// This is a pretzel, because the interface between NativeEvents and Input is a work in progress.
+const events = new Events((event: Event, state: InputState) => {
+  applyEvent(event, state, events, page, selection);
+});
+
 const page = new Page({ strokeAnalyzer: false });
 const snaps = new Snaps(page, { handleSnaps: true, alignmentSnaps: false });
 
@@ -42,14 +47,16 @@ onEveryFrame((dt, t) => {
   SVG.clearNow(t);
   constraints.now.clear();
 
-  // handle events
+  // Potentially deprecated — consider whether & how these should be migrated to Input.ts
   toolPicker.update(events);
   toolPicker.selected?.update(events);
   selection.update1(events);
   gizmo.update(events);
   selection.update2(events);
   freehandSelection.update(events);
-  events.clear();
+
+  // Tell NativeEvent to handle all events sent from Swift, evaluating Input for each
+  events.update();
 
   for (const handle of selection.handles) {
     constraints.now.pin(handle);
@@ -65,4 +72,16 @@ onEveryFrame((dt, t) => {
   }
 
   gizmo.render(dt, t);
+
+  // Ivan is currently using this to debug Input — he'll remove it soon
+  // SVG.now('foreignObject', {
+  //   x: 50,
+  //   y: 50,
+  //   width: 1000,
+  //   height: 1000,
+  //   content: JSON.stringify({
+  //     pencil: events.pencilState,
+  //     fingers: events.fingerStates,
+  //   }),
+  // });
 });

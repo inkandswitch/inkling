@@ -124,7 +124,7 @@ class GizmoInstance {
     return false;
   }
 
-  render(_dt: number, _t: number) {
+  render(dt: number, t: number) {
     this.updateLine();
     this.updateCenter();
     this.updateRadius();
@@ -133,20 +133,17 @@ class GizmoInstance {
       return;
     }
 
-    SVG.now('circle', {
-      cx: this.center.x,
-      cy: this.center.y,
-      r: this.radius,
-      ...stroke(this.angleConstraint ? green : grey),
-    });
+    let angle = Vec.angle(Vec.sub(this.b.position, this.a.position));
+
+    let d = [
+      SVG.arcPath(this.center, 20, angle - TAU / 4, Math.PI / 3),
+      SVG.arcPath(this.center, 20, angle + TAU / 4, Math.PI / 3),
+    ].join();
+
+    SVG.now('path', { d, ...stroke(this.angleConstraint ? green : grey) });
 
     SVG.now('polyline', {
-      points: SVG.points(this.line.a, this.line.b),
-      ...stroke('#fff', 20),
-    });
-
-    SVG.now('polyline', {
-      points: SVG.points(this.line.a, this.line.b),
+      points: SVG.points(this.a.position, this.b.position),
       ...stroke(this.distanceConstraint ? green : grey, 3),
     });
   }
