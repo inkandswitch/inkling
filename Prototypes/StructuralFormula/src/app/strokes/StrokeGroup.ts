@@ -6,7 +6,9 @@ import { Position, PositionWithPressure } from '../../lib/types';
 
 import { farthestPair } from '../../lib/helpers';
 
-// import ClipperShape from "@doodle3d/clipper-js"
+import ClipperShape from "@doodle3d/clipper-js"
+import Svg from '../Svg';
+import Vec from '../../lib/vec';
 
 // import simplify from "simplify-js";
 // import {SkeletonBuilder} from 'straight-skeleton';
@@ -19,6 +21,9 @@ export default class StrokeGroup {
   private pointData: PositionWithPressure[][];
   readonly a: Handle;
   readonly b: Handle;
+
+  readonly outlinePoints: Position[];
+  readonly shape: ClipperShape;
 
   // outlineShape: ClipperShape;
   skeleton: Position[] = [];
@@ -51,6 +56,17 @@ export default class StrokeGroup {
     this.pointData = this.strokes.map(stroke =>
       stroke.points.map(p => transform.transformPoint(p))
     );
+
+    let shape = new ClipperShape([rdp_simplify(this.strokes[0].points, 1)], false, true, true, true)
+    this.shape = shape.offset( 7, {
+      jointType: 'jtRound',
+      endType: 'etOpenRound',
+      miterLimit: 2.0,
+      roundPrecision: 0.25
+    })
+
+    this.outlinePoints = this.shape.paths.flatMap(path=>path.map(pt=>({x: pt.X, y: pt.Y})));
+    this.outlinePoints.push(this.outlinePoints[0])
   }
 
   onHandleMoved() {
@@ -67,6 +83,10 @@ export default class StrokeGroup {
       const newPoints = this.pointData[i].map(p => transform.transformPoint(p));
       stroke.updatePath(newPoints);
     }
+  }
+
+  isPositionInsideBounds(pos: Position) {
+    return this.shape.pointInShape(pos, true, true);
   }
 
   minDistanceFrom(pos: Position) {
@@ -136,6 +156,13 @@ export default class StrokeGroup {
   }
 
   render() {
+
+    Svg.now("polyline", {
+      points: Svg.points(this.outlinePoints),
+      fill: "none",
+      stroke: "blue",
+      "stroke-width": "1"
+    });
     // if(!this.dirty) {
     //   return
     // }
@@ -169,6 +196,50 @@ export default class StrokeGroup {
     }
   }
 }
+
+// Path Simplification
+function rdp_simplify(line, epsilon = 20) {
+  if(line.length == 2) {
+    return line
+  }
+  
+  let start = line[0]
+  let end = line[line.length-1]
+  
+  var largestDistance = -1;
+  var furthestIndex = -1;
+  
+  for (let i = 0; i < line.length; i++) {
+    let point = line[i]
+    let dist = point_line_distance(point, start, end)
+    if(dist > largestDistance) {
+      largestDistance = dist
+      furthestIndex = i
+    }
+  }
+  
+  if(largestDistance > epsilon) {
+    let segment_a = rdp_simplify(line.slice(0,furthestIndex), epsilon)
+    let segment_b = rdp_simplify(line.slice(furthestIndex), epsilon)
+    
+    return segment_a.concat(segment_b.slice(1))
+  }
+  return [start, end]
+}
+
+function point_line_distance(p, a, b) {
+  let norm = scalar_projection(p, a, b)
+  return Vec.len(Vec.sub(p,norm))
+}
+
+function scalar_projection(p, a, b) {
+  let ap = Vec.sub(p, a)
+  let ab = Vec.normalize(Vec.sub(b, a))
+  let f = Vec.mulS(ab, Vec.dot(ap, ab))
+
+  return Vec.add(a, f)
+}
+
 
 // // Clipper utilities
 // function clipperShapeToPoints(shape){

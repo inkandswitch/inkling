@@ -5,7 +5,7 @@ import Tool from './tools/Tool';
 export default class ToolPicker {
   selected?: Tool;
 
-  constructor(private tools: Tool[]) {
+  constructor(private tools: any[]) {
     this.select(tools[0]);
   }
 

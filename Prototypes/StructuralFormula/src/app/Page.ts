@@ -189,6 +189,8 @@ export default class Page {
     this.formulas.forEach(s=>{
       s.render(dt, time);
     });
+
+    this.strokeGroups.forEach(render);
   }
 }
 

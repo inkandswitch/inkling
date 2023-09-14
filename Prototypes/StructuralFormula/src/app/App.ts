@@ -17,6 +17,7 @@ import { onEveryFrame } from '../lib/helpers';
 import FormulaTool from './tools/FormulaTool';
 import Formula from './strokes/Formula';
 import FormulaSelection from './FormulaSelection';
+import MetaTool from './tools/MetaTool';
 
 const events = new Events();
 const page = new Page({ strokeAnalyzer: false });
@@ -25,7 +26,6 @@ const snaps = new Snaps(page, { handleSnaps: true, alignmentSnaps: false });
 const selection = new Selection(page, snaps);
 const freehandSelection = new FreehandSelection(page);
 const formulaSelection = new FormulaSelection(page);
-
 
 const toolPicker = new ToolPicker([
   new FreehandTool('FREE', 30, 30, page),
@@ -38,7 +38,8 @@ const toolPicker = new ToolPicker([
     length: true,
     angle: true,
   }),
-  new FormulaTool('1+2', 30, 280, page)
+  new FormulaTool('1+2', 30, 280, page),
+  new MetaTool('META', 30, 330, page)
 ]);
 
 onEveryFrame((dt, time) => {
@@ -47,7 +48,13 @@ onEveryFrame((dt, time) => {
 
   // handle events
   toolPicker.update(events);
+  
   toolPicker.selected?.update(events);
+
+  
+  
+
+
   selection.update(events);
   freehandSelection.update(events);
   formulaSelection.update(events);
@@ -65,6 +72,3 @@ onEveryFrame((dt, time) => {
 
 });
 
-
-let formula = new Formula({x: 400, y: 100});
-page.addFormula(formula);
