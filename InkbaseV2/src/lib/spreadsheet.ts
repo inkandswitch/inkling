@@ -1,37 +1,44 @@
+/*
+
+1   2  3  4
+5   6  7  8
+9  10 11 12
+13 14 15 16
+
+v = up.v(0) + left.v(0)
+
+*/
+
 const NOT_AVAILABLE = 'n/a';
 
-type Formula<V, PVs extends { _: V }, T> = (cell: Cell<V, PVs>) => T;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type PropertyTypes = { _: any };
 
-type FormulasForProperties<V, PVs extends { _: V }> = Omit<
-  {
-    [Property in keyof PVs]: Formula<V, PVs, PVs[Property]>;
-  },
+type Formula<PTs extends PropertyTypes, T> = (cell: Cell<PTs>) => T;
+
+type FormulasForProperties<PTs extends PropertyTypes> = Omit<
+  { [Property in keyof PTs]: Formula<PTs, PTs[Property]> },
   '_'
 >;
 
-class Cell<V, PVs extends { _: V }> {
-  readonly adjacentCells = new Map<string, Cell<V, PVs>>();
+class Cell<PTs extends PropertyTypes> {
+  readonly adjacentCells = new Map<string, Cell<PTs>>();
+  propertyValues: Partial<PTs> = {};
 
-  constructor(value: V) {
+  constructor(value: PTs['_']) {
     this.set('_', value);
   }
 
-  propertyValues: Partial<PVs> = {};
-
-  connect(direction: string, that: Cell<V, PVs>) {
+  connect(direction: string, that: Cell<PTs>) {
     this.adjacentCells.set(direction, that);
   }
 
-  clearProperties() {
-    this.propertyValues = {};
-  }
-
-  set<P extends keyof PVs>(property: P, value: PVs[P]): this {
+  set<P extends keyof PTs>(property: P, value: PTs[P]): this {
     this.propertyValues[property] = value;
     return this;
   }
 
-  get<P extends keyof PVs>(property: P): PVs[P] {
+  get<P extends keyof PTs>(property: P): PTs[P] {
     const value = this.propertyValues[property];
     if (value === undefined) {
       throw NOT_AVAILABLE;
@@ -40,30 +47,30 @@ class Cell<V, PVs extends { _: V }> {
     }
   }
 
-  nget<P extends keyof PVs>(
+  nget<P extends keyof PTs>(
     direction: string,
     property: P,
-    defaultValue: PVs[P]
-  ): PVs[P] {
+    defaultValue: PTs[P]
+  ): PTs[P] {
     const cell = this.adjacentCells.get(direction);
     return cell ? cell.get(property) : defaultValue;
   }
 
-  apply(formulasForProperties: FormulasForProperties<V, PVs>): boolean {
+  apply(formulasForProperties: FormulasForProperties<PTs>): boolean {
     let didSomething = false;
     for (const [property, formula] of Object.entries(formulasForProperties)) {
       didSomething =
         // (Typecast to any required b/c Object.entries()'s type is too loose, sigh.)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        this.computeProperty(property as keyof PVs, formula as any) ||
+        this.computeProperty(property as keyof PTs, formula as any) ||
         didSomething;
     }
     return didSomething;
   }
 
   private computeProperty(
-    property: keyof PVs,
-    formula: Formula<V, PVs, PVs[typeof property]>
+    property: keyof PTs,
+    formula: Formula<PTs, PTs[typeof property]>
   ) {
     if (property in this.propertyValues) {
       // already computed it!
@@ -83,10 +90,11 @@ class Cell<V, PVs extends { _: V }> {
   }
 }
 
-class Spreadsheet<V, PVs extends { _: V }> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+class Spreadsheet<PTs extends PropertyTypes> {
   constructor(
-    public readonly cells: Cell<V, PVs>[],
-    private readonly formulas: FormulasForProperties<V, PVs>
+    public readonly cells: Cell<PTs>[],
+    private readonly formulas: FormulasForProperties<PTs>
   ) {}
 
   compute(maxIterations = 1000) {
@@ -108,14 +116,16 @@ class Spreadsheet<V, PVs extends { _: V }> {
   }
 }
 
-type Properties = { _: string; n: number; v: string };
+// Example: habit tracker
 
-const cells = ['x', 'x', '', 'x', 'x', 'x'].map(
-  x => new Cell<string, Properties>(x)
+type HTProperties = { _: string; n: number; v: string };
+
+const htCells = ['x', 'x', '', 'x', 'x', 'x'].map(
+  x => new Cell<HTProperties>(x)
 );
 
-let prev: Cell<string, Properties> | null = null;
-for (const cell of cells) {
+let prev: Cell<HTProperties> | null = null;
+for (const cell of htCells) {
   if (prev) {
     prev.connect('next', cell);
     cell.connect('prev', prev);
@@ -123,7 +133,7 @@ for (const cell of cells) {
   prev = cell;
 }
 
-const spreadsheet = new Spreadsheet<string, Properties>(cells, {
+const spreadsheet = new Spreadsheet<HTProperties>(htCells, {
   n: cell => (cell.get('_') === 'x' ? cell.nget('prev', 'n', 0) + 1 : 0),
   v: cell =>
     cell.get('n') > cell.nget('next', 'n', 0) ? '' + cell.get('n') : '',
