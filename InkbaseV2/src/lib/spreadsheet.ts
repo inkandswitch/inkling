@@ -3,22 +3,24 @@ const NOT_AVAILABLE = 'n/a';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type PropertyTypes = { _: any };
 
-type Formula<PT extends PropertyTypes, C extends string, T> = (
-  cell: Cell<PT, C>
-) => T;
+interface Formula<PT extends PropertyTypes, C extends string, T> {
+  cellValue(cell: Cell<PT, C>): T;
+  edgeValues?: Partial<{ [key in C]: T }>;
+}
 
-type FormulasForProperties<PT extends PropertyTypes, C extends string> = Omit<
-  {
-    [Property in keyof PT]: Formula<PT, C, PT[Property]>;
-  },
-  '-'
->;
+type FormulasForProperties<
+  PT extends PropertyTypes,
+  C extends string,
+> = Partial<{ [Property in keyof PT]: Formula<PT, C, PT[Property]> }>;
 
 class Cell<PT extends PropertyTypes, C extends string, V = PT['_']> {
   readonly neighbors = new Map<C, Cell<PT, C>>();
   readonly propertyValues: Partial<PT> = {};
 
-  constructor(value: V) {
+  constructor(
+    private readonly spreadsheet: Spreadsheet<PT, C>,
+    value: V
+  ) {
     this.set('_', value);
   }
 
@@ -41,9 +43,11 @@ class Cell<PT extends PropertyTypes, C extends string, V = PT['_']> {
     }
   }
 
-  nget<P extends keyof PT>(name: C, property: P, defaultValue: PT[P]): PT[P] {
+  nget<P extends keyof PT>(name: C, property: P): PT[P] {
     const cell = this.neighbors.get(name);
-    return cell ? cell.get(property) : defaultValue;
+    return cell
+      ? cell.get(property)
+      : this.spreadsheet.getEdgeValue(name, property);
   }
 
   apply(formulasForProperties: FormulasForProperties<PT, C>): boolean {
@@ -68,7 +72,7 @@ class Cell<PT extends PropertyTypes, C extends string, V = PT['_']> {
     }
 
     try {
-      this.propertyValues[property] = formula(this);
+      this.propertyValues[property] = formula.cellValue(this);
       return true;
     } catch (e) {
       if (e !== NOT_AVAILABLE) {
@@ -80,18 +84,16 @@ class Cell<PT extends PropertyTypes, C extends string, V = PT['_']> {
   }
 }
 
-class Spreadsheet<PT extends PropertyTypes, C extends string> {
-  static create<PT extends PropertyTypes, C extends string>(
-    cells: Cell<PT, C>[],
-    formulas: FormulasForProperties<PT, C>
-  ) {
-    return new Spreadsheet<PT, C>(cells, formulas);
-  }
+class Spreadsheet<PT extends PropertyTypes, C extends string, V = PT['_']> {
+  readonly cells: Cell<PT, C>[] = [];
 
-  private constructor(
-    public readonly cells: Cell<PT, C>[],
-    private readonly formulas: FormulasForProperties<PT, C>
-  ) {}
+  constructor(private readonly formulas: FormulasForProperties<PT, C>) {}
+
+  addCell(value: V) {
+    const cell = new Cell<PT, C>(this, value);
+    this.cells.push(cell);
+    return cell;
+  }
 
   compute(maxIterations = 1000) {
     let n = 0;
@@ -107,33 +109,66 @@ class Spreadsheet<PT extends PropertyTypes, C extends string> {
     console.log('done in', n, 'iterations');
   }
 
+  getEdgeValue<P extends keyof PT>(name: C, property: P): PT[P] {
+    const value = this.formulas[property]?.edgeValues?.[name];
+    if (value === undefined) {
+      throw NOT_AVAILABLE;
+    } else {
+      return value;
+    }
+  }
+
   getCellValues(): object[] {
     return this.cells.map(cell => cell.propertyValues);
   }
 }
 
 function habitTrackerExample() {
-  type Ps = { _: string; n: number; v: string };
-  type C = 'prev' | 'next';
-  const cells = ['x', 'x', '', 'x', 'x', 'x'].map(x => new Cell<Ps, C>(x));
+  console.log('--- habit tracker ---');
 
-  let prev: Cell<Ps, C> | null = null;
-  for (const cell of cells) {
-    if (prev) {
-      prev.connect('next', cell);
-      cell.connect('prev', prev);
-    }
-    prev = cell;
-  }
-
-  const spreadsheet = Spreadsheet.create(cells, {
-    _: cell => cell.get('_'), // TODO: why does TC complain when I remove this???
-    n: cell => (cell.get('_') === 'x' ? cell.nget('prev', 'n', 0) + 1 : 0),
-    v: cell =>
-      cell.get('n') > cell.nget('next', 'n', 0) ? '' + cell.get('n') : '',
+  const habitTracker = new Spreadsheet<
+    { _: string; n: number; v: string },
+    'prev' | 'next'
+  >({
+    n: {
+      cellValue: cell =>
+        cell.get('_') === 'x' ? cell.nget('prev', 'n') + 1 : 0,
+      edgeValues: {
+        prev: 0,
+        next: 0,
+      },
+    },
+    v: {
+      cellValue(cell) {
+        return cell.get('n') > cell.nget('next', 'n') ? '' + cell.get('n') : '';
+      },
+    },
   });
-  spreadsheet.compute();
-  console.log(spreadsheet.getCellValues());
-}
 
+  // add cells and connect them
+  const cells = ['x', 'x', '', 'x', 'x', 'x'].map(x => habitTracker.addCell(x));
+  cells.forEach((curr, idx) => {
+    if (idx > 0) {
+      const prev = cells[idx - 1];
+      prev.connect('next', curr);
+      curr.connect('prev', prev);
+    }
+  });
+
+  habitTracker.compute();
+  console.log(habitTracker.getCellValues());
+}
 habitTrackerExample();
+
+/*
+
+TODO: try this other example
+
+1   2  3  4
+5   6  7  8
+9  10 11 12
+13 14 15 16
+
+v = up.v(0) + left.v(0)
+
+*/
