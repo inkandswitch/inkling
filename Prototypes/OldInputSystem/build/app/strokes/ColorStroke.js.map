@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["/Users/admin/Work/Inkling/Prototypes/OldInputSystem/src/app/strokes/ColorStroke.ts"],
+  "sourcesContent": ["import Stroke from './Stroke';\nimport SVG from '../Svg';\nimport { PositionWithPressure } from '../../lib/types';\n\nexport default class ColorStroke extends Stroke {\n  lastLength = 0;\n\n  constructor(points: PositionWithPressure[]) {\n    super(points);\n    this.element = SVG.add('g', { fill: 'none', 'stroke-width': 2 });\n  }\n\n  render() {\n    if (this.points.length === this.lastLength) {\n      return;\n    }\n    this.lastLength = this.points.length;\n\n    this.element.replaceChildren();\n\n    this.points.forEach((p1, i) => {\n      if (i === 0) {\n        return;\n      }\n\n      const p2 = this.points[i - 1];\n\n      const hue = (360 * i) / this.points.length;\n\n      SVG.add('polyline', {\n        points: SVG.points(p1, p2),\n        stroke: `hsl(${hue}, 100%, 50%)`,\n      });\n    });\n  }\n}\n"],
+  "mappings": "AAAA;AACA;AAGA,yCAAyC,OAAO;AAAA,EAG9C,YAAY,QAAgC;AAC1C,UAAM;AAHR,sBAAa;AAIX,SAAK,UAAU,IAAI,IAAI,KAAK,CAAE,MAAM,QAAQ,gBAAgB;AAAA;AAAA,EAG9D,SAAS;AACP,QAAI,KAAK,OAAO,WAAW,KAAK,YAAY;AAC1C;AAAA;AAEF,SAAK,aAAa,KAAK,OAAO;AAE9B,SAAK,QAAQ;AAEb,SAAK,OAAO,QAAQ,CAAC,IAAI,MAAM;AAC7B,UAAI,MAAM,GAAG;AACX;AAAA;AAGF,YAAM,KAAK,KAAK,OAAO,IAAI;AAE3B,YAAM,MAAO,MAAM,IAAK,KAAK,OAAO;AAEpC,UAAI,IAAI,YAAY;AAAA,QAClB,QAAQ,IAAI,OAAO,IAAI;AAAA,QACvB,QAAQ,OAAO;AAAA;AAAA;AAAA;AAAA;",
+  "names": []
+}
