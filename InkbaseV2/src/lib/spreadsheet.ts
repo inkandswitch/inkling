@@ -35,8 +35,8 @@ class Cell<PT extends PropertyTypes, C extends string, V = PT['_']> {
   }
 
   get<P extends keyof PT>(property: P): PT[P];
-  get<P extends keyof PT>(name: C, property: P): PT[P];
-  get<P extends keyof PT>(arg1: P | C, arg2?: P): PT[P] {
+  get<P extends keyof PT>(name: C | C[], property: P): PT[P];
+  get<P extends keyof PT>(arg1: P | C | C[], arg2?: P): PT[P] {
     if (arguments.length === 1) {
       const property = arg1 as P;
       const value = this.propertyValues[property];
@@ -46,12 +46,16 @@ class Cell<PT extends PropertyTypes, C extends string, V = PT['_']> {
         return value;
       }
     } else {
-      const name = arg1 as C;
+      const names = arg1 instanceof Array ? (arg1 as C[]) : [arg1 as C];
       const property = arg2 as P;
-      const cell = this.neighbors.get(name);
-      return cell
-        ? cell.get(property)
-        : this.spreadsheet.getEdgeValue(name, property);
+      let cell: Cell<PT, C> | undefined = this;
+      for (const name of names) {
+        cell = cell.neighbors.get(name);
+        if (!cell) {
+          return this.spreadsheet.getEdgeValue(name, property);
+        }
+      }
+      return cell.get(property);
     }
   }
 
