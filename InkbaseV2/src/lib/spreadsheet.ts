@@ -34,20 +34,25 @@ class Cell<PT extends PropertyTypes, C extends string, V = PT['_']> {
     return this;
   }
 
-  get<P extends keyof PT>(property: P): PT[P] {
-    const value = this.propertyValues[property];
-    if (value === undefined) {
-      throw NOT_AVAILABLE;
+  get<P extends keyof PT>(property: P): PT[P];
+  get<P extends keyof PT>(name: C, property: P): PT[P];
+  get<P extends keyof PT>(arg1: P | C, arg2?: P): PT[P] {
+    if (arguments.length === 1) {
+      const property = arg1 as P;
+      const value = this.propertyValues[property];
+      if (value === undefined) {
+        throw NOT_AVAILABLE;
+      } else {
+        return value;
+      }
     } else {
-      return value;
+      const name = arg1 as C;
+      const property = arg2 as P;
+      const cell = this.neighbors.get(name);
+      return cell
+        ? cell.get(property)
+        : this.spreadsheet.getEdgeValue(name, property);
     }
-  }
-
-  nget<P extends keyof PT>(name: C, property: P): PT[P] {
-    const cell = this.neighbors.get(name);
-    return cell
-      ? cell.get(property)
-      : this.spreadsheet.getEdgeValue(name, property);
   }
 
   apply(formulasForProperties: FormulasForProperties<PT, C>): boolean {
@@ -132,7 +137,7 @@ function habitTrackerExample() {
   >({
     n: {
       cellValue: cell =>
-        cell.get('_') === 'x' ? cell.nget('prev', 'n') + 1 : 0,
+        cell.get('_') === 'x' ? cell.get('prev', 'n') + 1 : 0,
       edgeValues: {
         prev: 0,
         next: 0,
@@ -140,7 +145,7 @@ function habitTrackerExample() {
     },
     v: {
       cellValue(cell) {
-        return cell.get('n') > cell.nget('next', 'n') ? '' + cell.get('n') : '';
+        return cell.get('n') > cell.get('next', 'n') ? '' + cell.get('n') : '';
       },
     },
   });
