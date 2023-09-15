@@ -19,7 +19,7 @@ import { applyEvent } from './Input';
 
 // This is a pretzel, because the interface between NativeEvents and Input is a work in progress.
 const events = new Events((event: Event, state: InputState) => {
-  applyEvent(event, state, events, page, selection);
+  applyEvent(event, state, events, page, selection, gizmo);
 });
 
 const page = new Page({ strokeAnalyzer: false });
@@ -50,9 +50,9 @@ onEveryFrame((dt, t) => {
   // Potentially deprecated — consider whether & how these should be migrated to Input.ts
   toolPicker.update(events);
   toolPicker.selected?.update(events);
-  selection.update1(events);
-  gizmo.update(events);
-  selection.update2(events);
+  // selection.update1(events);
+  // gizmo.update(events);
+  // selection.update2(events);
   freehandSelection.update(events);
 
   // Tell NativeEvent to handle all events sent from Swift, evaluating Input for each

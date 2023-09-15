@@ -66,22 +66,15 @@ type TouchPoint = {
   position: Position;
 };
 
+type ApplyEvent = (event: Event, state: InputState) => void;
+
 export default class Events {
   events: Event[] = [];
-
   pencilState: PencilState | null = null;
-
   fingerStates: FingerState[] = [];
   fingerStatesById: Record<TouchId, FingerState> = {};
 
-  constructor(
-    private applyEvent: {
-      (
-        event: PencilEvent | FingerEvent,
-        state: PencilState | FingerState
-      ): void;
-    }
-  ) {
+  constructor(private applyEvent: ApplyEvent) {
     this.setupNativeEventHandler();
   }
 
@@ -120,6 +113,7 @@ export default class Events {
     this.events = [];
   }
 
+  // Deprecated
   find(
     type: 'pencil',
     state: EventState,
@@ -136,6 +130,7 @@ export default class Events {
     );
   }
 
+  // Deprecated
   findAll(type: 'pencil', state: EventState, id?: TouchId): PencilEvent[];
   findAll(type: 'finger', state: EventState, id?: TouchId): FingerEvent[];
   findAll(type: EventType, state: EventState, id?: TouchId) {
@@ -144,6 +139,7 @@ export default class Events {
     );
   }
 
+  // Deprecated
   findLast(
     type: 'pencil',
     state: EventState,

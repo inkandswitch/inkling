@@ -23,9 +23,9 @@ const green = 'color(display-p3 0 1 0.8)';
 const grey = 'color(display-p3 0.8 0.8 0.8)';
 
 class GizmoInstance {
-  private line: Line;
-  private center: Position;
-  private radius: number;
+  line: Line;
+  center: Position;
+  radius: number;
 
   visible = true;
 
@@ -93,35 +93,49 @@ class GizmoInstance {
 
       const d = Vec.dist(this.center, fingerUp.position);
       if (Math.abs(d - this.radius) < 20) {
-        if (!this.angleConstraint) {
-          this.angleConstraint = constraints.constant(
-            this.polarVectorConstraint.variables.angle,
-            Vec.angle(Vec.sub(this.b.position, this.a.position))
-          );
-        } else {
-          this.angleConstraint.remove();
-          this.angleConstraint = undefined;
-        }
-
+        this.toggleAngle();
         return true;
       }
 
       if (Line.distToPoint(this.line, fingerUp.position) < 20) {
-        if (!this.distanceConstraint) {
-          this.distanceConstraint = constraints.constant(
-            this.polarVectorConstraint.variables.distance,
-            Vec.dist(this.a.position, this.b.position)
-          );
-        } else {
-          this.distanceConstraint.remove();
-          this.distanceConstraint = undefined;
-        }
-
+        this.toggleDistance();
         return true;
       }
     }
 
     return false;
+  }
+
+  tap(pos: Position) {
+    if (Vec.dist(this.center, pos) < this.radius * 2) {
+      this.toggleAngle();
+    } else {
+      this.toggleDistance();
+    }
+  }
+
+  toggleDistance() {
+    if (!this.distanceConstraint) {
+      this.distanceConstraint = constraints.constant(
+        this.polarVectorConstraint.variables.distance,
+        Vec.dist(this.a.position, this.b.position)
+      );
+    } else {
+      this.distanceConstraint.remove();
+      this.distanceConstraint = undefined;
+    }
+  }
+
+  toggleAngle() {
+    if (!this.angleConstraint) {
+      this.angleConstraint = constraints.constant(
+        this.polarVectorConstraint.variables.angle,
+        Vec.angle(Vec.sub(this.b.position, this.a.position))
+      );
+    } else {
+      this.angleConstraint.remove();
+      this.angleConstraint = undefined;
+    }
   }
 
   render(dt: number, t: number) {
@@ -151,6 +165,24 @@ class GizmoInstance {
 
 export default class Gizmo {
   all: GizmoInstance[] = [];
+
+  findNear(pos: Position, dist = 20): GizmoInstance | null {
+    let closestGizmo: GizmoInstance | null = null;
+    let closestDistance = dist;
+
+    for (const gizmo of this.all) {
+      // const d = Vec.dist(gizmo.position, pos);
+      const l = Line.distToPoint(gizmo.line, pos);
+      const a = Vec.dist(gizmo.center, pos);
+
+      if (l < closestDistance || a < closestDistance) {
+        closestDistance = l;
+        closestGizmo = gizmo;
+      }
+    }
+
+    return closestGizmo;
+  }
 
   constructor(
     public page: Page,
