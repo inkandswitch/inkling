@@ -27,7 +27,7 @@ export default class Events {
             timestamp,
             radius
           };
-          const event = type === "touch" ? {
+          const event = type === "finger" ? {
             type: "finger",
             ...sharedProperties
           } : {

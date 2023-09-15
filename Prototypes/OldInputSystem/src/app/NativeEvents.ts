@@ -1,8 +1,8 @@
-import { Position } from '../lib/types';
+import { Position } from "../lib/types";
 
 export type Event = PencilEvent | FingerEvent;
-export type EventType = Event['type'];
-export type EventState = 'began' | 'moved' | 'cancelled' | 'ended';
+export type EventType = Event["type"];
+export type EventState = "began" | "moved" | "cancelled" | "ended";
 export type TouchId = string;
 
 interface AEvent {
@@ -14,14 +14,14 @@ interface AEvent {
 }
 
 export interface PencilEvent extends AEvent {
-  type: 'pencil';
+  type: "pencil";
   pressure: number;
   altitude: number;
   azimuth: number;
 }
 
 export interface FingerEvent extends AEvent {
-  type: 'finger';
+  type: "finger";
 }
 
 // If we fixed the following inconsistencies, we could delete most of nativeEvent:
@@ -31,7 +31,7 @@ export interface FingerEvent extends AEvent {
 // • .force -> .pressure
 
 type TouchPoint = {
-  type: 'pencil' | 'touch' | 'stylus';
+  type: "pencil" | "finger";
   altitude: number;
   azimuth: number;
   force: number;
@@ -53,42 +53,42 @@ export default class Events {
   }
 
   find(
-    type: 'pencil',
+    type: "pencil",
     state: EventState,
     id?: TouchId
   ): PencilEvent | undefined;
   find(
-    type: 'finger',
+    type: "finger",
     state: EventState,
     id?: TouchId
   ): FingerEvent | undefined;
   find(type: EventType, state: EventState, id?: TouchId) {
     return this.events.find(
-      e => e.type === type && e.state === state && (!id || e.id === id)
+      (e) => e.type === type && e.state === state && (!id || e.id === id)
     );
   }
 
-  findAll(type: 'pencil', state: EventState, id?: TouchId): PencilEvent[];
-  findAll(type: 'finger', state: EventState, id?: TouchId): FingerEvent[];
+  findAll(type: "pencil", state: EventState, id?: TouchId): PencilEvent[];
+  findAll(type: "finger", state: EventState, id?: TouchId): FingerEvent[];
   findAll(type: EventType, state: EventState, id?: TouchId) {
     return this.events.filter(
-      e => e.type === type && e.state === state && (!id || e.id === id)
+      (e) => e.type === type && e.state === state && (!id || e.id === id)
     );
   }
 
   findLast(
-    type: 'pencil',
+    type: "pencil",
     state: EventState,
     id?: TouchId
   ): PencilEvent | undefined;
   findLast(
-    type: 'finger',
+    type: "finger",
     state: EventState,
     id?: TouchId
   ): FingerEvent | undefined;
   findLast(type: EventType, state: EventState, id?: TouchId) {
     return this.events.findLast(
-      e => e.type === type && e.state === state && (!id || e.id === id)
+      (e) => e.type === type && e.state === state && (!id || e.id === id)
     );
   }
 
@@ -112,13 +112,13 @@ export default class Events {
           };
 
           const event: Event =
-            type === 'touch'
+            type === "finger"
               ? {
-                  type: 'finger',
+                  type: "finger",
                   ...sharedProperties,
                 }
               : {
-                  type: 'pencil',
+                  type: "pencil",
                   pressure: force,
                   altitude,
                   azimuth,

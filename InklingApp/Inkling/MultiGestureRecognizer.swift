@@ -34,6 +34,11 @@ class MultiGestureRecognizer: UIGestureRecognizer {
             "radius": touch.majorRadius,
             "pressure": touch.force,
             "type": touch.type == .pencil ? "pencil" : "finger",
+            
+            // These fields are for backwards compatability with older prototypes
+            "force": touch.force,
+            "x": location.x,
+            "y": location.y,
         ]
     }
 

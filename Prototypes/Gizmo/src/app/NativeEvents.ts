@@ -31,7 +31,7 @@ export interface FingerEvent extends AEvent {
 // • .force -> .pressure
 
 type TouchPoint = {
-  type: 'pencil' | 'touch' | 'stylus';
+  type: 'pencil' | 'finger';
   altitude: number;
   azimuth: number;
   force: number;
@@ -112,7 +112,7 @@ export default class Events {
           };
 
           const event: Event =
-            type === 'touch'
+            type === 'finger'
               ? {
                   type: 'finger',
                   ...sharedProperties,
