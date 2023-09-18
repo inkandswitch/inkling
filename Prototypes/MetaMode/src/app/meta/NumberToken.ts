@@ -12,6 +12,7 @@ const SNAPZONE = 40;
 
 
 export default class NumberToken extends Token {
+  type = "number";
   variable: Variable;
 
   // position: Position = {x: 100, y: 100};
@@ -91,6 +92,14 @@ export default class NumberToken extends Token {
       )
     }
     return null
+  }
+
+  addChar(char: string) {
+    let s = this.variable.string() + char;
+    console.log(s);
+    
+    this.variable.value = parseInt(s);
+    this.updateView();
   }
 
   updateView(){

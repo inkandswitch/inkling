@@ -8,6 +8,7 @@ import Wire from "./Wire";
 import Scope from "./Scope";
 
 export default class MetaLayer {
+  editor: FormulaEditor = new FormulaEditor();
   tokens: Array<any> = [];
   wires: Array<Wire> = [];
   scope: Scope = new Scope();
@@ -15,7 +16,6 @@ export default class MetaLayer {
   constructor (){
     this.addNumberToken({x: 100, y: 100}, 100);
     this.addNumberToken({x: 100, y: 200}, 200);
-    //this.addLabelToken({x: 100, y: 200}, "Hello");
   }
 
   addNumberToken(position: Position, value: number = 1){
@@ -28,6 +28,11 @@ export default class MetaLayer {
     let wire = new Wire(position);
     this.wires.push(wire);
     return wire;
+  }
+
+  removeWire(wire: Wire) {
+    this.wires = this.wires.filter(w=>w!=wire);
+    wire.remove();
   }
 
   updateWireConnections(wire: Wire){
@@ -63,13 +68,14 @@ export default class MetaLayer {
 
     return null;
   }
+  
+  activateEditor(position: Position){
+    this.editor.activate(position);
+  }
 
   doSnap(action: SnapAction){
     let result = action.doSnap();
     //this.tokens.push(result);
   }
 
-  reflowWires(){
-
-  }
 }

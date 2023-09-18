@@ -31,6 +31,11 @@ export default class Formula {
     this.updateView();
   }
 
+  addToken(t: Token) {
+    this.tokens.push(t);
+    this.updateView();
+  }
+
   updateView() {
     // Layout child tokens in horizontal sequence
     let position = Vec.add(this.position, Vec(PADDING, PADDING));
@@ -66,9 +71,14 @@ export default class Formula {
       this.updateView();
     }
   }
+
+  lastToken(): Token {
+    return this.tokens[this.tokens.length-1];
+  }
 }
 
-class OpToken {
+export class OpToken extends Token {
+  type = "op";
   stringValue: string = "x";
 
   position: Position = {x: 100, y: 100};
@@ -81,6 +91,7 @@ class OpToken {
   }, undefined, "1234");
 
   constructor(op: string){
+    super()
     this.stringValue = op
   }
 
@@ -92,5 +103,9 @@ class OpToken {
     SVG.update(this.textElement, {
       x: this.position.x + 5, y: this.position.y + 30,
     })
+  }
+
+  isPointInside(position: Position): boolean {
+    return false;
   }
 }

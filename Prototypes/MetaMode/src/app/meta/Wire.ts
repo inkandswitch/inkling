@@ -59,4 +59,8 @@ export default class Wire {
       points: SVG.points(this.points)
     })
   }
+
+  remove(){
+    this.wireElement.remove();
+  }
 }

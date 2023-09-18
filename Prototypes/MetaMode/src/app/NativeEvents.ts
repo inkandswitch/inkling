@@ -18,7 +18,7 @@ export type Event = PencilEvent | FingerEvent;
 export type InputState = PencilState | FingerState;
 
 export type EventType = Event['type'];
-export type EventState = 'began' | 'moved' | 'cancelled' | 'ended';
+export type EventState = 'began' | 'moved' | 'cancelled' | 'ended' | 'longhold';
 export type TouchId = string;
 
 interface AEvent {
@@ -98,8 +98,21 @@ export default class Events {
           case 'moved':     state = this.pencilMoved(event); break;
           case 'cancelled': state = this.pencilEnded(event); break;
           case 'ended':     state = this.pencilEnded(event); break;
+          case 'longhold':  state = this.pencilLonghold(event); break;
         }
       }
+      
+      if(event.state == 'began') {
+        window.setTimeout(()=>{
+          if(this.pencilState?.down && (!this.pencilState.dragDelta || Vec.len(this.pencilState.dragDelta) < 5)) {
+            this.events.push({
+              ...event,
+              state: 'longhold'
+            })
+          }
+        }, 700)
+      }
+      
 
       this.applyEvent(event, state);
 
@@ -253,6 +266,14 @@ export default class Events {
     }
     state.down = false;
     state.event = event;
+    return state;
+  }
+
+  pencilLonghold(event: PencilEvent) {
+    const state = this.pencilState;
+    if (!state) {
+      throw new Error('Received pencil longhold event with no matching begin.');
+    }
     return state;
   }
 }

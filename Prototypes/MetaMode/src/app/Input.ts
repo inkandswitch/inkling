@@ -102,13 +102,48 @@ export function applyEvent(
   }
 
 
+  // Formula Editor Writing
+  if (
+    event.type === 'pencil' &&
+    event.state === 'began'
+  ) {
+    
+    const isInFormulaEditor = metaLayer.editor.isPointInside(event.position);
+    if(isInFormulaEditor) {
+      objects['writing'] = true;
+      metaLayer.editor.addStroke(event.position);
+      return;
+    }
+  }
+
+  if (
+    event.type === 'pencil' &&
+    event.state === 'moved' &&
+    objects['writing']
+  ) {
+    metaLayer.editor.addStrokePoint (event.position);
+    return;
+  }
+
+  if (
+    event.type === 'pencil' &&
+    event.state === 'ended' &&
+    objects['writing']
+  ) {
+    objects['writing'] = false;
+    metaLayer.editor.parseStrokes();
+    return;
+  }
+
   // DRAW WIRES / META-INK
   // BEGIN WIRE
   if (
     event.type === 'pencil' &&
     event.state === 'began'
   ) {
+    
     const snap = metaLayer.findAtPosition(event.position);
+    
     if(snap) {
       let wire = metaLayer.addWire(snap.midPoint());
       wire.input = snap;
@@ -144,6 +179,16 @@ export function applyEvent(
   ) {
     metaLayer.updateWireConnections(objects['wire']);
     objects['wire'] = null;
+  }
+
+  // Long hold
+  if (
+    event.type === 'pencil' &&
+    event.state === 'longhold'
+  ) {
+    metaLayer.removeWire(objects['wire']);
+    objects['wire'] = null;
+    metaLayer.activateEditor(event.position);
   }
   
 

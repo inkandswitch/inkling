@@ -10,6 +10,7 @@ import Token from "./Token";
 const SNAPZONE = 40;
 
 export default class LabelToken extends Token {
+  type = "label";
   label: Label;
   parent: Collection | Formula | null = null;
 
