@@ -58,6 +58,13 @@ export default class NumberToken extends Token {
            position.y < this.position.y + this.height
   }
 
+  midPoint(): Position {
+    return {
+      x: this.position.x + this.width/2,
+      y: this.position.y + this.height/2,
+    }
+  }
+
   isPointSnapping(position: Position, other: NumberToken): SnapAction | null {
     // Snap below
     if(

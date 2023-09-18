@@ -56,6 +56,15 @@ export default class Formula {
       })
     }
   }
+
+  dislodgeChild(token: NumberToken){
+    this.tokens = this.tokens.filter(t => t!= token);
+    if(this.tokens.length <= 1) {
+      this.boxElement.remove();
+    } else {
+      this.updateView();
+    }
+  }
 }
 
 class OpToken {

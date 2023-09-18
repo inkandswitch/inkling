@@ -37,7 +37,7 @@ export function applyEvent(
 
   const tokenNearEvent = metaLayer.findAtPosition(event.position);
 
-  console.log(state);
+  //console.log(state);
   
 
   // Below here, you'll find a list of each gesture recognizer in the system, one by one.
@@ -58,7 +58,8 @@ export function applyEvent(
   ) {
     objects[event.id] = { dragging: tokenNearEvent, originalPosition: Vec.clone(tokenNearEvent.position) };
     tokenNearEvent.dislodge();
-    return
+
+    return;
   }
 
   // DRAG A TOKEN
@@ -81,8 +82,7 @@ export function applyEvent(
     
     draggingState.dragging.updateView();
 
-
-    return
+    return;
   }
 
   // DROP A TOKEN
@@ -97,7 +97,45 @@ export function applyEvent(
     }
     objects[event.id] = null;
     objects["snap"] = null;
+    return;
   }
+
+
+  // BEGIN META-INK
+  if (
+    event.type === 'pencil' &&
+    event.state === 'began'
+  ) {
+    const snap = metaLayer.findAtPosition(event.position);
+    if(snap) {
+      let wire = metaLayer.addWire(snap.midPoint());
+      wire.input = snap;
+      objects['wire'] = wire;
+    } else {
+      objects['wire'] = metaLayer.addWire(event.position);
+    }
+    return;
+  }
+
+  // DRAW META-INK
+  if (
+    event.type === 'pencil' &&
+    event.state === 'moved' &&
+    objects['wire']
+  ) {
+    const snap = metaLayer.findAtPosition(event.position);
+    if(snap) {
+      objects['wire'].drawPoint(snap.midPoint());
+      objects['wire'].output = snap;
+    } else {
+      objects['wire'].drawPoint(event.position);
+      objects['wire'].output = null;
+    }
+    return;
+  }
+
+  // END META-INK
+
 
   // TAP A GIZMO -> TOGGLE THE GIZMO
   // if (event.type === 'finger' && event.state === 'began' && gizmoNearEvent) {
