@@ -4,25 +4,19 @@ import SVG from "../Svg";
 import Collection from "./Collection";
 import COLORS from "./Colors";
 import Formula from "./Formula";
+import { Variable } from "./Scope";
 import { CreateListSnapAction, SnapAction } from "./SnapActions";
+import Token from "./Token";
 
 const SNAPZONE = 40;
 
 
-
-
-abstract class Token {
-  abstract updateView(): void;
-  abstract isPointInside(position: Position): boolean;
-}
-
 export default class NumberToken extends Token {
-  numericValue: number = 0;
-  stringValue: string = "0";
+  variable: Variable;
 
-  position: Position = {x: 100, y: 100};
-  width: number = 90;
-  height: number = 40;
+  // position: Position = {x: 100, y: 100};
+  // width: number = 90;
+  // height: number = 40;
 
   parent: Collection | Formula | null = null;
 
@@ -36,13 +30,16 @@ export default class NumberToken extends Token {
   protected textElement = SVG.add('text', {
     x: this.position.x+5, y: this.position.y + 30,
     fill: COLORS.WHITE,
-    "font-size": "30px"
+    "font-size": "30px",
+    "font-family": "monospace",
   }, undefined, "1234");
 
-  constructor(value: number = 0) {
+  constructor(position: Position, variable: Variable) {
     super();
-    this.numericValue = value;
-    this.stringValue = value.toString();
+
+    this.position = position;
+    this.variable = variable;
+
     this.updateView();
   }
 
@@ -93,13 +90,12 @@ export default class NumberToken extends Token {
         this
       )
     }
-
     return null
   }
 
   updateView(){
     // Update text content
-    this.textElement.textContent = this.stringValue;
+    this.textElement.textContent = this.variable.string();
     this.width = (this.textElement as any).getComputedTextLength()+10;
     
     SVG.update(this.boxElement, {

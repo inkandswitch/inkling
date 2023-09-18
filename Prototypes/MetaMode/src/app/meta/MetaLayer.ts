@@ -5,25 +5,40 @@ import Formula from "./Formula";
 import FormulaEditor from "./FormulaEditor";
 import { SnapAction } from "./SnapActions";
 import Wire from "./Wire";
+import Scope from "./Scope";
 
 export default class MetaLayer {
   tokens: Array<any> = [];
   wires: Array<Wire> = [];
+  scope: Scope = new Scope();
 
   constructor (){
-    let token = new NumberToken(100);
-    this.tokens.push(token);
+    this.addNumberToken({x: 100, y: 100}, 100);
+    this.addNumberToken({x: 100, y: 200}, 200);
+    //this.addLabelToken({x: 100, y: 200}, "Hello");
+  }
 
-    let token2 = new NumberToken(50);
-    token2.position = {x: 100, y: 200};
-    token2.updateView();
-    this.tokens.push(token2);
+  addNumberToken(position: Position, value: number = 1){
+    let variable = this.scope.addVariable(value);
+    let token = new NumberToken(position, variable);
+    this.tokens.push(token);
   }
 
   addWire(position: Position) {
     let wire = new Wire(position);
     this.wires.push(wire);
     return wire;
+  }
+
+  updateWireConnections(wire: Wire){
+    if(wire.input && wire.output) {
+      let merged = this.scope.mergeVariables(wire.input.variable, wire.output.variable);
+      wire.input.variable = merged;
+      wire.output.variable = merged;
+      wire.input.updateView();
+      wire.output.updateView();
+
+    }
   }
 
   drawPoint(wire: Wire, position: Position){

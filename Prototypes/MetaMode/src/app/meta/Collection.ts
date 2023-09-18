@@ -1,4 +1,4 @@
-import NumberToken from "./NumberToken";
+import Token from "./Token";
 import { Position } from "../../lib/types";
 import SVG from "../Svg";
 import Vec from "../../lib/vec";
@@ -7,7 +7,7 @@ import COLORS from "./Colors";
 const PADDING = 3;
 
 export default class Collection {
-  tokens: Array<NumberToken>;
+  tokens: Array<Token>;
 
   position: Position = {x: 100, y: 100};
   width: number = 0;
@@ -21,7 +21,7 @@ export default class Collection {
     fill: COLORS.GREY_LIGHT,
   });
 
-  constructor(tokens: Array<NumberToken>){
+  constructor(tokens: Array<Token>){
     this.tokens = tokens;
     this.updateView();
     
@@ -34,7 +34,7 @@ export default class Collection {
     parentElement.insertBefore(this.boxElement, parentElement.firstChild);
   }
 
-  dislodgeChild(token: NumberToken){
+  dislodgeChild(token: Token){
     this.tokens = this.tokens.filter(t => t!= token);
     if(this.tokens.length <= 1) {
       this.boxElement.remove();

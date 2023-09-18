@@ -49,6 +49,7 @@ export function applyEvent(
   // each state separately, since (in theory) these separations cleanly split the gesture space
   // into non-overlapping sets.
 
+  // TOKEN DRAGGING
   // HOLD A TOKEN & DRAG IT
   if (
     event.type === 'finger' &&
@@ -101,7 +102,8 @@ export function applyEvent(
   }
 
 
-  // BEGIN META-INK
+  // DRAW WIRES / META-INK
+  // BEGIN WIRE
   if (
     event.type === 'pencil' &&
     event.state === 'began'
@@ -117,7 +119,7 @@ export function applyEvent(
     return;
   }
 
-  // DRAW META-INK
+  // DRAW WIRE
   if (
     event.type === 'pencil' &&
     event.state === 'moved' &&
@@ -134,8 +136,16 @@ export function applyEvent(
     return;
   }
 
-  // END META-INK
-
+  // END WIRE
+  if (
+    event.type === 'pencil' &&
+    event.state === 'ended' &&
+    objects['wire']
+  ) {
+    metaLayer.updateWireConnections(objects['wire']);
+    objects['wire'] = null;
+  }
+  
 
   // TAP A GIZMO -> TOGGLE THE GIZMO
   // if (event.type === 'finger' && event.state === 'began' && gizmoNearEvent) {

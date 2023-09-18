@@ -1,4 +1,5 @@
 import NumberToken from "./NumberToken";
+import Token from "./Token";
 import { Position } from "../../lib/types";
 import SVG from "../Svg";
 import Vec from "../../lib/vec";
@@ -8,7 +9,7 @@ const PADDING = 3;
 
 
 export default class Formula {
-  tokens: Array<NumberToken | OpToken> = new Array();
+  tokens: Array<Token | OpToken> = new Array();
   width: number = 90;
   height: number = 46;
   position: Position = {x: 100, y: 100};
@@ -22,11 +23,11 @@ export default class Formula {
 
 
   constructor() {
-    this.tokens.push(new NumberToken());
-    this.tokens.push(new OpToken("x"));
-    this.tokens.push(new NumberToken());
-    this.tokens.push(new OpToken("="));
-    this.tokens.push(new NumberToken());
+    // this.tokens.push(new NumberToken());
+    // this.tokens.push(new OpToken("x"));
+    // this.tokens.push(new NumberToken());
+    // this.tokens.push(new OpToken("="));
+    // this.tokens.push(new NumberToken());
     this.updateView();
   }
 
@@ -57,7 +58,7 @@ export default class Formula {
     }
   }
 
-  dislodgeChild(token: NumberToken){
+  dislodgeChild(token: Token){
     this.tokens = this.tokens.filter(t => t!= token);
     if(this.tokens.length <= 1) {
       this.boxElement.remove();
