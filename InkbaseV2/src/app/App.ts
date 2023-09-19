@@ -47,7 +47,7 @@ onEveryFrame((dt, t) => {
   SVG.clearNow(t);
   constraints.now.clear();
 
-  // Potentially deprecated — consider whether & how these should be migrated to Input.ts
+  // Potentially deprecated — consider whether & how these should be migrated to Input.ts
   toolPicker.update(events);
   toolPicker.selected?.update(events);
   // selection.update1(events);
@@ -73,7 +73,7 @@ onEveryFrame((dt, t) => {
 
   gizmo.render(dt, t);
 
-  // Ivan is currently using this to debug Input — he'll remove it soon
+  // Ivan is currently using this to debug Input — he'll remove it soon
   // SVG.now('foreignObject', {
   //   x: 50,
   //   y: 50,
