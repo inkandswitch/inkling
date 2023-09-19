@@ -38,9 +38,6 @@ export default class Handle {
   // only canonical handles
   static readonly all = new Set<Handle>();
 
-  // contains canonical and absorbed handles
-  private static readonly allInstances = new Set<Handle>();
-
   static create(
     type: HandleType,
     position: Position,
@@ -100,8 +97,6 @@ export default class Handle {
     if (instanceState.isCanonical) {
       Handle.all.add(this);
     }
-
-    Handle.allInstances.add(this);
   }
 
   // methods that can be called on any handle
@@ -194,12 +189,6 @@ export default class Handle {
     }
 
     this.removeFromDOM();
-
-    // remove me and my absorbed handles from the set of all handles
-    Handle.allInstances.delete(this);
-    for (const handle of this.instanceState.absorbedHandles) {
-      Handle.allInstances.delete(handle);
-    }
 
     // remove me from the set of canonical handles
     Handle.all.delete(this);
