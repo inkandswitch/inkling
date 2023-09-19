@@ -57,14 +57,37 @@ export function applyEvent(
     events.fingerStates.length === 1 &&
     tokenNearEvent
   ) {
-    objects[event.id] = { dragging: tokenNearEvent, originalPosition: Vec.clone(tokenNearEvent.position) };
-    tokenNearEvent.dislodge();
+    objects['dragging'] = { dragging: tokenNearEvent, originalPosition: Vec.clone(tokenNearEvent.position), finger: event.id };
 
     return;
   }
 
+  let draggingState = objects['dragging']
+  // DISLODGE A TOKEN FROM IT's parent
+  if (
+    event.type === 'finger' &&
+    event.state === 'began' &&
+    events.fingerStates.length === 2 &&
+    draggingState != null &&
+    draggingState.finger != event.id &&
+    tokenNearEvent
+  ) {
+    console.log("second finger");
+    console.log(draggingState);
+    if(draggingState.dragging.type == "collection") {
+      let found = draggingState.dragging.findAtPosition(event.position);
+
+      if(found) {
+        objects['dragging'] = { dragging: found, originalPosition: Vec.clone(found.position), finger: event.id };
+        metaLayer.dislodge(found);  
+        return;
+      }
+    }
+
+    
+  }
+
   // DRAG A TOKEN
-  let draggingState = objects[event.id]
   if (
     event.type === 'finger' &&
     event.state === 'moved' &&
@@ -113,6 +136,8 @@ export function applyEvent(
       objects['writing'] = true;
       metaLayer.editor.addStroke(event.position);
       return;
+    } else if(metaLayer.editor.active) {
+      metaLayer.editor.close();
     }
   }
 
@@ -131,7 +156,7 @@ export function applyEvent(
     objects['writing']
   ) {
     objects['writing'] = false;
-    metaLayer.editor.parseStrokes();
+    metaLayer.parseStrokes();
     return;
   }
 

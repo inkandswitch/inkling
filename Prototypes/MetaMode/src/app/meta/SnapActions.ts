@@ -1,10 +1,11 @@
 import { Position } from "../../lib/types";
 import NumberToken from "./NumberToken";
 import Collection from "./Collection";
+import MetaLayer from "./MetaLayer";
 
 export abstract class SnapAction {
   position: Position = {x: 0, y: 0}
-  doSnap(): any {}
+  doSnap(metaLayer: MetaLayer): any {}
 }
 
 export class CreateListSnapAction extends SnapAction {
@@ -18,10 +19,7 @@ export class CreateListSnapAction extends SnapAction {
     super();
   }
 
-  doSnap(): any {
-    return new Collection([
-      this.a, 
-      this.b
-    ])
+  doSnap(metaLayer: MetaLayer): any {
+    metaLayer.addCollection([this.a, this.b]);
   }
 }

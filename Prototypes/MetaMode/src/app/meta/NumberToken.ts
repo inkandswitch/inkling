@@ -44,18 +44,6 @@ export default class NumberToken extends Token {
     this.updateView();
   }
 
-  dislodge() {
-    if(this.parent == null) return
-    this.parent.dislodgeChild(this);
-  }
-
-  isPointInside(position: Position): boolean {
-    return position.x > this.position.x &&
-           position.y > this.position.y &&
-           position.x < this.position.x + this.width &&
-           position.y < this.position.y + this.height
-  }
-
   midPoint(): Position {
     return {
       x: this.position.x + this.width/2,

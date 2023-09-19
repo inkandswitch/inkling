@@ -6,11 +6,14 @@ import FormulaEditor from "./FormulaEditor";
 import { SnapAction } from "./SnapActions";
 import Wire from "./Wire";
 import Scope from "./Scope";
+import Collection from "./Collection";
+import Token from "./Token";
 
 export default class MetaLayer {
   editor: FormulaEditor = new FormulaEditor();
   tokens: Array<any> = [];
   wires: Array<Wire> = [];
+
   scope: Scope = new Scope();
 
   constructor (){
@@ -18,10 +21,11 @@ export default class MetaLayer {
     this.addNumberToken({x: 100, y: 200}, 200);
   }
 
-  addNumberToken(position: Position, value: number = 1){
+  addNumberToken(position: Position, value: number = 1): NumberToken {
     let variable = this.scope.addVariable(value);
     let token = new NumberToken(position, variable);
     this.tokens.push(token);
+    return token;
   }
 
   addWire(position: Position) {
@@ -30,27 +34,54 @@ export default class MetaLayer {
     return wire;
   }
 
+  addCollection(children: Array<NumberToken>) {
+    let collection = new Collection(children);
+    this.tokens.push(collection);
+
+    this.tokens = this.tokens.filter(b=>children.indexOf(b)== -1); // Filter out nested blocks
+
+    console.log(this.tokens);
+    
+    
+    return collection;
+  }
+
+  removeToken(token: Token){
+    token.remove();
+    if(token.tokens) {
+      this.tokens = this.tokens.concat(token.tokens)
+    }
+    this.tokens = this.tokens.filter(t=>t!==token);
+  }
+
   removeWire(wire: Wire) {
     this.wires = this.wires.filter(w=>w!=wire);
     wire.remove();
   }
 
-  updateWireConnections(wire: Wire){
+  updateWireConnections(wire: Wire) {
     if(wire.input && wire.output) {
       let merged = this.scope.mergeVariables(wire.input.variable, wire.output.variable);
       wire.input.variable = merged;
       wire.output.variable = merged;
       wire.input.updateView();
       wire.output.updateView();
-
     }
+  }
+
+  dislodge(token: Token){
+    let removeToken = token.dislodge();
+    if(removeToken != null) {
+      this.removeToken(removeToken);
+    }
+    this.tokens.push(token);
   }
 
   drawPoint(wire: Wire, position: Position){
     wire.drawPoint(position);
   }
 
-  findAtPosition(position: Position){
+  findAtPosition(position: Position) {
     return this.tokens.find(token=>{
       return token.isPointInside(position);
     })
@@ -65,17 +96,23 @@ export default class MetaLayer {
         }
       }
     }
-
     return null;
   }
   
-  activateEditor(position: Position){
+  activateEditor(position: Position) {
     this.editor.activate(position);
   }
 
-  doSnap(action: SnapAction){
-    let result = action.doSnap();
-    //this.tokens.push(result);
+  doSnap(action: SnapAction) {
+    action.doSnap(this);
+  }
+
+  parseStrokes() {
+    this.editor.parseStrokes(this);
+  }
+
+  updateView(){
+
   }
 
 }

@@ -7,6 +7,7 @@ import Vec from "../../lib/vec";
 import WritingRecognizer from "./WritingRecognizer";
 import NumberToken from "./NumberToken";
 import { Variable } from "./Scope";
+import MetaLayer from "./MetaLayer";
 
 const PADDING = 3;
 const PADDING_BIG = 5;
@@ -100,7 +101,8 @@ export default class FormulaEditor {
   }
 
   isPointInside(position: Position): boolean {
-    return position.x > this.position.x &&
+    return this.active &&
+           position.x > this.position.x &&
            position.y > this.position.y &&
            position.x < this.position.x + this.width &&
            position.y < this.position.y + this.height
@@ -109,6 +111,12 @@ export default class FormulaEditor {
   activate(position: Position){
     this.position = position;
     this.active = true;
+    this.strokes = [];
+    this.updateView();
+  }
+
+  close(){
+    this.active = false;
     this.strokes = [];
     this.updateView();
   }
@@ -132,7 +140,7 @@ export default class FormulaEditor {
     });
   }
 
-  parseStrokes(){
+  parseStrokes(layer: MetaLayer){
     let r = this.recognizer.recognize(this.strokes);
     let char = r.Name
     if(this.formula == null) {
@@ -143,11 +151,11 @@ export default class FormulaEditor {
     const isNumeric = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"].indexOf(char) > -1;
     
     if(isNumeric) {
-      let lastToken = this.formula.lastToken()  
+      let lastToken = this.formula.lastToken();
       if(lastToken && lastToken.type == "number") {
         (lastToken as NumberToken).addChar(char);
       } else {
-        let n = new NumberToken(this.formula.position, new Variable(parseInt(char)));
+        let n = layer.addNumberToken(this.formula.position, parseInt(char))
         this.formula.addToken(n);
       }
     } else {

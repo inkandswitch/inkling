@@ -1,19 +1,21 @@
-import Token from "./Token";
+import Token, { TokenGroup } from "./Token";
 import { Position } from "../../lib/types";
 import SVG from "../Svg";
 import Vec from "../../lib/vec";
 import COLORS from "./Colors";
+import NumberToken from "./NumberToken";
+import { SnapAction } from "./SnapActions";
 
 const PADDING = 3;
 
-export default class Collection {
+export default class Collection extends TokenGroup {
+  type = "collection";
   tokens: Array<Token>;
 
   position: Position = {x: 100, y: 100};
   width: number = 0;
   height: number = 46;
   
-
   protected boxElement = SVG.add('rect', {
     x: this.position.x, y: this.position.y,
     width: this.width, height: this.height,
@@ -22,30 +24,29 @@ export default class Collection {
   });
 
   constructor(tokens: Array<Token>){
+    super();
     this.tokens = tokens;
-    this.updateView();
     
     for(const t of tokens) {
       t.parent = this;
     }
 
+    this.position = Vec.sub(this.tokens[0].position, Vec(PADDING, PADDING));
+
     // Move me to the back, I'm not a fan of this... how to improve this?
     const parentElement = this.boxElement.parentElement!;
     parentElement.insertBefore(this.boxElement, parentElement.firstChild);
+
+    this.updateView();
+
   }
 
-  dislodgeChild(token: Token){
-    this.tokens = this.tokens.filter(t => t!= token);
-    if(this.tokens.length <= 1) {
-      this.boxElement.remove();
-    } else {
-      this.updateView();
-    }
+  isPointSnapping(position: Position, other: NumberToken): SnapAction | null {
+    return null
   }
 
   updateView(){
     // Layout child tokens in vertical sequence
-    this.position = Vec.sub(this.tokens[0].position, Vec(PADDING, PADDING));
     this.width = 0;
     let position = Vec.add(this.position, Vec(PADDING, PADDING));
     for(const token of this.tokens) {
@@ -62,5 +63,9 @@ export default class Collection {
       x: this.position.x, y: this.position.y,
       width: this.width, height: this.height
     })
+  }
+
+  remove(){
+    this.boxElement.remove();
   }
 }
