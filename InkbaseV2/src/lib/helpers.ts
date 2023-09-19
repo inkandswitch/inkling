@@ -1,4 +1,4 @@
-import { Position } from './types';
+import { Position, Renderable } from './types';
 import Vec from './vec';
 
 let nextId = 0;
@@ -174,4 +174,8 @@ export class SortedSet<T> {
       next: () => ({ value: data[++index], done: !(index in data) }),
     };
   }
+}
+
+export function render(obj: Renderable) {
+  obj.render();
 }

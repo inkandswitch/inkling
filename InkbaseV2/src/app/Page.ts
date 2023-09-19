@@ -8,7 +8,7 @@ import StrokeClusters from './StrokeClusters';
 import { Position, PositionWithPressure } from '../lib/types';
 import Handle from './strokes/Handle';
 import StrokeAnalyzer from './StrokeAnalyzer';
-import { makeIterableIterator } from '../lib/helpers';
+import { makeIterableIterator, render } from '../lib/helpers';
 
 interface Options {
   strokeAnalyzer: boolean;
@@ -168,6 +168,3 @@ export default class Page {
     this.analyzer?.render();
   }
 }
-
-type Renderable = { render: Function };
-const render = (s: Renderable) => s.render();

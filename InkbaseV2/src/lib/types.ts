@@ -12,3 +12,7 @@ export interface PositionWithPressure extends Position {
 export interface PositionWithRadius extends Position {
   radius: number;
 }
+
+export interface Renderable {
+  render(): void;
+}
