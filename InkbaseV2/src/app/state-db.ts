@@ -37,7 +37,11 @@ export function reclaimWeakRefs(timeBudgetMillis?: number) {
 
 export function find<T extends GameObject>(
   pred: (gameObj: GameObject) => gameObj is T
-): T | null {
+): T | null;
+export function find(pred: (gameObj: GameObject) => boolean): GameObject | null;
+export function find(
+  pred: (gameObj: GameObject) => boolean
+): GameObject | null {
   let ans: GameObject | null = null;
   withMatchesDo(pred, gameObj => {
     if (ans === null) {
@@ -49,8 +53,10 @@ export function find<T extends GameObject>(
 
 export function findAll<T extends GameObject>(
   pred: (gameObj: GameObject) => gameObj is T
-): T[] {
-  const gameObjs = [] as T[];
+): T[];
+export function findAll(pred: (gameObj: GameObject) => boolean): GameObject[];
+export function findAll(pred: (gameObj: GameObject) => boolean): GameObject[] {
+  const gameObjs = [] as GameObject[];
   withMatchesDo(pred, gameObj => gameObjs.push(gameObj));
   return gameObjs;
 }
@@ -58,6 +64,14 @@ export function findAll<T extends GameObject>(
 export function withMatchesDo<T extends GameObject>(
   pred: (gameObj: GameObject) => gameObj is T,
   fn: (gameObj: T) => void
+): void;
+export function withMatchesDo(
+  pred: (gameObj: GameObject) => boolean,
+  fn: (gameObj: GameObject) => void
+): void;
+export function withMatchesDo(
+  pred: (gameObj: GameObject) => boolean,
+  fn: (gameObj: GameObject) => void
 ): void {
   for (const wr of allGameObjects) {
     const gameObj = wr.deref();
