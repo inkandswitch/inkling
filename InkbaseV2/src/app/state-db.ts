@@ -42,13 +42,13 @@ export function find(pred: (gameObj: GameObject) => boolean): GameObject | null;
 export function find(
   pred: (gameObj: GameObject) => boolean
 ): GameObject | null {
-  let ans: GameObject | null = null;
-  withMatchesDo(pred, gameObj => {
-    if (ans === null) {
-      ans = gameObj;
+  for (const wr of allGameObjects) {
+    const gameObj = wr.deref();
+    if (gameObj && pred(gameObj)) {
+      return gameObj;
     }
-  });
-  return ans;
+  }
+  return null;
 }
 
 export function findAll<T extends GameObject>(
