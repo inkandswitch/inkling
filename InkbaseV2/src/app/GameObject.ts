@@ -15,7 +15,7 @@ export abstract class GameObject {
     this.parent?.removeChild(this);
   }
 
-  private removeChild(child: GameObject) {
+  protected removeChild(child: GameObject) {
     this.children.delete(child);
   }
 
