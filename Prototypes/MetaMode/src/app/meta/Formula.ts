@@ -1,5 +1,5 @@
 import NumberToken from "./NumberToken";
-import Token from "./Token";
+import Token, { TokenGroup } from "./Token";
 import { Position } from "../../lib/types";
 import SVG from "../Svg";
 import Vec from "../../lib/vec";
@@ -8,8 +8,9 @@ import COLORS from "./Colors";
 const PADDING = 3;
 
 
-export default class Formula {
-  tokens: Array<Token | OpToken> = new Array();
+export default class Formula extends TokenGroup {
+  type = "formula";
+  tokens: Array<Token> = new Array();
   width: number = 90;
   height: number = 46;
   position: Position = {x: 100, y: 100};
@@ -21,13 +22,8 @@ export default class Formula {
     fill: COLORS.GREY_LIGHT,
   });
 
-
   constructor() {
-    // this.tokens.push(new NumberToken());
-    // this.tokens.push(new OpToken("x"));
-    // this.tokens.push(new NumberToken());
-    // this.tokens.push(new OpToken("="));
-    // this.tokens.push(new NumberToken());
+    super();
     this.updateView();
   }
 
@@ -66,14 +62,19 @@ export default class Formula {
   dislodgeChild(token: Token){
     this.tokens = this.tokens.filter(t => t!= token);
     if(this.tokens.length <= 1) {
-      this.boxElement.remove();
+      return this;
     } else {
       this.updateView();
     }
+    return null;
   }
 
   lastToken(): Token {
     return this.tokens[this.tokens.length-1];
+  }
+
+  remove(): void {
+    this.boxElement.remove();
   }
 }
 
@@ -107,5 +108,9 @@ export class OpToken extends Token {
 
   isPointInside(position: Position): boolean {
     return false;
+  }
+
+  remove(): void {
+    this.textElement.remove();
   }
 }

@@ -83,8 +83,6 @@ export function applyEvent(
         return;
       }
     }
-
-    
   }
 
   // DRAG A TOKEN
@@ -119,7 +117,7 @@ export function applyEvent(
     if(objects["snap"]) {
       metaLayer.doSnap(objects["snap"]);
     }
-    objects[event.id] = null;
+    objects['dragging'] = null;
     objects["snap"] = null;
     return;
   }

@@ -4,12 +4,14 @@ import Formula from "./Formula";
 
 export default abstract class Token {
   type: string = "";
+  kind = "token";
   parent: Collection | Formula | null = null;
   position: Position = {x: 0, y: 0};
   width: number = 100;
   height: number = 40;
 
   abstract updateView(): void;
+  abstract remove(): void;
 
   isPointInside(position: Position): boolean {
     return position.x > this.position.x &&
@@ -25,6 +27,7 @@ export default abstract class Token {
 }
 
 export abstract class TokenGroup extends Token {
+  kind = "tokengroup";
   tokens: Array<Token> = [];
 
   findAtPosition(position: Position) {
@@ -35,6 +38,7 @@ export abstract class TokenGroup extends Token {
 
   dislodgeChild(token: Token){
     this.tokens = this.tokens.filter(t => t!= token);
+    
     if(this.tokens.length <= 1) {
       return this;
     } else {

@@ -23,3 +23,20 @@ export class CreateListSnapAction extends SnapAction {
     metaLayer.addCollection([this.a, this.b]);
   }
 }
+
+export class AppendListSnapAction extends SnapAction {
+  kind = "CreateList"
+
+  constructor (
+    public position: Position,
+    public a: Collection,
+    public b: NumberToken,
+    public index: number
+  ) {
+    super();
+  }
+
+  doSnap(metaLayer: MetaLayer): any {
+    metaLayer.appendToCollection(this.a, this.b, this.index);
+  }
+}

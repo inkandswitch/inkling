@@ -7,7 +7,7 @@ import { SnapAction } from "./SnapActions";
 import Wire from "./Wire";
 import Scope from "./Scope";
 import Collection from "./Collection";
-import Token from "./Token";
+import Token, { TokenGroup } from "./Token";
 
 export default class MetaLayer {
   editor: FormulaEditor = new FormulaEditor();
@@ -39,17 +39,20 @@ export default class MetaLayer {
     this.tokens.push(collection);
 
     this.tokens = this.tokens.filter(b=>children.indexOf(b)== -1); // Filter out nested blocks
-
-    console.log(this.tokens);
-    
     
     return collection;
   }
 
+  appendToCollection(collection: Collection, token: NumberToken, index: number){
+    collection.tokens.splice(index, 0, token);
+    this.tokens = this.tokens.filter(t=>t!==token);
+    collection.updateView();
+  }
+
   removeToken(token: Token){
     token.remove();
-    if(token.tokens) {
-      this.tokens = this.tokens.concat(token.tokens)
+    if(token.kind == 'tokengroup') {
+      this.tokens = this.tokens.concat((token as TokenGroup).tokens)
     }
     this.tokens = this.tokens.filter(t=>t!==token);
   }

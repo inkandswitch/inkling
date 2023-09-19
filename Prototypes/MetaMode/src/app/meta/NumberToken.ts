@@ -104,5 +104,10 @@ export default class NumberToken extends Token {
       x: this.position.x + 5, y: this.position.y + 30,
     })
   }
+
+  remove(): void {
+    this.boxElement.remove();
+    this.textElement.remove();
+  }
 }
 

@@ -4,9 +4,10 @@ import SVG from "../Svg";
 import Vec from "../../lib/vec";
 import COLORS from "./Colors";
 import NumberToken from "./NumberToken";
-import { SnapAction } from "./SnapActions";
+import { AppendListSnapAction, SnapAction } from "./SnapActions";
 
 const PADDING = 3;
+const SNAPZONE = 40;
 
 export default class Collection extends TokenGroup {
   type = "collection";
@@ -42,6 +43,33 @@ export default class Collection extends TokenGroup {
   }
 
   isPointSnapping(position: Position, other: NumberToken): SnapAction | null {
+    // Snap below
+    if(
+      position.x > this.position.x &&
+      position.y > this.position.y + this.height &&
+      position.x < this.position.x + this.width &&
+      position.y < this.position.y + this.height + SNAPZONE
+    ) {
+      return new AppendListSnapAction(
+        Vec(this.position.x, this.position.y + this.height + 3),
+        this, other,
+        this.tokens.length
+      )
+    }
+
+    // Snap above
+    if(
+      position.x > this.position.x &&
+      position.y > this.position.y - SNAPZONE &&
+      position.x < this.position.x + this.width &&
+      position.y < this.position.y
+    ) {
+      return new AppendListSnapAction(
+        Vec(this.position.x, this.position.y - SNAPZONE - 3),
+        this, other,
+        0
+      )
+    }
     return null
   }
 
