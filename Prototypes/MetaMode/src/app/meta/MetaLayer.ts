@@ -10,7 +10,7 @@ import Collection from "./Collection";
 import Token, { TokenGroup } from "./Token";
 
 export default class MetaLayer {
-  editor: FormulaEditor = new FormulaEditor();
+  editor: FormulaEditor = new FormulaEditor(this);
   tokens: Array<any> = [];
   wires: Array<Wire> = [];
 
@@ -44,7 +44,7 @@ export default class MetaLayer {
   }
 
   appendToCollection(collection: Collection, token: NumberToken, index: number){
-    collection.tokens.splice(index, 0, token);
+    collection.attachChild(token, index);
     this.tokens = this.tokens.filter(t=>t!==token);
     collection.updateView();
   }
@@ -88,6 +88,21 @@ export default class MetaLayer {
     return this.tokens.find(token=>{
       return token.isPointInside(position);
     })
+  }
+
+  findTokenAtPosition(position: Position) {
+    for(const token of this.tokens) {
+      if(token.kind == "tokengroup") {
+        const found = token.findAtPosition(position);
+        if(found) {
+          return found;
+        }
+      } else {
+        if(token.isPointInside(position)) {
+          return token;
+        }
+      }
+    }
   }
 
   findSnapOpportunity(token: NumberToken, position: Position): SnapAction | null {

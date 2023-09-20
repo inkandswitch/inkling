@@ -20,6 +20,13 @@ export default abstract class Token {
            position.y < this.position.y + this.height
   }
 
+  midPoint(): Position {
+    return {
+      x: this.position.x + this.width/2,
+      y: this.position.y + this.height/2,
+    }
+  }
+
   dislodge() {
     if(this.parent == null) return
     return this.parent.dislodgeChild(this);
@@ -38,12 +45,10 @@ export abstract class TokenGroup extends Token {
 
   dislodgeChild(token: Token){
     this.tokens = this.tokens.filter(t => t!= token);
-    
+    this.updateView();
     if(this.tokens.length <= 1) {
       return this;
-    } else {
-      this.updateView();
-      return null;
-    }
+    }  
+    return null;
   }
 }

@@ -16,6 +16,8 @@ export default class Collection extends TokenGroup {
   position: Position = {x: 100, y: 100};
   width: number = 0;
   height: number = 46;
+
+  reordered = true;
   
   protected boxElement = SVG.add('rect', {
     x: this.position.x, y: this.position.y,
@@ -32,14 +34,12 @@ export default class Collection extends TokenGroup {
       t.parent = this;
     }
 
-    this.position = Vec.sub(this.tokens[0].position, Vec(PADDING, PADDING));
 
     // Move me to the back, I'm not a fan of this... how to improve this?
     const parentElement = this.boxElement.parentElement!;
     parentElement.insertBefore(this.boxElement, parentElement.firstChild);
 
     this.updateView();
-
   }
 
   isPointSnapping(position: Position, other: NumberToken): SnapAction | null {
@@ -73,8 +73,24 @@ export default class Collection extends TokenGroup {
     return null
   }
 
+  attachChild(token: Token, index: number) {
+    this.tokens.splice(index, 0, token);
+    this.reordered = true;
+    this.updateView();
+  }
+
+  dislodgeChild(token: Token){
+    this.reordered = true;
+    return super.dislodgeChild(token);
+  }
+
   updateView(){
     // Layout child tokens in vertical sequence
+    if(this.reordered) {
+      this.position = Vec.sub(this.tokens[0].position, Vec(PADDING, PADDING));
+      this.reordered = false;
+    }
+
     this.width = 0;
     let position = Vec.add(this.position, Vec(PADDING, PADDING));
     for(const token of this.tokens) {

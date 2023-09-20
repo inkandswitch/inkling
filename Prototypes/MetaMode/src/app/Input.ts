@@ -131,8 +131,14 @@ export function applyEvent(
     
     const isInFormulaEditor = metaLayer.editor.isPointInside(event.position);
     if(isInFormulaEditor) {
-      objects['writing'] = true;
-      metaLayer.editor.addStroke(event.position);
+      if(metaLayer.editor.isToggleMode(event.position)) {
+        metaLayer.editor.toggleMode();
+        return;
+      } else {
+        objects['writing'] = true;
+        metaLayer.editor.addStroke(event.position);  
+      }
+      
       return;
     } else if(metaLayer.editor.active) {
       metaLayer.editor.close();
@@ -154,7 +160,7 @@ export function applyEvent(
     objects['writing']
   ) {
     objects['writing'] = false;
-    metaLayer.parseStrokes();
+    metaLayer.editor.endStroke(metaLayer);
     return;
   }
 
@@ -165,7 +171,7 @@ export function applyEvent(
     event.state === 'began'
   ) {
     
-    const snap = metaLayer.findAtPosition(event.position);
+    const snap = metaLayer.findTokenAtPosition(event.position);
     
     if(snap) {
       let wire = metaLayer.addWire(snap.midPoint());
@@ -183,7 +189,7 @@ export function applyEvent(
     event.state === 'moved' &&
     objects['wire']
   ) {
-    const snap = metaLayer.findAtPosition(event.position);
+    const snap = metaLayer.findTokenAtPosition(event.position);
     if(snap) {
       objects['wire'].drawPoint(snap.midPoint());
       objects['wire'].output = snap;
@@ -207,7 +213,8 @@ export function applyEvent(
   // Long hold
   if (
     event.type === 'pencil' &&
-    event.state === 'longhold'
+    event.state === 'longhold' &&
+    objects['wire']
   ) {
     metaLayer.removeWire(objects['wire']);
     objects['wire'] = null;

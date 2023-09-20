@@ -4,6 +4,7 @@ import { Position } from "../../lib/types";
 
 export default class Scope {
   variables: Array<Variable> = [];
+  labels: Array<Label> = [];
   labels: Map<Label, Variable> = new Map();
 
   // TODO:
@@ -22,6 +23,12 @@ export default class Scope {
 
     return a;
     // TODO: Update label references
+  }
+
+  addLabel(strokes: Array<Array<Position>>){
+    let label = new Label(strokes);
+    this.labels.push(label);
+    return label;
   }
 }
 
@@ -43,6 +50,30 @@ export class Label {
 
   constructor(strokes: Array<Array<Position>>){
     this.strokes = strokes;
-    //this.width = 
+    
+    // Normalize Strokes
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = 0;
+
+    for(const stroke of this.strokes) {
+      for(const pt of stroke) {
+        if(pt.x < minX) { minX = pt.x; }
+        if(pt.x > maxX) { maxX = pt.x; }
+        if(pt.y < minY) { minY = pt.y; }
+      }
+    }
+
+    for(const stroke of this.strokes) {
+      for(const pt of stroke) {
+        pt.x -= minX;
+        pt.y -= minY;
+      }
+    }
+
+    this.width = maxX - minX;
+    // if(this.width < 46) {
+    //   this.width = 46;
+    // }
   }
 }

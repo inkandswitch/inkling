@@ -21,34 +21,23 @@ export default class LabelToken extends Token {
     fill: COLORS.BLUE,
   });
 
+  strokeElements: Array<SVGElement> = [];
+
   constructor(position: Position, label: Label) {
     super();
 
     this.position = position;
     this.label = label;
+    let offsetPosition = Vec.add(position, Vec(20, 5));
 
-    this.width = label.width;
+    this.width = label.width + 40;
+
+    this.strokeElements = this.label.strokes.map(stroke=>{
+      let points = SVG.points(stroke.map(pt=>Vec.add(offsetPosition, pt)))
+      return SVG.add('polyline', {points: points, stroke: "white", fill: "none", "stroke-width": 2})
+    })
 
     this.updateView();
-  }
-
-  dislodge() {
-    if(this.parent == null) return
-    this.parent.dislodgeChild(this);
-  }
-
-  isPointInside(position: Position): boolean {
-    return position.x > this.position.x &&
-           position.y > this.position.y &&
-           position.x < this.position.x + this.width &&
-           position.y < this.position.y + this.height
-  }
-
-  midPoint(): Position {
-    return {
-      x: this.position.x + this.width/2,
-      y: this.position.y + this.height/2,
-    }
   }
 
   updateView(){
@@ -58,6 +47,17 @@ export default class LabelToken extends Token {
       x: this.position.x, y: this.position.y,
       width: this.width,
     })
+
+    let offsetPosition = Vec.add(this.position, Vec(20, 5));
+    this.label.strokes.forEach((stroke, i)=>{
+      let points = SVG.points(stroke.map(pt=>Vec.add(offsetPosition, pt)))
+      let element = this.strokeElements[i]
+      SVG.update(element, {points: points});
+    })
+  }
+
+  isPointSnapping(){
+    return
   }
 }
 

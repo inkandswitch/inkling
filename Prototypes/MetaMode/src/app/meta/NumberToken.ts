@@ -44,13 +44,6 @@ export default class NumberToken extends Token {
     this.updateView();
   }
 
-  midPoint(): Position {
-    return {
-      x: this.position.x + this.width/2,
-      y: this.position.y + this.height/2,
-    }
-  }
-
   isPointSnapping(position: Position, other: NumberToken): SnapAction | null {
     // Snap below
     if(

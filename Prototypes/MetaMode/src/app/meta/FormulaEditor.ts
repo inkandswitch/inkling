@@ -6,8 +6,9 @@ import Vec from "../../lib/vec";
 
 import WritingRecognizer from "./WritingRecognizer";
 import NumberToken from "./NumberToken";
-import { Variable } from "./Scope";
+import { Label, Variable } from "./Scope";
 import MetaLayer from "./MetaLayer";
+import LabelToken from "./LabelToken";
 
 const PADDING = 3;
 const PADDING_BIG = 5;
@@ -22,10 +23,13 @@ export default class FormulaEditor {
 
   strokes: Array<Array<Position>> = [];
   strokeElements: Array<SVGElement> = [];
+  editWidth: number = 46;
   
   // State
   active: boolean = false;
   mode: "default" | "label" = "default";
+
+  constructor(private metaLayer: MetaLayer){}
   
   // SVG Elements
   protected wrapperElement = SVG.add('rect', {
@@ -56,7 +60,7 @@ export default class FormulaEditor {
   updateView(){
     if(this.active) {
 
-      let offsetWidth = this.height + PADDING_BIG * 2+ PADDING * 6;
+      let offsetWidth = this.editWidth + PADDING_BIG * 2+ PADDING * 6;
       if(this.formula != null) {
         this.position = this.formula.position
         this.width = this.formula.width +offsetWidth
@@ -76,12 +80,13 @@ export default class FormulaEditor {
       let position = Vec.add(this.position, Vec(this.formula ? this.formula.width : 0, 0))
       SVG.update(this.nextCharElement, {
         x: position.x+PADDING, y: this.position.y,
+        width: this.editWidth,
         visibility: "visible"
       })
       
       // Toggle
       SVG.update(this.toggleElement, {
-        cx: position.x+ this.height + 4*PADDING, cy: this.position.y + this.height/2,
+        cx: position.x+ this.editWidth + 4*PADDING, cy: this.position.y + this.height/2,
         visibility: "visible"
       })
 
@@ -108,16 +113,38 @@ export default class FormulaEditor {
            position.y < this.position.y + this.height
   }
 
+  isToggleMode(position: Position): boolean {
+    return this.active &&
+           position.x > this.position.x + this.width - 25 &&
+           position.y > this.position.y &&
+           position.x < this.position.x + this.width &&
+           position.y < this.position.y + this.height
+  }
+
+  
+
   activate(position: Position){
     this.position = position;
     this.active = true;
     this.strokes = [];
+    this.formula = null;
     this.updateView();
   }
 
   close(){
     this.active = false;
+    if(this.mode == 'label') {
+      console.log("make label");
+      
+      this.makeLabelFromStrokes();
+    }
     this.strokes = [];
+    this.strokeElements.forEach(se=>se.remove());
+    this.updateView();
+  }
+
+  toggleMode(){
+    this.mode = this.mode == "label" ? "default" : "label"
     this.updateView();
   }
 
@@ -138,6 +165,30 @@ export default class FormulaEditor {
     SVG.update(lastElement, {
       points: SVG.points(last)
     });
+  }
+
+  endStroke(layer: MetaLayer){
+    if(this.mode == "default") {
+      this.parseStrokes(layer);
+    } else {
+      let maxX = 0;
+      for(const stroke of this.strokes) {
+        for(const pt of stroke) {
+          if(pt.x > maxX) {
+            maxX = pt.x;
+          }
+        }
+      }
+      
+      this.editWidth = maxX - this.position.x + 46;
+      this.updateView();
+    }
+  }
+
+  makeLabelFromStrokes() {
+    let label = new Label(this.strokes);
+    let token = new LabelToken(this.position,label);
+    this.metaLayer.tokens.push(token);
   }
 
   parseStrokes(layer: MetaLayer){
