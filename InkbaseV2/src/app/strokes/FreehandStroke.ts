@@ -4,6 +4,7 @@ import StrokeGroup from './StrokeGroup';
 import Vec from '../../lib/vec';
 import Stroke from './Stroke';
 import SVG from '../Svg';
+import { GameObject } from '../GameObject';
 
 export default class FreehandStroke extends Stroke {
   readonly id = generateId();
@@ -67,3 +68,7 @@ export default class FreehandStroke extends Stroke {
     return minDistance;
   }
 }
+
+export const isFreehandStroke = (
+  gameObj: GameObject
+): gameObj is FreehandStroke => gameObj instanceof FreehandStroke;

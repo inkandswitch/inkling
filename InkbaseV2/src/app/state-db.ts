@@ -34,7 +34,9 @@ export function reclaimWeakRefs(timeBudgetMillis?: number) {
     }
   }
 
-  console.log('reclaimed', numReclaimed, 'weak refs');
+  if (numReclaimed > 0) {
+    console.log('reclaimed', numReclaimed, 'weak refs');
+  }
 }
 
 export function find<T extends GameObject>(

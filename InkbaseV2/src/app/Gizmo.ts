@@ -138,7 +138,7 @@ class GizmoInstance {
     }
   }
 
-  render(dt: number, t: number) {
+  render(_dt: number, _t: number) {
     this.updateLine();
     this.updateCenter();
     this.updateRadius();
@@ -147,9 +147,9 @@ class GizmoInstance {
       return;
     }
 
-    let angle = Vec.angle(Vec.sub(this.b.position, this.a.position));
+    const angle = Vec.angle(Vec.sub(this.b.position, this.a.position));
 
-    let d = [
+    const d = [
       SVG.arcPath(this.center, 20, angle - TAU / 4, Math.PI / 3),
       SVG.arcPath(this.center, 20, angle + TAU / 4, Math.PI / 3),
     ].join();
@@ -201,10 +201,9 @@ export default class Gizmo {
       { x: 600, y: 500 },
       { x: 900, y: 600 }
     );
-    this.page.strokeGroups.forEach(strokeGroup => {
-      const { a, b } = strokeGroup;
+    for (const { a, b } of this.page.strokeGroups) {
       this.findOrCreate(a, b);
-    });
+    }
   }
 
   private addStrokeGroup(p1: Position, p2: Position) {
@@ -221,7 +220,7 @@ export default class Gizmo {
     for (let i = 1; i < positions.length; i++) {
       const a = positions[i - 1];
       const b = positions[i];
-      const { a: a1, b: b1 } = this.addStrokeGroup(a, b);
+      const { a: _a1, b: _b1 } = this.addStrokeGroup(a, b);
     }
   }
 
@@ -235,8 +234,7 @@ export default class Gizmo {
 
     this.selection.touchingGizmo = false;
 
-    this.page.strokeGroups.forEach(strokeGroup => {
-      const { a, b } = strokeGroup;
+    for (const { a, b } of this.page.strokeGroups) {
       const gizmo = this.findOrCreate(a, b);
       if (gizmo.visible || a.isSelected || b.isSelected) {
         gizmo.visible = true; // Show this gizmo
@@ -245,7 +243,7 @@ export default class Gizmo {
       } else {
         gizmo.visible = false;
       }
-    });
+    }
   }
 
   private findOrCreate(a: Handle, b: Handle) {

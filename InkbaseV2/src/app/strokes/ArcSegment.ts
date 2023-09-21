@@ -3,8 +3,9 @@ import { generateId } from '../../lib/helpers';
 import Vec from '../../lib/vec';
 import SVG from '../Svg';
 import Handle from './Handle';
+import { GameObject } from '../GameObject';
 
-export default class ArcSegment {
+export default class ArcSegment extends GameObject {
   readonly id = generateId();
   readonly a: Handle;
   readonly b: Handle;
@@ -16,6 +17,8 @@ export default class ArcSegment {
   private needsRerender = true;
 
   constructor(aPos: Position, bPos: Position, cPos: Position) {
+    super();
+
     this.a = Handle.create('formal', aPos, this);
     this.b = Handle.create('formal', bPos, this);
     this.c = Handle.create('formal', cPos, this);

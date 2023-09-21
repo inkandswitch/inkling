@@ -1,64 +1,58 @@
 import Vec from '../lib/vec';
 import ArcSegment from './strokes/ArcSegment';
-import LineSegment from './strokes/LineSegment';
-import FreehandStroke from './strokes/FreehandStroke';
-import StrokeGroup from './strokes/StrokeGroup';
+import LineSegment, { isLineSegment } from './strokes/LineSegment';
+import FreehandStroke, { isFreehandStroke } from './strokes/FreehandStroke';
+import StrokeGroup, { isStrokeGroup } from './strokes/StrokeGroup';
 import Stroke from './strokes/Stroke';
 import StrokeClusters from './StrokeClusters';
 import { Position, PositionWithPressure } from '../lib/types';
 import Handle from './strokes/Handle';
 import StrokeAnalyzer from './StrokeAnalyzer';
-import { makeIterableIterator, render } from '../lib/helpers';
+import { makeIterableIterator } from '../lib/helpers';
+import { GameObject } from './GameObject';
 
 interface Options {
   strokeAnalyzer: boolean;
 }
 
-export default class Page {
+export default class Page extends GameObject {
   // Stroke clusters are possible stroke Groups
   readonly clusters = new StrokeClusters();
 
   // Stroke graph looks at the page and tries to be smart about finding structure
   readonly analyzer: StrokeAnalyzer | null;
 
-  // TODO: figure out a better model for how to store different kinds of strokes
-  // For now just keep them separate, until we have a better idea of what freehand strokes look like
-  readonly lineSegments: Array<LineSegment | ArcSegment> = [];
-  readonly strokeGroups: StrokeGroup[] = [];
-  readonly strokes: Stroke[] = [];
-
   constructor(options: Options) {
+    super();
     this.analyzer = options.strokeAnalyzer ? new StrokeAnalyzer(this) : null;
   }
 
   get freehandStrokes() {
-    return makeIterableIterator(
-      [this.strokes],
-      (s: Stroke): s is FreehandStroke => s instanceof FreehandStroke
-    );
+    return makeIterableIterator([this.children], isFreehandStroke);
+  }
+
+  get strokeGroups() {
+    return makeIterableIterator([this.children], isStrokeGroup);
+  }
+
+  get lineSegments() {
+    return makeIterableIterator([this.children], isLineSegment);
   }
 
   addLineSegment(aPos: Position, bPos: Position) {
-    const ls = new LineSegment(aPos, bPos);
-    this.lineSegments.push(ls);
-    return ls;
+    return this.adopt(new LineSegment(aPos, bPos));
   }
 
   addArcSegment(aPos: Position, bPos: Position, cPos: Position) {
-    const as = new ArcSegment(aPos, bPos, cPos);
-    this.lineSegments.push(as);
-    return as;
+    return this.adopt(new ArcSegment(aPos, bPos, cPos));
   }
 
   addStrokeGroup(strokes: Set<FreehandStroke>): StrokeGroup {
-    const sg = new StrokeGroup(strokes);
-    this.strokeGroups.push(sg);
-    return sg;
+    return this.adopt(new StrokeGroup(strokes));
   }
 
   addStroke<S extends Stroke>(stroke: S) {
-    this.strokes.push(stroke);
-    return stroke;
+    return this.adopt(stroke);
   }
 
   onstrokeUpdated(stroke: Stroke) {
@@ -68,8 +62,7 @@ export default class Page {
   }
 
   addFreehandStroke(points: Array<PositionWithPressure>) {
-    const s = new FreehandStroke(points);
-    this.addStroke(s);
+    const s = this.addStroke(new FreehandStroke(points));
     this.analyzer?.addStroke(s);
     return s;
   }
@@ -163,8 +156,9 @@ export default class Page {
   }
 
   render() {
-    this.lineSegments.forEach(render);
-    this.strokes.forEach(render);
+    for (const child of this.children) {
+      child.render();
+    }
     this.analyzer?.render();
   }
 }

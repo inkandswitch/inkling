@@ -1,10 +1,11 @@
-import FreehandStroke from './FreehandStroke';
+import FreehandStroke, { isFreehandStroke } from './FreehandStroke';
 import Handle from './Handle';
 
 import TransformationMatrix from '../../lib/TransformationMatrix';
 import { Position, PositionWithPressure } from '../../lib/types';
 
-import { farthestPair } from '../../lib/helpers';
+import { farthestPair, render } from '../../lib/helpers';
+import { GameObject } from '../GameObject';
 
 // import ClipperShape from "@doodle3d/clipper-js"
 
@@ -14,8 +15,7 @@ import { farthestPair } from '../../lib/helpers';
 // import Voronoi from "voronoi"
 // const voronoi = new Voronoi();
 
-export default class StrokeGroup {
-  readonly strokes: FreehandStroke[];
+export default class StrokeGroup extends GameObject {
   private pointData: PositionWithPressure[][];
   readonly a: Handle;
   readonly b: Handle;
@@ -27,14 +27,11 @@ export default class StrokeGroup {
   svgElements: SVGElement[] = [];
 
   constructor(strokes: Set<FreehandStroke>) {
-    for (const stroke of strokes) {
-      if (stroke.group) {
-        throw new Error('a freehand stroke cannot be in more than one group');
-      }
-      stroke.group = this;
-    }
+    super();
 
-    this.strokes = Array.from(strokes);
+    for (const stroke of strokes) {
+      this.adopt(stroke);
+    }
 
     // Generate Handles
     const points = this.strokes.flatMap(stroke => stroke.points);
@@ -51,6 +48,10 @@ export default class StrokeGroup {
     this.pointData = this.strokes.map(stroke =>
       stroke.points.map(p => transform.transformPoint(p))
     );
+  }
+
+  get strokes(): FreehandStroke[] {
+    return Array.from(this.children).filter(isFreehandStroke);
   }
 
   onHandleMoved() {
@@ -136,6 +137,8 @@ export default class StrokeGroup {
   }
 
   render() {
+    this.children.forEach(render);
+
     // if(!this.dirty) {
     //   return
     // }
@@ -167,6 +170,8 @@ export default class StrokeGroup {
     for (const elem of this.svgElements) {
       elem.remove();
     }
+
+    super.remove();
   }
 }
 
@@ -307,3 +312,6 @@ export default class StrokeGroup {
 
 //   return kernel;
 // }
+
+export const isStrokeGroup = (gameObj: GameObject): gameObj is StrokeGroup =>
+  gameObj instanceof StrokeGroup;

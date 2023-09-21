@@ -2,8 +2,9 @@ import { Position } from '../../lib/types';
 import { generateId } from '../../lib/helpers';
 import SVG from '../Svg';
 import Handle from './Handle';
+import { GameObject } from '../GameObject';
 
-export default class LineSegment {
+export default class LineSegment extends GameObject {
   readonly id = generateId();
   readonly a: Handle;
   readonly b: Handle;
@@ -13,6 +14,8 @@ export default class LineSegment {
   private needsRerender = true;
 
   constructor(aPos: Position, bPos: Position) {
+    super();
+
     this.a = Handle.create('formal', aPos, this);
     this.b = Handle.create('formal', bPos, this);
 
@@ -68,3 +71,6 @@ export default class LineSegment {
     this.needsRerender = false;
   }
 }
+
+export const isLineSegment = (gameObj: GameObject): gameObj is LineSegment =>
+  gameObj instanceof LineSegment;
