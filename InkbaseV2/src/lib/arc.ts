@@ -33,7 +33,6 @@ Arc.len = (arc: Arc) => {
   return length;
 };
 
-// TODO: Position should be declared in lib, not /app/strokes/Point
 interface Circle {
   center: Position;
   radius: number;
