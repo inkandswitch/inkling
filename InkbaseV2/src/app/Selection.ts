@@ -8,12 +8,11 @@ import Handle, { isCanonicalHandle } from './strokes/Handle';
 import * as stateDb from './state-db';
 
 export default class Selection {
-  // TODO: should the type of `handles` be WeakRef<Handle>[]?
-  readonly handles = new Set<Handle>();
+  readonly handles = [] as WeakRef<Handle>[];
   private origPosition = new WeakMap<Handle, Position>();
 
   // gesture state
-  tappedOn?: Handle;
+  tappedOn?: Handle; // TODO: turn this into a WeakRef<Handle>
   firstFinger?: Event;
   firstFingerMoved?: Event;
   secondFinger?: Event;
@@ -27,7 +26,7 @@ export default class Selection {
   ) {}
 
   includes(handle: Handle): boolean {
-    return this.handles.has(handle.canonicalInstance);
+    return this.handles.some(wr => wr.deref() === handle.canonicalInstance);
   }
 
   update1(events: Events) {
@@ -54,11 +53,14 @@ export default class Selection {
         const transform = TransformationMatrix.identity()
           .translate(pos.x, pos.y)
           .inverse();
-        for (const handle of this.handles) {
-          this.origPosition.set(
-            handle,
-            transform.transformPoint(handle.position)
-          );
+        for (const wr of this.handles) {
+          const handle = wr.deref();
+          if (handle) {
+            this.origPosition.set(
+              handle,
+              transform.transformPoint(handle.position)
+            );
+          }
         }
       } else {
         // Two fingers, go into full transform mode
@@ -75,11 +77,14 @@ export default class Selection {
           a,
           b
         ).inverse();
-        for (const handle of this.handles) {
-          this.origPosition.set(
-            handle,
-            transform.transformPoint(handle.position)
-          );
+        for (const wr of this.handles) {
+          const handle = wr.deref();
+          if (handle) {
+            this.origPosition.set(
+              handle,
+              transform.transformPoint(handle.position)
+            );
+          }
         }
       }
     }
@@ -114,8 +119,11 @@ export default class Selection {
         //   }
         // }
 
-        for (const handle of this.handles) {
-          handle.absorbNearbyHandles();
+        for (const wr of this.handles) {
+          const handle = wr.deref();
+          if (handle) {
+            handle.absorbNearbyHandles();
+          }
         }
 
         this.firstFinger = undefined;
@@ -149,23 +157,29 @@ export default class Selection {
   }
 
   selectHandle(handle: Handle) {
+    if (this.includes(handle)) {
+      return;
+    }
+
     handle.select();
-    this.handles.add(handle.canonicalInstance);
+    this.handles.push(new WeakRef(handle.canonicalInstance));
     this.updateLineSelections();
   }
 
   deselectHandle(handle: Handle) {
     handle.deselect();
-    this.handles.delete(handle.canonicalInstance);
+    const idxToRemove = this.handles.findIndex(
+      wr => wr.deref() === handle.canonicalInstance
+    );
+    if (idxToRemove >= 0) {
+      this.handles.splice(idxToRemove, 1);
+    }
     this.updateLineSelections();
   }
 
   updateLineSelections() {
     for (const ls of this.page.lineSegments) {
-      if (
-        this.handles.has(ls.a.canonicalInstance) &&
-        this.handles.has(ls.b.canonicalInstance)
-      ) {
+      if (this.includes(ls.a) && this.includes(ls.b)) {
         ls.select();
       } else {
         ls.deselect();
@@ -174,11 +188,12 @@ export default class Selection {
   }
 
   clearSelection() {
-    for (const handle of this.handles) {
-      handle.deselect();
+    for (const wr of this.handles) {
+      const handle = wr.deref();
+      handle?.deselect();
     }
 
-    this.handles.clear();
+    this.handles.length = 0;
     this.origPosition = new WeakMap(); // not sure why, but WeakMap has no clear()
 
     for (const ls of this.page.lineSegments) {
@@ -204,7 +219,12 @@ export default class Selection {
     }
 
     const transformedPositions = new Map<Handle, Position>();
-    for (const handle of this.handles) {
+    for (const wr of this.handles) {
+      const handle = wr.deref();
+      if (!handle) {
+        continue;
+      }
+
       const oldPos = this.origPosition.get(handle)!;
       const newPos = transform.transformPoint(oldPos);
       transformedPositions.set(handle, newPos);
@@ -213,7 +233,12 @@ export default class Selection {
     const snappedPositions = this.snaps.snapPositions(transformedPositions);
 
     const brokenOffHandles = new Set<Handle>();
-    for (const handle of this.handles) {
+    for (const wr of this.handles) {
+      const handle = wr.deref();
+      if (!handle) {
+        continue;
+      }
+
       const newPos = snappedPositions.get(handle)!;
       const handleThatBreaksOff = this.getHandleThatBreaksOff(handle, newPos);
       if (handleThatBreaksOff) {

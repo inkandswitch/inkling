@@ -73,9 +73,11 @@ onEveryFrame((dt, t) => {
   // Tell NativeEvent to handle all events sent from Swift, evaluating Input for each
   events.update();
 
-  // TODO: should Selection's handles be weak refs?
-  for (const handle of selection.handles) {
-    constraints.now.pin(handle);
+  for (const wr of selection.handles) {
+    const handle = wr.deref();
+    if (handle) {
+      constraints.now.pin(handle);
+    }
   }
   constraints.solve();
 
