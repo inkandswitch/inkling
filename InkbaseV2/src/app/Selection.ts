@@ -12,7 +12,7 @@ export default class Selection {
   private origPosition = new WeakMap<Handle, Position>();
 
   // gesture state
-  tappedOn?: Handle; // TODO: turn this into a WeakRef<Handle>
+  tappedOn?: WeakRef<Handle>;
   firstFinger?: Event;
   firstFingerMoved?: Event;
   secondFinger?: Event;
@@ -43,7 +43,7 @@ export default class Selection {
         );
         if (handle) {
           // this.selectHandle(handle); // Extracted to Input.ts
-          this.tappedOn = handle;
+          this.tappedOn = new WeakRef(handle);
         } else {
           this.tappedOn = undefined;
         }
