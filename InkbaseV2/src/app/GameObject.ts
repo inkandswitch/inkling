@@ -10,7 +10,7 @@ export abstract class GameObject {
   }
 
   adopt<T extends GameObject>(child: T): T {
-    child.remove();
+    child.parent?.children.delete(child);
     this.children.add(child);
     child.parent = this;
     return child;
