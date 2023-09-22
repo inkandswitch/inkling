@@ -14,14 +14,13 @@ export default class ArcSegment extends GameObject {
   private selected = false;
   private path = '';
   private readonly elements: { normal: SVGElement; selected: SVGElement };
-  private needsRerender = true;
 
   constructor(aPos: Position, bPos: Position, cPos: Position) {
     super();
 
-    this.a = this.adopt(Handle.create('formal', aPos, this));
-    this.b = this.adopt(Handle.create('formal', bPos, this));
-    this.c = this.adopt(Handle.create('formal', cPos, this));
+    this.a = this.adopt(Handle.create('formal', aPos));
+    this.b = this.adopt(Handle.create('formal', bPos));
+    this.c = this.adopt(Handle.create('formal', cPos));
 
     this.updatePath();
 
@@ -52,21 +51,15 @@ export default class ArcSegment extends GameObject {
 
   select() {
     this.selected = true;
-    this.needsRerender = true;
   }
 
   deselect() {
     this.selected = false;
-    this.needsRerender = true;
   }
 
-  onHandleMoved() {
-    this.needsRerender = true;
-  }
-
-  render() {
-    if (!this.needsRerender) {
-      return;
+  render(dt: number, t: number) {
+    for (const child of this.children) {
+      child.render(dt, t);
     }
 
     this.updatePath();
@@ -76,7 +69,5 @@ export default class ArcSegment extends GameObject {
       ...commonAttributes,
       stroke: this.selected ? 'rgba(180, 134, 255, 0.42)' : 'none',
     });
-
-    this.needsRerender = false;
   }
 }
