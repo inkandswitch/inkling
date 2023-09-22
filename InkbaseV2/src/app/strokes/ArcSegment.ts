@@ -19,9 +19,9 @@ export default class ArcSegment extends GameObject {
   constructor(aPos: Position, bPos: Position, cPos: Position) {
     super();
 
-    this.a = Handle.create('formal', aPos, this);
-    this.b = Handle.create('formal', bPos, this);
-    this.c = Handle.create('formal', cPos, this);
+    this.a = this.adopt(Handle.create('formal', aPos, this));
+    this.b = this.adopt(Handle.create('formal', bPos, this));
+    this.c = this.adopt(Handle.create('formal', cPos, this));
 
     this.updatePath();
 

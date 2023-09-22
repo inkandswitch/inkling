@@ -108,17 +108,17 @@ function arcPath(
   // Values outside this range produce nonsense arcs
   rotation = clip(rotation, -Math.PI, Math.PI);
 
-  let S = Vec.add(center, Vec.polar(angle, radius));
+  const S = Vec.add(center, Vec.polar(angle, radius));
   let path = '';
 
   if (mirror) {
-    let B = Vec.add(center, Vec.polar(angle - rotation, radius));
+    const B = Vec.add(center, Vec.polar(angle - rotation, radius));
     path += `M ${B.x}, ${B.y} A ${radius},${radius} 0 0,1 ${S.x}, ${S.y}`;
   } else {
     path += `M ${S.x}, ${S.y}`;
   }
 
-  let A = Vec.add(center, Vec.polar(angle + rotation, radius));
+  const A = Vec.add(center, Vec.polar(angle + rotation, radius));
   path += `A ${radius},${radius} 0 0,1 ${A.x}, ${A.y}`;
 
   return path;

@@ -2,7 +2,8 @@ import { Position } from '../lib/types';
 import Vec from '../lib/vec';
 import Page from './Page';
 import SVG from './Svg';
-import Handle from './strokes/Handle';
+import Handle, { isCanonicalHandle } from './strokes/Handle';
+import * as stateDb from './state-db';
 
 interface Options {
   handleSnaps: boolean;
@@ -24,9 +25,9 @@ export default class Snaps {
   snapPositions(transformedPositions: Map<Handle, Position>) {
     const snaps: Snap[] = [];
     const snapPositions = new Map<Handle, Position>();
-    const snapHandles = Array.from(Handle.all).filter(
-      h => !transformedPositions.has(h)
-    );
+    const snapHandles = stateDb
+      .findAll(isCanonicalHandle)
+      .filter(h => !transformedPositions.has(h));
     const selectedHandles = Array.from(transformedPositions.keys());
     const connectedHandles = this.page.handlesReachableFrom(selectedHandles);
 

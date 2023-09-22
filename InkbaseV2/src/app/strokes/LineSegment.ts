@@ -16,8 +16,8 @@ export default class LineSegment extends GameObject {
   constructor(aPos: Position, bPos: Position) {
     super();
 
-    this.a = Handle.create('formal', aPos, this);
-    this.b = Handle.create('formal', bPos, this);
+    this.a = this.adopt(Handle.create('formal', aPos, this));
+    this.b = this.adopt(Handle.create('formal', bPos, this));
 
     const commonAttributes = {
       x1: aPos.x,

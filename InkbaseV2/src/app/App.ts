@@ -10,7 +10,6 @@ import ColorTool from './tools/ColorTool';
 import Tool from './tools/Tool';
 import ConstraintTool from './tools/ConstraintTool';
 import SVG from './Svg';
-import Handle from './strokes/Handle';
 import Stroke from './strokes/Stroke';
 import * as constraints from './constraints';
 import { onEveryFrame } from '../lib/helpers';
@@ -24,6 +23,9 @@ const events = new Events((event: Event, state: InputState) => {
 });
 
 const page = new Page({ strokeAnalyzer: false });
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(window as any).page = page; // make it available for debugging from the console
+
 const snaps = new Snaps(page, { handleSnaps: true, alignmentSnaps: false });
 
 const selection = new Selection(page, snaps);
@@ -70,9 +72,6 @@ onEveryFrame((dt, t) => {
   toolPicker.selected?.render();
   snaps.render();
   page.render();
-  for (const handle of Handle.all) {
-    handle.render();
-  }
 
   gizmo.render(dt, t);
 

@@ -4,7 +4,8 @@ import Vec from '../lib/vec';
 import Events, { Event } from './NativeEvents';
 import Page from './Page';
 import Snaps from './Snaps';
-import Handle from './strokes/Handle';
+import Handle, { isCanonicalHandle } from './strokes/Handle';
+import * as stateDb from './state-db';
 
 export default class Selection {
   readonly handles = new Set<Handle>();
@@ -36,7 +37,10 @@ export default class Selection {
         this.firstFinger = fingerDown;
         this.firstFingerMoved = fingerDown;
 
-        const handle = this.page.findHandleNear(fingerDown.position);
+        const handle = stateDb.findNearPosition(
+          isCanonicalHandle,
+          fingerDown.position
+        );
         if (handle) {
           // this.selectHandle(handle); // Extracted to Input.ts
           this.tappedOn = handle;
@@ -244,7 +248,7 @@ export default class Selection {
     if (
       // TODO: decide based on acceleration?
       Vec.dist(handle.position, newPos) < 60 ||
-      handle.absorbedHandles.size === 0
+      handle.absorbedHandles.length === 0
     ) {
       return null;
     }

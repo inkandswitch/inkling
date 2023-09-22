@@ -2,6 +2,8 @@ import Vec from '../lib/vec';
 import Events, { Event } from './NativeEvents';
 import Page from './Page';
 import FreehandStroke from './strokes/FreehandStroke';
+import * as stateDb from './state-db';
+import { isCanonicalHandle } from './strokes/Handle';
 
 export default class FreehandSelection {
   readonly selectedStrokes = new Set<FreehandStroke>();
@@ -18,7 +20,10 @@ export default class FreehandSelection {
     if (fingerDown) {
       this.fingerDown = fingerDown;
       const foundStroke = this.page.findFreehandStrokeNear(fingerDown.position);
-      const foundHandle = this.page.findHandleNear(fingerDown.position);
+      const foundHandle = stateDb.findNearPosition(
+        isCanonicalHandle,
+        fingerDown.position
+      );
 
       // Register longpress
       window.setTimeout(() => {

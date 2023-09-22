@@ -68,6 +68,7 @@ export function objectWithSortedKeys(obj: Obj) {
 }
 
 export const notNull = <T>(x: T | null): x is T => !!x;
+export const notUndefined = <T>(x: T | undefined): x is T => !!x;
 
 export function toDegrees(radians: number) {
   return (radians * 180) / Math.PI;

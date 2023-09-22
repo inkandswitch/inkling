@@ -1,11 +1,10 @@
-import { Position } from '../lib/types';
 import * as stateDb from './state-db';
 
 export abstract class GameObject {
   parent: GameObject | null = null;
   readonly children = new Set<GameObject>();
 
-  constructor(public position: Position = { x: 0, y: 0 }) {
+  constructor() {
     this.parent?.children.add(this);
     stateDb.add(this);
   }

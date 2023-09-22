@@ -3,6 +3,8 @@ import Events, { TouchId, Event, InputState } from './NativeEvents';
 import Page from './Page';
 import Selection from './Selection';
 import SVG from './Svg';
+import { isCanonicalHandle } from './strokes/Handle';
+import * as stateDb from './state-db';
 
 // Variables that store state needed by our gestures go here.
 
@@ -12,7 +14,7 @@ import SVG from './Svg';
 // we'd capture any object(s?) that (eg) were under each finger/pencil "began" event.
 // In the "post" section (which would have to be outside applyEvent(), since we eagerly return)
 // we'd clean up any objects that are associated with each ended finger/pencil.
-let objects: Record<TouchId, any> = {}; // The objects we're currently manipulating with each finger/pencil.
+const objects: Record<TouchId, any> = {}; // The objects we're currently manipulating with each finger/pencil.
 
 // End gesture state variables.
 
@@ -29,7 +31,10 @@ export function applyEvent(
   // Please don't fret about the performance burden of gathering this state on every event —
   // it rounds to zero! We can optimize the heck out of this later, once we know what we even want.
 
-  const handleNearEvent = page.findHandleNear(event.position);
+  const handleNearEvent = stateDb.findNearPosition(
+    isCanonicalHandle,
+    event.position
+  );
   const gizmoNearEvent = gizmo.findNear(event.position);
 
   // Below here, you'll find a list of each gesture recognizer in the system, one by one.
@@ -41,7 +46,7 @@ export function applyEvent(
   // each state separately, since (in theory) these separations cleanly split the gesture space
   // into non-overlapping sets.
 
-  // TAP A HANDLE WITH THE FIRST FINGER —> SELECT THE HANDLE
+  // TAP A HANDLE WITH THE FIRST FINGER —> SELECT THE HANDLE
   if (
     event.type === 'finger' &&
     event.state === 'began' &&

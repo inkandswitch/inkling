@@ -61,69 +61,19 @@ export function findAll<T extends GameObject>(
 export function findAll(pred: (gameObj: GameObject) => boolean): GameObject[];
 export function findAll(pred: (gameObj: GameObject) => boolean): GameObject[] {
   const gameObjs = [] as GameObject[];
-  withMatchesDo(pred, gameObj => gameObjs.push(gameObj));
+  forEach(pred, gameObj => gameObjs.push(gameObj));
   return gameObjs;
 }
 
-export function findNearPosition<T extends GameObject>(
-  pos: Position,
-  pred: (gameObj: GameObject) => gameObj is T,
-  maxDist: number
-): T | null;
-export function findNearPosition(
-  pos: Position,
-  pred: (gameObj: GameObject) => boolean,
-  maxDist: number
-): GameObject | null;
-export function findNearPosition(
-  pos: Position,
-  pred: (gameObj: GameObject) => boolean,
-  maxDist = 20
-): GameObject | null {
-  let minDist = Infinity;
-  let nearestGameObj: GameObject | null = null;
-  withMatchesDo(
-    gameObj => pred(gameObj),
-    gameObj => {
-      const dist = Vec.dist(gameObj.position, pos);
-      if (dist < minDist && dist < maxDist) {
-        minDist = dist;
-        nearestGameObj = gameObj;
-      }
-    }
-  );
-  return nearestGameObj;
-}
-
-export function findAllNearPosition<T extends GameObject>(
-  pos: Position,
-  pred: (gameObj: GameObject) => gameObj is T,
-  maxDist: number
-): T[];
-export function findAllNearPosition(
-  pos: Position,
-  pred: (gameObj: GameObject) => boolean,
-  maxDist: number
-): GameObject[];
-export function findAllNearPosition(
-  pos: Position,
-  pred: (gameObj: GameObject) => boolean,
-  maxDist = 20
-) {
-  return findAll(gameObj => {
-    return pred(gameObj) && Vec.dist(gameObj.position, pos) <= maxDist;
-  });
-}
-
-export function withMatchesDo<T extends GameObject>(
+export function forEach<T extends GameObject>(
   pred: (gameObj: GameObject) => gameObj is T,
   fn: (gameObj: T) => void
 ): void;
-export function withMatchesDo(
+export function forEach(
   pred: (gameObj: GameObject) => boolean,
   fn: (gameObj: GameObject) => void
 ): void;
-export function withMatchesDo(
+export function forEach(
   pred: (gameObj: GameObject) => boolean,
   fn: (gameObj: GameObject) => void
 ): void {
@@ -133,4 +83,48 @@ export function withMatchesDo(
       fn(gameObj);
     }
   }
+}
+
+export function findNearPosition<T extends GameObject & { position: Position }>(
+  pred: (gameObj: GameObject) => gameObj is T,
+  pos: Position,
+  maxDist = 20
+): T | null {
+  let minDist = Infinity;
+  let nearestGameObj: GameObject | null = null;
+  forEach(pred, gameObj => {
+    const dist = Vec.dist(gameObj.position, pos);
+    if (dist < minDist && dist < maxDist) {
+      minDist = dist;
+      nearestGameObj = gameObj;
+    }
+  });
+  return nearestGameObj;
+}
+
+export function findAllNearPosition<
+  T extends GameObject & { position: Position },
+>(
+  pred: (gameObj: GameObject) => gameObj is T,
+  pos: Position,
+  maxDist = 20
+): T[] {
+  const gameObjs = [] as T[];
+  forEachNearPosition(pred, pos, maxDist, gameObj => gameObjs.push(gameObj));
+  return gameObjs;
+}
+
+export function forEachNearPosition<
+  T extends GameObject & { position: Position },
+>(
+  pred: (gameObj: GameObject) => gameObj is T,
+  pos: Position,
+  maxDist: number,
+  fn: (gameObj: T) => void
+): void {
+  forEach(pred, gameObj => {
+    if (Vec.dist(gameObj.position, pos) <= maxDist) {
+      fn(gameObj);
+    }
+  });
 }

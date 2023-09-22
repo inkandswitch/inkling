@@ -61,9 +61,9 @@ export default class ConstraintTool extends Tool<FreehandStroke> {
 
   onAction() {
     if (!this.onActionState) {
-      const a = Handle.create('informal', { x: 100, y: 100 });
+      const a = this.page.adopt(Handle.create('informal', { x: 100, y: 100 }));
       const { variable: ay } = constraints.property(a, 'y').variables;
-      const b = Handle.create('informal', { x: 200, y: 100 });
+      const b = this.page.adopt(Handle.create('informal', { x: 200, y: 100 }));
       const { variable: by } = constraints.property(b, 'y').variables;
       const { result } = (this.onActionState = constraints.formula(
         [ay, by],

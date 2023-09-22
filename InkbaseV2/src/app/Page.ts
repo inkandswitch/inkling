@@ -1,4 +1,3 @@
-import Vec from '../lib/vec';
 import ArcSegment from './strokes/ArcSegment';
 import LineSegment, { isLineSegment } from './strokes/LineSegment';
 import FreehandStroke, { isFreehandStroke } from './strokes/FreehandStroke';
@@ -65,21 +64,6 @@ export default class Page extends GameObject {
     const s = this.addStroke(new FreehandStroke(points));
     this.analyzer?.addStroke(s);
     return s;
-  }
-
-  findHandleNear(pos: Position, dist = 20): Handle | null {
-    let closestHandle: Handle | null = null;
-    let closestDistance = dist;
-
-    for (const handle of Handle.all) {
-      const d = Vec.dist(handle.position, pos);
-      if (d < closestDistance) {
-        closestDistance = d;
-        closestHandle = handle;
-      }
-    }
-
-    return closestHandle;
   }
 
   handlesReachableFrom(startHandles: Handle[]) {

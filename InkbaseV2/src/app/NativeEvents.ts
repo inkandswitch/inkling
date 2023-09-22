@@ -80,7 +80,7 @@ export default class Events {
 
   // prettier-ignore
   update() {
-    for (let event of this.events) {
+    for (const event of this.events) {
       let state: InputState;
 
       // Tempted to make this a dynamic dispatch
