@@ -10,7 +10,6 @@ import FreehandStroke from './strokes/FreehandStroke';
 import * as constraints from './constraints';
 import Line from '../lib/line';
 import { GameObject } from './GameObject';
-import * as stateDb from './state-db';
 
 function stroke(color: string, width = 6) {
   return {
