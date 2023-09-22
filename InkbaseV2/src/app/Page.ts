@@ -19,6 +19,7 @@ export default class Page extends GameObject {
   readonly clusters = new StrokeClusters();
 
   // Stroke graph looks at the page and tries to be smart about finding structure
+  // TODO: should StrokeAnalyzer be a GameObject?
   readonly analyzer: StrokeAnalyzer | null;
 
   constructor(options: Options) {
