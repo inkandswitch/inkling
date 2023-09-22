@@ -23,9 +23,6 @@ const events = new Events((event: Event, state: InputState) => {
 });
 
 const page = new Page({ strokeAnalyzer: false });
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-(window as any).page = page; // make it available for debugging from the console
-
 const snaps = new Snaps(page, { handleSnaps: true, alignmentSnaps: false });
 
 const selection = new Selection(page, snaps);
