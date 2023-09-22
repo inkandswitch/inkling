@@ -109,6 +109,7 @@ export default class Page extends GameObject {
     return connectedHandles;
   }
 
+  // TODO: refactor to state-db
   findFreehandStrokeNear(pos: Position, dist = 20) {
     let closestStroke = null;
     let closestDistance = dist;
@@ -124,6 +125,7 @@ export default class Page extends GameObject {
     return closestStroke;
   }
 
+  // TODO: refactor to state-db
   findStrokeGroupNear(pos: Position, dist = 20) {
     let closestStrokeGroup = null;
     let closestDistance = dist;

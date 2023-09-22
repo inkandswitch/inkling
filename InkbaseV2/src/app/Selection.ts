@@ -8,7 +8,9 @@ import Handle, { isCanonicalHandle } from './strokes/Handle';
 import * as stateDb from './state-db';
 
 export default class Selection {
+  // TODO: should the type of `handles` be WeakRef<Handle>[]?
   readonly handles = new Set<Handle>();
+  // TODO: should `origPosition` be a WeakMap?
   readonly origPosition = new Map<Handle, Position>();
 
   // gesture state
