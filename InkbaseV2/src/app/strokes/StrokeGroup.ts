@@ -4,7 +4,7 @@ import Handle from './Handle';
 import TransformationMatrix from '../../lib/TransformationMatrix';
 import { Position, PositionWithPressure } from '../../lib/types';
 
-import { farthestPair, render } from '../../lib/helpers';
+import { farthestPair } from '../../lib/helpers';
 import { GameObject } from '../GameObject';
 
 // import ClipperShape from "@doodle3d/clipper-js"
@@ -70,13 +70,17 @@ export default class StrokeGroup extends GameObject {
     }
   }
 
-  minDistanceFrom(pos: Position) {
-    let minDistance = Infinity;
+  distanceToPoint(pos: Position) {
+    let minDistance: number | null = null;
     for (const stroke of this.strokes) {
-      minDistance = Math.min(
-        minDistance,
-        stroke.distanceToPoint(pos) ?? Infinity
-      );
+      const dist = stroke.distanceToPoint(pos);
+      if (dist === null) {
+        continue;
+      } else if (minDistance === null) {
+        minDistance = dist;
+      } else {
+        minDistance = Math.min(minDistance, dist);
+      }
     }
     return minDistance;
   }
