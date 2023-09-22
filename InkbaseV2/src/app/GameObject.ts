@@ -29,5 +29,5 @@ export abstract class GameObject {
     child.remove();
   }
 
-  abstract render(): void;
+  abstract render(dt: number, t: number): void;
 }

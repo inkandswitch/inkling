@@ -24,9 +24,9 @@ const events = new Events((event: Event, state: InputState) => {
 });
 
 const root = new (class extends GameObject {
-  render() {
+  render(dt: number, t: number) {
     for (const child of this.children) {
-      child.render();
+      child.render(dt, t);
     }
   }
 })();
@@ -80,8 +80,7 @@ onEveryFrame((dt, t) => {
   constraints.solve();
 
   // render everything
-  root.render();
-  gizmo.render(dt, t);
+  root.render(dt, t);
 
   // Ivan is currently using this to debug Input — he'll remove it soon
   // SVG.now('foreignObject', {

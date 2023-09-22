@@ -141,9 +141,9 @@ export default class Page extends GameObject {
     return closestStrokeGroup;
   }
 
-  render() {
+  render(dt: number, t: number) {
     for (const child of this.children) {
-      child.render();
+      child.render(dt, t);
     }
     this.analyzer?.render();
   }

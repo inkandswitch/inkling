@@ -9,6 +9,8 @@ import { Position } from '../lib/types';
 import FreehandStroke from './strokes/FreehandStroke';
 import * as constraints from './constraints';
 import Line from '../lib/line';
+import { GameObject } from './GameObject';
+import * as stateDb from './state-db';
 
 function stroke(color: string, width = 6) {
   return {
@@ -22,7 +24,7 @@ function stroke(color: string, width = 6) {
 const green = 'color(display-p3 0 1 0.8)';
 const grey = 'color(display-p3 0.8 0.8 0.8)';
 
-class GizmoInstance {
+class GizmoInstance extends GameObject {
   line: Line;
   center: Position;
   radius: number;
@@ -37,6 +39,7 @@ class GizmoInstance {
     public a: Handle,
     public b: Handle
   ) {
+    super();
     this.line = this.updateLine();
     this.center = this.updateCenter();
     this.radius = this.updateRadius();
@@ -138,7 +141,7 @@ class GizmoInstance {
     }
   }
 
-  render(_dt: number, _t: number) {
+  render() {
     this.updateLine();
     this.updateCenter();
     this.updateRadius();
@@ -164,13 +167,11 @@ class GizmoInstance {
 }
 
 export default class Gizmo {
-  all: GizmoInstance[] = [];
-
+  // TODO: refactor to state-db
   findNear(pos: Position, dist = 20): GizmoInstance | null {
     let closestGizmo: GizmoInstance | null = null;
     let closestDistance = dist;
-
-    for (const gizmo of this.all) {
+    stateDb.forEach(isGizmoInstance, gizmo => {
       // const d = Vec.dist(gizmo.position, pos);
       const l = Line.distToPoint(gizmo.line, pos);
       const a = Vec.dist(gizmo.center, pos);
@@ -179,7 +180,7 @@ export default class Gizmo {
         closestDistance = l;
         closestGizmo = gizmo;
       }
-    }
+    });
 
     return closestGizmo;
   }
@@ -246,24 +247,30 @@ export default class Gizmo {
     }
   }
 
+  // TODO: chat w/ Ivan about what happens to gizmos when handles are absorbed / broken off
   private findOrCreate(a: Handle, b: Handle) {
     // Sort a and b so that a has the lower id
     if (a.id > b.id) {
       [a, b] = [b, a];
     }
-    let giz = this.all.find(gizmo => gizmo.a === a && gizmo.b === b);
-    if (!giz) {
-      this.all.push((giz = new GizmoInstance(a, b)));
+
+    for (const gizmo of a.children) {
+      if (gizmo instanceof GizmoInstance && gizmo.a === a && gizmo.b === b) {
+        return gizmo;
+      }
     }
+
+    const giz = new GizmoInstance(a, b);
+    a.adopt(giz);
     return giz;
   }
 
-  render(dt: number, t: number) {
-    this.all.forEach(gizmo => gizmo.render(dt, t));
-    //   this.selection.distPos = null;
-    //   this.selection.anglePos = null;
-    //   if (Object.values(this.selection.dragging).length == 2) this.crossbow();
-  }
+  // render(dt: number, t: number) {
+  //   this.all.forEach(gizmo => gizmo.render(dt, t));
+  //   this.selection.distPos = null;
+  //   this.selection.anglePos = null;
+  //   if (Object.values(this.selection.dragging).length == 2) this.crossbow();
+  // }
 
   // crossbow() {
   //   let dist = Vec.dist(a.position, b.position);
@@ -317,3 +324,7 @@ export default class Gizmo {
   //   }
   // }
 }
+
+export const isGizmoInstance = (
+  gameObj: GameObject
+): gameObj is GizmoInstance => gameObj instanceof GizmoInstance;

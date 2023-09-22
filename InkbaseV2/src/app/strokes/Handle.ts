@@ -274,11 +274,15 @@ export default class Handle extends GameObject {
     constraints.onHandlesReconfigured();
   }
 
-  render() {
+  render(t: number, dt: number) {
     const state = this.instanceState;
 
     if (!state.isCanonical) {
       return;
+    }
+
+    for (const child of this.children) {
+      child.render(dt, t);
     }
 
     SVG.update(state.elements.normal, {
