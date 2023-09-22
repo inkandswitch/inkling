@@ -21,7 +21,7 @@ export type EventType = Event['type'];
 export type EventState = 'began' | 'moved' | 'cancelled' | 'ended';
 export type TouchId = string;
 
-interface AEvent {
+interface SharedEventProperties {
   state: EventState;
   id: TouchId;
   position: Position;
@@ -29,18 +29,18 @@ interface AEvent {
   radius: number;
 }
 
-export interface PencilEvent extends AEvent {
+export interface PencilEvent extends SharedEventProperties {
   type: 'pencil';
   pressure: number;
   altitude: number;
   azimuth: number;
 }
 
-export interface FingerEvent extends AEvent {
+export interface FingerEvent extends SharedEventProperties {
   type: 'finger';
 }
 
-interface AState {
+interface SharedStateProperties {
   down: boolean; // Is the pencil/finger currently down?
   drag: boolean; // Has the pencil/finger moved at least a tiny bit since being put down?
   // TODO — do we want to store the original & current *event* instead of cherry-picking their properties?
@@ -48,10 +48,10 @@ interface AState {
   originalPosition: Position | null; // Where was the pencil/finger initially put down?
 }
 
-export interface PencilState extends AState {
+export interface PencilState extends SharedStateProperties {
   event: PencilEvent; // What's the current (or most recent) event that has contributed to the state?
 }
-export interface FingerState extends AState {
+export interface FingerState extends SharedStateProperties {
   id: TouchId; // What's the ID of this finger?
   event: FingerEvent; // What's the current (or most recent) event that has contributed to the state?
 }
