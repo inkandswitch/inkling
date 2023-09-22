@@ -11,13 +11,12 @@ export default class LineSegment extends GameObject {
 
   private selected = false;
   private readonly elements: { normal: SVGElement; selected: SVGElement };
-  private needsRerender = true;
 
   constructor(aPos: Position, bPos: Position) {
     super();
 
-    this.a = this.adopt(Handle.create('formal', aPos, this));
-    this.b = this.adopt(Handle.create('formal', bPos, this));
+    this.a = this.adopt(Handle.create('formal', aPos));
+    this.b = this.adopt(Handle.create('formal', bPos));
 
     const commonAttributes = {
       x1: aPos.x,
@@ -38,22 +37,16 @@ export default class LineSegment extends GameObject {
   }
 
   select() {
-    this.needsRerender = true;
     this.selected = true;
   }
 
   deselect() {
-    this.needsRerender = true;
     this.selected = false;
   }
 
-  onHandleMoved() {
-    this.needsRerender = true;
-  }
-
-  render() {
-    if (!this.needsRerender) {
-      return;
+  render(dt: number, t: number) {
+    for (const child of this.children) {
+      child.render(dt, t);
     }
 
     const commonAttributes = {
@@ -67,8 +60,6 @@ export default class LineSegment extends GameObject {
       ...commonAttributes,
       stroke: this.selected ? 'rgba(180, 134, 255, 0.42)' : 'none',
     });
-
-    this.needsRerender = false;
   }
 }
 
