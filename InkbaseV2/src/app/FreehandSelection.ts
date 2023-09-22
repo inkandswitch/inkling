@@ -1,7 +1,7 @@
 import Vec from '../lib/vec';
 import Events, { Event } from './NativeEvents';
 import Page from './Page';
-import FreehandStroke from './strokes/FreehandStroke';
+import FreehandStroke, { isFreehandStroke } from './strokes/FreehandStroke';
 import * as stateDb from './state-db';
 import { isCanonicalHandle } from './strokes/Handle';
 
@@ -19,7 +19,10 @@ export default class FreehandSelection {
     const fingerDown = events.find('finger', 'began');
     if (fingerDown) {
       this.fingerDown = fingerDown;
-      const foundStroke = this.page.findFreehandStrokeNear(fingerDown.position);
+      const foundStroke = stateDb.findNearPosition(
+        isFreehandStroke,
+        fingerDown.position
+      );
       const foundHandle = stateDb.findNearPosition(
         isCanonicalHandle,
         fingerDown.position

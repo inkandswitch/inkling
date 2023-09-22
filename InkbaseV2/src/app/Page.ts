@@ -111,22 +111,6 @@ export default class Page extends GameObject {
   }
 
   // TODO: refactor to state-db
-  findFreehandStrokeNear(pos: Position, dist = 20) {
-    let closestStroke = null;
-    let closestDistance = dist;
-
-    for (const stroke of this.freehandStrokes) {
-      const d = stroke.distanceToPoint(pos);
-      if (d && d < closestDistance) {
-        closestDistance = d;
-        closestStroke = stroke;
-      }
-    }
-
-    return closestStroke;
-  }
-
-  // TODO: refactor to state-db
   findStrokeGroupNear(pos: Position, dist = 20) {
     let closestStrokeGroup = null;
     let closestDistance = dist;
