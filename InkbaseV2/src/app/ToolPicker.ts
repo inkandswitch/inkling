@@ -1,11 +1,17 @@
 import Vec from '../lib/vec';
+import { GameObject } from './GameObject';
 import Events from './NativeEvents';
 import Tool from './tools/Tool';
 
-export default class ToolPicker {
+export default class ToolPicker extends GameObject {
   selected?: Tool;
 
   constructor(private tools: Tool[]) {
+    super();
+    for (const tool of tools) {
+      this.adopt(tool);
+    }
+
     this.select(tools[0]);
   }
 
@@ -42,5 +48,9 @@ export default class ToolPicker {
         tool.onDeselected();
       }
     }
+  }
+
+  render() {
+    this.selected?.render();
   }
 }

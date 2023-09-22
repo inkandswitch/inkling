@@ -54,6 +54,7 @@ const toolPicker = new ToolPicker([
     angle: true,
   }),
 ]);
+root.adopt(toolPicker);
 
 onEveryFrame((dt, t) => {
   const t0 = performance.now();
@@ -78,9 +79,7 @@ onEveryFrame((dt, t) => {
   constraints.solve();
 
   // render everything
-  toolPicker.selected?.render();
   root.render();
-
   gizmo.render(dt, t);
 
   // Ivan is currently using this to debug Input — he'll remove it soon

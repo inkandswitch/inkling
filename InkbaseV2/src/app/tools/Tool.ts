@@ -3,8 +3,9 @@ import { PositionWithPressure, PositionWithRadius } from '../../lib/types';
 import SVG from '../Svg';
 import Page from '../Page';
 import Stroke from '../strokes/Stroke';
+import { GameObject } from '../GameObject';
 
-export default class Tool<S extends Stroke = Stroke> {
+export default class Tool<S extends Stroke = Stroke> extends GameObject {
   button: SVGElement;
   private isSelected = false;
   stroke?: S;
@@ -16,6 +17,8 @@ export default class Tool<S extends Stroke = Stroke> {
     public page: Page,
     public strokeClass?: { new (points: PositionWithPressure[]): S }
   ) {
+    super();
+
     this.button = SVG.add('circle', { cx: buttonX, cy: buttonY, r: 20 });
 
     SVG.add('text', { x: buttonX, y: buttonY, class: 'tool', content: label });
