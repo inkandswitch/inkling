@@ -16,14 +16,26 @@ import { onEveryFrame } from '../lib/helpers';
 import Gizmo from './Gizmo';
 import { applyEvent } from './Input';
 import * as stateDb from './state-db';
+import { GameObject } from './GameObject';
 
 // This is a pretzel, because the interface between NativeEvents and Input is a work in progress.
 const events = new Events((event: Event, state: InputState) => {
   applyEvent(event, state, events, page, selection, gizmo);
 });
 
+const root = new (class extends GameObject {
+  render() {
+    for (const child of this.children) {
+      child.render();
+    }
+  }
+})();
+
 const page = new Page({ strokeAnalyzer: false });
+root.adopt(page);
+
 const snaps = new Snaps(page, { handleSnaps: true, alignmentSnaps: false });
+root.adopt(snaps);
 
 const selection = new Selection(page, snaps);
 const freehandSelection = new FreehandSelection(page);
@@ -67,8 +79,7 @@ onEveryFrame((dt, t) => {
 
   // render everything
   toolPicker.selected?.render();
-  snaps.render();
-  page.render();
+  root.render();
 
   gizmo.render(dt, t);
 

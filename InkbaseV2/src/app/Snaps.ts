@@ -4,13 +4,14 @@ import Page from './Page';
 import SVG from './Svg';
 import Handle, { isCanonicalHandle } from './strokes/Handle';
 import * as stateDb from './state-db';
+import { GameObject } from './GameObject';
 
 interface Options {
   handleSnaps: boolean;
   alignmentSnaps: boolean;
 }
 
-export default class Snaps {
+export default class Snaps extends GameObject {
   private activeSnaps: Snap[] = [];
 
   // rendering
@@ -20,7 +21,9 @@ export default class Snaps {
   constructor(
     private page: Page,
     private options: Options
-  ) {}
+  ) {
+    super();
+  }
 
   snapPositions(transformedPositions: Map<Handle, Position>) {
     const snaps: Snap[] = [];
