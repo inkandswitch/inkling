@@ -110,22 +110,6 @@ export default class Page extends GameObject {
     return connectedHandles;
   }
 
-  // TODO: refactor to state-db
-  findStrokeGroupNear(pos: Position, dist = 20) {
-    let closestStrokeGroup = null;
-    let closestDistance = dist;
-
-    for (const strokeGroup of this.strokeGroups) {
-      const d = strokeGroup.distanceToPoint(pos);
-      if (d && d < closestDistance) {
-        closestDistance = d;
-        closestStrokeGroup = strokeGroup;
-      }
-    }
-
-    return closestStrokeGroup;
-  }
-
   render(dt: number, t: number) {
     for (const child of this.children) {
       child.render(dt, t);

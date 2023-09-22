@@ -3,12 +3,13 @@ import Events from '../NativeEvents';
 import Page from '../Page';
 import * as constraints from '../constraints';
 import FreehandStroke from '../strokes/FreehandStroke';
-import StrokeGroup from '../strokes/StrokeGroup';
+import StrokeGroup, { isStrokeGroup } from '../strokes/StrokeGroup';
 import Tool from './Tool';
 import SVG from '../Svg';
 import { toDegrees } from '../../lib/helpers';
 import { Position } from '../../lib/types';
 import Handle from '../strokes/Handle';
+import * as stateDb from '../state-db';
 
 interface Options {
   vertical: boolean;
@@ -136,7 +137,7 @@ export default class ConstraintTool extends Tool<FreehandStroke> {
     const fingerDown = events.find('finger', 'began');
     if (fingerDown) {
       this.updateLastTap(
-        this.page.findStrokeGroupNear(fingerDown.position, 40)
+        stateDb.findNearPosition(isStrokeGroup, fingerDown.position, 40)
       );
     }
 
