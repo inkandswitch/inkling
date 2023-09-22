@@ -21,7 +21,6 @@ interface CanonicalInstanceState {
   position: Position;
   elements: { normal: SVGElement; selected: SVGElement; label: SVGTextElement };
   isSelected: boolean;
-  needsRerender: boolean;
   wasRemoved: boolean;
 }
 
@@ -82,7 +81,6 @@ export default class Handle extends GameObject {
         }) as SVGTextElement,
       },
       isSelected: false,
-      needsRerender: true,
       wasRemoved: false,
     };
   }
@@ -139,7 +137,6 @@ export default class Handle extends GameObject {
     }
 
     this.instanceState.position = pos;
-    this.instanceState.needsRerender = true;
 
     // notify listeners
     this.notifyListeners(listener => listener.onHandleMoved(this));
@@ -159,7 +156,6 @@ export default class Handle extends GameObject {
     }
 
     this.instanceState.isSelected = true;
-    this.instanceState.needsRerender = true;
   }
 
   deselect() {
@@ -169,7 +165,6 @@ export default class Handle extends GameObject {
     }
 
     this.instanceState.isSelected = false;
-    this.instanceState.needsRerender = true;
   }
 
   get isSelected(): boolean {
@@ -286,10 +281,6 @@ export default class Handle extends GameObject {
       return;
     }
 
-    if (!state.needsRerender) {
-      return;
-    }
-
     SVG.update(state.elements.normal, {
       transform: `translate(${state.position.x} ${state.position.y})`,
     });
@@ -307,8 +298,6 @@ export default class Handle extends GameObject {
         this.position.y
       )})`,
     });
-
-    state.needsRerender = false;
   }
 
   private removeFromDOM() {
