@@ -173,24 +173,6 @@ class GizmoInstance extends GameObject {
 }
 
 export default class Gizmo {
-  // TODO: refactor to state-db
-  findNear(pos: Position, dist = 20): GizmoInstance | null {
-    let closestGizmo: GizmoInstance | null = null;
-    let closestDistance = dist;
-    stateDb.forEach(isGizmoInstance, gizmo => {
-      // const d = Vec.dist(gizmo.position, pos);
-      const l = Line.distToPoint(gizmo.line, pos);
-      const a = Vec.dist(gizmo.center, pos);
-
-      if (l < closestDistance || a < closestDistance) {
-        closestDistance = l;
-        closestGizmo = gizmo;
-      }
-    });
-
-    return closestGizmo;
-  }
-
   constructor(
     public page: Page,
     public selection: Selection,

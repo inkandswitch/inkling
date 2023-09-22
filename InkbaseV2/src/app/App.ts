@@ -20,7 +20,7 @@ import { GameObject } from './GameObject';
 
 // This is a pretzel, because the interface between NativeEvents and Input is a work in progress.
 const events = new Events((event: Event, state: InputState) => {
-  applyEvent(event, state, events, page, selection, gizmo);
+  applyEvent(event, state, events, selection);
 });
 
 const root = new (class extends GameObject {

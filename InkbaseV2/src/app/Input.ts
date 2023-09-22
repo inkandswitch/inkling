@@ -1,4 +1,4 @@
-import Gizmo from './Gizmo';
+import { isGizmoInstance } from './Gizmo';
 import Events, { TouchId, Event, InputState } from './NativeEvents';
 import Page from './Page';
 import Selection from './Selection';
@@ -23,9 +23,7 @@ export function applyEvent(
   event: Event, // The current event we're processing.
   state: InputState, // The current state of the pencil or finger that generated this event.
   events: Events, // The full NativeEvents instance, so we can look at other the pencil/fingers.
-  page: Page,
-  selection: Selection,
-  gizmo: Gizmo
+  selection: Selection
 ) {
   // This is a good place to set up any state needed by the below gesture recognizers.
   // Please don't fret about the performance burden of gathering this state on every event —
@@ -35,7 +33,10 @@ export function applyEvent(
     isCanonicalHandle,
     event.position
   );
-  const gizmoNearEvent = gizmo.findNear(event.position);
+  const gizmoNearEvent = stateDb.findNearPosition(
+    isGizmoInstance,
+    event.position
+  );
 
   // Below here, you'll find a list of each gesture recognizer in the system, one by one.
   // Each recognized gesture should end with a return, to keep the cyclomatic complexity super low.
