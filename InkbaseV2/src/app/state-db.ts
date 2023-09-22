@@ -1,5 +1,4 @@
 import { Position } from '../lib/types';
-import Vec from '../lib/vec';
 import { GameObject } from './GameObject';
 
 const allGameObjects = [] as WeakRef<GameObject>[];
@@ -95,16 +94,16 @@ export function forEach(
   }
 }
 
-export function findNearPosition<T extends GameObject & { position: Position }>(
-  pred: (gameObj: GameObject) => gameObj is T,
+export function findNearPosition<T extends GameObject>(
+  typePred: (gameObj: GameObject) => gameObj is T,
   pos: Position,
   maxDist = 20
 ): T | null {
   let minDist = Infinity;
   let nearestGameObj: GameObject | null = null;
-  forEach(pred, gameObj => {
-    const dist = Vec.dist(gameObj.position, pos);
-    if (dist < minDist && dist < maxDist) {
+  forEach(typePred, gameObj => {
+    const dist = gameObj.distanceToPoint(pos);
+    if (dist !== null && dist < minDist && dist < maxDist) {
       minDist = dist;
       nearestGameObj = gameObj;
     }
@@ -112,28 +111,27 @@ export function findNearPosition<T extends GameObject & { position: Position }>(
   return nearestGameObj;
 }
 
-export function findAllNearPosition<
-  T extends GameObject & { position: Position },
->(
-  pred: (gameObj: GameObject) => gameObj is T,
+export function findAllNearPosition<T extends GameObject>(
+  typePred: (gameObj: GameObject) => gameObj is T,
   pos: Position,
   maxDist = 20
 ): T[] {
   const gameObjs = [] as T[];
-  forEachNearPosition(pred, pos, maxDist, gameObj => gameObjs.push(gameObj));
+  forEachNearPosition(typePred, pos, maxDist, gameObj =>
+    gameObjs.push(gameObj)
+  );
   return gameObjs;
 }
 
-export function forEachNearPosition<
-  T extends GameObject & { position: Position },
->(
-  pred: (gameObj: GameObject) => gameObj is T,
+export function forEachNearPosition<T extends GameObject>(
+  typePred: (gameObj: GameObject) => gameObj is T,
   pos: Position,
   maxDist: number,
   fn: (gameObj: T) => void
 ): void {
-  forEach(pred, gameObj => {
-    if (Vec.dist(gameObj.position, pos) <= maxDist) {
+  forEach(typePred, gameObj => {
+    const dist = gameObj.distanceToPoint(pos);
+    if (dist !== null && dist <= maxDist) {
       fn(gameObj);
     }
   });
