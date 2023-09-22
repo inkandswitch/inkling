@@ -40,15 +40,17 @@ export function reclaimWeakRefs(timeBudgetMillis?: number) {
 }
 
 export function find<T extends GameObject>(
-  pred: (gameObj: GameObject) => gameObj is T
+  typePred: (gameObj: GameObject) => gameObj is T,
+  pred?: (gameObj: T) => boolean
 ): T | null;
 export function find(pred: (gameObj: GameObject) => boolean): GameObject | null;
 export function find(
-  pred: (gameObj: GameObject) => boolean
+  pred1: (gameObj: GameObject) => boolean,
+  pred2?: (gameObj: GameObject) => boolean
 ): GameObject | null {
   for (const wr of allGameObjects) {
     const gameObj = wr.deref();
-    if (gameObj && pred(gameObj)) {
+    if (gameObj && pred1(gameObj) && (!pred2 || pred2(gameObj))) {
       return gameObj;
     }
   }
@@ -56,17 +58,25 @@ export function find(
 }
 
 export function findAll<T extends GameObject>(
-  pred: (gameObj: GameObject) => gameObj is T
+  typePred: (gameObj: GameObject) => gameObj is T,
+  pred?: (gameObj: T) => boolean
 ): T[];
 export function findAll(pred: (gameObj: GameObject) => boolean): GameObject[];
-export function findAll(pred: (gameObj: GameObject) => boolean): GameObject[] {
+export function findAll(
+  pred1: (gameObj: GameObject) => boolean,
+  pred2?: (gameObj: GameObject) => boolean
+): GameObject[] {
   const gameObjs = [] as GameObject[];
-  forEach(pred, gameObj => gameObjs.push(gameObj));
+  forEach(pred1, gameObj => {
+    if (!pred2 || pred2(gameObj)) {
+      gameObjs.push(gameObj);
+    }
+  });
   return gameObjs;
 }
 
 export function forEach<T extends GameObject>(
-  pred: (gameObj: GameObject) => gameObj is T,
+  typePred: (gameObj: GameObject) => gameObj is T,
   fn: (gameObj: T) => void
 ): void;
 export function forEach(
