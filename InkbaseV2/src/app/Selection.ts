@@ -10,8 +10,7 @@ import * as stateDb from './state-db';
 export default class Selection {
   // TODO: should the type of `handles` be WeakRef<Handle>[]?
   readonly handles = new Set<Handle>();
-  // TODO: should `origPosition` be a WeakMap?
-  readonly origPosition = new Map<Handle, Position>();
+  private origPosition = new WeakMap<Handle, Position>();
 
   // gesture state
   tappedOn?: Handle;
@@ -180,7 +179,7 @@ export default class Selection {
     }
 
     this.handles.clear();
-    this.origPosition.clear();
+    this.origPosition = new WeakMap(); // not sure why, but WeakMap has no clear()
 
     for (const ls of this.page.lineSegments) {
       ls.deselect();
