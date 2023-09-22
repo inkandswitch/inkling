@@ -164,6 +164,12 @@ class GizmoInstance extends GameObject {
       ...stroke(this.distanceConstraint ? green : grey, 3),
     });
   }
+
+  distanceToPoint(point: Position) {
+    const l = Line.distToPoint(this.line, point);
+    const a = Vec.dist(this.center, point);
+    return Math.min(l, a);
+  }
 }
 
 export default class Gizmo {

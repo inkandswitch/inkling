@@ -73,7 +73,7 @@ export default class StrokeGroup extends GameObject {
   minDistanceFrom(pos: Position) {
     let minDistance = Infinity;
     for (const stroke of this.strokes) {
-      minDistance = Math.min(minDistance, stroke.minDistanceFrom(pos));
+      minDistance = Math.min(minDistance, stroke.distanceToPoint(pos));
     }
     return minDistance;
   }

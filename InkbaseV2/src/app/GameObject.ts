@@ -1,3 +1,4 @@
+import { Position } from '../lib/types';
 import * as stateDb from './state-db';
 
 export abstract class GameObject {
@@ -30,4 +31,8 @@ export abstract class GameObject {
   }
 
   abstract render(dt: number, t: number): void;
+
+  distanceToPoint(_point: Position): number | null {
+    return null;
+  }
 }

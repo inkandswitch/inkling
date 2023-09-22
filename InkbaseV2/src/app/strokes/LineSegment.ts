@@ -3,6 +3,7 @@ import { generateId } from '../../lib/helpers';
 import SVG from '../Svg';
 import Handle from './Handle';
 import { GameObject } from '../GameObject';
+import Line from '../../lib/line';
 
 export default class LineSegment extends GameObject {
   readonly id = generateId();
@@ -60,6 +61,10 @@ export default class LineSegment extends GameObject {
       ...commonAttributes,
       stroke: this.selected ? 'rgba(180, 134, 255, 0.42)' : 'none',
     });
+  }
+
+  distanceToPoint(point: Position) {
+    return Line.distToPoint(Line(this.a.position, this.b.position), point);
   }
 }
 

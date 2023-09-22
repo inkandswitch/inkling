@@ -1,4 +1,4 @@
-import { Position, PositionWithPressure } from '../../lib/types';
+import { PositionWithPressure } from '../../lib/types';
 import { generateId } from '../../lib/helpers';
 import StrokeGroup from './StrokeGroup';
 import Vec from '../../lib/vec';
@@ -49,23 +49,15 @@ export default class FreehandStroke extends Stroke {
     return Vec.normalize(Vec.sub(b, a));
   }
 
-  distanceBetweenPoints(a: number, b: number) {
+  distanceBetweenPoints(pIdx1: number, pIdx2: number) {
     let dist = 0;
-    for (let i = a; i < b - 1; i++) {
+    for (let i = pIdx1; i < pIdx2 - 1; i++) {
       const pointA = this.points[i];
       const pointB = this.points[i + 1];
       dist += Vec.dist(pointA, pointB);
     }
 
     return dist;
-  }
-
-  minDistanceFrom(pos: Position) {
-    let minDistance = Infinity;
-    for (const point of this.points) {
-      minDistance = Math.min(minDistance, Vec.dist(point, pos));
-    }
-    return minDistance;
   }
 }
 

@@ -4,6 +4,7 @@ import SVG from '../Svg';
 import * as constraints from '../constraints';
 import { GameObject } from '../GameObject';
 import * as stateDb from '../state-db';
+import Vec from '../../lib/vec';
 
 const SHOW_DEBUG_INFO = false;
 
@@ -360,6 +361,10 @@ export default class Handle extends GameObject {
     );
 
     return this;
+  }
+
+  distanceToPoint(point: Position) {
+    return Vec.dist(this.position, point);
   }
 }
 

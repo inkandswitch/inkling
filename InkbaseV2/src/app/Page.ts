@@ -116,7 +116,7 @@ export default class Page extends GameObject {
     let closestDistance = dist;
 
     for (const stroke of this.freehandStrokes) {
-      const d = stroke.minDistanceFrom(pos);
+      const d = stroke.distanceToPoint(pos);
       if (d < closestDistance) {
         closestDistance = d;
         closestStroke = stroke;
