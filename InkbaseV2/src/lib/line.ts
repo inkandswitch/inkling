@@ -1,6 +1,7 @@
 // Line
 // This is a collection of functions related to line segments written by Marcel with help of ChatGPT
 
+import { isZero } from './math';
 import { Position } from './types';
 import Vec from './vec';
 
@@ -125,6 +126,11 @@ Line.closestPoint = (line: Line, point: Position, strict = true) => {
   // Calculate vector AB and AP
   const AB = Vec.sub(b, a);
   const AP = Vec.sub(point, a);
+
+  // Special case for when a === b, w/o which we get NaNs.
+  if (isZero(AB.x) && isZero(AB.y)) {
+    return a;
+  }
 
   // Calculate the projection of AP onto AB
   const projection = Vec.dot(AP, AB) / Vec.dot(AB, AB);
