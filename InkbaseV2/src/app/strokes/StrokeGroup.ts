@@ -17,6 +17,8 @@ import { GameObject } from '../GameObject';
 
 export default class StrokeGroup extends GameObject {
   private pointData: PositionWithPressure[][];
+
+  // These strong references are OK b/c a and b will always be my children
   readonly a: Handle;
   readonly b: Handle;
 
