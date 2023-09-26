@@ -35,6 +35,7 @@ class GizmoInstance extends GameObject {
   angleConstraint: constraints.AddConstraintResult<never> | undefined;
 
   constructor(
+    // TODO: these guys should be weak refs
     public a: Handle,
     public b: Handle
   ) {
