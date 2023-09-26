@@ -2,7 +2,6 @@ import Arc from '../../lib/arc';
 import Fit, { ArcFit, CircleFit, LineFit } from '../../lib/fit';
 import Line from '../../lib/line';
 import Vec from '../../lib/vec';
-import Page from '../Page';
 import Snaps from '../Snaps';
 import SVG from '../Svg';
 import Tool from './Tool';
@@ -36,10 +35,9 @@ export default class FormalTool extends Tool {
     label: string,
     buttonX: number,
     buttonY: number,
-    page: Page,
     private snaps: Snaps
   ) {
-    super(label, buttonX, buttonY, page);
+    super(label, buttonX, buttonY);
 
     this.element = SVG.add('path', {});
     this.resetElement();

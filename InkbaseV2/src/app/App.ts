@@ -15,12 +15,11 @@ import * as constraints from './constraints';
 import { onEveryFrame } from '../lib/helpers';
 import Gizmo from './Gizmo';
 import { applyEvent } from './Input';
-import * as stateDb from './state-db';
-import { GameObject } from './GameObject';
+import { GameObject, reclaimWeakRefs } from './GameObject';
 
 // This is a pretzel, because the interface between NativeEvents and Input is a work in progress.
 const events = new Events((event: Event, state: InputState) => {
-  applyEvent(event, state, events, selection);
+  applyEvent(event, state, events, selection, page);
 });
 
 const root = new (class extends GameObject {
@@ -34,7 +33,7 @@ const root = new (class extends GameObject {
 const page = new Page({ strokeAnalyzer: false });
 root.adopt(page);
 
-const snaps = new Snaps(page, { handleSnaps: true, alignmentSnaps: false });
+const snaps = new Snaps({ handleSnaps: true, alignmentSnaps: false });
 root.adopt(snaps);
 
 const selection = new Selection(page, snaps);
@@ -43,11 +42,11 @@ const freehandSelection = new FreehandSelection(page);
 const gizmo = new Gizmo(page, selection, false);
 
 const toolPicker = new ToolPicker([
-  new FreehandTool('FREE', 30, 30, page),
-  new FormalTool('FORM', 30, 80, page, snaps),
-  new ColorTool('COLOR', 30, 130, page),
-  new Tool('🧠', 30, 180, page, Stroke),
-  new ConstraintTool('CONST', 30, 230, page, {
+  new FreehandTool('FREE', 30, 30),
+  new FormalTool('FORM', 30, 80, snaps),
+  new ColorTool('COLOR', 30, 130),
+  new Tool('🧠', 30, 180, Stroke),
+  new ConstraintTool('CONST', 30, 230, {
     vertical: true,
     horizontal: true,
     distance: true,
@@ -98,5 +97,5 @@ onEveryFrame((dt, t) => {
 
   const ellapsedTimeMillis = performance.now() - t0;
   const remainingTimeBudgetMillis = dt * 1_000 - ellapsedTimeMillis;
-  stateDb.reclaimWeakRefs(remainingTimeBudgetMillis);
+  reclaimWeakRefs(remainingTimeBudgetMillis);
 });

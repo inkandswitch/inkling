@@ -1,14 +1,13 @@
 import Vec from '../../lib/vec';
 import { PositionWithPressure } from '../../lib/types';
-import Page from '../Page';
 import Tool from './Tool';
 import ColorStroke from '../strokes/ColorStroke';
 
 export default class ColorTool extends Tool<ColorStroke> {
   last?: PositionWithPressure;
 
-  constructor(label: string, buttonX: number, buttonY: number, page: Page) {
-    super(label, buttonX, buttonY, page, ColorStroke);
+  constructor(label: string, buttonX: number, buttonY: number) {
+    super(label, buttonX, buttonY, ColorStroke);
   }
 
   startStroke(point: PositionWithPressure) {

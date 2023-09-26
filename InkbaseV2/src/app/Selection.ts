@@ -5,7 +5,6 @@ import Events, { Event } from './NativeEvents';
 import Page from './Page';
 import Snaps from './Snaps';
 import Handle, { isCanonicalHandle } from './strokes/Handle';
-import * as stateDb from './state-db';
 
 export default class Selection {
   readonly handles = [] as WeakRef<Handle>[];
@@ -37,7 +36,7 @@ export default class Selection {
         this.firstFinger = fingerDown;
         this.firstFingerMoved = fingerDown;
 
-        const handle = stateDb.findNearPosition(
+        const handle = this.page.findNearPosition(
           isCanonicalHandle,
           fingerDown.position
         );

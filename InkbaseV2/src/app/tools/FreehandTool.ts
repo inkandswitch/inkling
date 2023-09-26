@@ -1,5 +1,4 @@
 import { PositionWithPressure } from '../../lib/types';
-import Page from '../Page';
 import SVG from '../Svg';
 import FreehandStroke from '../strokes/FreehandStroke';
 import Tool from './Tool';
@@ -15,8 +14,8 @@ type ModeInfo =
 export default class FreehandTool extends Tool<FreehandStroke> {
   private modeInfo: ModeInfo = { mode: 'unistroke' };
 
-  constructor(label: string, buttonX: number, buttonY: number, page: Page) {
-    super(label, buttonX, buttonY, page, FreehandStroke);
+  constructor(label: string, buttonX: number, buttonY: number) {
+    super(label, buttonX, buttonY, FreehandStroke);
   }
 
   startStroke(point: PositionWithPressure) {

@@ -1,6 +1,5 @@
 import Vec from '../../lib/vec';
 import Events from '../NativeEvents';
-import Page from '../Page';
 import * as constraints from '../constraints';
 import FreehandStroke from '../strokes/FreehandStroke';
 import StrokeGroup, { isStrokeGroup } from '../strokes/StrokeGroup';
@@ -9,7 +8,6 @@ import SVG from '../Svg';
 import { toDegrees } from '../../lib/helpers';
 import { Position } from '../../lib/types';
 import Handle from '../strokes/Handle';
-import * as stateDb from '../state-db';
 
 interface Options {
   vertical: boolean;
@@ -42,10 +40,9 @@ export default class ConstraintTool extends Tool<FreehandStroke> {
     label: string,
     buttonX: number,
     buttonY: number,
-    page: Page,
     private options: Options
   ) {
-    super(label, buttonX, buttonY, page, FreehandStroke);
+    super(label, buttonX, buttonY, FreehandStroke);
   }
 
   private addStrokeGroup(p1: Position, p2: Position) {
@@ -137,7 +134,7 @@ export default class ConstraintTool extends Tool<FreehandStroke> {
     const fingerDown = events.find('finger', 'began');
     if (fingerDown) {
       this.updateLastTap(
-        stateDb.findNearPosition(isStrokeGroup, fingerDown.position, 40)
+        this.page.findNearPosition(isStrokeGroup, fingerDown.position, 40)
       );
     }
 

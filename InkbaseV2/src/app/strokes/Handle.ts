@@ -3,7 +3,6 @@ import { generateId, notUndefined } from '../../lib/helpers';
 import SVG from '../Svg';
 import * as constraints from '../constraints';
 import { GameObject } from '../GameObject';
-import * as stateDb from '../state-db';
 import Vec from '../../lib/vec';
 
 const SHOW_DEBUG_INFO = false;
@@ -235,7 +234,7 @@ export default class Handle extends GameObject {
       return;
     }
 
-    stateDb.forEachNearPosition(isHandle, this.position, 10, that =>
+    this.page.forEachNearPosition(isHandle, this.position, 10, that =>
       this.absorb(that)
     );
   }

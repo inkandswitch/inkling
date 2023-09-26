@@ -1,7 +1,6 @@
 import Events from '../NativeEvents';
 import { PositionWithPressure, PositionWithRadius } from '../../lib/types';
 import SVG from '../Svg';
-import Page from '../Page';
 import Stroke from '../strokes/Stroke';
 import { GameObject } from '../GameObject';
 
@@ -14,7 +13,6 @@ export default class Tool<S extends Stroke = Stroke> extends GameObject {
     label: string,
     public buttonX: number,
     public buttonY: number,
-    public page: Page,
     public strokeClass?: { new (points: PositionWithPressure[]): S }
   ) {
     super();
