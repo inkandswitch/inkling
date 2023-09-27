@@ -1,4 +1,4 @@
-import FreehandStroke, { freehandStrokePred } from './FreehandStroke';
+import FreehandStroke, { aFreehandStroke } from './FreehandStroke';
 import Handle from './Handle';
 
 import TransformationMatrix from '../../lib/TransformationMatrix';
@@ -53,7 +53,7 @@ export default class StrokeGroup extends GameObject {
   }
 
   get strokes(): FreehandStroke[] {
-    return this.findAll({ pred: freehandStrokePred, recursive: false });
+    return this.findAll({ what: aFreehandStroke, recursive: false });
   }
 
   onHandleMoved() {
@@ -324,5 +324,5 @@ export default class StrokeGroup extends GameObject {
 //   return kernel;
 // }
 
-export const strokeGroupPred = (gameObj: GameObject) =>
+export const aStrokeGroup = (gameObj: GameObject) =>
   gameObj instanceof StrokeGroup ? gameObj : null;

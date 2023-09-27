@@ -4,7 +4,8 @@ import Page from './Page';
 const DEFAULT_TOO_FAR = 20;
 
 interface FindOptions<T extends GameObject> {
-  pred(gameObj: GameObject): T | null;
+  what(gameObj: GameObject): T | null;
+  that?(gameObj: T): boolean;
   recursive?: boolean;
   nearPosition?: Position;
   tooFar?: number;
@@ -74,11 +75,18 @@ export abstract class GameObject {
   }
 
   find<T extends GameObject>(options: FindOptions<T>): T | null {
-    const { pred, recursive, nearPosition, tooFar = DEFAULT_TOO_FAR } = options;
+    const {
+      what,
+      that,
+      recursive,
+      nearPosition,
+      tooFar = DEFAULT_TOO_FAR,
+    } = options;
     let nearestDist = tooFar;
     let ans: T | null = null;
     this.forEach({
-      pred,
+      what,
+      that,
       recursive,
       do(gameObj) {
         if (nearPosition) {
@@ -110,7 +118,8 @@ export abstract class GameObject {
 
   forEach<T extends GameObject>(options: ForEachOptions<T>) {
     const {
-      pred,
+      what,
+      that,
       recursive = true,
       nearPosition,
       tooFar = DEFAULT_TOO_FAR,
@@ -122,8 +131,8 @@ export abstract class GameObject {
         gameObj.forEach(options);
       }
 
-      const narrowedGameObj = pred(gameObj);
-      if (!narrowedGameObj) {
+      const narrowedGameObj = what(gameObj);
+      if (!narrowedGameObj || (that && !that(narrowedGameObj))) {
         continue;
       }
 
@@ -138,6 +147,8 @@ export abstract class GameObject {
     }
   }
 }
+
+export const aGameObject = (gameObj: GameObject) => gameObj;
 
 export const root = new (class extends GameObject {
   currentPage: Page | null = null;

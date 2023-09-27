@@ -1,8 +1,8 @@
 import Vec from '../lib/vec';
 import Events, { Event } from './NativeEvents';
 import Page from './Page';
-import FreehandStroke, { freehandStrokePred } from './strokes/FreehandStroke';
-import { canonicalHandlePred } from './strokes/Handle';
+import FreehandStroke, { aFreehandStroke } from './strokes/FreehandStroke';
+import { aCanonicalHandle } from './strokes/Handle';
 
 export default class FreehandSelection {
   readonly selectedStrokes = new Set<FreehandStroke>();
@@ -19,11 +19,11 @@ export default class FreehandSelection {
     if (fingerDown) {
       this.fingerDown = fingerDown;
       const foundStroke = this.page.find({
-        pred: freehandStrokePred,
+        what: aFreehandStroke,
         nearPosition: fingerDown.position,
       });
       const foundHandle = this.page.find({
-        pred: canonicalHandlePred,
+        what: aCanonicalHandle,
         nearPosition: fingerDown.position,
       });
 

@@ -313,5 +313,5 @@ export default class Gizmo {
   // }
 }
 
-export const gizmoInstancePred = (gameObj: GameObject) =>
+export const aGizmo = (gameObj: GameObject) =>
   gameObj instanceof GizmoInstance ? gameObj : null;

@@ -235,7 +235,7 @@ export default class Handle extends GameObject {
     }
 
     this.page.forEach({
-      pred: handlePred,
+      what: aHandle,
       nearPosition: this.position,
       tooFar: 10,
       do: that => this.absorb(that),
@@ -388,10 +388,10 @@ export default class Handle extends GameObject {
   }
 }
 
-export const handlePred = (gameObj: GameObject) =>
+export const aHandle = (gameObj: GameObject) =>
   gameObj instanceof Handle ? gameObj : null;
 
-export const canonicalHandlePred = (gameObj: GameObject) =>
+export const aCanonicalHandle = (gameObj: GameObject) =>
   gameObj instanceof Handle && gameObj.canonicalInstance === gameObj
     ? gameObj
     : null;

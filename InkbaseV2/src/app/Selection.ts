@@ -4,7 +4,7 @@ import Vec from '../lib/vec';
 import Events, { Event } from './NativeEvents';
 import Page from './Page';
 import Snaps from './Snaps';
-import Handle, { canonicalHandlePred } from './strokes/Handle';
+import Handle, { aCanonicalHandle } from './strokes/Handle';
 
 export default class Selection {
   readonly handles = [] as WeakRef<Handle>[];
@@ -37,7 +37,7 @@ export default class Selection {
         this.firstFingerMoved = fingerDown;
 
         const handle = this.page.find({
-          pred: canonicalHandlePred,
+          what: aCanonicalHandle,
           nearPosition: fingerDown.position,
         });
         if (handle) {

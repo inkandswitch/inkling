@@ -1,7 +1,7 @@
 import ArcSegment from './strokes/ArcSegment';
-import LineSegment, { lineSegmentPred } from './strokes/LineSegment';
-import FreehandStroke, { freehandStrokePred } from './strokes/FreehandStroke';
-import StrokeGroup, { strokeGroupPred } from './strokes/StrokeGroup';
+import LineSegment, { aLineSegment } from './strokes/LineSegment';
+import FreehandStroke, { aFreehandStroke } from './strokes/FreehandStroke';
+import StrokeGroup, { aStrokeGroup } from './strokes/StrokeGroup';
 import Stroke from './strokes/Stroke';
 import StrokeClusters from './StrokeClusters';
 import { Position, PositionWithPressure } from '../lib/types';
@@ -27,15 +27,15 @@ export default class Page extends GameObject {
   }
 
   get freehandStrokes() {
-    return this.findAll({ pred: freehandStrokePred, recursive: false });
+    return this.findAll({ what: aFreehandStroke, recursive: false });
   }
 
   get strokeGroups() {
-    return this.findAll({ pred: strokeGroupPred, recursive: false });
+    return this.findAll({ what: aStrokeGroup, recursive: false });
   }
 
   get lineSegments() {
-    return this.findAll({ pred: lineSegmentPred, recursive: false });
+    return this.findAll({ what: aLineSegment, recursive: false });
   }
 
   addLineSegment(aPos: Position, bPos: Position) {

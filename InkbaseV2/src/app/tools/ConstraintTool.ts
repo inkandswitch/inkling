@@ -2,7 +2,7 @@ import Vec from '../../lib/vec';
 import Events from '../NativeEvents';
 import * as constraints from '../constraints';
 import FreehandStroke from '../strokes/FreehandStroke';
-import StrokeGroup, { strokeGroupPred } from '../strokes/StrokeGroup';
+import StrokeGroup, { aStrokeGroup } from '../strokes/StrokeGroup';
 import Tool from './Tool';
 import SVG from '../Svg';
 import { toDegrees } from '../../lib/helpers';
@@ -135,7 +135,7 @@ export default class ConstraintTool extends Tool<FreehandStroke> {
     if (fingerDown) {
       this.updateLastTap(
         this.page.find({
-          pred: strokeGroupPred,
+          what: aStrokeGroup,
           nearPosition: fingerDown.position,
           tooFar: 40,
         })

@@ -1,8 +1,8 @@
-import { gizmoInstancePred } from './Gizmo';
+import { aGizmo } from './Gizmo';
 import Events, { TouchId, Event, InputState } from './NativeEvents';
 import Page from './Page';
 import Selection from './Selection';
-import { canonicalHandlePred } from './strokes/Handle';
+import { aCanonicalHandle } from './strokes/Handle';
 
 // Variables that store state needed by our gestures go here.
 
@@ -29,11 +29,11 @@ export function applyEvent(
   // it rounds to zero! We can optimize the heck out of this later, once we know what we even want.
 
   const handleNearEvent = page.find({
-    pred: canonicalHandlePred,
+    what: aCanonicalHandle,
     nearPosition: event.position,
   });
   const gizmoNearEvent = page.find({
-    pred: gizmoInstancePred,
+    what: aGizmo,
     nearPosition: event.position,
   });
 
