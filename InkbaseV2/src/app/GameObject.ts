@@ -21,11 +21,12 @@ export abstract class GameObject {
   constructor() {}
 
   get page(): Page {
-    const p = this.parent;
+    let p = this.parent;
     while (p) {
       if (p instanceof Page) {
         return p;
       }
+      p = p.parent;
     }
     throw new Error('this game object does not belong to a page!');
   }
