@@ -20,7 +20,6 @@ interface CanonicalInstanceState {
   absorbedHandles: WeakRef<Handle>[];
   position: Position;
   elements: {
-    children: SVGElement;
     normal: SVGElement;
     selected: SVGElement;
     label: SVGTextElement;
@@ -65,12 +64,6 @@ export default class Handle extends GameObject {
       absorbedHandles: [],
       position,
       elements: {
-        children: SVG.add(
-          'circle',
-          type === 'formal'
-            ? { cx: 0, cy: 0, r: 3, fill: 'black' }
-            : { r: 5, fill: 'rgba(100, 100, 100, .2)' }
-        ),
         normal: SVG.add(
           'circle',
           type === 'formal'
@@ -298,13 +291,6 @@ export default class Handle extends GameObject {
       child.render(dt, t);
     }
 
-    SVG.update(state.elements.children, {
-      transform: `translate(${state.position.x + 2} ${state.position.y + 2})`,
-      visibility: state.absorbedHandles.some(wr => !!wr.deref())
-        ? 'visible'
-        : 'hidden',
-    });
-
     SVG.update(state.elements.normal, {
       transform: `translate(${state.position.x} ${state.position.y})`,
     });
@@ -329,7 +315,6 @@ export default class Handle extends GameObject {
       throw new Error('called removeFromDOM() on absorbed handle');
     }
 
-    this.instanceState.elements.children.remove();
     this.instanceState.elements.normal.remove();
     this.instanceState.elements.selected.remove();
     this.instanceState.elements.label.remove();
