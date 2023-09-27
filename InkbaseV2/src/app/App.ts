@@ -15,7 +15,7 @@ import * as constraints from './constraints';
 import { onEveryFrame } from '../lib/helpers';
 import Gizmo from './Gizmo';
 import { applyEvent } from './Input';
-import { GameObject, reclaimWeakRefs } from './GameObject';
+import { GameObject } from './GameObject';
 
 // This is a pretzel, because the interface between NativeEvents and Input is a work in progress.
 const events = new Events((event: Event, state: InputState) => {
@@ -34,7 +34,7 @@ const page = new Page({ strokeAnalyzer: false });
 root.adopt(page);
 
 const snaps = new Snaps({ handleSnaps: true, alignmentSnaps: false });
-root.adopt(snaps);
+page.adopt(snaps);
 
 const selection = new Selection(page, snaps);
 const freehandSelection = new FreehandSelection(page);
@@ -53,11 +53,9 @@ const toolPicker = new ToolPicker([
     angle: true,
   }),
 ]);
-root.adopt(toolPicker);
+page.adopt(toolPicker);
 
 onEveryFrame((dt, t) => {
-  const t0 = performance.now();
-
   SVG.clearNow(t);
   constraints.now.clear();
 
@@ -94,8 +92,4 @@ onEveryFrame((dt, t) => {
   //     fingers: events.fingerStates,
   //   }),
   // });
-
-  const ellapsedTimeMillis = performance.now() - t0;
-  const remainingTimeBudgetMillis = dt * 1_000 - ellapsedTimeMillis;
-  reclaimWeakRefs(remainingTimeBudgetMillis);
 });
