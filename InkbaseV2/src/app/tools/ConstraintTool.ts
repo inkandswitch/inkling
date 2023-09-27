@@ -136,7 +136,7 @@ export default class ConstraintTool extends Tool<FreehandStroke> {
       this.updateLastTap(
         this.page.find({
           what: aStrokeGroup,
-          nearPosition: fingerDown.position,
+          near: fingerDown.position,
           tooFar: 40,
         })
       );

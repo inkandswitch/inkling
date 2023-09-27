@@ -20,11 +20,11 @@ export default class FreehandSelection {
       this.fingerDown = fingerDown;
       const foundStroke = this.page.find({
         what: aFreehandStroke,
-        nearPosition: fingerDown.position,
+        near: fingerDown.position,
       });
       const foundHandle = this.page.find({
         what: aCanonicalHandle,
-        nearPosition: fingerDown.position,
+        near: fingerDown.position,
       });
 
       // Register longpress

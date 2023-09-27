@@ -38,7 +38,7 @@ export default class Selection {
 
         const handle = this.page.find({
           what: aCanonicalHandle,
-          nearPosition: fingerDown.position,
+          near: fingerDown.position,
         });
         if (handle) {
           // this.selectHandle(handle); // Extracted to Input.ts

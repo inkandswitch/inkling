@@ -7,7 +7,7 @@ interface FindOptions<T extends GameObject> {
   what(gameObj: GameObject): T | null;
   that?(gameObj: T): boolean;
   recursive?: boolean;
-  nearPosition?: Position;
+  near?: Position;
   tooFar?: number;
 }
 
@@ -79,7 +79,7 @@ export abstract class GameObject {
       what,
       that,
       recursive,
-      nearPosition,
+      near: pos,
       tooFar = DEFAULT_TOO_FAR,
     } = options;
     let nearestDist = tooFar;
@@ -89,8 +89,8 @@ export abstract class GameObject {
       that,
       recursive,
       do(gameObj) {
-        if (nearPosition) {
-          const dist = gameObj.distanceToPoint(nearPosition);
+        if (pos) {
+          const dist = gameObj.distanceToPoint(pos);
           if (dist !== null && dist < nearestDist) {
             ans = gameObj;
             nearestDist = dist;
@@ -121,7 +121,7 @@ export abstract class GameObject {
       what,
       that,
       recursive = true,
-      nearPosition,
+      near: pos,
       tooFar = DEFAULT_TOO_FAR,
       do: doFn,
     } = options;
@@ -136,8 +136,8 @@ export abstract class GameObject {
         continue;
       }
 
-      if (nearPosition) {
-        const dist = narrowedGameObj.distanceToPoint(nearPosition);
+      if (pos) {
+        const dist = narrowedGameObj.distanceToPoint(pos);
         if (dist === null || dist >= tooFar) {
           continue;
         }

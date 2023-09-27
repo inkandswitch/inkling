@@ -30,11 +30,11 @@ export function applyEvent(
 
   const handleNearEvent = page.find({
     what: aCanonicalHandle,
-    nearPosition: event.position,
+    near: event.position,
   });
   const gizmoNearEvent = page.find({
     what: aGizmo,
-    nearPosition: event.position,
+    near: event.position,
   });
 
   // Below here, you'll find a list of each gesture recognizer in the system, one by one.
