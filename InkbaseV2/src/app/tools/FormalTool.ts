@@ -29,6 +29,7 @@ export default class FormalTool extends Tool {
   private fit: LineFit | ArcFit | CircleFit | null = null;
 
   // Fixed mode
+  // TODO: this should be a weak ref
   private fixedStroke?: LineSegment | ArcSegment;
 
   constructor(
