@@ -234,9 +234,14 @@ export default class Handle extends GameObject {
       return;
     }
 
-    this.page.forEachNearPosition(isHandle, this.position, 10, that =>
-      this.absorb(that)
-    );
+    this.page.forEach({
+      pred: handlePred,
+      nearPosition: this.position,
+      tooFar: 10,
+      do(this: Handle, that) {
+        this.absorb(that);
+      },
+    });
   }
 
   // methods that can only be called on canonical handles
@@ -385,8 +390,10 @@ export default class Handle extends GameObject {
   }
 }
 
-export const isHandle = (gameObj: GameObject): gameObj is Handle =>
-  gameObj instanceof Handle;
+export const handlePred = (gameObj: GameObject) =>
+  gameObj instanceof Handle ? gameObj : null;
 
-export const isCanonicalHandle = (gameObj: GameObject): gameObj is Handle =>
-  isHandle(gameObj) && gameObj.canonicalInstance === gameObj;
+export const canonicalHandlePred = (gameObj: GameObject) =>
+  gameObj instanceof Handle && gameObj.canonicalInstance === gameObj
+    ? gameObj
+    : null;

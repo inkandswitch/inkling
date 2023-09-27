@@ -1,13 +1,12 @@
 import ArcSegment from './strokes/ArcSegment';
-import LineSegment, { isLineSegment } from './strokes/LineSegment';
-import FreehandStroke, { isFreehandStroke } from './strokes/FreehandStroke';
-import StrokeGroup, { isStrokeGroup } from './strokes/StrokeGroup';
+import LineSegment, { lineSegmentPred } from './strokes/LineSegment';
+import FreehandStroke, { freehandStrokePred } from './strokes/FreehandStroke';
+import StrokeGroup, { strokeGroupPred } from './strokes/StrokeGroup';
 import Stroke from './strokes/Stroke';
 import StrokeClusters from './StrokeClusters';
 import { Position, PositionWithPressure } from '../lib/types';
 import Handle from './strokes/Handle';
 import StrokeAnalyzer from './StrokeAnalyzer';
-import { makeIterableIterator } from '../lib/helpers';
 import { GameObject } from './GameObject';
 
 interface Options {
@@ -28,15 +27,15 @@ export default class Page extends GameObject {
   }
 
   get freehandStrokes() {
-    return makeIterableIterator([this.children], isFreehandStroke);
+    return this.findAll({ pred: freehandStrokePred, recursive: false });
   }
 
   get strokeGroups() {
-    return makeIterableIterator([this.children], isStrokeGroup);
+    return this.findAll({ pred: strokeGroupPred, recursive: false });
   }
 
   get lineSegments() {
-    return makeIterableIterator([this.children], isLineSegment);
+    return this.findAll({ pred: lineSegmentPred, recursive: false });
   }
 
   addLineSegment(aPos: Position, bPos: Position) {

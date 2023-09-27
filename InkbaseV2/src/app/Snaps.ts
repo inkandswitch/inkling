@@ -1,7 +1,7 @@
 import { Position } from '../lib/types';
 import Vec from '../lib/vec';
 import SVG from './Svg';
-import Handle, { isCanonicalHandle } from './strokes/Handle';
+import Handle, { canonicalHandlePred } from './strokes/Handle';
 import { GameObject } from './GameObject';
 
 interface Options {
@@ -23,9 +23,12 @@ export default class Snaps extends GameObject {
   snapPositions(transformedPositions: Map<Handle, Position>) {
     const snaps: Snap[] = [];
     const snapPositions = new Map<Handle, Position>();
-    const snapHandles = this.page
-      .findAll(isCanonicalHandle)
-      .filter(h => !transformedPositions.has(h));
+    const snapHandles = this.page.findAll({
+      pred(gameObj) {
+        const handle = canonicalHandlePred(gameObj);
+        return handle && !transformedPositions.has(handle) ? handle : null;
+      },
+    });
     const selectedHandles = Array.from(transformedPositions.keys());
     const connectedHandles = this.page.handlesReachableFrom(selectedHandles);
 

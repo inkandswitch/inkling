@@ -68,5 +68,5 @@ export default class LineSegment extends GameObject {
   }
 }
 
-export const isLineSegment = (gameObj: GameObject): gameObj is LineSegment =>
-  gameObj instanceof LineSegment;
+export const lineSegmentPred = (gameObj: GameObject) =>
+  gameObj instanceof LineSegment ? gameObj : null;

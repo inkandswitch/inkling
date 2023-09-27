@@ -1,8 +1,8 @@
-import { isGizmoInstance } from './Gizmo';
+import { gizmoInstancePred } from './Gizmo';
 import Events, { TouchId, Event, InputState } from './NativeEvents';
 import Page from './Page';
 import Selection from './Selection';
-import { isCanonicalHandle } from './strokes/Handle';
+import { canonicalHandlePred } from './strokes/Handle';
 
 // Variables that store state needed by our gestures go here.
 
@@ -28,11 +28,14 @@ export function applyEvent(
   // Please don't fret about the performance burden of gathering this state on every event —
   // it rounds to zero! We can optimize the heck out of this later, once we know what we even want.
 
-  const handleNearEvent = page.findNearPosition(
-    isCanonicalHandle,
-    event.position
-  );
-  const gizmoNearEvent = page.findNearPosition(isGizmoInstance, event.position);
+  const handleNearEvent = page.find({
+    pred: canonicalHandlePred,
+    nearPosition: event.position,
+  });
+  const gizmoNearEvent = page.find({
+    pred: gizmoInstancePred,
+    nearPosition: event.position,
+  });
 
   // Below here, you'll find a list of each gesture recognizer in the system, one by one.
   // Each recognized gesture should end with a return, to keep the cyclomatic complexity super low.

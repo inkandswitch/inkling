@@ -1,55 +1,31 @@
 import { Position } from '../lib/types';
 import Page from './Page';
 
-const allGameObjects = [] as WeakRef<GameObject>[];
+const DEFAULT_TOO_FAR = 20;
 
-let cleanUpIdx = 0;
+interface FindOptions<T extends GameObject> {
+  pred(gameObj: GameObject): T | null;
+  recursive?: boolean;
+  nearPosition?: Position;
+  tooFar?: number;
+}
 
-export function reclaimWeakRefs(timeBudgetMillis?: number) {
-  const t0 = performance.now();
-  let numReclaimed = 0;
-
-  while (
-    allGameObjects.length > 0 &&
-    (timeBudgetMillis === undefined ||
-      performance.now() - t0 < timeBudgetMillis)
-  ) {
-    if (cleanUpIdx >= allGameObjects.length) {
-      // start at the beginning the next time this function is called
-      cleanUpIdx = 0;
-      return;
-    }
-
-    const gameObj = allGameObjects[cleanUpIdx].deref();
-    if (!gameObj) {
-      allGameObjects.splice(cleanUpIdx, 1);
-      numReclaimed++;
-    } else {
-      cleanUpIdx++;
-    }
-  }
-
-  if (numReclaimed > 0) {
-    console.log('reclaimed', numReclaimed, 'weak refs');
-  }
+interface ForEachOptions<T extends GameObject> extends FindOptions<T> {
+  do(gameObj: T): void;
 }
 
 export abstract class GameObject {
   parent: GameObject | null = null;
   readonly children = new Set<GameObject>();
 
-  constructor() {
-    this.parent?.children.add(this);
-    allGameObjects.push(new WeakRef(this));
-  }
+  constructor() {}
 
   get page(): Page {
-    let p = this.parent;
+    const p = this.parent;
     while (p) {
       if (p instanceof Page) {
         return p;
       }
-      p = p.parent;
     }
     throw new Error('this game object does not belong to a page!');
   }
@@ -88,102 +64,68 @@ export abstract class GameObject {
     return null;
   }
 
-  find<T extends GameObject>(
-    typePred: (gameObj: GameObject) => gameObj is T,
-    pred?: (gameObj: T) => boolean
-  ): T | null;
-  find(pred: (gameObj: GameObject) => boolean): GameObject | null;
-  find(
-    pred1: (gameObj: GameObject) => boolean,
-    pred2?: (gameObj: GameObject) => boolean
-  ): GameObject | null {
-    for (const wr of allGameObjects) {
-      const gameObj = wr.deref();
-      if (gameObj && pred1(gameObj) && (!pred2 || pred2(gameObj))) {
-        return gameObj;
+  find<T extends GameObject>(options: FindOptions<T>): T | null {
+    const { pred, recursive, nearPosition, tooFar = DEFAULT_TOO_FAR } = options;
+    let nearestDist = tooFar;
+    let ans: T | null = null;
+    this.forEach({
+      pred,
+      recursive,
+      do(gameObj) {
+        if (nearPosition) {
+          const dist = gameObj.distanceToPoint(nearPosition);
+          if (dist !== null && dist < nearestDist) {
+            ans = gameObj;
+            nearestDist = dist;
+          }
+        } else {
+          if (ans === null) {
+            ans = gameObj;
+          }
+        }
+      },
+    });
+    return ans;
+  }
+
+  findAll<T extends GameObject>(options: FindOptions<T>) {
+    const ans = [] as T[];
+    this.forEach({
+      ...options,
+      do(gameObj) {
+        ans.push(gameObj);
+      },
+    });
+    return ans;
+  }
+
+  forEach<T extends GameObject>(options: ForEachOptions<T>) {
+    const {
+      pred,
+      recursive = true,
+      nearPosition,
+      tooFar = DEFAULT_TOO_FAR,
+      do: doFn,
+    } = options;
+
+    for (const gameObj of this.children) {
+      if (recursive) {
+        gameObj.forEach(options);
       }
+
+      const narrowedGameObj = pred(gameObj);
+      if (!narrowedGameObj) {
+        continue;
+      }
+
+      if (nearPosition) {
+        const dist = narrowedGameObj.distanceToPoint(nearPosition);
+        if (dist === null || dist >= tooFar) {
+          continue;
+        }
+      }
+
+      doFn.call(this, narrowedGameObj);
     }
-    return null;
-  }
-
-  findAll<T extends GameObject>(
-    typePred: (gameObj: GameObject) => gameObj is T,
-    pred?: (gameObj: T) => boolean
-  ): T[];
-  findAll(pred: (gameObj: GameObject) => boolean): GameObject[];
-  findAll(
-    pred1: (gameObj: GameObject) => boolean,
-    pred2?: (gameObj: GameObject) => boolean
-  ): GameObject[] {
-    const gameObjs = [] as GameObject[];
-    this.forEach(pred1, gameObj => {
-      if (!pred2 || pred2(gameObj)) {
-        gameObjs.push(gameObj);
-      }
-    });
-    return gameObjs;
-  }
-
-  forEach<T extends GameObject>(
-    typePred: (gameObj: GameObject) => gameObj is T,
-    fn: (gameObj: T) => void
-  ): void;
-  forEach(
-    pred: (gameObj: GameObject) => boolean,
-    fn: (gameObj: GameObject) => void
-  ): void;
-  forEach(
-    pred: (gameObj: GameObject) => boolean,
-    fn: (gameObj: GameObject) => void
-  ): void {
-    for (const wr of allGameObjects) {
-      const gameObj = wr.deref();
-      if (gameObj && pred(gameObj)) {
-        fn(gameObj);
-      }
-    }
-  }
-
-  findNearPosition<T extends GameObject>(
-    typePred: (gameObj: GameObject) => gameObj is T,
-    pos: Position,
-    maxDist = 20
-  ): T | null {
-    let minDist = Infinity;
-    let nearestGameObj: GameObject | null = null;
-    this.forEach(typePred, gameObj => {
-      const dist = gameObj.distanceToPoint(pos);
-      if (dist !== null && dist < minDist && dist < maxDist) {
-        minDist = dist;
-        nearestGameObj = gameObj;
-      }
-    });
-    return nearestGameObj;
-  }
-
-  findAllNearPosition<T extends GameObject>(
-    typePred: (gameObj: GameObject) => gameObj is T,
-    pos: Position,
-    maxDist = 20
-  ): T[] {
-    const gameObjs = [] as T[];
-    this.forEachNearPosition(typePred, pos, maxDist, gameObj =>
-      gameObjs.push(gameObj)
-    );
-    return gameObjs;
-  }
-
-  forEachNearPosition<T extends GameObject>(
-    typePred: (gameObj: GameObject) => gameObj is T,
-    pos: Position,
-    maxDist: number,
-    fn: (gameObj: T) => void
-  ): void {
-    this.forEach(typePred, gameObj => {
-      const dist = gameObj.distanceToPoint(pos);
-      if (dist !== null && dist <= maxDist) {
-        fn(gameObj);
-      }
-    });
   }
 }

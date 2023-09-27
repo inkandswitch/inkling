@@ -61,6 +61,5 @@ export default class FreehandStroke extends Stroke {
   }
 }
 
-export const isFreehandStroke = (
-  gameObj: GameObject
-): gameObj is FreehandStroke => gameObj instanceof FreehandStroke;
+export const freehandStrokePred = (gameObj: GameObject) =>
+  gameObj instanceof FreehandStroke ? gameObj : null;

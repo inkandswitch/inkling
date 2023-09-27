@@ -1,8 +1,8 @@
 import Vec from '../lib/vec';
 import Events, { Event } from './NativeEvents';
 import Page from './Page';
-import FreehandStroke, { isFreehandStroke } from './strokes/FreehandStroke';
-import { isCanonicalHandle } from './strokes/Handle';
+import FreehandStroke, { freehandStrokePred } from './strokes/FreehandStroke';
+import { canonicalHandlePred } from './strokes/Handle';
 
 export default class FreehandSelection {
   readonly selectedStrokes = new Set<FreehandStroke>();
@@ -18,14 +18,14 @@ export default class FreehandSelection {
     const fingerDown = events.find('finger', 'began');
     if (fingerDown) {
       this.fingerDown = fingerDown;
-      const foundStroke = this.page.findNearPosition(
-        isFreehandStroke,
-        fingerDown.position
-      );
-      const foundHandle = this.page.findNearPosition(
-        isCanonicalHandle,
-        fingerDown.position
-      );
+      const foundStroke = this.page.find({
+        pred: freehandStrokePred,
+        nearPosition: fingerDown.position,
+      });
+      const foundHandle = this.page.find({
+        pred: canonicalHandlePred,
+        nearPosition: fingerDown.position,
+      });
 
       // Register longpress
       window.setTimeout(() => {

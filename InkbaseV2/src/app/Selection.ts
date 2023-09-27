@@ -4,7 +4,7 @@ import Vec from '../lib/vec';
 import Events, { Event } from './NativeEvents';
 import Page from './Page';
 import Snaps from './Snaps';
-import Handle, { isCanonicalHandle } from './strokes/Handle';
+import Handle, { canonicalHandlePred } from './strokes/Handle';
 
 export default class Selection {
   readonly handles = [] as WeakRef<Handle>[];
@@ -36,10 +36,10 @@ export default class Selection {
         this.firstFinger = fingerDown;
         this.firstFingerMoved = fingerDown;
 
-        const handle = this.page.findNearPosition(
-          isCanonicalHandle,
-          fingerDown.position
-        );
+        const handle = this.page.find({
+          pred: canonicalHandlePred,
+          nearPosition: fingerDown.position,
+        });
         if (handle) {
           // this.selectHandle(handle); // Extracted to Input.ts
           this.tappedOn = new WeakRef(handle);
