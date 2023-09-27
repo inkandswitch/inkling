@@ -2,7 +2,7 @@ import { Position } from '../../lib/types';
 import { generateId, notUndefined } from '../../lib/helpers';
 import SVG from '../Svg';
 import * as constraints from '../constraints';
-import { GameObject } from '../GameObject';
+import { GameObject, root } from '../GameObject';
 import Vec from '../../lib/vec';
 
 const SHOW_DEBUG_INFO = false;
@@ -100,7 +100,7 @@ export default class Handle extends GameObject {
   private readonly listeners = new Set<HandleListener>();
 
   private constructor(private instanceState: InstanceState) {
-    super();
+    super(root);
   }
 
   // methods that can be called on any handle
@@ -238,9 +238,7 @@ export default class Handle extends GameObject {
       pred: handlePred,
       nearPosition: this.position,
       tooFar: 10,
-      do(this: Handle, that) {
-        this.absorb(that);
-      },
+      do: that => this.absorb(that),
     });
   }
 

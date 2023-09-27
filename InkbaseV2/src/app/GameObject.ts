@@ -18,7 +18,11 @@ export abstract class GameObject {
   parent: GameObject | null = null;
   readonly children = new Set<GameObject>();
 
-  constructor() {}
+  constructor(parent?: GameObject) {
+    if (parent) {
+      parent.adopt(this);
+    }
+  }
 
   get page(): Page {
     let p = this.parent;
@@ -28,7 +32,11 @@ export abstract class GameObject {
       }
       p = p.parent;
     }
-    throw new Error('this game object does not belong to a page!');
+
+    // If we get to this point, this object does not belong to a page.
+    // But the root object knows what the current page is, so we can
+    // return that.
+    return this.root.page;
   }
 
   get root(): GameObject {
@@ -130,3 +138,17 @@ export abstract class GameObject {
     }
   }
 }
+
+export const root = new (class extends GameObject {
+  currentPage: Page | null = null;
+
+  get page() {
+    return this.currentPage!;
+  }
+
+  render(dt: number, t: number) {
+    for (const child of this.children) {
+      child.render(dt, t);
+    }
+  }
+})();

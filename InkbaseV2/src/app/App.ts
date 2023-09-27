@@ -15,26 +15,19 @@ import * as constraints from './constraints';
 import { onEveryFrame } from '../lib/helpers';
 import Gizmo from './Gizmo';
 import { applyEvent } from './Input';
-import { GameObject } from './GameObject';
+import { root } from './GameObject';
 
 // This is a pretzel, because the interface between NativeEvents and Input is a work in progress.
 const events = new Events((event: Event, state: InputState) => {
   applyEvent(event, state, events, selection, page);
 });
 
-const root = new (class extends GameObject {
-  render(dt: number, t: number) {
-    for (const child of this.children) {
-      child.render(dt, t);
-    }
-  }
-})();
-
 const page = new Page({ strokeAnalyzer: false });
 root.adopt(page);
+root.currentPage = page;
 
 const snaps = new Snaps({ handleSnaps: true, alignmentSnaps: false });
-page.adopt(snaps);
+root.adopt(snaps);
 
 const selection = new Selection(page, snaps);
 const freehandSelection = new FreehandSelection(page);
@@ -53,7 +46,7 @@ const toolPicker = new ToolPicker([
     angle: true,
   }),
 ]);
-page.adopt(toolPicker);
+root.adopt(toolPicker);
 
 onEveryFrame((dt, t) => {
   SVG.clearNow(t);
