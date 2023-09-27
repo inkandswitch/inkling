@@ -7,7 +7,6 @@ import COLORS from "./Colors";
 
 const PADDING = 3;
 
-
 export default class Formula extends TokenGroup {
   type = "formula";
   tokens: Array<Token> = new Array();

@@ -2,6 +2,7 @@ import { aGizmo } from './Gizmo';
 import Events, { TouchId, Event, InputState } from './NativeEvents';
 import Page from './Page';
 import Selection from './Selection';
+import { aToken } from './meta/Token';
 import { aCanonicalHandle } from './strokes/Handle';
 
 // Variables that store state needed by our gestures go here.
@@ -37,6 +38,12 @@ export function applyEvent(
     near: event.position,
   });
 
+  const tokenNearEvent = page.find({
+    what: aToken,
+    near: event.position,
+    recursive: false
+  });
+
   // Below here, you'll find a list of each gesture recognizer in the system, one by one.
   // Each recognized gesture should end with a return, to keep the cyclomatic complexity super low.
   // In other words, we should try really hard to only have blocks (like `if`) go one level deep.
@@ -45,6 +52,41 @@ export function applyEvent(
   // TODO: We could potentially split these up to handle pencil separately from finger, and handle
   // each state separately, since (in theory) these separations cleanly split the gesture space
   // into non-overlapping sets.
+
+
+  // DRAGGING TOKENS
+  if (
+    event.type === 'finger' &&
+    event.state === 'began' && 
+    events.fingerStates.length === 1 &&
+    tokenNearEvent
+  ) {
+    // Drag token
+    objects['dragToken'] = tokenNearEvent
+  }
+
+  // TODO: Handle dragging with offset
+  if (
+    event.type === 'finger' &&
+    event.state === 'moved' && 
+    events.fingerStates.length === 1 &&
+    objects['dragToken']
+  ) {
+    // Drag token
+    objects['dragToken'].position = event.position;
+  }
+
+  if (
+    event.type === 'finger' &&
+    event.state === 'ended' && 
+    events.fingerStates.length === 1 &&
+    objects['dragToken']
+  ) {
+    // Drag token
+    delete objects['dragToken'];
+  }
+
+
 
   // TAP A HANDLE WITH THE FIRST FINGER —> SELECT THE HANDLE
   if (

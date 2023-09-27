@@ -18,6 +18,7 @@ import Gizmo from './Gizmo';
 import { applyEvent } from './Input';
 import NumberToken from './meta/NumberToken';
 import MetaLayer from './meta/MetaLayer';
+import Token from './meta/Token';
 
 // This is a pretzel, because the interface between NativeEvents and Input is a work in progress.
 const events = new Events((event: Event, state: InputState) => {
@@ -33,6 +34,7 @@ const freehandSelection = new FreehandSelection(page);
 const gizmo = new Gizmo(page, selection, false);
 
 const metaLayer = new MetaLayer();
+
 
 
 onEveryFrame((dt, t) => {

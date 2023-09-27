@@ -16,6 +16,9 @@ import { onEveryFrame } from '../lib/helpers';
 import Gizmo from './Gizmo';
 import { applyEvent } from './Input';
 import { root } from './GameObject';
+import Token from './meta/Token';
+import NumberToken from './meta/NumberToken';
+import Formula from './meta/Formula';
 
 // This is a pretzel, because the interface between NativeEvents and Input is a work in progress.
 const events = new Events((event: Event, state: InputState) => {
@@ -34,31 +37,36 @@ const freehandSelection = new FreehandSelection(page);
 
 const gizmo = new Gizmo(page, selection, false);
 
-const toolPicker = new ToolPicker([
-  new FreehandTool('FREE', 30, 30),
-  new FormalTool('FORM', 30, 80, snaps),
-  new ColorTool('COLOR', 30, 130),
-  new Tool('🧠', 30, 180, Stroke),
-  new ConstraintTool('CONST', 30, 230, {
-    vertical: true,
-    horizontal: true,
-    distance: true,
-    angle: true,
-  }),
-]);
-root.adopt(toolPicker);
+// const toolPicker = new ToolPicker([
+//   new FreehandTool('FREE', 30, 30),
+//   new FormalTool('FORM', 30, 80, snaps),
+//   new ColorTool('COLOR', 30, 130),
+//   new Tool('🧠', 30, 180, Stroke),
+//   new ConstraintTool('CONST', 30, 230, {
+//     vertical: true,
+//     horizontal: true,
+//     distance: true,
+//     angle: true,
+//   }),
+// ]);
+// root.adopt(toolPicker);
+
+// FORMULA STUFF
+const token = new Formula();
+page.adopt(token);
+
 
 onEveryFrame((dt, t) => {
   SVG.clearNow(t);
   constraints.now.clear();
 
   // Potentially deprecated — consider whether & how these should be migrated to Input.ts
-  toolPicker.update(events);
-  toolPicker.selected?.update(events);
-  selection.update1(events);
-  gizmo.update(events);
-  selection.update2(events);
-  freehandSelection.update(events);
+  // toolPicker.update(events);
+  // toolPicker.selected?.update(events);
+  // selection.update1(events);
+  // gizmo.update(events);
+  // selection.update2(events);
+  // freehandSelection.update(events);
 
   // Tell NativeEvent to handle all events sent from Swift, evaluating Input for each
   events.update();
