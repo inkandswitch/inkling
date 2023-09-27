@@ -22,6 +22,7 @@
     "typescript": "~5.1.6"
   },
   "dependencies": {
+    "ohm-js": "^17.1.0",
     "perfect-freehand": "^1.2.0"
   }
 }
