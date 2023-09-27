@@ -34,30 +34,54 @@ class GizmoInstance extends GameObject {
   distanceConstraint: constraints.AddConstraintResult<never> | undefined;
   angleConstraint: constraints.AddConstraintResult<never> | undefined;
 
-  constructor(
-    // TODO: these guys should be weak refs
-    public a: Handle,
-    public b: Handle
-  ) {
+  private readonly _a: WeakRef<Handle>;
+  private readonly _b: WeakRef<Handle>;
+
+  get a(): Handle | undefined {
+    return this._a.deref();
+  }
+
+  get b(): Handle | undefined {
+    return this._b.deref();
+  }
+
+  get handles() {
+    const a = this.a;
+    const b = this.b;
+    return a && b ? { a, b } : null;
+  }
+
+  constructor(a: Handle, b: Handle) {
     super();
-    this.line = this.updateLine();
-    this.center = this.updateCenter();
-    this.radius = this.updateRadius();
+    this._a = new WeakRef(a);
+    this._b = new WeakRef(b);
+    this.line = this.updateLine()!;
+    this.center = this.updateCenter()!;
+    this.radius = this.updateRadius()!;
     this.polarVectorConstraint = constraints.polarVector(a, b);
   }
 
   updateLine() {
-    const { a, b } = this;
+    const handles = this.handles;
+    if (!handles) {
+      return this.line;
+    }
+
     // let a_b = Vec.renormalize(Vec.sub(b.position, a.position), 10000);
     // return (this.line = Line(
     //   Vec.sub(a.position, a_b),
     //   Vec.add(b.position, a_b)
     // ));
-    return (this.line = Line(a.position, b.position));
+    return (this.line = Line(handles.a.position, handles.b.position));
   }
 
   updateCenter() {
-    return (this.center = Vec.avg(this.a.position, this.b.position));
+    const handles = this.handles;
+    if (!handles) {
+      return this.center;
+    }
+
+    return (this.center = Vec.avg(handles.a.position, handles.b.position));
   }
 
   updateRadius() {
@@ -70,6 +94,11 @@ class GizmoInstance extends GameObject {
   }
 
   update(events: Events) {
+    const handles = this.handles;
+    if (!handles) {
+      return false;
+    }
+
     const fingerDown = events.find('finger', 'began');
 
     if (fingerDown) {
@@ -87,10 +116,10 @@ class GizmoInstance extends GameObject {
     const fingerUp = events.find('finger', 'ended');
 
     if (fingerUp) {
-      if (Vec.dist(this.a.position, fingerUp.position) < 20) {
+      if (Vec.dist(handles.a.position, fingerUp.position) < 20) {
         return true;
       }
-      if (Vec.dist(this.b.position, fingerUp.position) < 20) {
+      if (Vec.dist(handles.b.position, fingerUp.position) < 20) {
         return true;
       }
 
@@ -119,10 +148,13 @@ class GizmoInstance extends GameObject {
 
   toggleDistance() {
     if (!this.distanceConstraint) {
-      this.distanceConstraint = constraints.constant(
-        this.polarVectorConstraint.variables.distance,
-        Vec.dist(this.a.position, this.b.position)
-      );
+      const handles = this.handles;
+      if (handles) {
+        this.distanceConstraint = constraints.constant(
+          this.polarVectorConstraint.variables.distance,
+          Vec.dist(handles.a.position, handles.b.position)
+        );
+      }
     } else {
       this.distanceConstraint.remove();
       this.distanceConstraint = undefined;
@@ -131,10 +163,13 @@ class GizmoInstance extends GameObject {
 
   toggleAngle() {
     if (!this.angleConstraint) {
-      this.angleConstraint = constraints.constant(
-        this.polarVectorConstraint.variables.angle,
-        Vec.angle(Vec.sub(this.b.position, this.a.position))
-      );
+      const handles = this.handles;
+      if (handles) {
+        this.angleConstraint = constraints.constant(
+          this.polarVectorConstraint.variables.angle,
+          Vec.angle(Vec.sub(handles.b.position, handles.a.position))
+        );
+      }
     } else {
       this.angleConstraint.remove();
       this.angleConstraint = undefined;
@@ -150,7 +185,12 @@ class GizmoInstance extends GameObject {
       return;
     }
 
-    const angle = Vec.angle(Vec.sub(this.b.position, this.a.position));
+    const handles = this.handles;
+    if (!handles) {
+      return;
+    }
+
+    const angle = Vec.angle(Vec.sub(handles.b.position, handles.a.position));
 
     const d = [
       SVG.arcPath(this.center, 20, angle - TAU / 4, Math.PI / 3),
@@ -160,7 +200,7 @@ class GizmoInstance extends GameObject {
     SVG.now('path', { d, ...stroke(this.angleConstraint ? green : grey) });
 
     SVG.now('polyline', {
-      points: SVG.points(this.a.position, this.b.position),
+      points: SVG.points(handles.a.position, handles.b.position),
       ...stroke(this.distanceConstraint ? green : grey, 3),
     });
   }

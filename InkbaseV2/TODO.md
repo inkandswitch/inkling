@@ -1,7 +1,7 @@
 TODO
 ====
 
-* Gizmo should only have weak refs to handles
+* Look at Gizmos w/ Ivan
 
 Constraints
 -----------
