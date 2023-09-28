@@ -351,28 +351,6 @@ const habitTracker = new Spreadsheet(
         then "" + •n
         else ""
   `
-  // {
-  //   n: {
-  //     name: 'n',
-  //     edgeValues: {
-  //       '←': 0,
-  //       '→': 0,
-  //     },
-  //     formula(cell) {
-  //       return cell.get(['•'], 'v') === 'x'
-  //         ? (cell.get(['←'], 'n') as number) + 1
-  //         : 0;
-  //     },
-  //   },
-  //   d: {
-  //     name: 'd',
-  //     formula(cell) {
-  //       return cell.get(['•'], 'n') > cell.get(['→'], 'n')
-  //         ? '' + cell.get(['•'], 'n')
-  //         : '';
-  //     },
-  //   },
-  // }
 );
 habitTracker.compute();
 console.log(habitTracker.getCellValues());
