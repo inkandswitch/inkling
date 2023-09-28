@@ -121,8 +121,6 @@ export default class FormulaEditor {
            position.y < this.position.y + this.height;
   }
 
-  
-
   activate(position: Position){
     this.position = position;
     this.active = true;

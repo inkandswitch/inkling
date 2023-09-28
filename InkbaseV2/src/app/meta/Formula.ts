@@ -19,11 +19,11 @@ export default class Formula extends Token {
 
   constructor(){
     super();
-    this.addToken(new NumberToken(10));
-    this.addToken(new OpToken("+"));
-    this.addToken(new NumberToken(20));
-    this.addToken(new OpToken("="));
-    this.addToken(new NumberToken(30));
+    // this.addToken(new NumberToken(10));
+    // this.addToken(new OpToken("+"));
+    // this.addToken(new NumberToken(20));
+    // this.addToken(new OpToken("="));
+    // this.addToken(new NumberToken(30));
   }
 
   addToken(t: Token){

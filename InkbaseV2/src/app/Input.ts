@@ -1,3 +1,4 @@
+import { PositionWithPressure } from '../lib/types';
 import { aGizmo } from './Gizmo';
 import Events, { TouchId, Event, InputState } from './NativeEvents';
 import Page from './Page';
@@ -5,7 +6,7 @@ import Selection from './Selection';
 import FormulaEditor from './meta/FormulaEditor';
 import { aToken } from './meta/Token';
 import { aCanonicalHandle } from './strokes/Handle';
-import pencil from './tools/Pencil';
+
 import Pencil from './tools/Pencil';
 
 // Variables that store state needed by our gestures go here.
@@ -26,6 +27,9 @@ export function applyEvent(
   state: InputState, // The current state of the pencil or finger that generated this event.
   events: Events, // The full NativeEvents instance, so we can look at other the pencil/fingers.
   page: Page,
+
+  // Marcel thinking: Passing every single thing as an argument seems kind of messy
+  // Maybe if we turn App into a singleton, we could just pass that into here as context?
   pencil: Pencil,
   formulaEditor: FormulaEditor
 ) {
@@ -48,6 +52,8 @@ export function applyEvent(
     recursive: false
   });
 
+  const formulaEditorToggleEvent = formulaEditor.isPositionNearToggle(event.position);
+
 
   // Below here, you'll find a list of each gesture recognizer in the system, one by one.
   // Each recognized gesture should end with a return, to keep the cyclomatic complexity super low.
@@ -58,35 +64,51 @@ export function applyEvent(
   // each state separately, since (in theory) these separations cleanly split the gesture space
   // into non-overlapping sets.
 
-
-  
   // USE THE PEN
-  // TODO: 
-  // [] Position with Pressure
-  // [] Handle Tilt differently
+  if (
+    event.type === 'pencil' &&
+    event.state === 'began' &&
+    formulaEditorToggleEvent
+  ) {
+    formulaEditor.toggleMode();
+    return
+  }
+
   if (
     event.type === 'pencil' &&
     event.state === 'began'
   ) {
-    pencil.startStroke(event.position);
+    // TODO: Constructing position with pressure like this could be improved
+    pencil.startStroke({
+      x: event.position.x, 
+      y: event.position.y,
+      pressure: event.pressure
+    });
+    objects['drawStroke'] = true;
     return;
   }
 
   if (
     event.type === 'pencil' &&
-    event.state === 'moved'
+    event.state === 'moved' &&
+    objects['drawStroke']
   ) {
-    pencil.extendStroke(event.position);
+    pencil.extendStroke({
+      x: event.position.x, 
+      y: event.position.y,
+      pressure: event.pressure
+    });
     return;
   }
 
   if (
     event.type === 'pencil' &&
-    event.state === 'ended'
+    event.state === 'ended' && 
+    objects['drawStroke']
   ) {
     formulaEditor.captureStroke(pencil.stroke!);
     pencil.endStroke();
-    
+    objects['drawStroke'] = false;
     return;
   }
 

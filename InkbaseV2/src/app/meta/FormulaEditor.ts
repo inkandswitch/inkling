@@ -7,8 +7,9 @@ import Formula, { OpToken } from "./Formula"
 import Page from "../Page";
 import Vec from "../../lib/vec";
 import Stroke from "../strokes/Stroke";
-import WritingRecognizer from "./WritingRecognizer";
+import WritingRecognizer from "../recognizers/WritingRecognizer";
 import NumberToken from "./NumberToken";
+import LabelToken from "./LabelToken";
 
 const PADDING = 3;
 const PADDING_BIG = 5;
@@ -21,8 +22,11 @@ export default class FormulaEditor extends GameObject {
   position: Position = {x: 100, y: 100};
 
   editWidth: number = 46;
+  mode: "default" | "label" = "default";
 
   recognizer = new WritingRecognizer();
+
+  labelStrokes: Array<WeakRef<Stroke>> = [];
 
   // SVG Elements
   protected wrapperElement = SVG.add('rect', {
@@ -58,32 +62,91 @@ export default class FormulaEditor extends GameObject {
     f.position = Vec.add(this.position, Vec(PADDING, PADDING));
   }
 
+  // STROKE CAPTURE
   captureStroke(stroke: WeakRef<Stroke>) {
     let f = this.formula?.deref();
     let s = stroke.deref();
     if(f != null && s != null) {
-      const capturePosition = Vec.add(this.position, Vec(f.width + this.editWidth/2, 20))
-      let distance = s.distanceToPoint(capturePosition)
-      if(distance && distance < 20) {
-        console.log("capture", s);
-        let result = this.recognizer.recognize([s.points]);
-        console.log(result);
-
-        let char = result.Name;
-        if(result.isNumeric) {
-          let lastToken = f.lastToken();
-          if(lastToken instanceof NumberToken) {
-            lastToken.addChar(char);
-          } else {
-            f.addToken(new NumberToken(parseInt(char)));
-          }
-        } else {
-          f.addToken(new OpToken(char));
+      if(this.mode == 'label') {
+        this.captureLabelStroke(stroke, f);
+      } else {
+        const capturePosition = Vec.add(this.position, Vec(f.width + this.editWidth/2, 20))
+        let distance = s.distanceToPoint(capturePosition)
+        if(distance && distance < 20) {
+          console.log("capture", s);
+          this.captureRecognizedStroke(s, f);
         }
-        
-        s.remove();
       }
     }
+  }
+
+  captureLabelStroke(stroke: WeakRef<Stroke>, f: Formula){
+    this.labelStrokes.push(stroke);
+    stroke.deref()!.color = '#FFF'
+
+    let maxX = 0;
+      for(const stroke of this.labelStrokes) {
+        for(const pt of stroke.deref()!.points) {
+          if(pt.x > maxX) {
+            maxX = pt.x;
+          }
+        }
+      }
+      
+      this.editWidth = maxX - (this.position.x + f.width) + 46;
+  }
+
+  captureRecognizedStroke(s: Stroke, f: Formula){
+    let result = this.recognizer.recognize([s.points]);
+    console.log(result);
+
+    let char = result.Name;
+    if(result.isNumeric) {
+      let lastToken = f.lastToken();
+      if(lastToken instanceof NumberToken) {
+        lastToken.addChar(char);
+      } else {
+        f.addToken(new NumberToken(parseInt(char)));
+      }
+    } else {
+      f.addToken(new OpToken(char));
+    }
+    
+    s.remove();
+  }
+
+  addLabelToken(){
+    const normalizedStrokes = this.labelStrokes.map(s=>{
+      return s.deref()!.points.map(pt=>{
+        return Vec.sub(pt, Vec.add(this.position, Vec(this.formula?.deref()?.width!+PADDING*2,+PADDING)));
+      })
+    });
+
+    let labelToken = new LabelToken(normalizedStrokes, this.editWidth - 46);
+    this.formula?.deref()?.addToken(labelToken);
+    
+    this.labelStrokes.forEach(stroke=>{
+      stroke.deref()!.remove();
+    })
+    this.labelStrokes = [];
+  }
+
+  // MODES
+  isPositionNearToggle(position: Position){
+    return  this.formula &&
+            position.x > this.position.x + this.width - 25 &&
+            position.y > this.position.y &&
+            position.x < this.position.x + this.width &&
+            position.y < this.position.y + this.height;
+  }
+
+  toggleMode(){
+    if(this.mode == "label") {
+      this.addLabelToken();
+    }
+
+    this.mode = this.mode == "label" ? "default" : "label";
+    this.editWidth = 46;
   }
 
   render(dt: number, t: number): void {
@@ -123,5 +186,14 @@ export default class FormulaEditor extends GameObject {
       SVG.update(this.toggleElement, {visibility: "hidden"});
       SVG.update(this.wrapperElement, {visibility: "hidden"});
     }
+
+    // Mode
+    SVG.update(this.toggleElement, {
+      fill: this.mode == "label" ? COLORS.GREY_MID : COLORS.BLUE
+    });
+
+    SVG.update(this.nextCharElement, {
+      fill: this.mode == "label" ? COLORS.BLUE : COLORS.GREY_MID
+    });
   }
 }

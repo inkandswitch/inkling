@@ -5,9 +5,11 @@ import Vec from '../../lib/vec';
 import Line from '../../lib/line';
 
 export default class Stroke extends GameObject {
+  color: string = "#000"
+
   protected element = SVG.add('polyline', {
     fill: 'none',
-    stroke: '#000',
+    stroke: this.color,
     'stroke-width': 2,
   });
 
@@ -16,7 +18,7 @@ export default class Stroke extends GameObject {
   }
 
   render(): void {
-    SVG.update(this.element, { points: SVG.points(this.points) });
+    SVG.update(this.element, { points: SVG.points(this.points), stroke: this.color });
   }
 
   distanceToPoint(pos: Position): number | null {
