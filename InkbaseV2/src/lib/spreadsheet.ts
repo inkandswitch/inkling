@@ -1,87 +1,182 @@
-const NOT_AVAILABLE = 'n/a';
+import * as ohm from 'ohm-js';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type PropertyTypes = { _: any };
+const g = ohm.grammar(String.raw`
 
-interface Formula<PT extends PropertyTypes, C extends string, T> {
-  cellValue(cell: Cell<PT, C>): T;
-  edgeValues?: Partial<{ [key in C]: T }>;
+Spreadsheet {
+  Properties
+    = Property*
+
+  Property
+    = name Edges? Formula
+
+  Edges
+    = edges Edge*
+
+  Edge
+    = dir Value
+
+  Formula
+    = formula Exp
+
+  Exp
+    = IfExp
+
+  IfExp
+    = if EqExp then EqExp else IfExp  -- if
+    | EqExp
+
+  EqExp
+    = RelExp "=" RelExp  -- eq
+    | RelExp
+
+  RelExp
+    = AddExp ("<=" | "<" | ">=" | ">") AddExp  -- rel
+    | AddExp
+
+  AddExp
+    = AddExp ("+" | "-") MulExp  -- add
+    | MulExp
+
+  MulExp
+    = MulExp ("*" | "/" | "%") PropExp  -- mul
+    | PropExp
+
+  PropExp
+    = dir+ name  -- prop
+    | UnExp
+
+  UnExp
+    = "-" CallExp  -- call
+    | CallExp
+
+  CallExp
+    = name "(" ListOf<Exp, ","> ")"  -- call
+    | PriExp
+
+  PriExp
+    = "(" Exp ")"  -- paren
+    | Value
+
+  Value
+    = number
+    | string
+
+  // lexical rules
+
+  dir  (a direction)
+    = "←"  -- left
+    | "→"  -- right
+    | "↑"  -- up
+    | "↓"  -- down
+    | "•"  -- here
+
+  ident  (an identifier)
+    = ~keyword letter alnum*
+
+  number  (a number literal)
+    = digit* "." digit+  -- fract
+    | digit+             -- whole
+
+  string  (a string literal)
+    = "\"" (~"\"" ~"\n" any)* "\""
+
+  name  (a name)
+    = ~keyword letter alnum*
+
+  edges = "edges" ~alnum
+  formula = "formula" ~alnum
+  if = "if" ~alnum
+  then = "then" ~alnum
+  else = "else" ~alnum
+  keyword = edges | formula | if | then | else
+
 }
 
-type FormulasForProperties<
-  PT extends PropertyTypes,
-  C extends string,
-> = Partial<{ [Property in keyof PT]: Formula<PT, C, PT[Property]> }>;
+`);
 
-class Cell<PT extends PropertyTypes, C extends string, V = PT['_']> {
-  readonly neighbors = new Map<C, Cell<PT, C>>();
-  readonly propertyValues: Partial<PT> = {};
+function parse(input: string) {
+  const m = g.match(input);
+  if (m.succeeded()) {
+    console.log('parsed ok:');
+    console.log(input);
+  } else {
+    console.log(m.message);
+  }
+}
+
+const habitTrackerFormulas = String.raw`
+  n
+    edges
+      ← 0
+      → 0
+    formula
+      if •v = "x"
+      then ←n + 1
+      else 0
+
+  d
+    formula
+      if •n > →n
+      then "" + •n
+      else ""
+`;
+parse(habitTrackerFormulas);
+
+const NOT_AVAILABLE = 'n/a';
+
+type Value = number | string;
+
+interface Property {
+  name: string;
+  formula(cell: Cell): Value;
+  edgeValues?: Record<string, Value>;
+}
+
+class Cell {
+  readonly neighbors = new Map<string, Cell>();
+  readonly propertyValues = new Map<string, Value>();
 
   constructor(
-    private readonly spreadsheet: Spreadsheet<PT, C>,
-    value: V
+    private readonly spreadsheet: Spreadsheet,
+    value: Value
   ) {
-    this.set('_', value);
+    this.set('v', value);
   }
 
-  connect(name: C, that: Cell<PT, C>): this {
+  connect(name: string, that: Cell): this {
     this.neighbors.set(name, that);
     return this;
   }
 
-  set<P extends keyof PT>(property: P, value: PT[P]): this {
-    this.propertyValues[property] = value;
+  set(propertyName: string, value: Value): this {
+    this.propertyValues.set(propertyName, value);
     return this;
   }
 
-  get<P extends keyof PT>(property: P): PT[P];
-  get<P extends keyof PT>(name: C | C[], property: P): PT[P];
-  get<P extends keyof PT>(arg1: P | C | C[], arg2?: P): PT[P] {
-    if (arguments.length === 1) {
-      const property = arg1 as P;
-      const value = this.propertyValues[property];
-      if (value === undefined) {
-        throw NOT_AVAILABLE;
-      } else {
-        return value;
+  get(path: string[], propertyName: string): Value {
+    let cell: Cell | undefined = this;
+    for (const name of path) {
+      cell = cell.neighbors.get(name);
+      if (!cell) {
+        return this.spreadsheet.getEdgeValue(name, propertyName);
       }
+    }
+    const value = cell.propertyValues.get(propertyName);
+    if (value !== undefined) {
+      return value;
     } else {
-      const names = arg1 instanceof Array ? (arg1 as C[]) : [arg1 as C];
-      const property = arg2 as P;
-      let cell: Cell<PT, C> | undefined = this;
-      for (const name of names) {
-        cell = cell.neighbors.get(name);
-        if (!cell) {
-          return this.spreadsheet.getEdgeValue(name, property);
-        }
-      }
-      return cell.get(property);
+      throw NOT_AVAILABLE;
     }
   }
 
-  apply(formulasForProperties: FormulasForProperties<PT, C>): boolean {
-    let didSomething = false;
-    for (const [property, formula] of Object.entries(formulasForProperties)) {
-      didSomething =
-        // (Typecast to any required b/c Object.entries()'s type is too loose, sigh.)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        this.computeProperty(property as keyof PT, formula as any) ||
-        didSomething;
-    }
-    return didSomething;
-  }
-
-  private computeProperty(
-    property: keyof PT,
-    formula: Formula<PT, C, PT[typeof property]>
-  ) {
-    if (property in this.propertyValues) {
+  compute(property: Property) {
+    if (this.propertyValues.has(property.name)) {
       // already computed it!
       return false;
     }
 
     try {
-      this.propertyValues[property] = formula.cellValue(this);
+      this.propertyValues.set(property.name, property.formula(this));
       return true;
     } catch (e) {
       if (e !== NOT_AVAILABLE) {
@@ -91,25 +186,79 @@ class Cell<PT extends PropertyTypes, C extends string, V = PT['_']> {
       }
     }
   }
+
+  toJSON(): Record<string, Value> {
+    const obj = {} as Record<string, Value>;
+    for (const [name, value] of this.propertyValues.entries()) {
+      obj[name] = value;
+    }
+    return obj;
+  }
 }
 
-class Spreadsheet<PT extends PropertyTypes, C extends string, V = PT['_']> {
-  readonly cells: Cell<PT, C>[] = [];
+class Spreadsheet {
+  static parse(_properties: string): Record<string, Property> {
+    throw new Error('TODO: Spreadsheet.parse()');
+  }
 
-  constructor(private readonly formulas: FormulasForProperties<PT, C>) {}
+  readonly properties: Record<string, Property>;
+  readonly rows: Cell[][];
 
-  addCell(value: V) {
-    const cell = new Cell<PT, C>(this, value);
-    this.cells.push(cell);
-    return cell;
+  constructor(
+    cellValues: Value[][],
+    properties: Record<string, Property> | string
+  ) {
+    this.properties =
+      typeof properties === 'string'
+        ? Spreadsheet.parse(properties)
+        : properties;
+
+    this.rows = cellValues.map(row => row.map(value => new Cell(this, value)));
+    for (let row = 0; row < this.rows.length; row++) {
+      for (let col = 0; col < this.rows[row].length; col++) {
+        const here = this.getCell(row, col)!;
+        const up = this.getCell(row - 1, col);
+        const down = this.getCell(row + 1, col);
+        const left = this.getCell(row, col - 1);
+        const right = this.getCell(row, col + 1);
+        here.connect('•', here);
+        if (up) {
+          here.connect('↑', up);
+        }
+        if (down) {
+          here.connect('↓', down);
+        }
+        if (left) {
+          here.connect('←', left);
+        }
+        if (right) {
+          here.connect('→', right);
+        }
+      }
+    }
+  }
+
+  private getCell(rowIdx: number, colIdx: number) {
+    if (rowIdx < 0 || rowIdx >= this.rows.length) {
+      return null;
+    }
+    const row = this.rows[rowIdx];
+    if (colIdx < 0 || colIdx >= row.length) {
+      return null;
+    }
+    return row[colIdx];
   }
 
   compute(maxIterations = 1000) {
     let n = 0;
     while (n++ < maxIterations) {
       let didSomething = false;
-      for (const cell of this.cells) {
-        didSomething = cell.apply(this.formulas) || didSomething;
+      for (const row of this.rows) {
+        for (const cell of row) {
+          for (const property of Object.values(this.properties)) {
+            didSomething = cell.compute(property) || didSomething;
+          }
+        }
       }
       if (!didSomething) {
         break;
@@ -118,56 +267,67 @@ class Spreadsheet<PT extends PropertyTypes, C extends string, V = PT['_']> {
     console.log('done in', n, 'iterations');
   }
 
-  getEdgeValue<P extends keyof PT>(name: C, property: P): PT[P] {
-    const value = this.formulas[property]?.edgeValues?.[name];
-    if (value === undefined) {
+  getEdgeValue(name: string, propertyName: string): Value {
+    const property = this.properties[propertyName];
+    if (
+      !property ||
+      !property.edgeValues ||
+      property.edgeValues[name] === undefined
+    ) {
       throw NOT_AVAILABLE;
-    } else {
-      return value;
     }
+    return property.edgeValues[name];
   }
 
-  getCellValues(): object[] {
-    return this.cells.map(cell => cell.propertyValues);
+  getCellValues(): Record<string, Value>[][] {
+    return this.rows.map(row => row.map(cell => cell.toJSON()));
   }
 }
 
-function habitTrackerExample() {
-  console.log('--- habit tracker ---');
+console.log('--- habit tracker ---');
+const habitTracker = new Spreadsheet(
+  [['x', 'x', '', 'x', 'x', 'x']],
+  // String.raw`
+  //   n
+  //     edges
+  //       ← 0
+  //       → 0
+  //     formula
+  //       if •v = "x"
+  //       then ←n + 1
+  //       else 0
 
-  const habitTracker = new Spreadsheet<
-    { _: string; n: number; v: string },
-    'prev' | 'next'
-  >({
+  //   d
+  //     formula
+  //       if •n > →n
+  //       then "" + •n
+  //       else ""
+  // `,
+  {
     n: {
-      cellValue: cell =>
-        cell.get('_') === 'x' ? cell.get('prev', 'n') + 1 : 0,
+      name: 'n',
       edgeValues: {
-        prev: 0,
-        next: 0,
+        '←': 0,
+        '→': 0,
+      },
+      formula(cell) {
+        return cell.get(['•'], 'v') === 'x'
+          ? (cell.get(['←'], 'n') as number) + 1
+          : 0;
       },
     },
-    v: {
-      cellValue(cell) {
-        return cell.get('n') > cell.get('next', 'n') ? '' + cell.get('n') : '';
+    d: {
+      name: 'd',
+      formula(cell) {
+        return cell.get(['•'], 'n') > cell.get(['→'], 'n')
+          ? '' + cell.get(['•'], 'n')
+          : '';
       },
     },
-  });
-
-  // add cells and connect them
-  const cells = ['x', 'x', '', 'x', 'x', 'x'].map(x => habitTracker.addCell(x));
-  cells.forEach((curr, idx) => {
-    if (idx > 0) {
-      const prev = cells[idx - 1];
-      prev.connect('next', curr);
-      curr.connect('prev', prev);
-    }
-  });
-
-  habitTracker.compute();
-  console.log(habitTracker.getCellValues());
-}
-habitTrackerExample();
+  }
+);
+habitTracker.compute();
+console.log(habitTracker.getCellValues());
 
 /*
 
