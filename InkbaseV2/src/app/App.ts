@@ -45,7 +45,6 @@ root.adopt(pencil);
 // FORMULA STUFF
 const formulaEditor = new FormulaEditor();
 root.adopt(formulaEditor);
-formulaEditor.newFormula();
 
 onEveryFrame((dt, t) => {
   SVG.clearNow(t);

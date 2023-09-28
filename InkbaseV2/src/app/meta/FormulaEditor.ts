@@ -115,7 +115,9 @@ export default class FormulaEditor extends GameObject {
     s.remove();
   }
 
+  // TODO: All the derefs are kind of a pain here. But w/e
   addLabelToken(){
+    // Normalize the stroke positions to the the top corner of the token
     const normalizedStrokes = this.labelStrokes.map(s=>{
       return s.deref()!.points.map(pt=>{
         return Vec.sub(pt, Vec.add(this.position, Vec(this.formula?.deref()?.width!+PADDING*2,+PADDING)));
@@ -147,6 +149,24 @@ export default class FormulaEditor extends GameObject {
 
     this.mode = this.mode == "label" ? "default" : "label";
     this.editWidth = 46;
+  }
+
+  // Active
+  isActive(){
+    return this.formula != null;
+  }
+
+  activateFromFormula(formula: WeakRef<Formula>){
+    this.formula = formula;
+  }
+
+  activateFromPosition(position: Position) {
+    this.position = position;
+    this.newFormula();
+  }
+
+  deactivate(){
+    this.formula = null;
   }
 
   render(dt: number, t: number): void {

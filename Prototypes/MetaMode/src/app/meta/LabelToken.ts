@@ -28,7 +28,7 @@ export default class LabelToken extends Token {
 
     this.position = position;
     this.label = label;
-    let offsetPosition = Vec.add(position, Vec(20, 5));
+
 
     this.width = label.width + 40;
 

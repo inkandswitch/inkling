@@ -3,6 +3,7 @@ import { aGizmo } from './Gizmo';
 import Events, { TouchId, Event, InputState } from './NativeEvents';
 import Page from './Page';
 import Selection from './Selection';
+import Formula from './meta/Formula';
 import FormulaEditor from './meta/FormulaEditor';
 import { aToken } from './meta/Token';
 import { aCanonicalHandle } from './strokes/Handle';
@@ -64,13 +65,46 @@ export function applyEvent(
   // each state separately, since (in theory) these separations cleanly split the gesture space
   // into non-overlapping sets.
 
+  // ACTIVATE FORMULA EDITOR
+  // TODO: This is not a good gesture
+  if (
+    event.type === 'pencil' &&
+    event.state === 'began' &&
+    events.fingerStates.length === 1 &&
+    tokenNearEvent &&
+    tokenNearEvent instanceof Formula
+  ) {
+    formulaEditor.activateFromFormula(new WeakRef(tokenNearEvent));
+    return
+  }
+
+  if (
+    event.type === 'pencil' &&
+    event.state === 'began' &&
+    events.fingerStates.length === 1
+  ) {
+    formulaEditor.activateFromPosition(event.position);
+    return
+  }
+
   // USE THE PEN
   if (
     event.type === 'pencil' &&
     event.state === 'began' &&
+    formulaEditor.isActive() &&
     formulaEditorToggleEvent
   ) {
     formulaEditor.toggleMode();
+    return
+  }
+
+  if (
+    event.type === 'finger' &&
+    event.state === 'began' &&
+    events.fingerStates.length === 3 &&
+    formulaEditor.isActive()
+  ) {
+    formulaEditor.deactivate();
     return
   }
 
@@ -80,7 +114,7 @@ export function applyEvent(
   ) {
     // TODO: Constructing position with pressure like this could be improved
     pencil.startStroke({
-      x: event.position.x, 
+      x: event.position.x,
       y: event.position.y,
       pressure: event.pressure
     });
