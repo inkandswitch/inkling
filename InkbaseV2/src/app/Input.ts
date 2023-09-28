@@ -2,8 +2,11 @@ import { aGizmo } from './Gizmo';
 import Events, { TouchId, Event, InputState } from './NativeEvents';
 import Page from './Page';
 import Selection from './Selection';
+import FormulaEditor from './meta/FormulaEditor';
 import { aToken } from './meta/Token';
 import { aCanonicalHandle } from './strokes/Handle';
+import pencil from './tools/Pencil';
+import Pencil from './tools/Pencil';
 
 // Variables that store state needed by our gestures go here.
 
@@ -22,17 +25,18 @@ export function applyEvent(
   event: Event, // The current event we're processing.
   state: InputState, // The current state of the pencil or finger that generated this event.
   events: Events, // The full NativeEvents instance, so we can look at other the pencil/fingers.
-  selection: Selection,
-  page: Page
+  page: Page,
+  pencil: Pencil,
+  formulaEditor: FormulaEditor
 ) {
   // This is a good place to set up any state needed by the below gesture recognizers.
   // Please don't fret about the performance burden of gathering this state on every event —
   // it rounds to zero! We can optimize the heck out of this later, once we know what we even want.
-
   const handleNearEvent = page.find({
     what: aCanonicalHandle,
     near: event.position,
   });
+
   const gizmoNearEvent = page.find({
     what: aGizmo,
     near: event.position,
@@ -44,6 +48,7 @@ export function applyEvent(
     recursive: false
   });
 
+
   // Below here, you'll find a list of each gesture recognizer in the system, one by one.
   // Each recognized gesture should end with a return, to keep the cyclomatic complexity super low.
   // In other words, we should try really hard to only have blocks (like `if`) go one level deep.
@@ -53,6 +58,39 @@ export function applyEvent(
   // each state separately, since (in theory) these separations cleanly split the gesture space
   // into non-overlapping sets.
 
+
+  
+  // USE THE PEN
+  // TODO: 
+  // [] Position with Pressure
+  // [] Handle Tilt differently
+  if (
+    event.type === 'pencil' &&
+    event.state === 'began'
+  ) {
+    pencil.startStroke(event.position);
+    return;
+  }
+
+  if (
+    event.type === 'pencil' &&
+    event.state === 'moved'
+  ) {
+    pencil.extendStroke(event.position);
+    return;
+  }
+
+  if (
+    event.type === 'pencil' &&
+    event.state === 'ended'
+  ) {
+    formulaEditor.captureStroke(pencil.stroke!);
+    pencil.endStroke();
+    
+    return;
+  }
+
+
   // DRAGGING TOKENS
   if (
     event.type === 'finger' &&
@@ -60,8 +98,8 @@ export function applyEvent(
     events.fingerStates.length === 1 &&
     tokenNearEvent
   ) {
-    // Drag token
-    objects['dragToken'] = tokenNearEvent
+    objects['dragToken'] = tokenNearEvent;
+    return;
   }
 
   // TODO: Handle dragging with offset
@@ -71,8 +109,8 @@ export function applyEvent(
     events.fingerStates.length === 1 &&
     objects['dragToken']
   ) {
-    // Drag token
     objects['dragToken'].position = event.position;
+    return;
   }
 
   if (
@@ -81,47 +119,47 @@ export function applyEvent(
     events.fingerStates.length === 1 &&
     objects['dragToken']
   ) {
-    // Drag token
     delete objects['dragToken'];
-  }
-
-
-
-  // TAP A HANDLE WITH THE FIRST FINGER —> SELECT THE HANDLE
-  if (
-    event.type === 'finger' &&
-    event.state === 'began' &&
-    events.fingerStates.length === 1 &&
-    handleNearEvent
-  ) {
-    // objects[event.id] = handleNearEvent; // TODO: Save this handle so we can immediately start dragging it
-    return selection.selectHandle(handleNearEvent);
-  }
-
-  // TAP A GIZMO -> TOGGLE THE GIZMO
-  if (event.type === 'finger' && event.state === 'began' && gizmoNearEvent) {
-    return gizmoNearEvent.tap(event.position);
-  }
-
-  // CLEAR SELECTION WHEN A FINGER IS TAPPED
-  if (
-    event.type === 'finger' &&
-    event.state === 'ended' &&
-    !state.drag &&
-    !handleNearEvent
-    // TODO: We may want to track the max number of fingers seen since the gesture began,
-    // so we can only invoke this gesture when that === 1
-    // TODO: Rather than determining whether a drag has happened in NativeEvent, we might
-    // want to determine it here, so that each different gesture can decide how much of a drag
-    // is enough (or too much) to warrant responding to. So in NativeEvent, it'd just accumulate
-    // the total distance travelled by the pencil/finger.
-  ) {
-    return selection.clearSelection();
-  }
-
-  // MOVE SELECTED HANDLES
-  if (event.type === 'finger' && event.state === 'moved') {
-    // TODO: Implement this
     return;
   }
+
+
+
+  // // TAP A HANDLE WITH THE FIRST FINGER —> SELECT THE HANDLE
+  // if (
+  //   event.type === 'finger' &&
+  //   event.state === 'began' &&
+  //   events.fingerStates.length === 1 &&
+  //   handleNearEvent
+  // ) {
+  //   // objects[event.id] = handleNearEvent; // TODO: Save this handle so we can immediately start dragging it
+  //   return selection.selectHandle(handleNearEvent);
+  // }
+
+  // // TAP A GIZMO -> TOGGLE THE GIZMO
+  // if (event.type === 'finger' && event.state === 'began' && gizmoNearEvent) {
+  //   return gizmoNearEvent.tap(event.position);
+  // }
+
+  // // CLEAR SELECTION WHEN A FINGER IS TAPPED
+  // if (
+  //   event.type === 'finger' &&
+  //   event.state === 'ended' &&
+  //   !state.drag &&
+  //   !handleNearEvent
+  //   // TODO: We may want to track the max number of fingers seen since the gesture began,
+  //   // so we can only invoke this gesture when that === 1
+  //   // TODO: Rather than determining whether a drag has happened in NativeEvent, we might
+  //   // want to determine it here, so that each different gesture can decide how much of a drag
+  //   // is enough (or too much) to warrant responding to. So in NativeEvent, it'd just accumulate
+  //   // the total distance travelled by the pencil/finger.
+  // ) {
+  //   return selection.clearSelection();
+  // }
+
+  // // MOVE SELECTED HANDLES
+  // if (event.type === 'finger' && event.state === 'moved') {
+  //   // TODO: Implement this
+  //   return;
+  // }
 }

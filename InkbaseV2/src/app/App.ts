@@ -20,10 +20,11 @@ import Token from './meta/Token';
 import NumberToken from './meta/NumberToken';
 import Formula from './meta/Formula';
 import FormulaEditor from './meta/FormulaEditor';
+import Pencil from './tools/Pencil';
 
 // This is a pretzel, because the interface between NativeEvents and Input is a work in progress.
 const events = new Events((event: Event, state: InputState) => {
-  applyEvent(event, state, events, selection, page);
+  applyEvent(event, state, events, page, pencil, formulaEditor);
 });
 
 const page = new Page({ strokeAnalyzer: false });
@@ -33,24 +34,13 @@ root.currentPage = page;
 const snaps = new Snaps({ handleSnaps: true, alignmentSnaps: false });
 root.adopt(snaps);
 
-const selection = new Selection(page, snaps);
-const freehandSelection = new FreehandSelection(page);
+// const selection = new Selection(page, snaps);
+// const freehandSelection = new FreehandSelection(page);
 
-const gizmo = new Gizmo(page, selection, false);
+// const gizmo = new Gizmo(page, selection, false);
 
-// const toolPicker = new ToolPicker([
-//   new FreehandTool('FREE', 30, 30),
-//   new FormalTool('FORM', 30, 80, snaps),
-//   new ColorTool('COLOR', 30, 130),
-//   new Tool('🧠', 30, 180, Stroke),
-//   new ConstraintTool('CONST', 30, 230, {
-//     vertical: true,
-//     horizontal: true,
-//     distance: true,
-//     angle: true,
-//   }),
-// ]);
-// root.adopt(toolPicker);
+const pencil = new Pencil();
+root.adopt(pencil);
 
 // FORMULA STUFF
 const formulaEditor = new FormulaEditor();
@@ -72,12 +62,12 @@ onEveryFrame((dt, t) => {
   // Tell NativeEvent to handle all events sent from Swift, evaluating Input for each
   events.update();
 
-  for (const wr of selection.handles) {
-    const handle = wr.deref();
-    if (handle) {
-      constraints.now.pin(handle);
-    }
-  }
+  // for (const wr of selection.handles) {
+  //   const handle = wr.deref();
+  //   if (handle) {
+  //     constraints.now.pin(handle);
+  //   }
+  // }
   constraints.solve();
 
   // render everything

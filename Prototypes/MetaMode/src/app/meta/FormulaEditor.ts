@@ -62,8 +62,8 @@ export default class FormulaEditor {
 
       let offsetWidth = this.editWidth + PADDING_BIG * 2+ PADDING * 6;
       if(this.formula != null) {
-        this.position = this.formula.position
-        this.width = this.formula.width +offsetWidth
+        this.position = this.formula.position;
+        this.width = this.formula.width +offsetWidth;
       } else {
         this.width = offsetWidth;
       }
@@ -74,7 +74,7 @@ export default class FormulaEditor {
         x: this.position.x-PADDING_BIG, y: this.position.y-PADDING_BIG,
         width: this.width, height: this.height + PADDING_BIG*2,
         visibility: "visible"
-      })
+      });
 
       // Char elements
       let position = Vec.add(this.position, Vec(this.formula ? this.formula.width : 0, 0))
@@ -82,27 +82,27 @@ export default class FormulaEditor {
         x: position.x+PADDING, y: this.position.y,
         width: this.editWidth,
         visibility: "visible"
-      })
+      });
       
       // Toggle
       SVG.update(this.toggleElement, {
         cx: position.x+ this.editWidth + 4*PADDING, cy: this.position.y + this.height/2,
         visibility: "visible"
-      })
-
+      });
     } else {
       SVG.update(this.nextCharElement, {visibility: "hidden"});
       SVG.update(this.toggleElement, {visibility: "hidden"});
       SVG.update(this.wrapperElement, {visibility: "hidden"});
     }
     
-    // label stuff
+    // Label stuff
     SVG.update(this.toggleElement, {
       fill: this.mode == "label" ? COLORS.GREY_MID : COLORS.BLUE
-    })
+    });
+
     SVG.update(this.nextCharElement, {
       fill: this.mode == "label" ? COLORS.BLUE : COLORS.GREY_MID
-    })
+    });
   }
 
   isPointInside(position: Position): boolean {
@@ -110,7 +110,7 @@ export default class FormulaEditor {
            position.x > this.position.x &&
            position.y > this.position.y &&
            position.x < this.position.x + this.width &&
-           position.y < this.position.y + this.height
+           position.y < this.position.y + this.height;
   }
 
   isToggleMode(position: Position): boolean {
@@ -118,7 +118,7 @@ export default class FormulaEditor {
            position.x > this.position.x + this.width - 25 &&
            position.y > this.position.y &&
            position.x < this.position.x + this.width &&
-           position.y < this.position.y + this.height
+           position.y < this.position.y + this.height;
   }
 
   
@@ -135,7 +135,6 @@ export default class FormulaEditor {
     this.active = false;
     if(this.mode == 'label') {
       console.log("make label");
-      
       this.makeLabelFromStrokes();
     }
     this.strokes = [];
@@ -144,7 +143,7 @@ export default class FormulaEditor {
   }
 
   toggleMode(){
-    this.mode = this.mode == "label" ? "default" : "label"
+    this.mode = this.mode == "label" ? "default" : "label";
     this.updateView();
   }
 
@@ -152,16 +151,16 @@ export default class FormulaEditor {
   addStroke(position: Position) {
     this.strokes.push([
       position
-    ])
+    ]);
 
-    this.strokeElements.push(SVG.add('polyline', {points: "", stroke: "black", fill: "none", "stroke-width": 2}))
+    this.strokeElements.push(SVG.add('polyline', {points: "", stroke: "black", fill: "none", "stroke-width": 2}));
   }
 
   addStrokePoint(position: Position){
-    let last = this.strokes[this.strokes.length-1]
+    let last = this.strokes[this.strokes.length-1];
     last.push(position);
 
-    let lastElement = this.strokeElements[this.strokeElements.length-1]
+    let lastElement = this.strokeElements[this.strokeElements.length-1];
     SVG.update(lastElement, {
       points: SVG.points(last)
     });

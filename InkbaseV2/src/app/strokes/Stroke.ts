@@ -36,4 +36,9 @@ export default class Stroke extends GameObject {
       }
     }
   }
+
+  remove(): void {
+    this.element.remove();
+    super.remove();
+  }
 }

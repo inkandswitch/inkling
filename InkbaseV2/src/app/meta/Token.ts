@@ -1,7 +1,7 @@
 import { GameObject } from '../GameObject';
 import { Position } from '../../lib/types';
 
-import { signedDistanceToBox } from './SignedDistance';
+import { signedDistanceToBox } from '../../lib/SignedDistance';
 
 
 export default class Token extends GameObject {

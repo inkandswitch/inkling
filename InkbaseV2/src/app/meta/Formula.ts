@@ -30,6 +30,10 @@ export default class Formula extends Token {
     this.adopt(t);
   }
 
+  lastToken(){
+    return Array.from(this.children).pop();
+  }
+
   render(dt: number, t: number): void {
     // Layout child tokens in horizontal sequence
     let tokenPosition = Vec.add(this.position, Vec(PADDING, PADDING));

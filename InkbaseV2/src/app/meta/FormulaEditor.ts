@@ -3,9 +3,12 @@ import { Position } from '../../lib/types';
 import COLORS from './Colors';
 import SVG from '../Svg';
 
-import Formula from "./Formula"
+import Formula, { OpToken } from "./Formula"
 import Page from "../Page";
 import Vec from "../../lib/vec";
+import Stroke from "../strokes/Stroke";
+import WritingRecognizer from "./WritingRecognizer";
+import NumberToken from "./NumberToken";
 
 const PADDING = 3;
 const PADDING_BIG = 5;
@@ -18,6 +21,8 @@ export default class FormulaEditor extends GameObject {
   position: Position = {x: 100, y: 100};
 
   editWidth: number = 46;
+
+  recognizer = new WritingRecognizer();
 
   // SVG Elements
   protected wrapperElement = SVG.add('rect', {
@@ -51,6 +56,34 @@ export default class FormulaEditor extends GameObject {
     this.formula = new WeakRef(f);
 
     f.position = Vec.add(this.position, Vec(PADDING, PADDING));
+  }
+
+  captureStroke(stroke: WeakRef<Stroke>) {
+    let f = this.formula?.deref();
+    let s = stroke.deref();
+    if(f != null && s != null) {
+      const capturePosition = Vec.add(this.position, Vec(f.width + this.editWidth/2, 20))
+      let distance = s.distanceToPoint(capturePosition)
+      if(distance && distance < 20) {
+        console.log("capture", s);
+        let result = this.recognizer.recognize([s.points]);
+        console.log(result);
+
+        let char = result.Name;
+        if(result.isNumeric) {
+          let lastToken = f.lastToken();
+          if(lastToken instanceof NumberToken) {
+            lastToken.addChar(char);
+          } else {
+            f.addToken(new NumberToken(parseInt(char)));
+          }
+        } else {
+          f.addToken(new OpToken(char));
+        }
+        
+        s.remove();
+      }
+    }
   }
 
   render(dt: number, t: number): void {

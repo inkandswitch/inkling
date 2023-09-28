@@ -25,6 +25,11 @@ export default class NumberToken extends Token {
     this.variable.value = value;
   }
   
+  addChar(char: number) {
+    let stringValue = this.variable.value.toString() + char;
+    this.variable.value = parseInt(stringValue);
+  }
+
   render(dt: number, t: number): void {
     this.textElement.textContent = this.variable.value.toString();
     this.width = (this.textElement as any).getComputedTextLength()+10;
