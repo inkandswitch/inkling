@@ -46,7 +46,7 @@ Spreadsheet {
     | UnExp
 
   UnExp
-    = "-" CallExp  -- call
+    = "-" CallExp  -- neg
     | CallExp
 
   CallExp
@@ -69,9 +69,6 @@ Spreadsheet {
     | "↑"  -- up
     | "↓"  -- down
     | "•"  -- here
-
-  ident  (an identifier)
-    = ~keyword letter alnum*
 
   number  (a number literal)
     = digit* "." digit+  -- fract
@@ -109,7 +106,7 @@ class Cell {
   readonly propertyValues = new Map<string, Value>();
 
   constructor(
-    private readonly spreadsheet: Spreadsheet,
+    readonly spreadsheet: Spreadsheet,
     value: Value
   ) {
     this.set('v', value);
@@ -195,6 +192,7 @@ class Spreadsheet {
       },
       Formula(_formulaKw, exp) {
         const fnSource = `cell => ${exp.parse()}`;
+        // console.log(fnSource);
         return eval(fnSource);
       },
       IfExp_if(_if, cond, _then, trueBranch, _else, falseBranch) {
@@ -209,11 +207,25 @@ class Spreadsheet {
       AddExp_add(a, op, b) {
         return `(${a.parse()} ${op.sourceString} ${b.parse()})`;
       },
+      MulExp_mul(a, op, b) {
+        return `(${a.parse()} ${op.sourceString} ${b.parse()})`;
+      },
       PropExp_prop(names, propertyName) {
         return `cell.get([${names
           .parse()
           .map((name: string) => JSON.stringify(name))
           .join(', ')}], ${JSON.stringify(propertyName.parse())})`;
+      },
+      UnExp_neg(_minusSign, exp) {
+        return `(-${exp.parse()})`;
+      },
+      CallExp_call(funcName, _openParen, args, _closeParen) {
+        return `cell.spreadsheet.callBuiltinFn(${JSON.stringify(
+          funcName.parse()
+        )}, ${args.children.map(arg => arg.parse()).join(', ')})`;
+      },
+      PriExp_paren(_openParen, exp, _closeParen) {
+        return `(${exp.parse()})`;
       },
       name(_firstLetter, _rest) {
         return this.sourceString;
@@ -228,6 +240,12 @@ class Spreadsheet {
         return this.sourceString;
       },
 
+      EmptyListOf() {
+        return [];
+      },
+      NonemptyListOf(x, _commas, xs) {
+        return [x.parse(), ...xs.parse()];
+      },
       _iter(...children) {
         return children.map(child => child.parse());
       },
@@ -244,9 +262,7 @@ class Spreadsheet {
         'failed to parse spreadsheet formulas -- see console for details'
       );
     }
-    const parsed = Spreadsheet.semantics(m).parse();
-    // console.log('parsed:', parsed);
-    return parsed;
+    return Spreadsheet.semantics(m).parse();
   }
 
   readonly properties: Record<string, Property>;
@@ -325,6 +341,17 @@ class Spreadsheet {
       throw NOT_AVAILABLE;
     }
     return property.edgeValues[name];
+  }
+
+  callBuiltinFn(name: string, ...args: Value[]) {
+    switch (name) {
+      case 'min':
+        return Math.min(...(args as number[]));
+      case 'max':
+        return Math.max(...(args as number[]));
+      default:
+        throw new Error('unsupported function: ' + name);
+    }
   }
 
   getCellValues(): Record<string, Value>[][] {
