@@ -19,6 +19,7 @@ import { root } from './GameObject';
 import Token from './meta/Token';
 import NumberToken from './meta/NumberToken';
 import Formula from './meta/Formula';
+import FormulaEditor from './meta/FormulaEditor';
 
 // This is a pretzel, because the interface between NativeEvents and Input is a work in progress.
 const events = new Events((event: Event, state: InputState) => {
@@ -52,9 +53,9 @@ const gizmo = new Gizmo(page, selection, false);
 // root.adopt(toolPicker);
 
 // FORMULA STUFF
-const token = new Formula();
-page.adopt(token);
-
+const formulaEditor = new FormulaEditor();
+root.adopt(formulaEditor);
+formulaEditor.newFormula();
 
 onEveryFrame((dt, t) => {
   SVG.clearNow(t);

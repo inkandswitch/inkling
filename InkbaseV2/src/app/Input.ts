@@ -53,7 +53,6 @@ export function applyEvent(
   // each state separately, since (in theory) these separations cleanly split the gesture space
   // into non-overlapping sets.
 
-
   // DRAGGING TOKENS
   if (
     event.type === 'finger' &&

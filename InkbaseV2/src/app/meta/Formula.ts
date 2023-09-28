@@ -1,7 +1,7 @@
 import Token from "./Token";
 import COLORS from './Colors';
 import SVG from '../Svg';
-import {Variable} from '../constraints';
+
 import Vec from "../../lib/vec";
 import NumberToken from "./NumberToken";
 
