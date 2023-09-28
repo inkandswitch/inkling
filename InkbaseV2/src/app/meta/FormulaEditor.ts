@@ -117,6 +117,9 @@ export default class FormulaEditor extends GameObject {
 
   // TODO: All the derefs are kind of a pain here. But w/e
   addLabelToken(){
+    if(this.labelStrokes.length == 0) {
+      return;
+    }
     // Normalize the stroke positions to the the top corner of the token
     const normalizedStrokes = this.labelStrokes.map(s=>{
       return s.deref()!.points.map(pt=>{
@@ -166,19 +169,28 @@ export default class FormulaEditor extends GameObject {
   }
 
   deactivate(){
-    // Unwrap if formula only has one child
     let f = this.formula?.deref();
-    if(f != null) {
-      if(f.children.size == 0) {
-        f.remove();
-      }
-      if(f.children.size == 1) {
-        let child = Array.from(f.children).pop();
-        this.page.adopt(child!);
-        f.remove();
-      } 
+    if(f== null) {
+      return
     }
+    // Finish off work if we still have something to do
+    if(this.mode=="label") {
+      this.addLabelToken();
+      f.render(0,0);
+    }
+
+    // Unwrap if formula only has one child
+    if(f.children.size == 0) {
+      f.remove();
+    }
+    if(f.children.size == 1) {
+      let child = Array.from(f.children).pop();
+      this.page.adopt(child!);
+      f.remove();
+    } 
     this.formula = null;
+    this.mode = 'default';
+    this.editWidth = 46;
   }
 
   render(dt: number, t: number): void {
