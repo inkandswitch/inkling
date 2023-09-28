@@ -1,6 +1,6 @@
 import * as ohm from 'ohm-js';
 
-const g = ohm.grammar(String.raw`
+const spreadsheetGrammar = ohm.grammar(String.raw`
 
 Spreadsheet {
   Properties
@@ -94,34 +94,6 @@ Spreadsheet {
 
 `);
 
-function parse(input: string) {
-  const m = g.match(input);
-  if (m.succeeded()) {
-    console.log('parsed ok:');
-    console.log(input);
-  } else {
-    console.log(m.message);
-  }
-}
-
-const habitTrackerFormulas = String.raw`
-  n
-    edges
-      ← 0
-      → 0
-    formula
-      if •v = "x"
-      then ←n + 1
-      else 0
-
-  d
-    formula
-      if •n > →n
-      then "" + •n
-      else ""
-`;
-parse(habitTrackerFormulas);
-
 const NOT_AVAILABLE = 'n/a';
 
 type Value = number | string;
@@ -197,8 +169,84 @@ class Cell {
 }
 
 class Spreadsheet {
-  static parse(_properties: string): Record<string, Property> {
-    throw new Error('TODO: Spreadsheet.parse()');
+  static semantics = spreadsheetGrammar
+    .createSemantics()
+    .addOperation('parse', {
+      Property(name, edges, formula) {
+        return {
+          name: name.parse(),
+          edgeValues: edges.parse(),
+          formula: formula.parse(),
+        };
+      },
+      Edges(_edges, edges) {
+        const edgeValues = {} as Record<string, Value>;
+        for (const edgeNode of edges.children) {
+          const edge = edgeNode.parse();
+          edgeValues[edge.name] = edge.value;
+        }
+        return edgeValues;
+      },
+      Edge(name, value) {
+        return {
+          name: name.parse(),
+          value: value.parse(),
+        };
+      },
+      Formula(_formulaKw, exp) {
+        const fnSource = `cell => ${exp.parse()}`;
+        return eval(fnSource);
+      },
+      IfExp_if(_if, cond, _then, trueBranch, _else, falseBranch) {
+        return `(${cond.parse()} ? ${trueBranch.parse()} : ${falseBranch.parse()})`;
+      },
+      EqExp_eq(a, _eq, b) {
+        return `(${a.parse()} === ${b.parse()})`;
+      },
+      RelExp_rel(a, op, b) {
+        return `(${a.parse()} ${op.sourceString} ${b.parse()})`;
+      },
+      AddExp_add(a, op, b) {
+        return `(${a.parse()} ${op.sourceString} ${b.parse()})`;
+      },
+      PropExp_prop(names, propertyName) {
+        return `cell.get([${names
+          .parse()
+          .map((name: string) => JSON.stringify(name))
+          .join(', ')}], ${JSON.stringify(propertyName.parse())})`;
+      },
+      name(_firstLetter, _rest) {
+        return this.sourceString;
+      },
+      dir(_name) {
+        return this.sourceString;
+      },
+      number(__) {
+        return parseFloat(this.sourceString);
+      },
+      string(_openQuote, _meat, _closeQuote) {
+        return this.sourceString;
+      },
+
+      _iter(...children) {
+        return children.map(child => child.parse());
+      },
+      _terminal() {
+        return this.sourceString;
+      },
+    });
+
+  static parse(properties: string): Record<string, Property> {
+    const m = spreadsheetGrammar.match(properties);
+    if (m.failed()) {
+      console.log(m.message);
+      throw new Error(
+        'failed to parse spreadsheet formulas -- see console for details'
+      );
+    }
+    const parsed = Spreadsheet.semantics(m).parse();
+    // console.log('parsed:', parsed);
+    return parsed;
   }
 
   readonly properties: Record<string, Property>;
@@ -287,44 +335,44 @@ class Spreadsheet {
 console.log('--- habit tracker ---');
 const habitTracker = new Spreadsheet(
   [['x', 'x', '', 'x', 'x', 'x']],
-  // String.raw`
-  //   n
-  //     edges
-  //       ← 0
-  //       → 0
-  //     formula
-  //       if •v = "x"
-  //       then ←n + 1
-  //       else 0
+  String.raw`
+    n
+      edges
+        ← 0
+        → 0
+      formula
+        if •v = "x"
+        then ←n + 1
+        else 0
 
-  //   d
-  //     formula
-  //       if •n > →n
-  //       then "" + •n
-  //       else ""
-  // `,
-  {
-    n: {
-      name: 'n',
-      edgeValues: {
-        '←': 0,
-        '→': 0,
-      },
-      formula(cell) {
-        return cell.get(['•'], 'v') === 'x'
-          ? (cell.get(['←'], 'n') as number) + 1
-          : 0;
-      },
-    },
-    d: {
-      name: 'd',
-      formula(cell) {
-        return cell.get(['•'], 'n') > cell.get(['→'], 'n')
-          ? '' + cell.get(['•'], 'n')
-          : '';
-      },
-    },
-  }
+    d
+      formula
+        if •n > →n
+        then "" + •n
+        else ""
+  `
+  // {
+  //   n: {
+  //     name: 'n',
+  //     edgeValues: {
+  //       '←': 0,
+  //       '→': 0,
+  //     },
+  //     formula(cell) {
+  //       return cell.get(['•'], 'v') === 'x'
+  //         ? (cell.get(['←'], 'n') as number) + 1
+  //         : 0;
+  //     },
+  //   },
+  //   d: {
+  //     name: 'd',
+  //     formula(cell) {
+  //       return cell.get(['•'], 'n') > cell.get(['→'], 'n')
+  //         ? '' + cell.get(['•'], 'n')
+  //         : '';
+  //     },
+  //   },
+  // }
 );
 habitTracker.compute();
 console.log(habitTracker.getCellValues());
