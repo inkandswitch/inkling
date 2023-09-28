@@ -7,10 +7,11 @@ Spreadsheet {
     = Property*
 
   Property
-    = name Edges? Formula
+    = name Edges Formula
 
   Edges
-    = edges Edge*
+    = edges Edge*  -- edges
+    |              -- none
 
   Edge
     = dir Value
@@ -169,6 +170,14 @@ class Spreadsheet {
   static semantics = spreadsheetGrammar
     .createSemantics()
     .addOperation('parse', {
+      Properties(ps) {
+        const properties = {} as Record<string, Property>;
+        for (const p of ps.children) {
+          const property = p.parse();
+          properties[property.name] = property;
+        }
+        return properties;
+      },
       Property(name, edges, formula) {
         return {
           name: name.parse(),
@@ -176,13 +185,16 @@ class Spreadsheet {
           formula: formula.parse(),
         };
       },
-      Edges(_edges, edges) {
+      Edges_edges(_edges, edges) {
         const edgeValues = {} as Record<string, Value>;
         for (const edgeNode of edges.children) {
           const edge = edgeNode.parse();
           edgeValues[edge.name] = edge.value;
         }
         return edgeValues;
+      },
+      Edges_none() {
+        return {};
       },
       Edge(name, value) {
         return {
@@ -233,7 +245,7 @@ class Spreadsheet {
       dir(_name) {
         return this.sourceString;
       },
-      number(__) {
+      number(_) {
         return parseFloat(this.sourceString);
       },
       string(_openQuote, _meat, _closeQuote) {
@@ -268,14 +280,10 @@ class Spreadsheet {
   readonly properties: Record<string, Property>;
   readonly rows: Cell[][];
 
-  constructor(
-    cellValues: Value[][],
-    properties: Record<string, Property> | string
-  ) {
-    this.properties =
-      typeof properties === 'string'
-        ? Spreadsheet.parse(properties)
-        : properties;
+  constructor(cellValues: Value[][], properties: string) {
+    this.properties = Spreadsheet.parse(properties);
+    console.log(properties);
+    console.log(this.properties);
 
     this.rows = cellValues.map(row => row.map(value => new Cell(this, value)));
     for (let row = 0; row < this.rows.length; row++) {
@@ -382,15 +390,22 @@ const habitTracker = new Spreadsheet(
 habitTracker.compute();
 console.log(habitTracker.getCellValues());
 
-/*
-
-TODO: try this other example
-
-1   2  3  4
-5   6  7  8
-9  10 11 12
-13 14 15 16
-
-v = up.v(0) + left.v(0)
-
-*/
+console.log('--- wave ---');
+const wave = new Spreadsheet(
+  [
+    [1, 2, 3, 4], //
+    [5, 6, 7, 8], //
+    [9, 10, 11, 12], //
+    [13, 14, 15, 16], //
+  ],
+  String.raw`
+    acc
+      edges
+        ↑ 0
+        ← 0
+      formula
+        •v + ↑acc + ←acc
+  `
+);
+wave.compute();
+console.log(wave.getCellValues());
