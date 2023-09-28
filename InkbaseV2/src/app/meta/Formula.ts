@@ -60,6 +60,11 @@ export default class Formula extends Token {
       })
     }
   }
+
+  remove(): void {
+    this.boxElement.remove();
+    super.remove();
+  }
 }
 
 // OPS
@@ -89,5 +94,6 @@ export class OpToken extends Token {
 
   remove(): void {
     this.textElement.remove();
+    super.remove();
   }
 }

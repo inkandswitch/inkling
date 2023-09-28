@@ -166,6 +166,18 @@ export default class FormulaEditor extends GameObject {
   }
 
   deactivate(){
+    // Unwrap if formula only has one child
+    let f = this.formula?.deref();
+    if(f != null) {
+      if(f.children.size == 0) {
+        f.remove();
+      }
+      if(f.children.size == 1) {
+        let child = Array.from(f.children).pop();
+        this.page.adopt(child!);
+        f.remove();
+      } 
+    }
     this.formula = null;
   }
 
