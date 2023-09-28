@@ -321,7 +321,8 @@ class Spreadsheet {
     return row[colIdx];
   }
 
-  compute(maxIterations = 1000) {
+  compute(options?: Partial<{ maxIterations: number; showResult: boolean }>) {
+    const { maxIterations = 1_000, showResult = true } = options ?? {};
     let n = 0;
     while (n++ < maxIterations) {
       let didSomething = false;
@@ -335,6 +336,9 @@ class Spreadsheet {
       if (!didSomething) {
         break;
       }
+    }
+    if (showResult) {
+      console.log(this.getCellValues());
     }
     console.log('done in', n, 'iterations');
   }
@@ -388,7 +392,6 @@ const habitTracker = new Spreadsheet(
   `
 );
 habitTracker.compute();
-console.log(habitTracker.getCellValues());
 
 console.log('--- wave ---');
 const wave = new Spreadsheet(
@@ -408,4 +411,3 @@ const wave = new Spreadsheet(
   `
 );
 wave.compute();
-console.log(wave.getCellValues());
