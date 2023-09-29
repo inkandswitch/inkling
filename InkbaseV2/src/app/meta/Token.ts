@@ -3,21 +3,23 @@ import { Position } from '../../lib/types';
 
 import { signedDistanceToBox } from '../../lib/SignedDistance';
 
-
 export default class Token extends GameObject {
-  position: Position = {x: 100, y: 100};
-  width: number = 90;
-  height: number = 40;
+  position: Position = { x: 100, y: 100 };
+  width = 90;
+  height = 40;
 
   distanceToPoint(pos: Position): number | null {
     return signedDistanceToBox(
-      this.position.x, this.position.y, 
-      this.width, this.height, 
-      pos.x, pos.y
+      this.position.x,
+      this.position.y,
+      this.width,
+      this.height,
+      pos.x,
+      pos.y
     );
   }
 
-  render(dt: number, t: number): void {
+  render(): void {
     // NO-OP
   }
 }

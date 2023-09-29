@@ -1,46 +1,51 @@
-import Token from "./Token";
+import Token from './Token';
 import COLORS from './Colors';
 import SVG from '../Svg';
-import {Variable} from '../constraints';
+import { Variable } from '../constraints';
 
 export default class NumberToken extends Token {
-  variable = new Variable(123);
+  readonly variable: Variable;
 
-  protected boxElement = SVG.add('rect', {
-    x: this.position.x, y: this.position.y,
-    width: this.width, height: this.height,
+  protected readonly boxElement = SVG.add('rect', {
+    x: this.position.x,
+    y: this.position.y,
+    width: this.width,
+    height: this.height,
     rx: 3,
     fill: COLORS.GREY_DARK,
   });
 
-  protected textElement = SVG.add('text', {
-    x: this.position.x+5, y: this.position.y + 30,
+  protected readonly textElement = SVG.add('text', {
+    x: this.position.x + 5,
+    y: this.position.y + 30,
     fill: COLORS.WHITE,
-    "font-size": "30px",
-    "font-family": "monospace",
-  });
+    'font-size': '30px',
+    'font-family': 'monospace',
+  }) as SVGTextElement;
 
-  constructor(value = 0){
+  constructor(value = 0) {
     super();
-    this.variable.value = value;
+    this.variable = new Variable(value);
   }
-  
+
   addChar(char: number) {
-    let stringValue = this.variable.value.toString() + char;
+    const stringValue = this.variable.value.toString() + char;
     this.variable.value = parseInt(stringValue);
   }
 
-  render(dt: number, t: number): void {
+  render(): void {
     this.textElement.textContent = this.variable.value.toString();
-    this.width = (this.textElement as any).getComputedTextLength()+10;
+    this.width = this.textElement.getComputedTextLength() + 10;
 
     SVG.update(this.boxElement, {
-      x: this.position.x, y: this.position.y,
+      x: this.position.x,
+      y: this.position.y,
       width: this.width,
-    })
+    });
 
     SVG.update(this.textElement, {
-      x: this.position.x + 5, y: this.position.y + 30,
-    })
+      x: this.position.x + 5,
+      y: this.position.y + 30,
+    });
   }
 }
