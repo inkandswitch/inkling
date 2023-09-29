@@ -94,6 +94,18 @@ export function farthestPair<P extends Position>(points: P[]): [P, P] {
   return [mdp1!, mdp2!];
 }
 
+export function forEach<T extends WeakKey>(
+  xs: WeakRef<T>[],
+  fn: (x: T, idx: number, xs: WeakRef<T>[]) => void
+) {
+  xs.forEach((wr, idx) => {
+    const x = wr.deref();
+    if (x !== undefined) {
+      fn(x, idx, xs);
+    }
+  });
+}
+
 export function makeIterableIterator<T, S extends T>(
   iterables: Iterable<T>[],
   pred: (t: T) => t is S

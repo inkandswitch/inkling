@@ -12,7 +12,7 @@ import ConstraintTool from './tools/ConstraintTool';
 import SVG from './Svg';
 import Stroke from './strokes/Stroke';
 import * as constraints from './constraints';
-import { onEveryFrame } from '../lib/helpers';
+import { forEach, onEveryFrame } from '../lib/helpers';
 import Gizmo from './Gizmo';
 import { applyEvent } from './Input';
 import { root } from './GameObject';
@@ -61,13 +61,10 @@ onEveryFrame((dt, t) => {
   // Tell NativeEvent to handle all events sent from Swift, evaluating Input for each
   events.update();
 
-  // for (const wr of selection.handles) {
-  //   const handle = wr.deref();
-  //   if (handle) {
-  //     constraints.now.pin(handle);
-  //   }
-  // }
-  constraints.solve();
+  // forEach(selection.handles, handle => {
+  //   constraints.now.pin(handle);
+  // });
+  // constraints.solve();
 
   // render everything
   root.render(dt, t);

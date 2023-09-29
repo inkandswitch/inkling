@@ -9,6 +9,7 @@ import Stroke from '../strokes/Stroke';
 import WritingRecognizer from '../recognizers/WritingRecognizer';
 import NumberToken from './NumberToken';
 import LabelToken from './LabelToken';
+import { forEach } from '../../lib/helpers';
 
 const PADDING = 3;
 const PADDING_BIG = 5;
@@ -94,16 +95,11 @@ export default class FormulaEditor extends GameObject {
     stroke.deref()!.color = '#FFF';
 
     let maxX = 0;
-    for (const wr of this.labelStrokes) {
-      const stroke = wr.deref();
-      if (!stroke) {
-        continue;
-      }
-
+    forEach(this.labelStrokes, stroke => {
       for (const pt of stroke.points) {
         maxX = Math.max(pt.x, maxX);
       }
-    }
+    });
 
     this.editWidth = maxX - (this.position.x + f.width) + 46;
   }
@@ -136,12 +132,7 @@ export default class FormulaEditor extends GameObject {
 
     // Normalize the stroke positions to the the top corner of the token
     const normalizedStrokes: Position[][] = [];
-    for (const wr of this.labelStrokes) {
-      const s = wr.deref();
-      if (!s) {
-        continue;
-      }
-
+    forEach(this.labelStrokes, s => {
       const ns = s.points.map(pt =>
         Vec.sub(
           pt,
@@ -149,17 +140,14 @@ export default class FormulaEditor extends GameObject {
         )
       );
       normalizedStrokes.push(ns);
-    }
+    });
 
     const labelToken = new LabelToken(normalizedStrokes, this.editWidth - 46);
     formula.addToken(labelToken);
 
-    for (const wr of this.labelStrokes) {
-      const stroke = wr.deref();
-      if (stroke) {
-        stroke.remove();
-      }
-    }
+    forEach(this.labelStrokes, stroke => {
+      stroke.remove();
+    });
     this.labelStrokes = [];
   }
 
