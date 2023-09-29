@@ -17,7 +17,7 @@ Spreadsheet {
     = dir Value
 
   Formula
-    = formula Exp
+    = Exp
 
   Exp
     = IfExp
@@ -82,11 +82,10 @@ Spreadsheet {
     = ~keyword letter alnum*
 
   edges = "edges" ~alnum
-  formula = "formula" ~alnum
   if = "if" ~alnum
   then = "then" ~alnum
   else = "else" ~alnum
-  keyword = edges | formula | if | then | else
+  keyword = edges | if | then | else
 
 }
 
@@ -108,9 +107,11 @@ class Cell {
 
   constructor(
     readonly spreadsheet: Spreadsheet,
-    value: Value
+    value?: Value
   ) {
-    this.set('v', value);
+    if (value !== undefined) {
+      this.set('value', value);
+    }
   }
 
   connect(name: string, that: Cell): this {
@@ -202,7 +203,7 @@ class Spreadsheet {
           value: value.parse(),
         };
       },
-      Formula(_formulaKw, exp) {
+      Formula(exp) {
         const fnSource = `cell => ${exp.parse()}`;
         // console.log(fnSource);
         return eval(fnSource);
@@ -280,10 +281,10 @@ class Spreadsheet {
   readonly properties: Record<string, Property>;
   readonly rows: Cell[][];
 
-  constructor(cellValues: Value[][], properties: string) {
+  constructor(cellValues: (Value | undefined)[][], properties: string) {
     this.properties = Spreadsheet.parse(properties);
     console.log(properties);
-    console.log(this.properties);
+    // console.log(this.properties);
 
     this.rows = cellValues.map(row => row.map(value => new Cell(this, value)));
     for (let row = 0; row < this.rows.length; row++) {
@@ -371,6 +372,22 @@ class Spreadsheet {
   }
 }
 
+console.log('--- squares ---');
+const squares = new Spreadsheet(
+  [
+    [1, undefined],
+    [2, undefined],
+    [3, undefined],
+    [4, undefined],
+    [5, undefined],
+  ],
+  String.raw`
+    value
+      ←value * ←value
+  `
+);
+squares.compute();
+
 console.log('--- habit tracker ---');
 const habitTracker = new Spreadsheet(
   [['x', 'x', '', 'x', 'x', 'x']],
@@ -379,16 +396,14 @@ const habitTracker = new Spreadsheet(
       edges
         ← 0
         → 0
-      formula
-        if •v = "x"
-        then ←n + 1
-        else 0
+      if •value = "x"
+      then ←n + 1
+      else 0
 
-    d
-      formula
-        if •n > →n
-        then "" + •n
-        else ""
+    subscript
+      if •n > →n
+      then "" + •n
+      else ""
   `
 );
 habitTracker.compute();
@@ -406,8 +421,10 @@ const wave = new Spreadsheet(
       edges
         ↑ 0
         ← 0
-      formula
-        •v + ↑acc + ←acc
+      •value + ↑acc + ←acc
+
+    subscript
+      •acc
   `
 );
 wave.compute();
