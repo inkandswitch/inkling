@@ -9,7 +9,7 @@ export class Namespace {
   labels: Set<Label> = new Set();
 
   createNewLabel(strokeData: Position[][], width: number): Label {
-    let l = new Label(strokeData, width);
+    const l = new Label(strokeData, width);
     this.labels.add(l);
     return l;
   }
@@ -43,7 +43,7 @@ export default class LabelToken extends Token {
         'stroke-width': 2,
       });
     });
-    this.width = label.width
+    this.width = label.width;
   }
 
   render(): void {
@@ -60,8 +60,8 @@ export default class LabelToken extends Token {
     }
   }
 
-  getVariable(){
-    return this.label.variable
+  getVariable() {
+    return this.label.variable;
   }
 }
 
@@ -69,9 +69,9 @@ export class Label {
   id: number = generateId();
   strokeData: Position[][] = [];
   variable = new Variable(0);
-  width: number
+  width: number;
 
-  constructor(strokeData: Position[][], width: number){
+  constructor(strokeData: Position[][], width: number) {
     this.strokeData = strokeData;
     this.width = width;
   }

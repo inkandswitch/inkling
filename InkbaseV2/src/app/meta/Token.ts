@@ -22,11 +22,8 @@ export default class Token extends GameObject {
     );
   }
 
-  midPoint(){
-    return Vec.add(
-      this.position,
-      Vec.mulS(Vec(this.width, this.height), 0.5)
-    )
+  midPoint() {
+    return Vec.add(this.position, Vec.mulS(Vec(this.width, this.height), 0.5));
   }
 
   render(): void {
@@ -39,5 +36,4 @@ export const aToken = (gameObj: GameObject) =>
 
 export const aPrimaryToken = (gameObj: GameObject) => {
   return gameObj instanceof Token && gameObj.primary ? gameObj : null;
-}
-  
+};
