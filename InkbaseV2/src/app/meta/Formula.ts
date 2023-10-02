@@ -4,6 +4,7 @@ import SVG from '../Svg';
 
 import Vec from '../../lib/vec';
 import NumberToken from './NumberToken';
+import {equals, formula, variable} from "../constraints"
 
 const PADDING = 3;
 
@@ -20,17 +21,15 @@ export default class Formula extends Token {
     fill: COLORS.GREY_LIGHT,
   });
 
+  constraints: any[] = [];
+
   constructor() {
     super();
-    // this.addToken(new NumberToken(10));
-    // this.addToken(new OpToken('+'));
-    // this.addToken(new NumberToken(20));
-    // this.addToken(new OpToken('='));
-    // this.addToken(new NumberToken(30));
   }
 
   addToken(t: Token) {
     this.adopt(t);
+    this.parseFormula();
   }
 
   lastToken() {
@@ -71,6 +70,60 @@ export default class Formula extends Token {
   remove(): void {
     this.boxElement.remove();
     super.remove();
+  }
+
+  parseFormula(){
+
+    // this.constraints.forEach(c=>{
+    //   c.remove();
+    // })
+
+    let stack = [
+      {variableNames:[], variables: [], formulaTokens: []}
+    ];
+
+    for(const child of this.children) {
+      if(child instanceof OpToken) {
+        if(child.stringValue == "=") {
+          stack.unshift({variableNames:[], variables: [], formulaTokens: []})
+        } else {
+          stack[0].formulaTokens.push(child.stringValue);
+        }
+      } else {
+        // TODO: improve types
+        //@ts-ignore
+        const v = child.getVariable();
+        const name = "v_"+stack[0].variables.length
+        stack[0].formulaTokens.push(name);
+        stack[0].variableNames.push(name);
+        stack[0].variables.push(v);
+      }
+    }
+
+    let constraintVariables = []
+    
+    stack.forEach(f=>{
+      if(f.formulaTokens.length==0) return;
+      if(f.formulaTokens.length==1) return constraintVariables.push(f.variables[0]);
+      let functionText = `return ${f.formulaTokens.join(" ")};`;
+      
+      try {
+        let func = new Function("["+f.variableNames.join(",")+"]",functionText);
+        constraintVariables.push(formula(f.variables, func).variables.result);
+      } catch {
+        console.log("invalid formula");
+      }
+    })
+
+    console.log(constraintVariables);
+    
+    
+    if(constraintVariables.length == 2) {
+      equals(constraintVariables[0], constraintVariables[1]);
+    }
+    
+
+    this.constraints = constraintVariables;
   }
 }
 

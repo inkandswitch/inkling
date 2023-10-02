@@ -35,7 +35,7 @@ export default class NumberToken extends Token {
   }
 
   render(): void {
-    this.textElement.textContent = this.variable.value.toString();
+    this.textElement.textContent = Math.round(this.variable.value.toString());
     this.width = this.textElement.getComputedTextLength() + 10;
 
     SVG.update(this.boxElement, {

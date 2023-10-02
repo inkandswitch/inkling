@@ -92,9 +92,9 @@ export function applyEvent(
     event.type === 'pencil' &&
     event.state === 'began' &&
     events.fingerStates.length === 1 &&
-    tokenNearEvent
+    primaryTokenNearEvent
   ) {
-    objects['drawWire'] = page.addWireFromToken(tokenNearEvent);
+    objects['drawWire'] = page.addWireFromToken(primaryTokenNearEvent);
     return
   }
 
