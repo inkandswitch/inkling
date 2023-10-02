@@ -90,7 +90,7 @@ export function applyEvent(
   //   tokenNearEvent &&
   //   tokenNearEvent instanceof Formula
   // ) {
-  //   formulaEditor.activateFromFormula(new WeakRef(tokenNearEvent));
+  //   formulaEditor.activateFromFormula(tokenNearEvent);
   //   return
   // }
 
@@ -228,9 +228,10 @@ export function applyEvent(
   if (
     event.type === 'pencil' &&
     event.state === 'ended' &&
-    objects['drawStroke']
+    objects['drawStroke'] &&
+    pencil.stroke?.deref()
   ) {
-    formulaEditor.captureStroke(pencil.stroke!);
+    formulaEditor.captureStroke(pencil.stroke!.deref()!);
     pencil.endStroke();
     objects['drawStroke'] = false;
     return;

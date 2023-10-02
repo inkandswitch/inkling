@@ -16,7 +16,16 @@ const PADDING = 3;
 const PADDING_BIG = 5;
 
 export default class FormulaEditor extends GameObject {
-  formula: WeakRef<Formula> | null = null;
+  _formula: WeakRef<Formula> | null = null;
+
+  get formula() {
+    const f = this._formula?.deref();
+    return f ?? null;
+  }
+
+  set formula(f: Formula | null) {
+    this._formula = f ? new WeakRef(f) : null;
+  }
 
   width = 90;
   height = 46;
@@ -61,18 +70,16 @@ export default class FormulaEditor extends GameObject {
   });
 
   newFormula() {
-    const f = new Formula();
-    this.page.adopt(f);
-    this.formula = new WeakRef(f);
+    this.formula = new Formula();
+    this.page.adopt(this.formula);
 
-    f.position = Vec.add(this.position, Vec(PADDING, PADDING));
+    this.formula.position = Vec.add(this.position, Vec(PADDING, PADDING));
   }
 
   // STROKE CAPTURE
-  captureStroke(stroke: WeakRef<Stroke>) {
-    const f = this.formula?.deref();
-    const s = stroke.deref();
-    if (!f || !s) {
+  captureStroke(stroke: Stroke) {
+    const f = this.formula;
+    if (!f) {
       return;
     }
 
@@ -83,17 +90,17 @@ export default class FormulaEditor extends GameObject {
         this.position,
         Vec(f.width + this.editWidth / 2, 20)
       );
-      const distance = s.distanceToPoint(capturePosition);
+      const distance = stroke.distanceToPoint(capturePosition);
       if (distance !== null && distance < 20) {
-        console.log('capture', s);
-        this.captureRecognizedStroke(s, f);
+        console.log('capture', stroke);
+        this.captureRecognizedStroke(stroke, f);
       }
     }
   }
 
-  captureLabelStroke(stroke: WeakRef<Stroke>, f: Formula) {
-    this.labelStrokes.push(stroke);
-    stroke.deref()!.color = '#FFF';
+  captureLabelStroke(stroke: Stroke, f: Formula) {
+    this.labelStrokes.push(new WeakRef(stroke));
+    stroke.color = '#FFF';
 
     let maxX = 0;
     forEach(this.labelStrokes, stroke => {
@@ -124,9 +131,8 @@ export default class FormulaEditor extends GameObject {
     s.remove();
   }
 
-  // TODO: All the derefs are kind of a pain here. But w/e
   addLabelToken() {
-    const formula = this.formula?.deref();
+    const formula = this.formula;
     if (this.labelStrokes.length === 0 || !formula) {
       return;
     }
@@ -137,7 +143,7 @@ export default class FormulaEditor extends GameObject {
       const ns = s.points.map(pt =>
         Vec.sub(
           pt,
-          Vec.add(this.position, Vec(formula.width! + PADDING * 2, +PADDING))
+          Vec.add(this.position, Vec(formula.width + PADDING * 2, +PADDING))
         )
       );
       normalizedStrokes.push(ns);
@@ -160,7 +166,7 @@ export default class FormulaEditor extends GameObject {
   }
 
   addLabelTokenFromExisting(label: Label) {
-    const formula = this.formula?.deref();
+    const formula = this.formula;
     if (!formula) {
       return;
     }
@@ -172,7 +178,7 @@ export default class FormulaEditor extends GameObject {
   // MODES
   isPositionNearToggle(position: Position) {
     return (
-      !!this.formula?.deref() &&
+      this.formula &&
       position.x > this.position.x + this.width - 25 &&
       position.y > this.position.y &&
       position.x < this.position.x + this.width &&
@@ -191,11 +197,11 @@ export default class FormulaEditor extends GameObject {
 
   // Active
   isActive() {
-    return !!this.formula?.deref();
+    return !!this.formula;
   }
 
   // TODO: should this take Formula instead of WR<Formula>?
-  activateFromFormula(formula: WeakRef<Formula>) {
+  activateFromFormula(formula: Formula) {
     this.formula = formula;
   }
 
@@ -205,7 +211,7 @@ export default class FormulaEditor extends GameObject {
   }
 
   deactivate() {
-    const f = this.formula?.deref();
+    const f = this.formula;
     if (!f) {
       return;
     }
@@ -230,7 +236,7 @@ export default class FormulaEditor extends GameObject {
   }
 
   render(): void {
-    const f = this.formula?.deref();
+    const f = this.formula;
     if (f) {
       const offsetWidth = this.editWidth + PADDING_BIG * 2 + PADDING * 6;
       this.position = f.position;
