@@ -64,7 +64,7 @@ onEveryFrame((dt, t) => {
   // forEach(selection.handles, handle => {
   //   constraints.now.pin(handle);
   // });
-  // constraints.solve();
+  constraints.solve();
 
   // render everything
   root.render(dt, t);

@@ -8,6 +8,8 @@ import { Position, PositionWithPressure } from '../lib/types';
 import Handle from './strokes/Handle';
 import StrokeAnalyzer from './StrokeAnalyzer';
 import { GameObject } from './GameObject';
+import Wire from './meta/Wire';
+import Token from './meta/Token';
 
 interface Options {
   strokeAnalyzer: boolean;
@@ -52,6 +54,21 @@ export default class Page extends GameObject {
 
   addStroke<S extends Stroke>(stroke: S) {
     return this.adopt(stroke);
+  }
+
+  addWireFromPosition(position: Position) {
+    let w = new Wire();
+    w.points = [
+      {...position},
+      {...position}
+    ]
+    return this.adopt(w);
+  }
+
+  addWireFromToken(token: Token) {
+    let w = new Wire();
+    w.a = new WeakRef(token);
+    return this.adopt(w);
   }
 
   onstrokeUpdated(stroke: Stroke) {

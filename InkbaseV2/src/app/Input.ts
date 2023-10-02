@@ -67,14 +67,26 @@ export function applyEvent(
 
   // ACTIVATE FORMULA EDITOR
   // TODO: This is not a good gesture
+  // if (
+  //   event.type === 'pencil' &&
+  //   event.state === 'began' &&
+  //   events.fingerStates.length === 1 &&
+  //   tokenNearEvent &&
+  //   tokenNearEvent instanceof Formula
+  // ) {
+  //   formulaEditor.activateFromFormula(new WeakRef(tokenNearEvent));
+  //   return
+  // }
+
+  // META PEN
+
   if (
     event.type === 'pencil' &&
     event.state === 'began' &&
     events.fingerStates.length === 1 &&
-    tokenNearEvent &&
-    tokenNearEvent instanceof Formula
+    tokenNearEvent
   ) {
-    formulaEditor.activateFromFormula(new WeakRef(tokenNearEvent));
+    objects['drawWire'] = page.addWireFromToken(tokenNearEvent);
     return
   }
 
@@ -83,8 +95,53 @@ export function applyEvent(
     event.state === 'began' &&
     events.fingerStates.length === 1
   ) {
-    formulaEditor.activateFromPosition(event.position);
+    objects['drawWire'] = page.addWireFromPosition(event.position);
     return
+  }
+
+  if (
+    event.type === 'pencil' &&
+    event.state === 'moved' &&
+    objects['drawWire']
+  ) {
+    objects['drawWire'].points[1] = event.position
+    return;
+  }
+
+  // PENCIL ENDED
+  // If it's a tiny wire, remove it, and open formula editor (Simple tap)
+  if (
+    event.type === 'pencil' &&
+    event.state === 'ended' && 
+    objects['drawWire'] &&
+    objects['drawWire'].isCollapsable()
+  ) {
+    objects['drawWire'].remove();
+    formulaEditor.activateFromPosition(event.position);
+    delete objects['drawWire'];
+    return;
+  }
+
+  // Attach & snap to a token
+  if (
+    event.type === 'pencil' &&
+    event.state === 'ended' && 
+    objects['drawWire'] &&
+    tokenNearEvent
+  ) {
+    objects['drawWire'].attachEnd(tokenNearEvent);
+    delete objects['drawWire'];
+    return;
+  }
+
+  // simply end & open context menu
+  if (
+    event.type === 'pencil' &&
+    event.state === 'ended' && 
+    objects['drawWire']
+  ) {
+    delete objects['drawWire'];
+    return;
   }
 
   // USE THE PEN
@@ -108,6 +165,8 @@ export function applyEvent(
     return
   }
 
+  
+
   if (
     event.type === 'pencil' &&
     event.state === 'began'
@@ -121,6 +180,8 @@ export function applyEvent(
     objects['drawStroke'] = true;
     return;
   }
+
+
 
   if (
     event.type === 'pencil' &&

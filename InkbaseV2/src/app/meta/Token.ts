@@ -2,6 +2,7 @@ import { GameObject } from '../GameObject';
 import { Position } from '../../lib/types';
 
 import { signedDistanceToBox } from '../../lib/SignedDistance';
+import Vec from '../../lib/vec';
 
 export default class Token extends GameObject {
   position: Position = { x: 100, y: 100 };
@@ -17,6 +18,13 @@ export default class Token extends GameObject {
       pos.x,
       pos.y
     );
+  }
+
+  midPoint(){
+    return Vec.add(
+      this.position,
+      Vec.mulS(Vec(this.width, this.height), 0.5)
+    )
   }
 
   render(): void {

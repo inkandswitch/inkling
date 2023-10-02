@@ -23,7 +23,6 @@ export default class Wire {
   }
 
   drawPoint(position: Position){
-    
     this.points[this.points.length-1] = position;
 
     let currentOffset = this.offsets[this.offsets.length-1]
