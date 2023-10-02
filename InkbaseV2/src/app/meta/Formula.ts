@@ -6,6 +6,7 @@ import Vec from '../../lib/vec';
 import NumberToken from './NumberToken';
 import { equals, formula, Variable } from '../constraints';
 import LabelToken from './LabelToken';
+import OpToken from './OpToken';
 
 const PADDING = 3;
 
@@ -132,38 +133,5 @@ export default class Formula extends Token {
     if (this.constrainedVars.length === 2) {
       equals(this.constrainedVars[0], this.constrainedVars[1]);
     }
-  }
-}
-
-// OPS
-export class OpToken extends Token {
-  stringValue = 'x';
-
-  protected readonly textElement = SVG.add('text', {
-    x: this.position.x + 5,
-    y: this.position.y + 30,
-    fill: COLORS.GREY_DARK,
-    'font-size': '30px',
-  }) as SVGTextElement;
-
-  constructor(value: string) {
-    super();
-    this.stringValue = value;
-  }
-
-  render() {
-    // Update text content
-    this.textElement.textContent = this.stringValue;
-    this.width = this.textElement.getComputedTextLength() + 10;
-
-    SVG.update(this.textElement, {
-      x: this.position.x + 5,
-      y: this.position.y + 30,
-    });
-  }
-
-  remove(): void {
-    this.textElement.remove();
-    super.remove();
   }
 }

@@ -3,13 +3,14 @@ import { Position } from '../../lib/types';
 import COLORS from './Colors';
 import SVG from '../Svg';
 
-import Formula, { OpToken } from './Formula';
+import Formula from './Formula';
 import Vec from '../../lib/vec';
 import Stroke from '../strokes/Stroke';
 import WritingRecognizer from '../recognizers/WritingRecognizer';
 import NumberToken from './NumberToken';
 import LabelToken, { Label } from './LabelToken';
 import { forEach } from '../../lib/helpers';
+import OpToken from './OpToken';
 
 const PADDING = 3;
 const PADDING_BIG = 5;
@@ -143,7 +144,10 @@ export default class FormulaEditor extends GameObject {
     });
 
     // Add new label token
-    const label = this.page.nameSpace.createNewLabel(normalizedStrokes, this.editWidth - 46);
+    const label = this.page.nameSpace.createNewLabel(
+      normalizedStrokes,
+      this.editWidth - 46
+    );
     const labelToken = new LabelToken(label);
     formula.addToken(labelToken);
 
@@ -155,9 +159,11 @@ export default class FormulaEditor extends GameObject {
     this.editWidth = 46;
   }
 
-  addLabelTokenFromExisting(label: Label){
+  addLabelTokenFromExisting(label: Label) {
     const formula = this.formula?.deref();
-    if(!formula) return;
+    if (!formula) {
+      return;
+    }
 
     const labelToken = new LabelToken(label);
     formula.addToken(labelToken);
