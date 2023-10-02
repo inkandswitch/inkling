@@ -1,9 +1,8 @@
-import { PositionWithPressure } from '../lib/types';
 import { aGizmo } from './Gizmo';
 import Events, { TouchId, Event, InputState } from './NativeEvents';
 import Page from './Page';
-import Selection from './Selection';
-import Formula from './meta/Formula';
+// import Selection from './Selection';
+// import Formula from './meta/Formula';
 import FormulaEditor from './meta/FormulaEditor';
 import LabelToken from './meta/LabelToken';
 import NumberToken from './meta/NumberToken';
@@ -20,6 +19,7 @@ import Pencil from './tools/Pencil';
 // we'd capture any object(s?) that (eg) were under each finger/pencil "began" event.
 // In the "post" section (which would have to be outside applyEvent(), since we eagerly return)
 // we'd clean up any objects that are associated with each ended finger/pencil.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const objects: Record<TouchId, any> = {}; // The objects we're currently manipulating with each finger/pencil.
 
 // End gesture state variables.
@@ -39,12 +39,12 @@ export function applyEvent(
   // This is a good place to set up any state needed by the below gesture recognizers.
   // Please don't fret about the performance burden of gathering this state on every event —
   // it rounds to zero! We can optimize the heck out of this later, once we know what we even want.
-  const handleNearEvent = page.find({
+  const _handleNearEvent = page.find({
     what: aCanonicalHandle,
     near: event.position,
   });
 
-  const gizmoNearEvent = page.find({
+  const _gizmoNearEvent = page.find({
     what: aGizmo,
     near: event.position,
   });
@@ -52,17 +52,18 @@ export function applyEvent(
   const tokenNearEvent = page.find({
     what: aToken,
     near: event.position,
-    recursive: false
+    recursive: false,
   });
 
   const primaryTokenNearEvent = page.find({
     what: aPrimaryToken,
     near: event.position,
-    recursive: true
+    recursive: true,
   });
-  
 
-  const formulaEditorToggleEvent = formulaEditor.isPositionNearToggle(event.position);
+  const formulaEditorToggleEvent = formulaEditor.isPositionNearToggle(
+    event.position
+  );
 
   // Below here, you'll find a list of each gesture recognizer in the system, one by one.
   // Each recognized gesture should end with a return, to keep the cyclomatic complexity super low.
@@ -95,7 +96,7 @@ export function applyEvent(
     primaryTokenNearEvent
   ) {
     objects['drawWire'] = page.addWireFromToken(primaryTokenNearEvent);
-    return
+    return;
   }
 
   // Add wire from the middle of nowhere
@@ -105,7 +106,7 @@ export function applyEvent(
     events.fingerStates.length === 1
   ) {
     objects['drawWire'] = page.addWireFromPosition(event.position);
-    return
+    return;
   }
 
   // Drag wire endpoint
@@ -114,16 +115,15 @@ export function applyEvent(
     event.state === 'moved' &&
     objects['drawWire']
   ) {
-    objects['drawWire'].points[1] = event.position
+    objects['drawWire'].points[1] = event.position;
     return;
   }
 
   // If it's a tiny wire, remove it, and open formula editor (Simple tap)
   if (
     event.type === 'pencil' &&
-    event.state === 'ended' && 
-    objects['drawWire'] &&
-    objects['drawWire'].isCollapsable()
+    event.state === 'ended' &&
+    objects['drawWire']?.isCollapsable()
   ) {
     objects['drawWire'].remove();
     formulaEditor.activateFromPosition(event.position);
@@ -134,7 +134,7 @@ export function applyEvent(
   // Attach & snap to a token
   if (
     event.type === 'pencil' &&
-    event.state === 'ended' && 
+    event.state === 'ended' &&
     objects['drawWire'] &&
     tokenNearEvent
   ) {
@@ -143,25 +143,24 @@ export function applyEvent(
     return;
   }
 
-    // Attach & snap to a token
-    if (
-      event.type === 'pencil' &&
-      event.state === 'ended' && 
-      objects['drawWire'] &&
-      objects['drawWire'].a != null
-    ) {
-      let n = new NumberToken(0);
-      n.position = event.position;
-      page.adopt(n);
-      objects['drawWire'].attachEnd(n);
-      delete objects['drawWire'];
-      return;
-    }
+  // Attach & snap to a token
+  if (
+    event.type === 'pencil' &&
+    event.state === 'ended' &&
+    objects['drawWire']?.a
+  ) {
+    const n = new NumberToken(0);
+    n.position = event.position;
+    page.adopt(n);
+    objects['drawWire'].attachEnd(n);
+    delete objects['drawWire'];
+    return;
+  }
 
   // simply end & open context menu
   if (
     event.type === 'pencil' &&
-    event.state === 'ended' && 
+    event.state === 'ended' &&
     objects['drawWire']
   ) {
     delete objects['drawWire'];
@@ -177,7 +176,7 @@ export function applyEvent(
     formulaEditorToggleEvent
   ) {
     formulaEditor.toggleMode();
-    return
+    return;
   }
 
   // Close formula editor
@@ -188,7 +187,7 @@ export function applyEvent(
     formulaEditor.isActive()
   ) {
     formulaEditor.deactivate();
-    return
+    return;
   }
 
   // Tapped label while editing formula
@@ -204,15 +203,12 @@ export function applyEvent(
   }
 
   // REGULAR PEN
-  if (
-    event.type === 'pencil' &&
-    event.state === 'began'
-  ) {
+  if (event.type === 'pencil' && event.state === 'began') {
     // TODO: Constructing position with pressure like this could be improved
     pencil.startStroke({
       x: event.position.x,
       y: event.position.y,
-      pressure: event.pressure
+      pressure: event.pressure,
     });
     objects['drawStroke'] = true;
     return;
@@ -224,16 +220,16 @@ export function applyEvent(
     objects['drawStroke']
   ) {
     pencil.extendStroke({
-      x: event.position.x, 
+      x: event.position.x,
       y: event.position.y,
-      pressure: event.pressure
+      pressure: event.pressure,
     });
     return;
   }
 
   if (
     event.type === 'pencil' &&
-    event.state === 'ended' && 
+    event.state === 'ended' &&
     objects['drawStroke']
   ) {
     formulaEditor.captureStroke(pencil.stroke!);
@@ -245,7 +241,7 @@ export function applyEvent(
   // SCRUB TOKENS
   if (
     event.type === 'finger' &&
-    event.state === 'began' && 
+    event.state === 'began' &&
     events.fingerStates.length === 2 &&
     primaryTokenNearEvent &&
     primaryTokenNearEvent instanceof NumberToken
@@ -257,11 +253,13 @@ export function applyEvent(
 
   if (
     event.type === 'finger' &&
-    event.state === 'moved' && 
+    event.state === 'moved' &&
     objects['scrubToken']
   ) {
-    let delta = state.originalPosition!.y - event.position.y;
-    objects['scrubToken'].getVariable().value = Math.floor(objects['scrubTokenValue'] + delta / 10);
+    const delta = state.originalPosition!.y - event.position.y;
+    objects['scrubToken'].getVariable().value = Math.floor(
+      objects['scrubTokenValue'] + delta / 10
+    );
 
     return;
   }
@@ -269,7 +267,7 @@ export function applyEvent(
   // DRAGGING TOKENS
   if (
     event.type === 'finger' &&
-    event.state === 'began' && 
+    event.state === 'began' &&
     events.fingerStates.length === 1 &&
     tokenNearEvent
   ) {
@@ -280,7 +278,7 @@ export function applyEvent(
   // TODO: Handle dragging with offset
   if (
     event.type === 'finger' &&
-    event.state === 'moved' && 
+    event.state === 'moved' &&
     events.fingerStates.length === 1 &&
     objects['dragToken']
   ) {
@@ -288,17 +286,12 @@ export function applyEvent(
     return;
   }
 
-  if (
-    event.type === 'finger' &&
-    event.state === 'ended'
-  ) {
+  if (event.type === 'finger' && event.state === 'ended') {
     delete objects['dragToken'];
     delete objects['scrubToken'];
-    delete objects['scrubTokenValue']
+    delete objects['scrubTokenValue'];
     return;
   }
-
-
 
   // // TAP A HANDLE WITH THE FIRST FINGER —> SELECT THE HANDLE
   // if (
