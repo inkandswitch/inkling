@@ -143,6 +143,21 @@ export function applyEvent(
     return;
   }
 
+    // Attach & snap to a token
+    if (
+      event.type === 'pencil' &&
+      event.state === 'ended' && 
+      objects['drawWire'] &&
+      objects['drawWire'].a != null
+    ) {
+      let n = new NumberToken(0);
+      n.position = event.position;
+      page.adopt(n);
+      objects['drawWire'].attachEnd(n);
+      delete objects['drawWire'];
+      return;
+    }
+
   // simply end & open context menu
   if (
     event.type === 'pencil' &&
