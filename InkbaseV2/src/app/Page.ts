@@ -60,16 +60,13 @@ export default class Page extends GameObject {
   }
 
   addWireFromPosition(position: Position) {
-    let w = new Wire();
-    w.points = [
-      {...position},
-      {...position}
-    ]
+    const w = new Wire();
+    w.points = [{ ...position }, { ...position }];
     return this.adopt(w);
   }
 
   addWireFromToken(token: Token) {
-    let w = new Wire();
+    const w = new Wire();
     w.a = new WeakRef(token);
     return this.adopt(w);
   }
