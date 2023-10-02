@@ -25,8 +25,8 @@ import Pencil from './tools/Pencil';
 // we'd capture any object(s?) that (eg) were under each finger/pencil "began" event.
 // In the "post" section (which would have to be outside applyEvent(), since we eagerly return)
 // we'd clean up any objects that are associated with each ended finger/pencil.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 // TODO: replace this w/ a more specific type, and use weak refs for GameObjects.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const objects: Record<TouchId, any> = {}; // The objects we're currently manipulating with each finger/pencil.
 
 // End gesture state variables.
