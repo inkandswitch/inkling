@@ -81,7 +81,7 @@ export default class Handle extends GameObject {
           y: 0,
           visibility: SHOW_DEBUG_INFO ? 'visible' : 'hidden',
           content: '?',
-        }) as SVGTextElement,
+        }),
       },
       isSelected: false,
       wasRemoved: false,

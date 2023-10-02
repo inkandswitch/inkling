@@ -10,6 +10,16 @@ const rootElm = document.querySelector('svg') as SVGSVGElement;
 const nowElm = document.querySelector('#now') as SVGGElement;
 
 function add(
+  type: 'text',
+  attributes?: Attributes,
+  parent?: SVGElement
+): SVGTextElement;
+function add(
+  type: string,
+  attributes?: Attributes,
+  parent?: SVGElement
+): SVGElement;
+function add(
   type: string,
   attributes: Attributes = {},
   parent: SVGElement = rootElm

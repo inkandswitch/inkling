@@ -22,7 +22,7 @@ export default class NumberToken extends Token {
     fill: COLORS.WHITE,
     'font-size': '30px',
     'font-family': 'monospace',
-  }) as SVGTextElement;
+  });
 
   constructor(value = 0) {
     super();

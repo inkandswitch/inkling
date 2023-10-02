@@ -10,7 +10,7 @@ export default class OpToken extends Token {
     y: this.position.y + 30,
     fill: COLORS.GREY_DARK,
     'font-size': '30px',
-  }) as SVGTextElement;
+  });
 
   constructor(value: string) {
     super();
