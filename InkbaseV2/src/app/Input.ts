@@ -5,7 +5,9 @@ import Page from './Page';
 import Selection from './Selection';
 import Formula from './meta/Formula';
 import FormulaEditor from './meta/FormulaEditor';
-import { aToken } from './meta/Token';
+import LabelToken from './meta/LabelToken';
+import NumberToken from './meta/NumberToken';
+import { aPrimaryToken, aToken } from './meta/Token';
 import { aCanonicalHandle } from './strokes/Handle';
 
 import Pencil from './tools/Pencil';
@@ -53,8 +55,14 @@ export function applyEvent(
     recursive: false
   });
 
-  const formulaEditorToggleEvent = formulaEditor.isPositionNearToggle(event.position);
+  const primaryTokenNearEvent = page.find({
+    what: aPrimaryToken,
+    near: event.position,
+    recursive: true
+  });
+  
 
+  const formulaEditorToggleEvent = formulaEditor.isPositionNearToggle(event.position);
 
   // Below here, you'll find a list of each gesture recognizer in the system, one by one.
   // Each recognized gesture should end with a return, to keep the cyclomatic complexity super low.
@@ -79,7 +87,7 @@ export function applyEvent(
   // }
 
   // META PEN
-
+  // Ad wire from token
   if (
     event.type === 'pencil' &&
     event.state === 'began' &&
@@ -90,6 +98,7 @@ export function applyEvent(
     return
   }
 
+  // Add wire from the middle of nowhere
   if (
     event.type === 'pencil' &&
     event.state === 'began' &&
@@ -99,6 +108,7 @@ export function applyEvent(
     return
   }
 
+  // Drag wire endpoint
   if (
     event.type === 'pencil' &&
     event.state === 'moved' &&
@@ -108,7 +118,6 @@ export function applyEvent(
     return;
   }
 
-  // PENCIL ENDED
   // If it's a tiny wire, remove it, and open formula editor (Simple tap)
   if (
     event.type === 'pencil' &&
@@ -144,7 +153,8 @@ export function applyEvent(
     return;
   }
 
-  // USE THE PEN
+  // FORMULA EDITOR
+  // Toggle formula editor mode
   if (
     event.type === 'pencil' &&
     event.state === 'began' &&
@@ -155,6 +165,7 @@ export function applyEvent(
     return
   }
 
+  // Close formula editor
   if (
     event.type === 'finger' &&
     event.state === 'began' &&
@@ -165,8 +176,19 @@ export function applyEvent(
     return
   }
 
-  
+  // Tapped label while editing formula
+  if (
+    event.type === 'finger' &&
+    event.state === 'began' &&
+    events.fingerStates.length === 1 &&
+    formulaEditor.isActive() &&
+    primaryTokenNearEvent &&
+    primaryTokenNearEvent instanceof LabelToken
+  ) {
+    formulaEditor.addLabelTokenFromExisting(primaryTokenNearEvent.label);
+  }
 
+  // REGULAR PEN
   if (
     event.type === 'pencil' &&
     event.state === 'began'
@@ -180,8 +202,6 @@ export function applyEvent(
     objects['drawStroke'] = true;
     return;
   }
-
-
 
   if (
     event.type === 'pencil' &&
@@ -207,6 +227,29 @@ export function applyEvent(
     return;
   }
 
+  // SCRUB TOKENS
+  if (
+    event.type === 'finger' &&
+    event.state === 'began' && 
+    events.fingerStates.length === 2 &&
+    primaryTokenNearEvent &&
+    primaryTokenNearEvent instanceof NumberToken
+  ) {
+    objects['scrubToken'] = primaryTokenNearEvent;
+    objects['scrubTokenValue'] = primaryTokenNearEvent.getVariable().value;
+    return;
+  }
+
+  if (
+    event.type === 'finger' &&
+    event.state === 'moved' && 
+    objects['scrubToken']
+  ) {
+    let delta = state.originalPosition!.y - event.position.y;
+    objects['scrubToken'].getVariable().value = Math.floor(objects['scrubTokenValue'] + delta / 10);
+
+    return;
+  }
 
   // DRAGGING TOKENS
   if (
@@ -232,11 +275,11 @@ export function applyEvent(
 
   if (
     event.type === 'finger' &&
-    event.state === 'ended' && 
-    events.fingerStates.length === 1 &&
-    objects['dragToken']
+    event.state === 'ended'
   ) {
     delete objects['dragToken'];
+    delete objects['scrubToken'];
+    delete objects['scrubTokenValue']
     return;
   }
 

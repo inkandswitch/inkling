@@ -8,6 +8,7 @@ import NumberToken from './NumberToken';
 const PADDING = 3;
 
 export default class Formula extends Token {
+  primary = false;
   height = 40 + PADDING * 2;
 
   protected readonly boxElement = SVG.add('rect', {

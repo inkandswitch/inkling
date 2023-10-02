@@ -4,6 +4,7 @@ import SVG from '../Svg';
 import { Variable } from '../constraints';
 
 export default class NumberToken extends Token {
+  primary = true;
   readonly variable: Variable;
 
   protected readonly boxElement = SVG.add('rect', {
@@ -47,5 +48,10 @@ export default class NumberToken extends Token {
       x: this.position.x + 5,
       y: this.position.y + 30,
     });
+  }
+
+
+  getVariable(){
+    return this.variable
   }
 }

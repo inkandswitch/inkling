@@ -3,9 +3,20 @@ import COLORS from './Colors';
 import SVG from '../Svg';
 import { Variable } from '../constraints';
 import { Position } from '../../lib/types';
+import { generateId } from '../../lib/helpers';
+
+export class Namespace {
+  labels: Set<Label> = new Set();
+
+  createNewLabel(strokeData: Position[][], width: number): Label {
+    let l = new Label(strokeData, width);
+    this.labels.add(l);
+    return l;
+  }
+}
 
 export default class LabelToken extends Token {
-  variable = new Variable(123);
+  primary = true;
 
   protected readonly boxElement = SVG.add('rect', {
     x: this.position.x,
@@ -18,9 +29,12 @@ export default class LabelToken extends Token {
 
   readonly strokeElements: SVGElement[];
 
-  constructor(strokeData: Position[][], width: number) {
+  label: Label;
+
+  constructor(label: Label) {
     super();
-    this.strokeElements = strokeData.map(stroke => {
+    this.label = label;
+    this.strokeElements = label.strokeData.map(stroke => {
       return SVG.add('polyline', {
         points: SVG.points(stroke),
         transform: `translate(${this.position.x}, ${this.position.y})`,
@@ -29,19 +43,14 @@ export default class LabelToken extends Token {
         'stroke-width': 2,
       });
     });
-    this.width = width;
-  }
-
-  addChar(char: number) {
-    const stringValue = this.variable.value.toString() + char;
-    this.variable.value = parseInt(stringValue);
+    this.width = label.width
   }
 
   render(): void {
     SVG.update(this.boxElement, {
       x: this.position.x,
       y: this.position.y,
-      width: this.width,
+      width: this.label.width,
     });
 
     for (const strokeElement of this.strokeElements) {
@@ -49,5 +58,21 @@ export default class LabelToken extends Token {
         transform: `translate(${this.position.x}, ${this.position.y})`,
       });
     }
+  }
+
+  getVariable(){
+    return this.label.variable
+  }
+}
+
+export class Label {
+  id: number = generateId();
+  strokeData: Position[][] = [];
+  variable = new Variable(0);
+  width: number
+
+  constructor(strokeData: Position[][], width: number){
+    this.strokeData = strokeData;
+    this.width = width;
   }
 }

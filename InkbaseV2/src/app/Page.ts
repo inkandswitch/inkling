@@ -10,6 +10,7 @@ import StrokeAnalyzer from './StrokeAnalyzer';
 import { GameObject } from './GameObject';
 import Wire from './meta/Wire';
 import Token from './meta/Token';
+import { Namespace } from './meta/LabelToken';
 
 interface Options {
   strokeAnalyzer: boolean;
@@ -22,6 +23,8 @@ export default class Page extends GameObject {
   // Stroke graph looks at the page and tries to be smart about finding structure
   // TODO: should StrokeAnalyzer be a GameObject?
   readonly analyzer: StrokeAnalyzer | null;
+
+  readonly nameSpace = new Namespace();
 
   constructor(options: Options) {
     super();

@@ -8,7 +8,7 @@ import Vec from '../../lib/vec';
 import Stroke from '../strokes/Stroke';
 import WritingRecognizer from '../recognizers/WritingRecognizer';
 import NumberToken from './NumberToken';
-import LabelToken from './LabelToken';
+import LabelToken, { Label } from './LabelToken';
 import { forEach } from '../../lib/helpers';
 
 const PADDING = 3;
@@ -142,13 +142,25 @@ export default class FormulaEditor extends GameObject {
       normalizedStrokes.push(ns);
     });
 
-    const labelToken = new LabelToken(normalizedStrokes, this.editWidth - 46);
+    // Add new label token
+    const label = this.page.nameSpace.createNewLabel(normalizedStrokes, this.editWidth - 46);
+    const labelToken = new LabelToken(label);
     formula.addToken(labelToken);
 
+    // Cleanup
     forEach(this.labelStrokes, stroke => {
       stroke.remove();
     });
     this.labelStrokes = [];
+    this.editWidth = 46;
+  }
+
+  addLabelTokenFromExisting(label: Label){
+    const formula = this.formula?.deref();
+    if(!formula) return;
+
+    const labelToken = new LabelToken(label);
+    formula.addToken(labelToken);
   }
 
   // MODES

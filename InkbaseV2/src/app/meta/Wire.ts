@@ -6,6 +6,8 @@ import { Position } from '../../lib/types';
 import Vec from '../../lib/vec';
 import { equals } from '../constraints';
 
+// TODO: properly implement this so it only works for tokens with a variable
+
 export default class Wire extends GameObject { 
   
   points: Array<Position> = new Array();
@@ -17,7 +19,6 @@ export default class Wire extends GameObject {
     stroke: COLORS.BLUE,
     fill: "none"
   });
-
 
   render(dt: number, t: number): void {
     let a = this.a?.deref();
@@ -56,8 +57,8 @@ export default class Wire extends GameObject {
     let b = this.b?.deref();
 
     if(a != null && b != null) {
-      console.log(a, b);
-      console.log(equals(a.variable, b.variable));
+      //@ts-ignore
+      equals(a.getVariable(), b.getVariable());
     }
   }
 
