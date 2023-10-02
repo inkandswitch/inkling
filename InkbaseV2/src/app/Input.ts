@@ -1,6 +1,11 @@
 import Vec from '../lib/vec';
 import { aGizmo } from './Gizmo';
-import Events, { TouchId, Event, InputState } from './NativeEvents';
+import Events, {
+  TouchId,
+  Event,
+  InputState,
+  getPositionWithPressure,
+} from './NativeEvents';
 import Page from './Page';
 // import Selection from './Selection';
 // import Formula from './meta/Formula';
@@ -205,12 +210,7 @@ export function applyEvent(
 
   // REGULAR PEN
   if (event.type === 'pencil' && event.state === 'began') {
-    // TODO: Constructing position with pressure like this could be improved
-    pencil.startStroke({
-      x: event.position.x,
-      y: event.position.y,
-      pressure: event.pressure,
-    });
+    pencil.startStroke(getPositionWithPressure(event));
     objects['drawStroke'] = true;
     return;
   }
@@ -220,11 +220,7 @@ export function applyEvent(
     event.state === 'moved' &&
     objects['drawStroke']
   ) {
-    pencil.extendStroke({
-      x: event.position.x,
-      y: event.position.y,
-      pressure: event.pressure,
-    });
+    pencil.extendStroke(getPositionWithPressure(event));
     return;
   }
 
