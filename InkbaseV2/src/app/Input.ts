@@ -1,3 +1,4 @@
+import Vec from '../lib/vec';
 import { aGizmo } from './Gizmo';
 import Events, { TouchId, Event, InputState } from './NativeEvents';
 import Page from './Page';
@@ -272,6 +273,10 @@ export function applyEvent(
     tokenNearEvent
   ) {
     objects['dragToken'] = tokenNearEvent;
+    objects['dragTokenOffset'] = Vec.sub(
+      event.position,
+      tokenNearEvent.position
+    );
     return;
   }
 
@@ -282,12 +287,16 @@ export function applyEvent(
     events.fingerStates.length === 1 &&
     objects['dragToken']
   ) {
-    objects['dragToken'].position = event.position;
+    objects['dragToken'].position = Vec.sub(
+      event.position,
+      objects['dragTokenOffset']
+    );
     return;
   }
 
   if (event.type === 'finger' && event.state === 'ended') {
     delete objects['dragToken'];
+    delete objects['dragTokenOffset'];
     delete objects['scrubToken'];
     delete objects['scrubTokenValue'];
     return;
