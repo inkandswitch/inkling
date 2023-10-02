@@ -1,4 +1,4 @@
-import { Position } from '../lib/types';
+import { Position, PositionWithPressure } from '../lib/types';
 import Vec from '../lib/vec';
 
 // TODO: Do we want to add some way to fake pencil input with a finger?
@@ -34,6 +34,12 @@ export interface PencilEvent extends SharedEventProperties {
   pressure: number;
   altitude: number;
   azimuth: number;
+}
+
+export function getPositionWithPressure(
+  event: PencilEvent
+): PositionWithPressure {
+  return { ...event.position, pressure: event.pressure };
 }
 
 export interface FingerEvent extends SharedEventProperties {
