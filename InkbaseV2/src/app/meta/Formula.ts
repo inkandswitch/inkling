@@ -4,7 +4,8 @@ import SVG from '../Svg';
 
 import Vec from '../../lib/vec';
 import NumberToken from './NumberToken';
-import { equals, formula, Variable } from '../constraints';
+import * as constraints from '../constraints';
+import { Variable } from '../constraints';
 import LabelToken from './LabelToken';
 import OpToken from './OpToken';
 
@@ -22,7 +23,7 @@ export default class Formula extends Token {
     fill: COLORS.GREY_LIGHT,
   });
 
-  readonly constrainedVars: Variable[] = [];
+  readonly vars: Variable[] = [];
 
   constructor() {
     super();
@@ -78,63 +79,79 @@ export default class Formula extends Token {
   }
 
   parseFormula() {
-    while (this.constrainedVars.length > 0) {
-      const variable = this.constrainedVars.pop()!;
+    // Remove the old variables along with any constraints that reference them.
+    while (this.vars.length > 0) {
+      const variable = this.vars.pop()!;
       variable.remove();
     }
 
-    const stack: {
-      variableNames: string[];
-      variables: Variable[];
-      formulaTokens: string[];
-    }[] = [{ variableNames: [], variables: [], formulaTokens: [] }];
-
-    for (const child of this.children as Set<Token>) {
-      if (child instanceof OpToken) {
-        if (child.stringValue === '=') {
-          stack.unshift({
-            variableNames: [],
-            variables: [],
-            formulaTokens: [],
-          });
-        } else {
-          stack[0].formulaTokens.push(child.stringValue);
-        }
-      } else if (child instanceof NumberToken || child instanceof LabelToken) {
-        const v = child.getVariable();
-        const name = 'v_' + stack[0].variables.length;
-        stack[0].formulaTokens.push(name);
-        stack[0].variableNames.push(name);
-        stack[0].variables.push(v);
+    const tokens = [...(this.children as Set<Token>)];
+    while (tokens.length > 0) {
+      const idxOfEqualSign = tokens.findIndex(isEqualSign);
+      if (idxOfEqualSign >= 0) {
+        this.processExpr(tokens.splice(0, idxOfEqualSign));
+        tokens.shift(); // discard the equal sign
       } else {
-        throw new Error('unexpected token type: ' + child.constructor.name);
+        this.processExpr(tokens.splice(0, tokens.length));
       }
-    }
-
-    for (const { formulaTokens, variableNames, variables } of stack) {
-      if (formulaTokens.length === 0) {
-        continue;
-      } else if (formulaTokens.length === 1) {
-        this.constrainedVars.push(variables[0]);
-        continue;
-      }
-
-      const functionText = `return ${formulaTokens.join(' ')};`;
-      try {
-        const func = new Function(
-          `[${variableNames.join(',')}]`,
-          functionText
-        ) as (xs: number[]) => number;
-        this.constrainedVars.push(formula(variables, func).variables.result);
-      } catch {
-        console.log('invalid formula');
-      }
-    }
-
-    console.log(this.constrainedVars);
-
-    if (this.constrainedVars.length === 2) {
-      equals(this.constrainedVars[0], this.constrainedVars[1]);
     }
   }
+
+  processExpr(tokens: Token[]) {
+    const newVar = this.addFormulaConstraint(tokens);
+    if (!newVar) {
+      return;
+    }
+
+    const lastVar = this.vars[this.vars.length - 1];
+    if (lastVar) {
+      constraints.equals(lastVar, newVar);
+    }
+
+    this.vars.push(newVar);
+  }
+
+  addFormulaConstraint(tokens: Token[]) {
+    if (tokens.length === 1 && hasVariable(tokens[0])) {
+      return tokens[0].getVariable();
+    }
+
+    const expr = [] as string[];
+    const vars: Record<string, Variable> = {};
+    let numVars = 0;
+    for (const token of tokens) {
+      if (token instanceof OpToken) {
+        expr.push(token.stringValue);
+      } else if (hasVariable(token)) {
+        const varName = `v${++numVars}`;
+        vars[varName] = token.getVariable();
+        expr.push(varName);
+      } else {
+        throw new Error('unsupported token type ' + token.constructor.name);
+      }
+    }
+
+    try {
+      console.log(expr.join(' '));
+      const func = new Function(
+        `[${[...Object.keys(vars)].join(',')}]`,
+        `return ${expr.join(' ')}`
+      ) as (xs: number[]) => number;
+      const args = [...Object.values(vars)];
+      return constraints.formula(args, func).variables.result;
+    } catch {
+      console.log('invalid formula');
+      return null;
+    }
+  }
+}
+
+// helpers
+
+function isEqualSign(token: Token) {
+  return token instanceof OpToken && token.stringValue === '=';
+}
+
+function hasVariable(token: Token): token is NumberToken | LabelToken {
+  return token instanceof NumberToken || token instanceof LabelToken;
 }
