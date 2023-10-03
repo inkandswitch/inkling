@@ -200,7 +200,6 @@ export default class FormulaEditor extends GameObject {
     return !!this.formula;
   }
 
-  // TODO: should this take Formula instead of WR<Formula>?
   activateFromFormula(formula: Formula) {
     this.formula = formula;
   }
