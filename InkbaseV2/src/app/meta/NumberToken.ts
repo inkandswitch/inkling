@@ -3,6 +3,10 @@ import COLORS from './Colors';
 import SVG from '../Svg';
 import { Variable } from '../constraints';
 
+// There's a difference between a number and a variable,
+// and this class is trying to be both.
+// TODO: separate NumberToken and VarToken
+
 export default class NumberToken extends Token {
   protected readonly boxElement = SVG.add('rect', {
     x: this.position.x,
