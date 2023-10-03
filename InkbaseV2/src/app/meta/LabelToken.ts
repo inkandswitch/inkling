@@ -1,18 +1,7 @@
 import Token from './Token';
 import COLORS from './Colors';
 import SVG from '../Svg';
-import { Position } from '../../lib/types';
 import Label from './Label';
-
-export class Namespace {
-  labels = new Set<Label>();
-
-  createNewLabel(strokeData: Position[][], width: number): Label {
-    const l = new Label(strokeData, width);
-    this.labels.add(l);
-    return l;
-  }
-}
 
 export default class LabelToken extends Token {
   protected readonly boxElement = SVG.add('rect', {

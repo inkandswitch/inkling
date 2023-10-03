@@ -10,7 +10,7 @@ import StrokeAnalyzer from './StrokeAnalyzer';
 import { GameObject } from './GameObject';
 import Wire from './meta/Wire';
 import Token from './meta/Token';
-import { Namespace } from './meta/LabelToken';
+import Namespace from './meta/Namespace';
 
 interface Options {
   strokeAnalyzer: boolean;
