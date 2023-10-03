@@ -8,7 +8,8 @@ import Vec from '../../lib/vec';
 import Stroke from '../strokes/Stroke';
 import WritingRecognizer from '../recognizers/WritingRecognizer';
 import NumberToken from './NumberToken';
-import LabelToken, { Label } from './LabelToken';
+import LabelToken from './LabelToken';
+import Label from './Label';
 import { forEach } from '../../lib/helpers';
 import OpToken from './OpToken';
 

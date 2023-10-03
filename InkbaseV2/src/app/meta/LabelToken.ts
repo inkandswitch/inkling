@@ -1,9 +1,8 @@
 import Token from './Token';
 import COLORS from './Colors';
 import SVG from '../Svg';
-import { Variable } from '../constraints';
 import { Position } from '../../lib/types';
-import { generateId } from '../../lib/helpers';
+import Label from './Label';
 
 export class Namespace {
   labels = new Set<Label>();
@@ -61,17 +60,5 @@ export default class LabelToken extends Token {
 
   getVariable() {
     return this.label.variable;
-  }
-}
-
-export class Label {
-  id: number = generateId();
-  strokeData: Position[][] = [];
-  variable = new Variable(0);
-  width: number;
-
-  constructor(strokeData: Position[][], width: number) {
-    this.strokeData = strokeData;
-    this.width = width;
   }
 }
