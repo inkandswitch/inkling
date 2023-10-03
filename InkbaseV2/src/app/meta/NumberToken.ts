@@ -4,9 +4,6 @@ import SVG from '../Svg';
 import { Variable } from '../constraints';
 
 export default class NumberToken extends Token {
-  primary = true;
-  readonly variable: Variable;
-
   protected readonly boxElement = SVG.add('rect', {
     x: this.position.x,
     y: this.position.y,
@@ -24,9 +21,15 @@ export default class NumberToken extends Token {
     'font-family': 'monospace',
   });
 
+  readonly variable: Variable;
+
   constructor(value = 0) {
     super();
     this.variable = new Variable(value);
+  }
+
+  isPrimary() {
+    return true;
   }
 
   addChar(char: number) {

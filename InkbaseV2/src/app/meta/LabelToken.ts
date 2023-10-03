@@ -16,8 +16,6 @@ export class Namespace {
 }
 
 export default class LabelToken extends Token {
-  primary = true;
-
   protected readonly boxElement = SVG.add('rect', {
     x: this.position.x,
     y: this.position.y,
@@ -29,21 +27,22 @@ export default class LabelToken extends Token {
 
   readonly strokeElements: SVGElement[];
 
-  label: Label;
-
-  constructor(label: Label) {
+  constructor(public readonly label: Label) {
     super();
-    this.label = label;
-    this.strokeElements = label.strokeData.map(stroke => {
-      return SVG.add('polyline', {
+    this.strokeElements = label.strokeData.map(stroke =>
+      SVG.add('polyline', {
         points: SVG.points(stroke),
         transform: `translate(${this.position.x}, ${this.position.y})`,
         stroke: 'white',
         fill: 'none',
         'stroke-width': 2,
-      });
-    });
+      })
+    );
     this.width = label.width;
+  }
+
+  isPrimary() {
+    return true;
   }
 
   render(): void {

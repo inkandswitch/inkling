@@ -4,12 +4,12 @@ import { Position } from '../../lib/types';
 import { signedDistanceToBox } from '../../lib/SignedDistance';
 import Vec from '../../lib/vec';
 
-export default class Token extends GameObject {
-  primary = false;
-
+export default abstract class Token extends GameObject {
   position: Position = { x: 100, y: 100 };
   width = 90;
   height = 40;
+
+  abstract isPrimary(): boolean;
 
   distanceToPoint(pos: Position): number | null {
     return signedDistanceToBox(
@@ -34,6 +34,5 @@ export default class Token extends GameObject {
 export const aToken = (gameObj: GameObject) =>
   gameObj instanceof Token ? gameObj : null;
 
-export const aPrimaryToken = (gameObj: GameObject) => {
-  return gameObj instanceof Token && gameObj.primary ? gameObj : null;
-};
+export const aPrimaryToken = (gameObj: GameObject) =>
+  gameObj instanceof Token && gameObj.isPrimary() ? gameObj : null;

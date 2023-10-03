@@ -11,8 +11,7 @@ import OpToken from './OpToken';
 const PADDING = 3;
 
 export default class Formula extends Token {
-  primary = false;
-  height = 40 + PADDING * 2;
+  readonly height = 40 + PADDING * 2;
 
   protected readonly boxElement = SVG.add('rect', {
     x: this.position.x,
@@ -27,6 +26,10 @@ export default class Formula extends Token {
 
   constructor() {
     super();
+  }
+
+  isPrimary() {
+    return false;
   }
 
   addToken(t: Token) {

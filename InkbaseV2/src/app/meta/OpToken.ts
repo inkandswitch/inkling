@@ -3,8 +3,6 @@ import Token from './Token';
 import SVG from '../Svg';
 
 export default class OpToken extends Token {
-  stringValue = 'x';
-
   protected readonly textElement = SVG.add('text', {
     x: this.position.x + 5,
     y: this.position.y + 30,
@@ -12,9 +10,12 @@ export default class OpToken extends Token {
     'font-size': '30px',
   });
 
-  constructor(value: string) {
+  constructor(public stringValue: string) {
     super();
-    this.stringValue = value;
+  }
+
+  isPrimary() {
+    return false;
   }
 
   render() {
