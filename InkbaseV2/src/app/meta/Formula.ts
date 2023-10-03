@@ -132,7 +132,6 @@ export default class Formula extends Token {
     }
 
     try {
-      console.log(expr.join(' '));
       const func = new Function(
         `[${[...Object.keys(vars)].join(',')}]`,
         `return ${expr.join(' ')}`
