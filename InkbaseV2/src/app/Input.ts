@@ -278,7 +278,6 @@ export function applyEvent(
     return;
   }
 
-  // TODO: Handle dragging with offset
   if (
     event.type === 'finger' &&
     event.state === 'moved' &&
