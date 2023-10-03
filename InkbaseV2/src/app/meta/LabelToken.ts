@@ -6,7 +6,7 @@ import { Position } from '../../lib/types';
 import { generateId } from '../../lib/helpers';
 
 export class Namespace {
-  labels: Set<Label> = new Set();
+  labels = new Set<Label>();
 
   createNewLabel(strokeData: Position[][], width: number): Label {
     const l = new Label(strokeData, width);
