@@ -109,6 +109,35 @@ export class Variable {
       };
     }
   }
+
+  get isLocked() {
+    for (const c of Constraint.all) {
+      if (c instanceof Constant && c.variable === this.canonicalInstance) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  lock() {
+    constant(this.canonicalInstance);
+  }
+
+  unlock() {
+    for (const c of Constraint.all) {
+      if (c instanceof Constant && c.variable === this.canonicalInstance) {
+        c.remove();
+      }
+    }
+  }
+
+  toggleLock() {
+    if (this.isLocked) {
+      this.unlock();
+    } else {
+      this.lock();
+    }
+  }
 }
 
 // #region constraint and thing clusters for solver

@@ -60,6 +60,9 @@ export default class NumberToken extends Token {
       x: this.position.x,
       y: this.position.y,
       width: this.width,
+      fill: this.getVariable().isLocked
+        ? COLORS.GREY_LESS_DARK
+        : COLORS.GREY_DARK,
     });
 
     SVG.update(this.wholeTextElement, {
@@ -78,6 +81,6 @@ export default class NumberToken extends Token {
   }
 
   onTap() {
-    console.log('user tapped on', this);
+    this.getVariable().toggleLock();
   }
 }
