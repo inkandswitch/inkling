@@ -5,6 +5,9 @@ import LabelToken from './LabelToken';
 import NumberToken from './NumberToken';
 import OpToken from './OpToken';
 import * as ohm from 'ohm-js';
+import * as constraints from '../constraints';
+import { isTokenWithVariable } from './token-helpers';
+import { Variable } from '../constraints';
 
 const formulaGrammar = ohm.grammar(String.raw`
 
@@ -46,30 +49,80 @@ Formula {
 `);
 
 export default class FormulaParser {
-  private readonly semantics = formulaGrammar
-    .createSemantics()
-    .addOperation<Token>('createToken(page)', {
-      number(_) {
-        const n = parseFloat(this.sourceString);
-        return new NumberToken(n, this.source);
-      },
-      name(_first, _rest) {
-        const label = (this.args.page as Page).namespace.createNewLabel(
-          this.sourceString
-        );
-        return new LabelToken(label, this.source);
-      },
-      any(_c) {
-        return new OpToken(this.sourceString, this.source);
-      },
-    })
-    .addOperation<Token[]>('createTokens(page)', {
-      tokens(ts) {
-        return ts.children.map(t => t.createToken(this.args.page));
-      },
-    });
+  private readonly semantics: ohm.Semantics;
 
-  constructor(private readonly page: Page) {}
+  constructor(private readonly page: Page) {
+    this.semantics = formulaGrammar
+      .createSemantics()
+      .addAttribute<Token>('token', {
+        number(_) {
+          const n = parseFloat(this.sourceString);
+          return new NumberToken(n, this.source);
+        },
+        name(_first, _rest) {
+          const label = page.namespace.createNewLabel(this.sourceString);
+          return new LabelToken(label, this.source);
+        },
+        _terminal() {
+          return new OpToken(this.sourceString, this.source);
+        },
+      })
+      .addAttribute<Token[]>('tokens', {
+        tokens(ts) {
+          return ts.children.map(t => t.token);
+        },
+      })
+      .addOperation<void>('addTokens(tokens)', {
+        AddExp_add(a, op, b) {
+          a.addTokens(this.args.tokens);
+          op.addTokens(this.args.tokens);
+          b.addTokens(this.args.tokens);
+        },
+        MulExp_mul(a, op, b) {
+          a.addTokens(this.args.tokens);
+          op.addTokens(this.args.tokens);
+          b.addTokens(this.args.tokens);
+        },
+        UnExp_neg(op, e) {
+          op.addTokens(this.args.tokens);
+          e.addTokens(this.args.tokens);
+        },
+        PriExp_paren(oparen, e, cparen) {
+          oparen.addTokens(this.args.tokens);
+          e.addTokens(this.args.tokens);
+          cparen.addTokens(this.args.tokens);
+        },
+        name(_first, _rest) {
+          this.args.tokens.push(this.token);
+        },
+        number(_) {
+          this.args.tokens.push(this.token);
+        },
+        _terminal() {
+          this.args.tokens.push(this.token);
+        },
+      })
+      .addOperation('compile', {
+        AddExp_add(a, op, b) {
+          return `(${a.compile()} ${op.sourceString} ${b.compile()})`;
+        },
+        MulExp_mul(a, op, b) {
+          return `(${a.compile()} ${op.sourceString} ${b.compile()})`;
+        },
+        UnExp_neg(op, e) {
+          return `(${op.sourceString}${e.compile()})`;
+        },
+        PriExp_paren(_oparen, e, _cparen) {
+          return `(${e.compile()})`;
+        },
+        name(_first, _rest) {
+          return `v${this.token.getVariable().id}`;
+        },
+        number(_) {
+          return `v${this.token.getVariable().id}`;
+        },
+      });
+  }
 
   /**
    * Parses the expression in `input` and returns the `Token`s corresponding
@@ -84,16 +137,22 @@ export default class FormulaParser {
    * a `ParsedFormula` widget to the page.
    */
   parse(input: string, addToCanvas = false) {
-    const tokens = this.tokenize(input);
-
     const m = formulaGrammar.match(input);
+    let tokens: Token[];
     let resultToken: NumberToken | null = null;
     if (m.succeeded()) {
-      // TODO
-      console.log('parse succeeded');
+      const sm = this.semantics(m);
+      tokens = [];
+      sm.addTokens(tokens);
       resultToken = new NumberToken(0);
+      this.addConstraints(
+        m,
+        tokens.filter(isTokenWithVariable).map(t => t.getVariable()),
+        resultToken.getVariable()
+      );
     } else {
       console.log('parse failed');
+      tokens = this.semantics(formulaGrammar.match(input, 'tokens')).tokens;
     }
 
     if (addToCanvas) {
@@ -107,6 +166,32 @@ export default class FormulaParser {
 
   tokenize(input: string): Token[] {
     const m = formulaGrammar.match(input, 'tokens');
-    return this.semantics(m).createTokens(this.page);
+    return this.semantics(m).tokens;
+  }
+
+  addConstraints(m: ohm.MatchResult, vars: Variable[], resultVar: Variable) {
+    const argNames = vars.map(v => `v${v.id}`);
+    const compiledExpr = this.semantics(m).compile();
+    const func = this.createFormulaFn(argNames, compiledExpr);
+    constraints.equals(
+      resultVar,
+      constraints.formula(vars, func).variables.result
+    );
+  }
+
+  createFormulaFn(
+    argNames: string[],
+    compiledExpr: string
+  ): (xs: number[]) => number {
+    // console.log('argNames', argNames);
+    // console.log('compiledExpr', compiledExpr);
+    try {
+      return new Function(`[${argNames}]`, `return ${compiledExpr}`) as (
+        xs: number[]
+      ) => number;
+    } catch (e) {
+      console.error('uh-oh, generated code is not ok', e);
+      throw new Error(':(');
+    }
   }
 }
