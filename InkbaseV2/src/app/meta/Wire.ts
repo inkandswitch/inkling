@@ -3,11 +3,8 @@ import COLORS from './Colors';
 import SVG from '../Svg';
 import { Position } from '../../lib/types';
 import Vec from '../../lib/vec';
-import NumberToken from './NumberToken';
-import LabelToken from './LabelToken';
 import * as constraints from '../constraints';
-
-type TokenWithVariable = NumberToken | LabelToken;
+import { TokenWithVariable } from './Token';
 
 export default class Wire extends GameObject {
   readonly points: Position[] = [];

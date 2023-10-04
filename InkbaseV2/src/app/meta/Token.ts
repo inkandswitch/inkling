@@ -3,6 +3,8 @@ import { Position } from '../../lib/types';
 
 import { signedDistanceToBox } from '../../lib/SignedDistance';
 import Vec from '../../lib/vec';
+import NumberToken from './NumberToken';
+import LabelToken from './LabelToken';
 
 export default abstract class Token extends GameObject {
   position: Position = { x: 100, y: 100 };
@@ -30,6 +32,11 @@ export default abstract class Token extends GameObject {
     // NO-OP
   }
 }
+
+export type TokenWithVariable = NumberToken | LabelToken;
+
+export const isTokenWithVariable = (token: Token): token is TokenWithVariable =>
+  token instanceof NumberToken || token instanceof LabelToken;
 
 export const aToken = (gameObj: GameObject) =>
   gameObj instanceof Token ? gameObj : null;
