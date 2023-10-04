@@ -1,20 +1,19 @@
 import Vec from '../lib/vec';
 import { aGizmo } from './Gizmo';
 import Events, {
-  TouchId,
   Event,
   InputState,
   getPositionWithPressure,
 } from './NativeEvents';
 import Page from './Page';
-// import Selection from './Selection';
-// import Formula from './meta/Formula';
 import FormulaEditor from './meta/FormulaEditor';
 import LabelToken from './meta/LabelToken';
 import NumberToken from './meta/NumberToken';
-import { aPrimaryToken, aToken } from './meta/Token';
-import { aCanonicalHandle } from './strokes/Handle';
+import Token, { aPrimaryToken, aToken } from './meta/Token';
+import Handle, { aCanonicalHandle } from './strokes/Handle';
 import Pencil from './tools/Pencil';
+import { Position } from '../lib/types';
+import Wire from './meta/Wire';
 import * as constraints from './constraints';
 
 // Variables that store state needed by our gestures go here.
@@ -25,9 +24,20 @@ import * as constraints from './constraints';
 // we'd capture any object(s?) that (eg) were under each finger/pencil "began" event.
 // In the "post" section (which would have to be outside applyEvent(), since we eagerly return)
 // we'd clean up any objects that are associated with each ended finger/pencil.
-// TODO: replace this w/ a more specific type, and use weak refs for GameObjects.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const objects: Record<TouchId, any> = {}; // The objects we're currently manipulating with each finger/pencil.
+// TODO: use weak refs for GameObjects.
+const objects: Partial<{
+  touchedHandle: Handle;
+  drawWire: Wire;
+  drawStroke: boolean;
+  scrubToken: {
+    token: NumberToken;
+    value: number;
+  };
+  dragToken: {
+    token: Token;
+    offset: Position;
+  };
+}> = {};
 
 // End gesture state variables.
 
@@ -50,9 +60,6 @@ export function applyEvent(
     what: aCanonicalHandle,
     near: event.position,
   });
-  if (event.type === 'finger' && event.state === 'began' && handleNearEvent) {
-    objects['touchedHandle'] = handleNearEvent;
-  }
 
   const _gizmoNearEvent = page.find({
     what: aGizmo,
@@ -105,7 +112,7 @@ export function applyEvent(
     events.fingerStates.length === 1 &&
     primaryTokenNearEvent
   ) {
-    objects['drawWire'] = page.addWireFromToken(primaryTokenNearEvent);
+    objects.drawWire = page.addWireFromToken(primaryTokenNearEvent);
     return;
   }
 
@@ -115,17 +122,13 @@ export function applyEvent(
     event.state === 'began' &&
     events.fingerStates.length === 1
   ) {
-    objects['drawWire'] = page.addWireFromPosition(event.position);
+    objects.drawWire = page.addWireFromPosition(event.position);
     return;
   }
 
   // Drag wire endpoint
-  if (
-    event.type === 'pencil' &&
-    event.state === 'moved' &&
-    objects['drawWire']
-  ) {
-    objects['drawWire'].points[1] = event.position;
+  if (event.type === 'pencil' && event.state === 'moved' && objects.drawWire) {
+    objects.drawWire.points[1] = event.position;
     return;
   }
 
@@ -133,11 +136,11 @@ export function applyEvent(
   if (
     event.type === 'pencil' &&
     event.state === 'ended' &&
-    objects['drawWire']?.isCollapsable()
+    objects.drawWire?.isCollapsable()
   ) {
-    objects['drawWire'].remove();
+    objects.drawWire.remove();
     formulaEditor.activateFromPosition(event.position);
-    delete objects['drawWire'];
+    objects.drawWire = undefined;
     return;
   }
 
@@ -145,11 +148,11 @@ export function applyEvent(
   if (
     event.type === 'pencil' &&
     event.state === 'ended' &&
-    objects['drawWire'] &&
+    objects.drawWire &&
     tokenNearEvent
   ) {
-    objects['drawWire'].attachEnd(tokenNearEvent);
-    delete objects['drawWire'];
+    objects.drawWire.attachEnd(tokenNearEvent);
+    objects.drawWire = undefined;
     return;
   }
 
@@ -157,23 +160,19 @@ export function applyEvent(
   if (
     event.type === 'pencil' &&
     event.state === 'ended' &&
-    objects['drawWire']?.a
+    objects.drawWire?.a
   ) {
     const n = new NumberToken(0);
     n.position = event.position;
     page.adopt(n);
-    objects['drawWire'].attachEnd(n);
-    delete objects['drawWire'];
+    objects.drawWire.attachEnd(n);
+    objects.drawWire = undefined;
     return;
   }
 
   // simply end & open context menu
-  if (
-    event.type === 'pencil' &&
-    event.state === 'ended' &&
-    objects['drawWire']
-  ) {
-    delete objects['drawWire'];
+  if (event.type === 'pencil' && event.state === 'ended' && objects.drawWire) {
+    objects.drawWire = undefined;
     return;
   }
 
@@ -215,14 +214,14 @@ export function applyEvent(
   // REGULAR PEN
   if (event.type === 'pencil' && event.state === 'began') {
     pencil.startStroke(getPositionWithPressure(event));
-    objects['drawStroke'] = true;
+    objects.drawStroke = true;
     return;
   }
 
   if (
     event.type === 'pencil' &&
     event.state === 'moved' &&
-    objects['drawStroke']
+    objects.drawStroke
   ) {
     pencil.extendStroke(getPositionWithPressure(event));
     return;
@@ -231,12 +230,12 @@ export function applyEvent(
   if (
     event.type === 'pencil' &&
     event.state === 'ended' &&
-    objects['drawStroke'] &&
+    objects.drawStroke &&
     pencil.stroke?.deref()
   ) {
     formulaEditor.captureStroke(pencil.stroke!.deref()!);
     pencil.endStroke();
-    objects['drawStroke'] = false;
+    objects.drawStroke = false;
     return;
   }
 
@@ -248,21 +247,21 @@ export function applyEvent(
     primaryTokenNearEvent &&
     primaryTokenNearEvent instanceof NumberToken
   ) {
-    objects['scrubToken'] = primaryTokenNearEvent;
-    objects['scrubTokenValue'] = primaryTokenNearEvent.getVariable().value;
+    objects.scrubToken = {
+      token: primaryTokenNearEvent,
+      value: primaryTokenNearEvent.getVariable().value,
+    };
     return;
   }
 
   if (
     event.type === 'finger' &&
     event.state === 'moved' &&
-    objects['scrubToken']
+    objects.scrubToken
   ) {
+    const { token, value } = objects.scrubToken;
     const delta = state.originalPosition!.y - event.position.y;
-    objects['scrubToken'].getVariable().value = Math.floor(
-      objects['scrubTokenValue'] + delta / 10
-    );
-
+    token.getVariable().value = Math.floor(value + delta / 10);
     return;
   }
 
@@ -273,11 +272,10 @@ export function applyEvent(
     events.fingerStates.length === 1 &&
     tokenNearEvent
   ) {
-    objects['dragToken'] = tokenNearEvent;
-    objects['dragTokenOffset'] = Vec.sub(
-      event.position,
-      tokenNearEvent.position
-    );
+    objects.dragToken = {
+      token: tokenNearEvent,
+      offset: Vec.sub(event.position, tokenNearEvent.position),
+    };
     return;
   }
 
@@ -285,21 +283,17 @@ export function applyEvent(
     event.type === 'finger' &&
     event.state === 'moved' &&
     events.fingerStates.length === 1 &&
-    objects['dragToken']
+    objects.dragToken
   ) {
-    objects['dragToken'].position = Vec.sub(
-      event.position,
-      objects['dragTokenOffset']
-    );
+    const { token, offset } = objects.dragToken;
+    token.position = Vec.sub(event.position, offset);
     return;
   }
 
   if (event.type === 'finger' && event.state === 'ended') {
-    delete objects['dragToken'];
-    delete objects['dragTokenOffset'];
-    delete objects['scrubToken'];
-    delete objects['scrubTokenValue'];
-    delete objects['touchedHandle'];
+    objects.dragToken = undefined;
+    objects.scrubToken = undefined;
+    objects.touchedHandle = undefined;
     return;
   }
 
@@ -336,13 +330,19 @@ export function applyEvent(
   // }
 
   // MOVE SELECTED HANDLES
+
+  if (event.type === 'finger' && event.state === 'began' && handleNearEvent) {
+    objects.touchedHandle = handleNearEvent;
+    return;
+  }
+
   if (
     event.type === 'finger' &&
     event.state === 'moved' &&
-    objects['touchedHandle']
+    objects.touchedHandle
   ) {
     // TODO: replace this with the correct gestures
-    const handle = objects['touchedHandle'];
+    const handle = objects.touchedHandle;
     handle.position = event.position;
     constraints.now.pin(handle);
     return;
