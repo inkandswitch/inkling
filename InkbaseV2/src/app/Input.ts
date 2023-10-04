@@ -296,6 +296,15 @@ export function applyEvent(
   }
 
   if (event.type === 'finger' && event.state === 'ended') {
+    if (
+      primaryTokenNearEvent &&
+      primaryTokenNearEvent instanceof NumberToken &&
+      state.originalPosition &&
+      Vec.dist(state.originalPosition, event.position) < 10
+    ) {
+      primaryTokenNearEvent.onTap();
+    }
+
     objects.dragToken = undefined;
     objects.scrubToken = undefined;
     objects.touchedHandle = undefined;

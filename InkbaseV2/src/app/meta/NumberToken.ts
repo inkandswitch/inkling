@@ -76,4 +76,8 @@ export default class NumberToken extends Token {
   getVariable() {
     return this.variable;
   }
+
+  onTap() {
+    console.log('user tapped on', this);
+  }
 }
