@@ -15,6 +15,7 @@ import Pencil from './tools/Pencil';
 import { Position } from '../lib/types';
 import Wire from './meta/Wire';
 import * as constraints from './constraints';
+import { isTokenWithVariable } from './meta/token-helpers';
 
 // Variables that store state needed by our gestures go here.
 
@@ -110,7 +111,8 @@ export function applyEvent(
     event.type === 'pencil' &&
     event.state === 'began' &&
     events.fingerStates.length === 1 &&
-    primaryTokenNearEvent
+    primaryTokenNearEvent &&
+    isTokenWithVariable(primaryTokenNearEvent)
   ) {
     objects.drawWire = page.addWireFromToken(primaryTokenNearEvent);
     return;

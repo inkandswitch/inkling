@@ -17,6 +17,7 @@ import { applyEvent } from './Input';
 import { root } from './GameObject';
 import FormulaEditor from './meta/FormulaEditor';
 import Pencil from './tools/Pencil';
+import FormulaParser from './meta/FormulaParser';
 // import '../lib/spreadsheet';
 
 // This is a pretzel, because the interface between NativeEvents and Input is a work in progress.
@@ -42,6 +43,9 @@ root.adopt(pencil);
 // FORMULA STUFF
 const formulaEditor = new FormulaEditor();
 root.adopt(formulaEditor);
+
+const formulaParser = new FormulaParser(page);
+formulaParser.parse('hello world');
 
 onEveryFrame((dt, t) => {
   SVG.clearNow(t);

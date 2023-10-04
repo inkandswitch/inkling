@@ -151,7 +151,7 @@ export default class FormulaEditor extends GameObject {
     });
 
     // Add new label token
-    const label = this.page.nameSpace.createNewLabel(
+    const label = this.page.namespace.createNewLabel(
       normalizedStrokes,
       this.editWidth - 46
     );

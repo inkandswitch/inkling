@@ -7,7 +7,7 @@ import * as constraints from '../constraints';
 import { TokenWithVariable } from './token-helpers';
 
 export default class Wire extends GameObject {
-  readonly points: Position[] = [];
+  points: Position[] = [];
   a?: WeakRef<TokenWithVariable>;
   b?: WeakRef<TokenWithVariable>;
 

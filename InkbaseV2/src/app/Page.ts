@@ -9,8 +9,8 @@ import Handle from './strokes/Handle';
 import StrokeAnalyzer from './StrokeAnalyzer';
 import { GameObject } from './GameObject';
 import Wire from './meta/Wire';
-import Token from './meta/Token';
 import Namespace from './meta/Namespace';
+import { TokenWithVariable } from './meta/token-helpers';
 
 interface Options {
   strokeAnalyzer: boolean;
@@ -24,7 +24,7 @@ export default class Page extends GameObject {
   // TODO: should StrokeAnalyzer be a GameObject?
   readonly analyzer: StrokeAnalyzer | null;
 
-  readonly nameSpace = new Namespace();
+  readonly namespace = new Namespace();
 
   constructor(options: Options) {
     super();
@@ -65,7 +65,7 @@ export default class Page extends GameObject {
     return this.adopt(w);
   }
 
-  addWireFromToken(token: Token) {
+  addWireFromToken(token: TokenWithVariable) {
     const w = new Wire();
     w.a = new WeakRef(token);
     return this.adopt(w);
