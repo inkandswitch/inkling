@@ -1,4 +1,4 @@
-import Token, { isTokenWithVariable } from './Token';
+import Token from './Token';
 import COLORS from './Colors';
 import SVG from '../Svg';
 import Vec from '../../lib/vec';
@@ -6,6 +6,7 @@ import NumberToken from './NumberToken';
 import * as constraints from '../constraints';
 import { Variable } from '../constraints';
 import OpToken from './OpToken';
+import { isTokenWithVariable } from './token-helpers';
 
 const PADDING = 3;
 

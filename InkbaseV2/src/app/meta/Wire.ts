@@ -4,7 +4,7 @@ import SVG from '../Svg';
 import { Position } from '../../lib/types';
 import Vec from '../../lib/vec';
 import * as constraints from '../constraints';
-import { TokenWithVariable } from './Token';
+import { TokenWithVariable } from './token-helpers';
 
 export default class Wire extends GameObject {
   readonly points: Position[] = [];
