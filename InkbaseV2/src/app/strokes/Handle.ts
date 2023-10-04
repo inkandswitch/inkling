@@ -281,14 +281,13 @@ export default class Handle extends GameObject {
   }
 
   render(t: number, dt: number) {
-    const state = this.instanceState;
-
-    if (!state.isCanonical) {
-      return;
-    }
-
     for (const child of this.children) {
       child.render(dt, t);
+    }
+
+    const state = this.instanceState;
+    if (!state.isCanonical) {
+      return;
     }
 
     SVG.update(state.elements.normal, {

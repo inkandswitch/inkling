@@ -1,7 +1,6 @@
 import { TAU, clip, lerp } from '../lib/math';
 import Events from './NativeEvents';
 import Page from './Page';
-import Selection from './Selection';
 import SVG from './Svg';
 import Handle from './strokes/Handle';
 import Vec from '../lib/vec';
@@ -215,7 +214,6 @@ class GizmoInstance extends GameObject {
 export default class Gizmo {
   constructor(
     public page: Page,
-    public selection: Selection,
     public enabled = true
   ) {
     if (!enabled) {
@@ -261,14 +259,11 @@ export default class Gizmo {
     // Assume all gizmos will be hidden
     // this.all.forEach(v => (v.visible = false));
 
-    this.selection.touchingGizmo = false;
-
     for (const { a, b } of this.page.strokeGroups) {
       const gizmo = this.findOrCreate(a, b);
       if (gizmo.visible || a.isSelected || b.isSelected) {
         gizmo.visible = true; // Show this gizmo
-        const didTouch = gizmo.update(events);
-        this.selection.touchingGizmo ||= didTouch;
+        gizmo.update(events);
       } else {
         gizmo.visible = false;
       }

@@ -14,8 +14,8 @@ import LabelToken from './meta/LabelToken';
 import NumberToken from './meta/NumberToken';
 import { aPrimaryToken, aToken } from './meta/Token';
 import { aCanonicalHandle } from './strokes/Handle';
-
 import Pencil from './tools/Pencil';
+import * as constraints from './constraints';
 
 // Variables that store state needed by our gestures go here.
 
@@ -46,10 +46,13 @@ export function applyEvent(
   // This is a good place to set up any state needed by the below gesture recognizers.
   // Please don't fret about the performance burden of gathering this state on every event —
   // it rounds to zero! We can optimize the heck out of this later, once we know what we even want.
-  const _handleNearEvent = page.find({
+  const handleNearEvent = page.find({
     what: aCanonicalHandle,
     near: event.position,
   });
+  if (event.type === 'finger' && event.state === 'began' && handleNearEvent) {
+    objects['touchedHandle'] = handleNearEvent;
+  }
 
   const _gizmoNearEvent = page.find({
     what: aGizmo,
@@ -296,6 +299,7 @@ export function applyEvent(
     delete objects['dragTokenOffset'];
     delete objects['scrubToken'];
     delete objects['scrubTokenValue'];
+    delete objects['touchedHandle'];
     return;
   }
 
@@ -331,9 +335,16 @@ export function applyEvent(
   //   return selection.clearSelection();
   // }
 
-  // // MOVE SELECTED HANDLES
-  // if (event.type === 'finger' && event.state === 'moved') {
-  //   // TODO: Implement this
-  //   return;
-  // }
+  // MOVE SELECTED HANDLES
+  if (
+    event.type === 'finger' &&
+    event.state === 'moved' &&
+    objects['touchedHandle']
+  ) {
+    // TODO: replace this with the correct gestures
+    const handle = objects['touchedHandle'];
+    handle.position = event.position;
+    constraints.now.pin(handle);
+    return;
+  }
 }
