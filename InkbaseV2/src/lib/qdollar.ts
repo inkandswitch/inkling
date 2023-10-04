@@ -272,14 +272,15 @@ function QDollarRecognizer() // constructor
 	// Marcel added this function
 	this.AddGestureStrokes = function(name, strokes)
 	{
-		let points = [];
-		for(const [i, stroke] of strokes.entries()) {
-			for(const point of stroke.points) {
-				points.push(new Point(point.x, point.y, i));
+		let convertedPoints = [];
+		for(let i = 0; i<strokes.length; i++) {
+			const points = strokes[i];
+			for(const point of points) {
+				convertedPoints.push(new Point(point.x, point.y, i));
 			}
 		}
-
-		return this.AddGesture(name, points);
+		
+		return this.AddGesture(name, convertedPoints);
 	}
 
 	this.AddGesture = function(name, points)
@@ -297,8 +298,6 @@ function QDollarRecognizer() // constructor
 		this.PointClouds.length = NumPointClouds; // clears any beyond the original set
 		return NumPointClouds;
 	}
-
-	console.log(this);
 }
 //
 // Private helper functions from here on down

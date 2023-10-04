@@ -42,7 +42,9 @@ root.adopt(pencil);
 
 // FORMULA STUFF
 const formulaEditor = new FormulaEditor();
+(window as any).formulaEditor = formulaEditor;
 root.adopt(formulaEditor);
+
 
 const formulaParser = new FormulaParser(page);
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

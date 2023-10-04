@@ -1,5 +1,5 @@
 import { GameObject } from '../GameObject';
-import { Position } from '../../lib/types';
+import { Position, PositionWithPressure } from '../../lib/types';
 import COLORS from './Colors';
 import SVG from '../Svg';
 import Stroke, { aStroke } from '../strokes/Stroke';
@@ -29,12 +29,6 @@ export default class FormulaEditor extends GameObject {
 
   protected readonly svgCellElements: Array<SVGElement> = [];
   
-  // cells: Array<FormulaEditorCell> = [
-  //   new FormulaEditorCell(),
-  //   new FormulaEditorCell(),
-  //   new FormulaEditorCell(),
-  // ];
-
   constructor(){
     super();
     this.adopt(new FormulaEditorCell());
@@ -63,6 +57,8 @@ export default class FormulaEditor extends GameObject {
     }
   }
 
+  // Attempt to regcognize strokes on all the cells except the most recent one
+  // (The user may be still want to add more strokes on that one)
   recognizeStrokes(exceptCell: FormulaEditorCell){
     for(const cell of this.findAll({what: aFormulaEditorCell})) {
       if(cell != exceptCell) {
@@ -100,6 +96,17 @@ export default class FormulaEditor extends GameObject {
       height: this.height,
     })
   }
+
+  addGesture(name: string) {
+    const cells = this.findAll({what: aFormulaEditorCell});
+    const lastCell = cells[cells.length-3];
+    
+    writingRecognizer.addGesture(name, lastCell.strokeData);
+  }
+
+  printGestures(){
+    writingRecognizer.printGestures();
+  }
 }
 
 class FormulaEditorCell extends GameObject {
@@ -110,6 +117,9 @@ class FormulaEditorCell extends GameObject {
   stringValue = "";
 
   timer: number | null = null;
+
+  // Remember stroke data so we can add it to the library if we want
+  strokeData: PositionWithPressure[][] = [];
 
   protected readonly svgCell = SVG.add('rect', {
     x: this.position.x,
@@ -164,12 +174,15 @@ class FormulaEditorCell extends GameObject {
     const result = writingRecognizer.recognize(strokes);
     this.stringValue = result.Name;
     
+    // Remember stroke data if we want to add it to the library
+    this.strokeData = strokes;
+
+    // Clean up strokes that have been recognized
     this.children.forEach(child=>{
       child.remove();
     })
   }
 }
-
 
 export const aFormulaEditorCell = (gameObj: GameObject) =>
   gameObj instanceof FormulaEditorCell ? gameObj : null;
