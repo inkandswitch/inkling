@@ -130,7 +130,9 @@ export default class FormulaEditor extends GameObject {
     // Find the formula parser
     let string = this.getAsString();
     let result = this.formulaParser!.parse(string, this.position);
-    this.deactivate();
+    if(result) {
+      this.deactivate();
+    }
   }
 
   render(dt: number, t: number): void {
