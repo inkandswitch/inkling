@@ -198,7 +198,7 @@ export function applyEvent(
     events.fingerStates.length === 3 &&
     formulaEditor.isActive()
   ) {
-    formulaEditor.deactivate();
+    formulaEditor.parseFormulaAndClose();
     return;
   }
 

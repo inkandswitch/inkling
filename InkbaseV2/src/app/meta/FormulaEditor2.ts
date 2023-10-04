@@ -7,15 +7,21 @@ import Vec from '../../lib/vec';
 import Rect from '../../lib/rect';
 
 import WritingRecognizer from '../recognizers/WritingRecognizer';
+import FormulaParser from './FormulaParser';
 
 const PADDING = 2;
 
 const writingRecognizer = new WritingRecognizer();
 
+
 export default class FormulaEditor extends GameObject {
   width = 200;
   height = 44;
   position: Position = { x: 100, y: 100 };
+
+  formulaParser: FormulaParser | null = null;
+
+  active: boolean = false;
 
   // SVG
   protected readonly svgBackgroundElement = SVG.add('rect', {
@@ -24,16 +30,14 @@ export default class FormulaEditor extends GameObject {
     width: this.width,
     height: this.height,
     rx: 3,
-    fill: COLORS.GREY_LIGHT
+    fill: COLORS.GREY_LIGHT,
+    visibility: "hidden"
   })
 
   protected readonly svgCellElements: Array<SVGElement> = [];
   
   constructor(){
     super();
-    this.adopt(new FormulaEditorCell());
-    this.adopt(new FormulaEditorCell());
-    this.adopt(new FormulaEditorCell());
   }
 
   isPositionNearToggle(){
@@ -41,11 +45,27 @@ export default class FormulaEditor extends GameObject {
   }
 
   isActive(){
-    return true;
+    return this.active;
+  }
+
+  activateFromFormula(){
+
+  }
+
+  activateFromPosition(position: Position){
+    this.position = position;
+    this.adopt(new FormulaEditorCell());
+    this.adopt(new FormulaEditorCell());
+    this.adopt(new FormulaEditorCell());
+    this.active = true;
   }
 
   deactivate(){
+    for(const child of this.children) {
+      child.remove();
+    }
 
+    this.active = false;
   }
 
   captureStroke(stroke: Stroke){
@@ -65,7 +85,29 @@ export default class FormulaEditor extends GameObject {
         cell.recognizeStrokes();
       }
     }
+    this.refresh();
+  }
+
+  refresh(){
     this.ensureEmptySpace();
+    //TODO: this is where we potentially do syntax highlighting
+    // But we've punted on that for now.
+
+    // If the last character is an equals sign, we parse and close the editor
+    const lastChar = this.lastCharacter();
+    if(lastChar?.stringValue == "=") {
+      this.parseFormulaAndClose();
+    }
+  }
+
+  lastCharacter(){
+    const cells = this.findAll({what: aFormulaEditorCell});
+
+    for(let i = cells.length-1; i>=0; i--) {
+      if(cells[i].stringValue != "") {
+        return cells[i];
+      }
+    }
   }
 
   ensureEmptySpace(){
@@ -78,6 +120,19 @@ export default class FormulaEditor extends GameObject {
     }
   }
 
+  getAsString(){
+    const cells = this.findAll({what: aFormulaEditorCell});
+    let stringValue = cells.reduce((acc, cell)=>{return acc+cell.stringValue}, "")
+    return stringValue.slice(0, -1)
+  }
+
+  parseFormulaAndClose(){
+    // Find the formula parser
+    let string = this.getAsString();
+    let result = this.formulaParser!.parse(string, this.position);
+    this.deactivate();
+  }
+
   render(dt: number, t: number): void {
     // Layout cells
     let offset = Vec.add(this.position, Vec(PADDING, PADDING));
@@ -86,6 +141,7 @@ export default class FormulaEditor extends GameObject {
       offset = Vec.add(offset, Vec(cell.width+PADDING, 0));
       cell.render(dt, t);
     }
+
     this.width = offset.x - this.position.x;
 
     // Update background rect
@@ -94,6 +150,7 @@ export default class FormulaEditor extends GameObject {
       y: this.position.y,
       width: this.width,
       height: this.height,
+      visibility: this.active? "visible": "hidden"
     })
   }
 
@@ -142,19 +199,21 @@ class FormulaEditorCell extends GameObject {
       this.timer -= dt;
       if(this.timer < 0) {
         this.recognizeStrokes();
-        (this.parent! as FormulaEditor).ensureEmptySpace();
+        (this.parent! as FormulaEditor).refresh();
+        this.timer = null;
       }
     }
 
     SVG.update(this.svgCell, {
       x: this.position.x,
       y: this.position.y,
-    })
+    });
 
     SVG.update(this.textElement, {
       x: this.position.x + 5,
       y: this.position.y + 30,
-    })
+    });
+
     this.textElement.textContent = this.stringValue;
   }
 
@@ -162,9 +221,9 @@ class FormulaEditorCell extends GameObject {
     if(stroke.overlapsRect(Rect(this.position, this.width, this.height))) {
       this.adopt(stroke);
       this.timer = 0.5;
-      return true
+      return true;
     }
-    return false
+    return false;
   }
 
   recognizeStrokes(){
@@ -181,6 +240,12 @@ class FormulaEditorCell extends GameObject {
     this.children.forEach(child=>{
       child.remove();
     })
+  }
+
+  remove(): void {
+    super.remove();
+    this.svgCell.remove();
+    this.textElement.remove();
   }
 }
 
