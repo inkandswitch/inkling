@@ -8,6 +8,8 @@ import * as ohm from 'ohm-js';
 import * as constraints from '../constraints';
 import { isTokenWithVariable } from './token-helpers';
 import { Variable } from '../constraints';
+import { Position } from '../../lib/types';
+import SVG from '../Svg';
 
 const formulaGrammar = ohm.grammar(String.raw`
 
@@ -124,48 +126,25 @@ export default class FormulaParser {
       });
   }
 
-  /**
-   * Parses the expression in `input` and returns the `Token`s corresponding
-   * to the input string. If the parse is successful, this method also creates
-   * a `NumberToken` whose value is constrained to be equal to the value of the
-   * expression.
-   *
-   * Note that each token that corresponds to part of the input has a `source`
-   * property that tells us exactly what part of the input it comes from.
-   *
-   * If the optional `addToCanvas` argument is `true`, this method also adds
-   * a `ParsedFormula` widget to the page.
-   */
-  parse(input: string, addToCanvas = false) {
+  parse(input: string, pos: Position = { x: 100, y: 250 }): boolean {
     const m = formulaGrammar.match(input);
-    let tokens: Token[];
-    let resultToken: NumberToken | null = null;
-    if (m.succeeded()) {
-      const sm = this.semantics(m);
-      tokens = [];
-      sm.collectTokens(tokens);
-      const resultVar = this.addConstraints(
-        m,
-        tokens.filter(isTokenWithVariable).map(t => t.getVariable())
-      );
-      resultToken = new NumberToken(resultVar);
-    } else {
-      console.log('parse failed');
-      tokens = this.semantics(formulaGrammar.match(input, 'tokens')).tokens;
+    if (m.failed()) {
+      SVG.showStatus(m.shortMessage!);
+      console.log(m.message);
+      return false;
     }
 
-    if (addToCanvas) {
-      const formula = new ParsedFormula(tokens, resultToken);
-      formula.position = { x: 100, y: 250 };
-      this.page.adopt(formula);
-    }
+    const tokens: Token[] = [];
+    this.semantics(m).collectTokens(tokens);
 
-    return { tokens, resultToken };
-  }
+    const vars = tokens.filter(isTokenWithVariable).map(t => t.getVariable());
+    const resultVar = this.addConstraints(m, vars);
+    const resultToken = new NumberToken(resultVar);
+    const formula = new ParsedFormula(tokens, resultToken);
 
-  tokenize(input: string): Token[] {
-    const m = formulaGrammar.match(input, 'tokens');
-    return this.semantics(m).tokens;
+    formula.position = pos;
+    this.page.adopt(formula);
+    return true;
   }
 
   addConstraints(m: ohm.MatchResult, vars: Variable[]): Variable {
