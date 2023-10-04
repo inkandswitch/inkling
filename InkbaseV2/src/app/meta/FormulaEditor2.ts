@@ -123,7 +123,7 @@ export default class FormulaEditor extends GameObject {
   getAsString(){
     const cells = this.findAll({what: aFormulaEditorCell});
     let stringValue = cells.reduce((acc, cell)=>{return acc+cell.stringValue}, "")
-    return stringValue.slice(0, -1)
+    return stringValue.replace("=", "");
   }
 
   parseFormulaAndClose(){
