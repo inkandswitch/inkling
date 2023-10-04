@@ -264,7 +264,10 @@ export function applyEvent(
   ) {
     const { token, value } = objects.scrubToken;
     const delta = state.originalPosition!.y - event.position.y;
-    token.getVariable().value = Math.floor(value + delta / 10);
+    constraints.now.constant(
+      token.getVariable(),
+      Math.floor(value + delta / 10)
+    );
     return;
   }
 
