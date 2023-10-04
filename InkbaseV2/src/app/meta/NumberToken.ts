@@ -24,9 +24,11 @@ export default class NumberToken extends Token {
 
   readonly variable: Variable;
 
-  constructor(value = 0, source?: ohm.Interval) {
+  constructor(value?: number, source?: ohm.Interval);
+  constructor(variable: Variable, source?: ohm.Interval);
+  constructor(arg: number | Variable = 0, source?: ohm.Interval) {
     super(source);
-    this.variable = new Variable(value);
+    this.variable = arg instanceof Variable ? arg : new Variable(arg);
   }
 
   isPrimary() {

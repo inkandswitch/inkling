@@ -72,25 +72,25 @@ export default class FormulaParser {
           return ts.children.map(t => t.token);
         },
       })
-      .addOperation<void>('addTokens(tokens)', {
+      .addOperation<void>('collectTokens(tokens)', {
         AddExp_add(a, op, b) {
-          a.addTokens(this.args.tokens);
-          op.addTokens(this.args.tokens);
-          b.addTokens(this.args.tokens);
+          a.collectTokens(this.args.tokens);
+          op.collectTokens(this.args.tokens);
+          b.collectTokens(this.args.tokens);
         },
         MulExp_mul(a, op, b) {
-          a.addTokens(this.args.tokens);
-          op.addTokens(this.args.tokens);
-          b.addTokens(this.args.tokens);
+          a.collectTokens(this.args.tokens);
+          op.collectTokens(this.args.tokens);
+          b.collectTokens(this.args.tokens);
         },
         UnExp_neg(op, e) {
-          op.addTokens(this.args.tokens);
-          e.addTokens(this.args.tokens);
+          op.collectTokens(this.args.tokens);
+          e.collectTokens(this.args.tokens);
         },
         PriExp_paren(oparen, e, cparen) {
-          oparen.addTokens(this.args.tokens);
-          e.addTokens(this.args.tokens);
-          cparen.addTokens(this.args.tokens);
+          oparen.collectTokens(this.args.tokens);
+          e.collectTokens(this.args.tokens);
+          cparen.collectTokens(this.args.tokens);
         },
         name(_first, _rest) {
           this.args.tokens.push(this.token);
@@ -143,13 +143,12 @@ export default class FormulaParser {
     if (m.succeeded()) {
       const sm = this.semantics(m);
       tokens = [];
-      sm.addTokens(tokens);
-      resultToken = new NumberToken(0);
-      this.addConstraints(
+      sm.collectTokens(tokens);
+      const resultVar = this.addConstraints(
         m,
-        tokens.filter(isTokenWithVariable).map(t => t.getVariable()),
-        resultToken.getVariable()
+        tokens.filter(isTokenWithVariable).map(t => t.getVariable())
       );
+      resultToken = new NumberToken(resultVar);
     } else {
       console.log('parse failed');
       tokens = this.semantics(formulaGrammar.match(input, 'tokens')).tokens;
@@ -169,14 +168,11 @@ export default class FormulaParser {
     return this.semantics(m).tokens;
   }
 
-  addConstraints(m: ohm.MatchResult, vars: Variable[], resultVar: Variable) {
+  addConstraints(m: ohm.MatchResult, vars: Variable[]): Variable {
     const argNames = vars.map(v => `v${v.id}`);
     const compiledExpr = this.semantics(m).compile();
     const func = this.createFormulaFn(argNames, compiledExpr);
-    constraints.equals(
-      resultVar,
-      constraints.formula(vars, func).variables.result
-    );
+    return constraints.formula(vars, func).variables.result;
   }
 
   createFormulaFn(
