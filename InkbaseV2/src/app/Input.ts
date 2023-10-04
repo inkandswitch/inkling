@@ -149,7 +149,8 @@ export function applyEvent(
     event.type === 'pencil' &&
     event.state === 'ended' &&
     objects.drawWire &&
-    tokenNearEvent
+    (tokenNearEvent instanceof NumberToken ||
+      tokenNearEvent instanceof LabelToken)
   ) {
     objects.drawWire.attachEnd(tokenNearEvent);
     objects.drawWire = undefined;
