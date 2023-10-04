@@ -13,20 +13,36 @@ export default class LabelToken extends Token {
     fill: COLORS.BLUE,
   });
 
-  readonly strokeElements: SVGElement[];
+  protected readonly textElement = SVG.add('text', {
+    x: this.position.x + 5,
+    y: this.position.y + 30,
+    fill: COLORS.WHITE,
+    'font-size': '30px',
+  });
+
+  readonly strokeElements: SVGElement[] = [];
 
   constructor(public readonly label: Label) {
     super();
-    this.strokeElements = label.strokeData.map(stroke =>
-      SVG.add('polyline', {
-        points: SVG.points(stroke),
-        transform: `translate(${this.position.x}, ${this.position.y})`,
-        stroke: 'white',
-        fill: 'none',
-        'stroke-width': 2,
-      })
-    );
-    this.width = label.width;
+    console.log('lll', label.display);
+    if (typeof label.display === 'string') {
+      this.textElement.textContent = label.display;
+      this.width = this.textElement.getComputedTextLength() + 10;
+    } else {
+      for (const stroke of label.display.strokeData) {
+        this.strokeElements.push(
+          SVG.add('polyline', {
+            points: SVG.points(stroke),
+            transform: `translate(${this.position.x}, ${this.position.y})`,
+            stroke: 'white',
+            fill: 'none',
+            'stroke-width': 2,
+          })
+        );
+      }
+      this.width = label.display.width;
+    }
+    SVG.update(this.boxElement, { width: this.width });
   }
 
   isPrimary() {
@@ -37,7 +53,11 @@ export default class LabelToken extends Token {
     SVG.update(this.boxElement, {
       x: this.position.x,
       y: this.position.y,
-      width: this.label.width,
+    });
+
+    SVG.update(this.textElement, {
+      x: this.position.x + 5,
+      y: this.position.y + 30,
     });
 
     for (const strokeElement of this.strokeElements) {
