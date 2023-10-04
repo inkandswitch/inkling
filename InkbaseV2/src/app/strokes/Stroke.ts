@@ -3,6 +3,7 @@ import { Position, PositionWithPressure } from '../../lib/types';
 import { GameObject } from '../GameObject';
 import Vec from '../../lib/vec';
 import Line from '../../lib/line';
+import Rect from '../../lib/rect';
 
 export default class Stroke extends GameObject {
   color: string = "#000"
@@ -39,8 +40,21 @@ export default class Stroke extends GameObject {
     }
   }
 
+  overlapsRect(rect: Rect): boolean {
+    for(const point of this.points) {
+      if(Rect.isPointInside(rect, point)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   remove(): void {
     this.element.remove();
     super.remove();
   }
 }
+
+
+export const aStroke = (gameObj: GameObject) =>
+  gameObj instanceof Stroke ? gameObj : null;

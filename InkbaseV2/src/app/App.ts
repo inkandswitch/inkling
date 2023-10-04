@@ -15,7 +15,7 @@ import { onEveryFrame } from '../lib/helpers';
 import Gizmo from './Gizmo';
 import { applyEvent } from './Input';
 import { root } from './GameObject';
-import FormulaEditor from './meta/FormulaEditor';
+import FormulaEditor from './meta/FormulaEditor2';
 import Pencil from './tools/Pencil';
 import FormulaParser from './meta/FormulaParser';
 // import '../lib/spreadsheet';
