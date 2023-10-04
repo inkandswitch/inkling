@@ -1,6 +1,13 @@
 // TODO: Move this to lib
 
-export function signedDistanceToBox(xA: number, yA: number, widthA: number, heightA: number, xB: number, yB: number): number {
+export function signedDistanceToBox(
+  xA: number,
+  yA: number,
+  widthA: number,
+  heightA: number,
+  xB: number,
+  yB: number
+): number {
   // Calculate the half dimensions of the box A
   const halfWidthA = widthA / 2;
   const halfHeightA = heightA / 2;

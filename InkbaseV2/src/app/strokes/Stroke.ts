@@ -6,7 +6,7 @@ import Line from '../../lib/line';
 import Rect from '../../lib/rect';
 
 export default class Stroke extends GameObject {
-  color: string = "#000"
+  color: string = '#000';
 
   protected element = SVG.add('polyline', {
     fill: 'none',
@@ -19,7 +19,10 @@ export default class Stroke extends GameObject {
   }
 
   render(): void {
-    SVG.update(this.element, { points: SVG.points(this.points), stroke: this.color });
+    SVG.update(this.element, {
+      points: SVG.points(this.points),
+      stroke: this.color,
+    });
   }
 
   distanceToPoint(pos: Position): number | null {
@@ -41,8 +44,8 @@ export default class Stroke extends GameObject {
   }
 
   overlapsRect(rect: Rect): boolean {
-    for(const point of this.points) {
-      if(Rect.isPointInside(rect, point)) {
+    for (const point of this.points) {
+      if (Rect.isPointInside(rect, point)) {
         return true;
       }
     }
@@ -54,7 +57,6 @@ export default class Stroke extends GameObject {
     super.remove();
   }
 }
-
 
 export const aStroke = (gameObj: GameObject) =>
   gameObj instanceof Stroke ? gameObj : null;

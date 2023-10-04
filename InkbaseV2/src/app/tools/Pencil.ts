@@ -4,9 +4,8 @@ import Stroke from '../strokes/Stroke';
 import { PositionWithPressure, PositionWithRadius } from '../../lib/types';
 
 export default class pencil extends GameObject {
-
   stroke: WeakRef<Stroke> | null = null;
-  
+
   startStroke(point: PositionWithPressure) {
     const s = this.page.addStroke(new Stroke([point]));
     this.stroke = new WeakRef(s);
@@ -14,7 +13,7 @@ export default class pencil extends GameObject {
 
   extendStroke(point: PositionWithPressure) {
     const s = this.stroke?.deref();
-    if(s) {
+    if (s) {
       s.points.push(point);
     }
   }
@@ -23,7 +22,5 @@ export default class pencil extends GameObject {
     this.stroke = null;
   }
 
-  render() {
-
-  }
+  render() {}
 }

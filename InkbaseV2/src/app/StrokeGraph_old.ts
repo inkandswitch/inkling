@@ -3,7 +3,6 @@ import Vec from '../lib/vec';
 import SVG from './Svg';
 import FreehandStroke from './strokes/FreehandStroke';
 
-
 // A connection between two strokes
 interface Connection {
   strokes: FreehandStroke[];

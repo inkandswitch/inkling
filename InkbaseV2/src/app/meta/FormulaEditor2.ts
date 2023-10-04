@@ -13,7 +13,6 @@ const PADDING = 2;
 
 const writingRecognizer = new WritingRecognizer();
 
-
 export default class FormulaEditor extends GameObject {
   width = 200;
   height = 44;
@@ -31,28 +30,26 @@ export default class FormulaEditor extends GameObject {
     height: this.height,
     rx: 3,
     fill: COLORS.GREY_LIGHT,
-    visibility: "hidden"
-  })
+    visibility: 'hidden',
+  });
 
   protected readonly svgCellElements: Array<SVGElement> = [];
-  
-  constructor(){
+
+  constructor() {
     super();
   }
 
-  isPositionNearToggle(){
+  isPositionNearToggle() {
     return false;
   }
 
-  isActive(){
+  isActive() {
     return this.active;
   }
 
-  activateFromFormula(){
+  activateFromFormula() {}
 
-  }
-
-  activateFromPosition(position: Position){
+  activateFromPosition(position: Position) {
     this.position = position;
     this.adopt(new FormulaEditorCell());
     this.adopt(new FormulaEditorCell());
@@ -60,17 +57,17 @@ export default class FormulaEditor extends GameObject {
     this.active = true;
   }
 
-  deactivate(){
-    for(const child of this.children) {
+  deactivate() {
+    for (const child of this.children) {
       child.remove();
     }
 
     this.active = false;
   }
 
-  captureStroke(stroke: Stroke){
-    for(const cell of this.findAll({what: aFormulaEditorCell})) {
-      if(cell.captureStroke(stroke)) {
+  captureStroke(stroke: Stroke) {
+    for (const cell of this.findAll({ what: aFormulaEditorCell })) {
+      if (cell.captureStroke(stroke)) {
         this.recognizeStrokes(cell);
         return;
       }
@@ -79,58 +76,60 @@ export default class FormulaEditor extends GameObject {
 
   // Attempt to regcognize strokes on all the cells except the most recent one
   // (The user may be still want to add more strokes on that one)
-  recognizeStrokes(exceptCell: FormulaEditorCell){
-    for(const cell of this.findAll({what: aFormulaEditorCell})) {
-      if(cell != exceptCell) {
+  recognizeStrokes(exceptCell: FormulaEditorCell) {
+    for (const cell of this.findAll({ what: aFormulaEditorCell })) {
+      if (cell != exceptCell) {
         cell.recognizeStrokes();
       }
     }
     this.refresh();
   }
 
-  refresh(){
+  refresh() {
     this.ensureEmptySpace();
     //TODO: this is where we potentially do syntax highlighting
     // But we've punted on that for now.
 
     // If the last character is an equals sign, we parse and close the editor
     const lastChar = this.lastCharacter();
-    if(lastChar?.stringValue == "=") {
+    if (lastChar?.stringValue == '=') {
       this.parseFormulaAndClose();
     }
   }
 
-  lastCharacter(){
-    const cells = this.findAll({what: aFormulaEditorCell});
+  lastCharacter() {
+    const cells = this.findAll({ what: aFormulaEditorCell });
 
-    for(let i = cells.length-1; i>=0; i--) {
-      if(cells[i].stringValue != "") {
+    for (let i = cells.length - 1; i >= 0; i--) {
+      if (cells[i].stringValue != '') {
         return cells[i];
       }
     }
   }
 
-  ensureEmptySpace(){
+  ensureEmptySpace() {
     // make sure there are at least two empty cells at the end
-    const cells = this.findAll({what: aFormulaEditorCell});
-    for(let i = 1; i<3; i++) {
-      if(cells[cells.length-i].stringValue != "") {
+    const cells = this.findAll({ what: aFormulaEditorCell });
+    for (let i = 1; i < 3; i++) {
+      if (cells[cells.length - i].stringValue != '') {
         this.adopt(new FormulaEditorCell());
       }
     }
   }
 
-  getAsString(){
-    const cells = this.findAll({what: aFormulaEditorCell});
-    let stringValue = cells.reduce((acc, cell)=>{return acc+cell.stringValue}, "")
-    return stringValue.replace("=", "");
+  getAsString() {
+    const cells = this.findAll({ what: aFormulaEditorCell });
+    let stringValue = cells.reduce((acc, cell) => {
+      return acc + cell.stringValue;
+    }, '');
+    return stringValue.replace('=', '');
   }
 
-  parseFormulaAndClose(){
+  parseFormulaAndClose() {
     // Find the formula parser
     let string = this.getAsString();
     let result = this.formulaParser!.parse(string, this.position);
-    if(result) {
+    if (result) {
       this.deactivate();
     }
   }
@@ -138,9 +137,9 @@ export default class FormulaEditor extends GameObject {
   render(dt: number, t: number): void {
     // Layout cells
     let offset = Vec.add(this.position, Vec(PADDING, PADDING));
-    for(const cell of this.findAll({what: aFormulaEditorCell})) {
+    for (const cell of this.findAll({ what: aFormulaEditorCell })) {
       cell.position = offset;
-      offset = Vec.add(offset, Vec(cell.width+PADDING, 0));
+      offset = Vec.add(offset, Vec(cell.width + PADDING, 0));
       cell.render(dt, t);
     }
 
@@ -152,18 +151,18 @@ export default class FormulaEditor extends GameObject {
       y: this.position.y,
       width: this.width,
       height: this.height,
-      visibility: this.active? "visible": "hidden"
-    })
+      visibility: this.active ? 'visible' : 'hidden',
+    });
   }
 
   addGesture(name: string) {
-    const cells = this.findAll({what: aFormulaEditorCell});
-    const lastCell = cells[cells.length-3];
-    
+    const cells = this.findAll({ what: aFormulaEditorCell });
+    const lastCell = cells[cells.length - 3];
+
     writingRecognizer.addGesture(name, lastCell.strokeData);
   }
 
-  printGestures(){
+  printGestures() {
     writingRecognizer.printGestures();
   }
 }
@@ -173,7 +172,7 @@ class FormulaEditorCell extends GameObject {
   height = 40;
   position: Position = { x: 100, y: 100 };
 
-  stringValue = "";
+  stringValue = '';
 
   timer: number | null = null;
 
@@ -186,8 +185,8 @@ class FormulaEditorCell extends GameObject {
     width: this.width,
     height: this.height,
     rx: 3,
-    fill: COLORS.WHITE
-  })
+    fill: COLORS.WHITE,
+  });
 
   protected readonly textElement = SVG.add('text', {
     x: this.position.x + 5,
@@ -197,9 +196,9 @@ class FormulaEditorCell extends GameObject {
   });
 
   render(dt: number, t: number) {
-    if(this.timer != null) {
+    if (this.timer != null) {
       this.timer -= dt;
-      if(this.timer < 0) {
+      if (this.timer < 0) {
         this.recognizeStrokes();
         (this.parent! as FormulaEditor).refresh();
         this.timer = null;
@@ -220,7 +219,7 @@ class FormulaEditorCell extends GameObject {
   }
 
   captureStroke(stroke: Stroke): boolean {
-    if(stroke.overlapsRect(Rect(this.position, this.width, this.height))) {
+    if (stroke.overlapsRect(Rect(this.position, this.width, this.height))) {
       this.adopt(stroke);
       this.timer = 0.5;
       return true;
@@ -228,20 +227,20 @@ class FormulaEditorCell extends GameObject {
     return false;
   }
 
-  recognizeStrokes(){
-    const strokes = this.findAll({what: aStroke}).map(s=>s.points);
-    if(strokes.length == 0) return;
-    
+  recognizeStrokes() {
+    const strokes = this.findAll({ what: aStroke }).map(s => s.points);
+    if (strokes.length == 0) return;
+
     const result = writingRecognizer.recognize(strokes);
     this.stringValue = result.Name;
-    
+
     // Remember stroke data if we want to add it to the library
     this.strokeData = strokes;
 
     // Clean up strokes that have been recognized
-    this.children.forEach(child=>{
+    this.children.forEach(child => {
       child.remove();
-    })
+    });
   }
 
   remove(): void {
