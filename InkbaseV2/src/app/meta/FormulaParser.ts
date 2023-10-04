@@ -71,7 +71,19 @@ export default class FormulaParser {
 
   constructor(private readonly page: Page) {}
 
-  parse(input: string) {
+  /**
+   * Parses the expression in `input` and returns the `Token`s corresponding
+   * to the input string. If the parse is successful, this method also creates
+   * a `NumberToken` whose value is constrained to be equal to the value of the
+   * expression.
+   *
+   * Note that each token that corresponds to part of the input has a `source`
+   * property that tells us exactly what part of the input it comes from.
+   *
+   * If the optional `addToCanvas` argument is `true`, this method also adds
+   * a `ParsedFormula` widget to the page.
+   */
+  parse(input: string, addToCanvas = false) {
     const tokens = this.tokenize(input);
 
     const m = formulaGrammar.match(input);
@@ -84,10 +96,13 @@ export default class FormulaParser {
       console.log('parse failed');
     }
 
-    const formula = new ParsedFormula(tokens, resultToken);
-    formula.position = { x: 100, y: 250 };
-    this.page.adopt(formula);
-    return formula;
+    if (addToCanvas) {
+      const formula = new ParsedFormula(tokens, resultToken);
+      formula.position = { x: 100, y: 250 };
+      this.page.adopt(formula);
+    }
+
+    return { tokens, resultToken };
   }
 
   tokenize(input: string): Token[] {
