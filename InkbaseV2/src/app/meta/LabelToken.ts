@@ -2,6 +2,7 @@ import Token from './Token';
 import COLORS from './Colors';
 import SVG from '../Svg';
 import Label from './Label';
+import * as ohm from 'ohm-js';
 
 export default class LabelToken extends Token {
   protected readonly boxElement = SVG.add('rect', {
@@ -22,8 +23,11 @@ export default class LabelToken extends Token {
 
   readonly strokeElements: SVGElement[] = [];
 
-  constructor(public readonly label: Label) {
-    super();
+  constructor(
+    public readonly label: Label,
+    source?: ohm.Interval
+  ) {
+    super(source);
     console.log('lll', label.display);
     if (typeof label.display === 'string') {
       this.textElement.textContent = label.display;

@@ -29,6 +29,14 @@ function add(
   );
 }
 
+function bringToFront(element: SVGElement) {
+  const parent = element.parentNode;
+  if (parent) {
+    element.remove();
+    parent.appendChild(element);
+  }
+}
+
 /**
  * Use the sugar attribute `content` to set innerHTML.
  * E.g.: SVG.update(myTextElm, { content: 'hello' })
@@ -166,6 +174,7 @@ function showStatus(text: string, time = 3_000) {
 export default {
   add,
   update,
+  bringToFront,
   now,
   clearNow,
   points,

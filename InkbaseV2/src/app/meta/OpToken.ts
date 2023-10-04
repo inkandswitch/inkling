@@ -1,6 +1,7 @@
 import COLORS from './Colors';
 import Token from './Token';
 import SVG from '../Svg';
+import * as ohm from 'ohm-js';
 
 export default class OpToken extends Token {
   protected readonly textElement = SVG.add('text', {
@@ -10,8 +11,11 @@ export default class OpToken extends Token {
     'font-size': '30px',
   });
 
-  constructor(public stringValue: string) {
-    super();
+  constructor(
+    public stringValue: string,
+    source?: ohm.Interval
+  ) {
+    super(source);
   }
 
   isPrimary() {

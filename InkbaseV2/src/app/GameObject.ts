@@ -1,5 +1,6 @@
 import { Position } from '../lib/types';
 import Page from './Page';
+import SVG from './Svg';
 
 const DEFAULT_TOO_FAR = 20;
 
@@ -144,6 +145,14 @@ export abstract class GameObject {
       }
 
       doFn.call(this, narrowedGameObj);
+    }
+  }
+
+  bringToFront() {
+    for (const obj of Object.values(this)) {
+      if (obj instanceof SVGElement) {
+        SVG.bringToFront(obj);
+      }
     }
   }
 }

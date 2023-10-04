@@ -1,3 +1,4 @@
+import * as ohm from 'ohm-js';
 import { GameObject } from '../GameObject';
 import { Position } from '../../lib/types';
 
@@ -8,6 +9,10 @@ export default abstract class Token extends GameObject {
   position: Position = { x: 100, y: 100 };
   width = 90;
   height = 40;
+
+  constructor(public source?: ohm.Interval) {
+    super();
+  }
 
   abstract isPrimary(): boolean;
 

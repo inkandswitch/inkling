@@ -45,7 +45,8 @@ const formulaEditor = new FormulaEditor();
 root.adopt(formulaEditor);
 
 const formulaParser = new FormulaParser(page);
-formulaParser.parse('hello world');
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(window as any).formulaParser = formulaParser;
 
 onEveryFrame((dt, t) => {
   SVG.clearNow(t);

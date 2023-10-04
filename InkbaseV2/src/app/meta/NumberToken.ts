@@ -2,6 +2,7 @@ import Token from './Token';
 import COLORS from './Colors';
 import SVG from '../Svg';
 import { Variable } from '../constraints';
+import * as ohm from 'ohm-js';
 
 // There's a difference between a number and a variable,
 // and this class is trying to be both.
@@ -27,8 +28,8 @@ export default class NumberToken extends Token {
 
   readonly variable: Variable;
 
-  constructor(value = 0) {
-    super();
+  constructor(value = 0, source?: ohm.Interval) {
+    super(source);
     this.variable = new Variable(value);
   }
 

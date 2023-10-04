@@ -10,6 +10,8 @@ import { isTokenWithVariable } from './token-helpers';
 
 const PADDING = 3;
 
+// NOTE TO MARCEL: Alex's latest changes are not using this class.
+
 export default class Formula extends Token {
   readonly height = 40 + PADDING * 2;
 
