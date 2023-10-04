@@ -270,6 +270,7 @@ export default class Selection {
 
     for (const h of [handle, ...handle.absorbedHandles]) {
       for (const ch of this.page.getHandlesImmediatelyConnectedTo(h)) {
+        // TODO: Instead of using the signed/wrapped angle between the velocity and stroke, shouldn't we be using the dot product?
         const angle = Math.abs(
           Vec.angleBetweenClockwise(v, Vec.sub(ch.position, handle.position))
         );
