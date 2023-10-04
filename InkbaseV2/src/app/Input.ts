@@ -246,7 +246,7 @@ export function applyEvent(
   if (
     event.type === 'finger' &&
     event.state === 'began' &&
-    events.fingerStates.length === 2 &&
+    events.fingerStates.length >= 2 &&
     primaryTokenNearEvent &&
     primaryTokenNearEvent instanceof NumberToken
   ) {
@@ -264,10 +264,9 @@ export function applyEvent(
   ) {
     const { token, value } = objects.scrubToken;
     const delta = state.originalPosition!.y - event.position.y;
-    constraints.now.constant(
-      token.getVariable(),
-      Math.floor(value + delta / 10)
-    );
+    const m = 1 / Math.pow(10, events.fingerStates.length - 2);
+    const newValue = Math.round((value + delta * m) / m) * m;
+    constraints.now.constant(token.getVariable(), newValue);
     return;
   }
 

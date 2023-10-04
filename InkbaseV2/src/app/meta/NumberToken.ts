@@ -14,11 +14,19 @@ export default class NumberToken extends Token {
     fill: COLORS.GREY_DARK,
   });
 
-  protected readonly textElement = SVG.add('text', {
+  protected readonly wholeTextElement = SVG.add('text', {
     x: this.position.x + 5,
     y: this.position.y + 30,
     fill: COLORS.WHITE,
     'font-size': '30px',
+    'font-family': 'monospace',
+  });
+
+  protected readonly fracTextElement = SVG.add('text', {
+    x: this.position.x + 5,
+    y: this.position.y + 10,
+    fill: COLORS.GREY_LIGHT,
+    'font-size': '10px',
     'font-family': 'monospace',
   });
 
@@ -41,8 +49,12 @@ export default class NumberToken extends Token {
   }
 
   render(): void {
-    this.textElement.textContent = '' + Math.round(this.variable.value);
-    this.width = this.textElement.getComputedTextLength() + 10;
+    [this.wholeTextElement.textContent, this.fracTextElement.textContent] =
+      this.variable.value.toFixed(2).split('.');
+
+    const wholeWidth = this.wholeTextElement.getComputedTextLength();
+    const fracWidth = this.fracTextElement.getComputedTextLength();
+    this.width = 5 + wholeWidth + 2 + fracWidth + 5;
 
     SVG.update(this.boxElement, {
       x: this.position.x,
@@ -50,8 +62,13 @@ export default class NumberToken extends Token {
       width: this.width,
     });
 
-    SVG.update(this.textElement, {
+    SVG.update(this.wholeTextElement, {
       x: this.position.x + 5,
+      y: this.position.y + 30,
+    });
+
+    SVG.update(this.fracTextElement, {
+      x: this.position.x + 5 + wholeWidth + 2,
       y: this.position.y + 30,
     });
   }
