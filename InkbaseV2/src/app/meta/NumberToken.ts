@@ -4,10 +4,6 @@ import SVG from '../Svg';
 import { Variable } from '../constraints';
 import * as ohm from 'ohm-js';
 
-// There's a difference between a number and a variable,
-// and this class is trying to be both.
-// TODO: separate NumberToken and VarToken
-
 export default class NumberToken extends Token {
   protected readonly boxElement = SVG.add('rect', {
     x: this.position.x,

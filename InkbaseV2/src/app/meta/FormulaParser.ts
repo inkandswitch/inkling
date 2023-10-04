@@ -1,10 +1,10 @@
-import * as ohm from 'ohm-js';
-import NumberToken from './NumberToken';
 import Page from '../Page';
-import LabelToken from './LabelToken';
-import Token from './Token';
-import OpToken from './OpToken';
 import ParsedFormula from './ParsedFormula';
+import Token from './Token';
+import LabelToken from './LabelToken';
+import NumberToken from './NumberToken';
+import OpToken from './OpToken';
+import * as ohm from 'ohm-js';
 
 const formulaGrammar = ohm.grammar(String.raw`
 
@@ -26,11 +26,8 @@ Formula {
 
   PriExp
     = "(" Exp ")"  -- paren
-    | name  -- label
-    | Value
-
-  Value
-    = number
+    | name
+    | number
 
   // lexical rules
 
