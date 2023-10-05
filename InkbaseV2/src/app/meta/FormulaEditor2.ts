@@ -39,7 +39,7 @@ export default class FormulaEditor extends GameObject {
     super();
   }
 
-  isPositionNearToggle() {
+  isPositionNearToggle(_: any) {
     return false;
   }
 
@@ -48,6 +48,8 @@ export default class FormulaEditor extends GameObject {
   }
 
   activateFromFormula() {}
+  toggleMode() {}
+  addLabelTokenFromExisting(_: any) {}
 
   activateFromPosition(position: Position) {
     this.position = position;
@@ -105,6 +107,8 @@ export default class FormulaEditor extends GameObject {
         return cells[i];
       }
     }
+
+    return null;
   }
 
   ensureEmptySpace() {
