@@ -18,7 +18,8 @@ export type Event = PencilEvent | FingerEvent;
 export type InputState = PencilState | FingerState;
 
 export type EventType = Event['type'];
-export type EventState = 'began' | 'moved' | 'cancelled' | 'ended';
+export type EventState = 'began' | 'moved' | 'ended';
+export type EventStateWithCancelled = EventState | 'cancelled';
 export type TouchId = string;
 
 interface SharedEventProperties {
@@ -94,14 +95,12 @@ export default class Events {
         switch(event.state) {
           case 'began':     state = this.fingerBegan(event); break;
           case 'moved':     state = this.fingerMoved(event); break;
-          case 'cancelled': state = this.fingerEnded(event); break;
           case 'ended':     state = this.fingerEnded(event); break;
         }
       } else {
         switch(event.state) {
           case 'began':     state = this.pencilBegan(event); break;
           case 'moved':     state = this.pencilMoved(event); break;
-          case 'cancelled': state = this.pencilEnded(event); break;
           case 'ended':     state = this.pencilEnded(event); break;
         }
       }
@@ -165,7 +164,12 @@ export default class Events {
   // prettier-ignore
   private setupNativeEventHandler() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (window as any).nativeEvent = (state: EventState, touches: Record<TouchId, TouchPoint[]>) => {
+    (window as any).nativeEvent = (state: EventStateWithCancelled, touches: Record<TouchId, TouchPoint[]>) => {
+      // The swift wrapper passes us 'cancelled' events, but they're a pain to code around, so we treat them as 'ended'
+      if (state === 'cancelled') {
+        state = 'ended'
+      }
+
       // Okay, so this is weird. Swift gives us a single EventState, but multiple "touches"?
       // And then we loop through the touches and make… an Event for each one?
       // Why are we thinking of these as "touches"? What does that word mean here?
