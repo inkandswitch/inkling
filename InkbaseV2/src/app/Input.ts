@@ -44,6 +44,7 @@ const objects: Partial<{
     owner: TouchId;
     toggle: MetaToggle;
   };
+  pseudoFinger: string
 }> = {};
 
 // End gesture state variables.
@@ -153,6 +154,32 @@ export function applyEvent(
   // Tentatively making this a top level if-statement. In principle cleanly divides the the gesture space in two. (We'll have to see if this is a good idea)
   if (metaToggle.active) {
     // WRITE INSIDE FORMULA EDITOR
+    // Switch mode
+    if (
+      event.type === 'pencil' &&
+      event.state === 'began' &&
+      events.fingerStates.length === 1 &&
+      formulaEditorNearEvent &&
+      formulaEditor.isActive() &&
+      objects.pseudoFinger == undefined
+    ) {
+      formulaEditor.switchCellMode(event.position);
+      objects.pseudoFinger = events.fingerStates[0].id;
+      console.log(objects.pseudoFinger);
+    }
+
+    if (
+      event.type === 'finger' &&
+      event.state === 'ended' &&
+      formulaEditor.isActive() &&
+      event.id === objects.pseudoFinger
+    ) {
+      console.log(event.id);
+      formulaEditor.recognizeStrokes();
+      delete objects.pseudoFinger;
+      //return;
+    }
+
     if (
       event.type === 'pencil' && 
       event.state === 'began' &&
@@ -263,16 +290,6 @@ export function applyEvent(
     }
 
     // FORMULA EDITOR
-    // Toggle formula editor mode
-    if (
-      event.type === 'pencil' &&
-      event.state === 'began' &&
-      formulaEditor.isActive() &&
-      formulaEditorToggleEvent
-    ) {
-      formulaEditor.toggleMode();
-      return;
-    }
 
     // Close formula editor
     if (

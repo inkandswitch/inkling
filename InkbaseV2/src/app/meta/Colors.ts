@@ -6,7 +6,7 @@ const COLORS = {
   GREY_BRIGHT: '#FAFAFA',
   WHITE: '#FFFFFF',
 
-  BLUE: '#1878EA',
+  BLUE: '#B0C4EC',
 };
 
 export default COLORS;

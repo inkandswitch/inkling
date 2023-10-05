@@ -49,8 +49,9 @@ export default class FormulaEditor extends GameObject {
   }
 
   activateFromFormula() {}
-  toggleMode() {}
   addLabelTokenFromExisting(_: any) {}
+
+
 
   activateFromPosition(position: Position) {
     this.position = position;
@@ -79,7 +80,7 @@ export default class FormulaEditor extends GameObject {
 
   // Attempt to regcognize strokes on all the cells except the most recent one
   // (The user may be still want to add more strokes on that one)
-  recognizeStrokes(exceptCell: FormulaEditorCell) {
+  recognizeStrokes(exceptCell?: FormulaEditorCell) {
     for (const cell of this.findAll({ what: aFormulaEditorCell })) {
       if (cell != exceptCell) {
         cell.recognizeStrokes();
@@ -171,6 +172,13 @@ export default class FormulaEditor extends GameObject {
     )
   }
 
+  // Track longpress in here? Probably not ideal, but okay for now I guess
+  switchCellMode(position: Position){
+    const cell = this.find({ what: aFormulaEditorCell, near: position });
+
+    cell?.setTypeLabel();
+  }
+
   addGesture(name: string) {
     const cells = this.findAll({ what: aFormulaEditorCell });
     const lastCell = cells[cells.length - 3];
@@ -184,6 +192,8 @@ export default class FormulaEditor extends GameObject {
 }
 
 class FormulaEditorCell extends GameObject {
+  type: "default" | "label" = "default";
+
   width = 30;
   height = 40;
   position: Position = { x: 100, y: 100 };
@@ -212,6 +222,7 @@ class FormulaEditorCell extends GameObject {
   });
 
   render(dt: number, t: number) {
+    // Update timer
     if (this.timer != null) {
       this.timer -= dt;
       if (this.timer < 0) {
@@ -221,48 +232,105 @@ class FormulaEditorCell extends GameObject {
       }
     }
 
+    // Do rendering pass
     SVG.update(this.svgCell, {
       x: this.position.x,
       y: this.position.y,
+      width: this.width,
+      fill: this.type=="default" ? COLORS.WHITE: COLORS.BLUE
     });
 
-    SVG.update(this.textElement, {
-      x: this.position.x + 5,
-      y: this.position.y + 30,
-    });
-
-    this.textElement.textContent = this.stringValue;
+    if(this.type == "default") {
+      SVG.update(this.textElement, {
+        x: this.position.x + 5,
+        y: this.position.y + 30,
+      });
+  
+      this.textElement.textContent = this.stringValue;
+    }
   }
 
   captureStroke(stroke: Stroke): boolean {
     if (stroke.overlapsRect(Rect(this.position, this.width, this.height))) {
       this.adopt(stroke);
-      this.timer = 0.5;
+      if(this.type == "default") {
+        this.timer = 0.5;
+      } else {
+        this.recomputeWidth();
+      }
       return true;
     }
     return false;
+  }
+
+  recomputeWidth(withSpace: boolean = true){
+    let strokes = this.findAll({what: aStroke});
+    // Compute total width of strokes
+    // TODO: Refactor this to get Bounding box of stroke
+    let minX = Infinity;
+    let maxX = -Infinity;
+
+    for(const stroke of strokes) {
+      for(const pt of stroke.points) {
+        if(pt.x < minX) minX = pt.x
+        if(pt.x > maxX) maxX = pt.x
+      }
+    }
+
+    if(withSpace) {
+      this.width = Math.max(100, maxX-minX + 100);
+    } else {
+      // Balance margin
+      let leftPadding = minX - this.position.x;
+      this.width = maxX-minX + leftPadding*2;
+    }
   }
 
   recognizeStrokes() {
     const strokes = this.findAll({ what: aStroke }).map(s => s.points);
     if (strokes.length == 0) return;
 
-    const result = writingRecognizer.recognize(strokes);
-    this.stringValue = result.Name;
-
-    // Remember stroke data if we want to add it to the library
-    this.strokeData = strokes;
-
-    // Clean up strokes that have been recognized
-    this.children.forEach(child => {
-      child.remove();
-    });
+    if(this.type == "default") {
+      const result = writingRecognizer.recognize(strokes);
+      this.stringValue = result.Name;
+  
+      // Remember stroke data if we want to add it to the library
+      this.strokeData = strokes;
+  
+      // Clean up strokes that have been recognized
+      this.children.forEach(child => {
+        child.remove();
+      });
+    } else {
+      this.recomputeWidth(false);
+      let label = this.page.namespace.createNewLabel(strokes, this.width);
+      this.stringValue = "l"+label.id.toString();
+    }
   }
 
   remove(): void {
     super.remove();
     this.svgCell.remove();
     this.textElement.remove();
+    for(const child of this.children) {
+      child.remove();
+    }
+  }
+
+  setTypeLabel(){
+    this.type = "label";
+    this.width = 100;
+  }
+
+  distanceToPoint(_point: Position): number | null {
+    return signedDistanceToBox(
+      this.position.x, 
+      this.position.y,
+      this.width,
+      this.height,
+      _point.x,
+      _point.y
+    )
   }
 }
 
