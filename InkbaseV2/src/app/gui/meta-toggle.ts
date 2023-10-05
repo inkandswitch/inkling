@@ -21,7 +21,7 @@ export default class MetaToggle extends GameObject {
 
     this.position = {
       x: padding,
-      y: window.innerHeight - padding,
+      y: padding,
     };
 
     this.element = SVG.add(
