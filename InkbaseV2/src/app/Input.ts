@@ -3,6 +3,7 @@ import { aGizmo } from './Gizmo';
 import Events, {
   Event,
   InputState,
+  TouchId,
   getPositionWithPressure,
 } from './NativeEvents';
 import Page from './Page';
@@ -39,7 +40,10 @@ const objects: Partial<{
     token: Token;
     offset: Position;
   };
-  touchedMetaToggle: MetaToggle;
+  touchedMetaToggle: {
+    owner: TouchId;
+    toggle: MetaToggle;
+  };
 }> = {};
 
 // End gesture state variables.
@@ -110,27 +114,30 @@ export function applyEvent(
     event.state === 'began' &&
     metaToggleNearEvent
   ) {
-    objects.touchedMetaToggle = metaToggleNearEvent;
+    objects.touchedMetaToggle = {
+      owner: event.id,
+      toggle: metaToggleNearEvent,
+    };
   }
 
   if (
     event.type === 'finger' &&
     event.state === 'moved' &&
     state.drag &&
-    objects.touchedMetaToggle
+    objects.touchedMetaToggle?.owner == event.id
   ) {
-    objects.touchedMetaToggle.dragTo(event.position);
+    objects.touchedMetaToggle.toggle.dragTo(event.position);
   }
 
   if (
     event.type === 'finger' &&
     event.state === 'ended' &&
-    objects.touchedMetaToggle
+    objects.touchedMetaToggle?.owner == event.id
   ) {
     if (!state.drag) {
-      objects.touchedMetaToggle.toggle();
+      objects.touchedMetaToggle.toggle.toggle();
     } else {
-      objects.touchedMetaToggle.snapToCorner();
+      objects.touchedMetaToggle.toggle.snapToCorner();
     }
     objects.touchedMetaToggle = undefined;
     return;

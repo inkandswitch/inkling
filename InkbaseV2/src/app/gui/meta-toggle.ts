@@ -24,10 +24,14 @@ export default class MetaToggle extends GameObject {
       y: window.innerHeight - padding,
     };
 
-    this.element = SVG.add('g', {
-      id: 'meta-toggle',
-      ...this.getAttrs(), // This avoids an unstyled flash on first load
-    });
+    this.element = SVG.add(
+      'g',
+      {
+        id: 'meta-toggle',
+        ...this.getAttrs(), // This avoids an unstyled flash on first load
+      },
+      SVG.guiElm
+    );
 
     SVG.add('circle', { class: 'outer', r: radius }, this.element);
     SVG.add('circle', { class: 'inner', r: radius }, this.element);
@@ -71,7 +75,7 @@ export default class MetaToggle extends GameObject {
     return {
       color: 'black',
       class: classes.join(' '),
-      style: `transform: translate(${this.position.x}px, ${this.position.y}px)`,
+      style: `translate: ${this.position.x}px ${this.position.y}px`,
     };
   }
 

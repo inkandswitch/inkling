@@ -6,7 +6,9 @@ type Attributes = Record<string, string | number>;
 
 const NS = 'http://www.w3.org/2000/svg';
 
-const rootElm = document.querySelector('svg') as SVGSVGElement;
+const _rootElm = document.querySelector('svg') as SVGSVGElement;
+const canvasElm = document.querySelector('#canvas') as SVGSVGElement;
+const guiElm = document.querySelector('#gui') as SVGSVGElement;
 const nowElm = document.querySelector('#now') as SVGGElement;
 
 function add(
@@ -22,7 +24,7 @@ function add(
 function add(
   type: string,
   attributes: Attributes = {},
-  parent: SVGElement = rootElm
+  parent: SVGElement = canvasElm
 ) {
   return parent.appendChild(
     update(document.createElementNS(NS, type), attributes)
@@ -181,4 +183,6 @@ export default {
   arcPath,
   path,
   showStatus,
+  canvasElm,
+  guiElm,
 };
