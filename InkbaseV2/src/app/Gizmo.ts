@@ -92,6 +92,14 @@ class GizmoInstance extends GameObject {
     return (this.radius = 20);
   }
 
+  midPoint(){
+    return this.center;
+  }
+
+  getVariable(){
+    return this.polarVectorConstraint.variables.angle;
+  }
+
   update(events: Events) {
     const handles = this.handles;
     if (!handles) {
@@ -286,6 +294,12 @@ export default class Gizmo {
     const giz = new GizmoInstance(a, b);
     a.adopt(giz);
     return giz;
+  }
+
+  public createTest(){
+    let a = Handle.create('formal', {x: 100, y: 100});
+    let b = Handle.create('formal', {x: 200, y: 200});
+    return this.findOrCreate(a, b);
   }
 
   // render(dt: number, t: number) {

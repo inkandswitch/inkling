@@ -19,6 +19,8 @@ import FormulaEditor from './meta/FormulaEditor';
 import Pencil from './tools/Pencil';
 import FormulaParser from './meta/FormulaParser';
 import MetaToggle from './gui/MetaToggle';
+import NumberToken from './meta/NumberToken';
+import Wire from './meta/Wire';
 // import '../lib/spreadsheet';
 
 // This is a pretzel, because the interface between NativeEvents and Input is a work in progress.
@@ -49,6 +51,17 @@ formulaEditor.formulaParser = new FormulaParser(page);
 
 const metaToggle = new MetaToggle();
 root.adopt(metaToggle);
+
+// gizmoo wiring testing for testing
+let g = gizmo.createTest();
+let n = new NumberToken(20);
+n.position = {x: 200, y: 100};
+page.adopt(n);
+let w = new Wire();
+w.attachFront(n);
+w.attachEnd(g);
+page.adopt(w);
+
 
 onEveryFrame((dt, t) => {
   SVG.clearNow(t);

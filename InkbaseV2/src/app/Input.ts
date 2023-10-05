@@ -73,7 +73,7 @@ export function applyEvent(
     near: event.position,
   });
 
-  const _gizmoNearEvent = page.find({
+  const gizmoNearEvent = page.find({
     what: aGizmo,
     near: event.position,
   });
@@ -165,7 +165,7 @@ export function applyEvent(
     ) {
       formulaEditor.switchCellMode(event.position);
       objects.pseudoFinger = events.fingerStates[0].id;
-      console.log(objects.pseudoFinger);
+      return;
     }
 
     if (
@@ -177,7 +177,7 @@ export function applyEvent(
       console.log(event.id);
       formulaEditor.recognizeStrokes();
       delete objects.pseudoFinger;
-      //return;
+      return;
     }
 
     if (
@@ -211,7 +211,6 @@ export function applyEvent(
       objects.drawStroke = false;
       return;
     }
-
     // META PEN
     // Add wire from token
     if (
@@ -256,15 +255,27 @@ export function applyEvent(
       event.type === 'pencil' &&
       event.state === 'ended' &&
       objects.drawWire &&
-      (tokenNearEvent instanceof NumberToken ||
-        tokenNearEvent instanceof LabelToken)
+      tokenNearEvent &&
+      isTokenWithVariable(tokenNearEvent)
     ) {
       objects.drawWire.attachEnd(tokenNearEvent);
       objects.drawWire = undefined;
       return;
     }
 
-    // Attach & snap to a token
+    // Attach & snap to a gizmo
+    if (
+      event.type === 'pencil' &&
+      event.state === 'ended' &&
+      objects.drawWire &&
+      gizmoNearEvent 
+    ) {
+      objects.drawWire.attachEnd(gizmoNearEvent);
+      objects.drawWire = undefined;
+      return;
+    }
+
+    // End and create a new token
     if (
       event.type === 'pencil' &&
       event.state === 'ended' &&
@@ -386,6 +397,7 @@ export function applyEvent(
     return;
   }
 
+  // DRAWING MODE
   // REGULAR PEN
   if (
     event.type === 'pencil' && 

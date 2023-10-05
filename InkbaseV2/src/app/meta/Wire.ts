@@ -4,12 +4,19 @@ import SVG from '../Svg';
 import { Position } from '../../lib/types';
 import Vec from '../../lib/vec';
 import * as constraints from '../constraints';
-import { TokenWithVariable } from './token-helpers';
+import { TokenWithVariable, isTokenWithVariable } from './token-helpers';
+import Gizmo from '../Gizmo';
+import Token from './Token';
+
+export interface Wireable {
+  midPoint(): Position;
+  getVariable(): constraints.Variable
+}
 
 export default class Wire extends GameObject {
   points: Position[] = [];
-  a?: WeakRef<TokenWithVariable>;
-  b?: WeakRef<TokenWithVariable>;
+  a?: WeakRef<Wireable>;
+  b?: WeakRef<Wireable>;
 
   protected readonly wireElement = SVG.add('polyline', {
     points: '',
@@ -37,13 +44,13 @@ export default class Wire extends GameObject {
     return p1 && p2 && Vec.dist(p1, p2) < 10;
   }
 
-  attachFront(token: TokenWithVariable) {
-    this.a = new WeakRef(token);
+  attachFront(element: Wireable) {
+    this.a = new WeakRef(element);
     this.updateConstraint();
   }
 
-  attachEnd(token: TokenWithVariable) {
-    this.b = new WeakRef(token);
+  attachEnd(element: Wireable) {
+    this.b = new WeakRef(element);
     this.updateConstraint();
   }
 
