@@ -1,284 +1,273 @@
 import { GameObject } from '../GameObject';
-import { Position } from '../../lib/types';
+import { Position, PositionWithPressure } from '../../lib/types';
 import COLORS from './Colors';
 import SVG from '../Svg';
-
-import Formula from './Formula';
+import Stroke, { aStroke } from '../strokes/Stroke';
 import Vec from '../../lib/vec';
-import Stroke from '../strokes/Stroke';
-import WritingRecognizer from '../recognizers/WritingRecognizer';
-import NumberToken from './NumberToken';
-import LabelToken from './LabelToken';
-import Label from './Label';
-import { forEach } from '../../lib/helpers';
-import OpToken from './OpToken';
+import Rect from '../../lib/rect';
 
-const PADDING = 3;
-const PADDING_BIG = 5;
+import WritingRecognizer from '../recognizers/WritingRecognizer';
+import FormulaParser from './FormulaParser';
+import { signedDistanceToBox } from '../../lib/SignedDistance';
+
+const PADDING = 2;
+
+const writingRecognizer = new WritingRecognizer();
 
 export default class FormulaEditor extends GameObject {
-  _formula: WeakRef<Formula> | null = null;
-
-  get formula() {
-    const f = this._formula?.deref();
-    return f ?? null;
-  }
-
-  set formula(f: Formula | null) {
-    this._formula = f ? new WeakRef(f) : null;
-  }
-
-  width = 90;
-  height = 46;
+  width = 200;
+  height = 44;
   position: Position = { x: 100, y: 100 };
 
-  editWidth = 46;
-  mode: 'default' | 'label' = 'default';
+  formulaParser: FormulaParser | null = null;
 
-  readonly recognizer = new WritingRecognizer();
+  active: boolean = false;
 
-  labelStrokes: WeakRef<Stroke>[] = [];
-
-  // SVG Elements
-  protected readonly wrapperElement = SVG.add('rect', {
+  // SVG
+  protected readonly svgBackgroundElement = SVG.add('rect', {
     x: this.position.x,
     y: this.position.y,
-    width: this.height,
-    height: this.height,
-    rx: 3,
-    fill: COLORS.GREY_BRIGHT,
-    stroke: 'rgba(0,0,0,0.2)',
-    'stroke-width': 0.3,
-    visibility: 'hidden',
-  });
-
-  protected readonly nextCharElement = SVG.add('rect', {
-    x: this.position.x + this.width + PADDING,
-    y: this.position.y,
-    width: this.height,
+    width: this.width,
     height: this.height,
     rx: 3,
     fill: COLORS.GREY_LIGHT,
     visibility: 'hidden',
   });
 
-  protected readonly toggleElement = SVG.add('circle', {
-    cx: this.position.x,
-    cy: this.position.y,
-    r: 5,
-    fill: COLORS.BLUE,
-    visibility: 'hidden',
-  });
+  protected readonly svgCellElements: Array<SVGElement> = [];
 
-  newFormula() {
-    this.formula = new Formula();
-    this.page.adopt(this.formula);
-
-    this.formula.position = Vec.add(this.position, Vec(PADDING, PADDING));
+  constructor() {
+    super();
   }
 
-  // STROKE CAPTURE
-  captureStroke(stroke: Stroke) {
-    const f = this.formula;
-    if (!f) {
-      return;
-    }
-
-    if (this.mode === 'label') {
-      this.captureLabelStroke(stroke, f);
-    } else {
-      const capturePosition = Vec.add(
-        this.position,
-        Vec(f.width + this.editWidth / 2, 20)
-      );
-      const distance = stroke.distanceToPoint(capturePosition);
-      if (distance !== null && distance < 20) {
-        console.log('capture', stroke);
-        this.captureRecognizedStroke(stroke, f);
-      }
-    }
+  isPositionNearToggle(_: any) {
+    return false;
   }
 
-  captureLabelStroke(stroke: Stroke, f: Formula) {
-    this.labelStrokes.push(new WeakRef(stroke));
-    stroke.color = '#FFF';
-
-    let maxX = 0;
-    forEach(this.labelStrokes, stroke => {
-      for (const pt of stroke.points) {
-        maxX = Math.max(pt.x, maxX);
-      }
-    });
-
-    this.editWidth = maxX - (this.position.x + f.width) + 46;
-  }
-
-  captureRecognizedStroke(s: Stroke, f: Formula) {
-    const result = this.recognizer.recognize([s.points]);
-    console.log(result);
-
-    const char = result.Name;
-    if (result.isNumeric) {
-      const lastToken = f.lastToken();
-      if (lastToken instanceof NumberToken) {
-        lastToken.addChar(char);
-      } else {
-        f.addToken(new NumberToken(parseInt(char)));
-      }
-    } else {
-      f.addToken(new OpToken(char));
-    }
-
-    s.remove();
-  }
-
-  addLabelToken() {
-    const formula = this.formula;
-    if (this.labelStrokes.length === 0 || !formula) {
-      return;
-    }
-
-    // Normalize the stroke positions to the the top corner of the token
-    const normalizedStrokes: Position[][] = [];
-    forEach(this.labelStrokes, s => {
-      const ns = s.points.map(pt =>
-        Vec.sub(
-          pt,
-          Vec.add(this.position, Vec(formula.width + PADDING * 2, +PADDING))
-        )
-      );
-      normalizedStrokes.push(ns);
-    });
-
-    // Add new label token
-    const label = this.page.namespace.createNewLabel(
-      normalizedStrokes,
-      this.editWidth - 46
-    );
-    const labelToken = new LabelToken(label);
-    formula.addToken(labelToken);
-
-    // Cleanup
-    forEach(this.labelStrokes, stroke => {
-      stroke.remove();
-    });
-    this.labelStrokes = [];
-    this.editWidth = 46;
-  }
-
-  addLabelTokenFromExisting(label: Label) {
-    const formula = this.formula;
-    if (!formula) {
-      return;
-    }
-
-    const labelToken = new LabelToken(label);
-    formula.addToken(labelToken);
-  }
-
-  // MODES
-  isPositionNearToggle(position: Position) {
-    return (
-      this.formula &&
-      position.x > this.position.x + this.width - 25 &&
-      position.y > this.position.y &&
-      position.x < this.position.x + this.width &&
-      position.y < this.position.y + this.height
-    );
-  }
-
-  toggleMode() {
-    if (this.mode === 'label') {
-      this.addLabelToken();
-    }
-
-    this.mode = this.mode === 'label' ? 'default' : 'label';
-    this.editWidth = 46;
-  }
-
-  // Active
   isActive() {
-    return !!this.formula;
+    return this.active;
   }
 
-  activateFromFormula(formula: Formula) {
-    this.formula = formula;
-  }
+  activateFromFormula() {}
+  toggleMode() {}
+  addLabelTokenFromExisting(_: any) {}
 
   activateFromPosition(position: Position) {
     this.position = position;
-    this.newFormula();
+    this.adopt(new FormulaEditorCell());
+    this.adopt(new FormulaEditorCell());
+    this.adopt(new FormulaEditorCell());
+    this.active = true;
   }
 
   deactivate() {
-    const f = this.formula;
-    if (!f) {
-      return;
+    for (const child of this.children) {
+      child.remove();
     }
 
-    // Finish off work if we still have something to do
-    if (this.mode === 'label') {
-      this.addLabelToken();
-      f.render();
-    }
-
-    // Unwrap if formula only has one child
-    if (f.children.size === 0) {
-      f.remove();
-    } else if (f.children.size === 1) {
-      const child = Array.from(f.children).pop()!;
-      this.page.adopt(child);
-      f.remove();
-    }
-    this.formula = null;
-    this.mode = 'default';
-    this.editWidth = 46;
+    this.active = false;
   }
 
-  render(): void {
-    const f = this.formula;
-    if (f) {
-      const offsetWidth = this.editWidth + PADDING_BIG * 2 + PADDING * 6;
-      this.position = f.position;
-      this.width = f.width + offsetWidth;
+  captureStroke(stroke: Stroke) {
+    for (const cell of this.findAll({ what: aFormulaEditorCell })) {
+      if (cell.captureStroke(stroke)) {
+        this.recognizeStrokes(cell);
+        return;
+      }
+    }
+  }
 
-      // Update total wrapper
-      SVG.update(this.wrapperElement, {
-        x: this.position.x - PADDING_BIG,
-        y: this.position.y - PADDING_BIG,
-        width: this.width,
-        height: this.height + PADDING_BIG * 2,
-        visibility: 'visible',
-      });
+  // Attempt to regcognize strokes on all the cells except the most recent one
+  // (The user may be still want to add more strokes on that one)
+  recognizeStrokes(exceptCell: FormulaEditorCell) {
+    for (const cell of this.findAll({ what: aFormulaEditorCell })) {
+      if (cell != exceptCell) {
+        cell.recognizeStrokes();
+      }
+    }
+    this.refresh();
+  }
 
-      // Char elements
-      const position = Vec.add(this.position, Vec(f.width, 0));
-      SVG.update(this.nextCharElement, {
-        x: position.x + PADDING,
-        y: this.position.y,
-        width: this.editWidth,
-        visibility: 'visible',
-      });
+  refresh() {
+    this.ensureEmptySpace();
+    //TODO: this is where we potentially do syntax highlighting
+    // But we've punted on that for now.
 
-      // Toggle
-      SVG.update(this.toggleElement, {
-        cx: position.x + this.editWidth + 4 * PADDING,
-        cy: this.position.y + this.height / 2,
-        visibility: 'visible',
-      });
-    } else {
-      SVG.update(this.nextCharElement, { visibility: 'hidden' });
-      SVG.update(this.toggleElement, { visibility: 'hidden' });
-      SVG.update(this.wrapperElement, { visibility: 'hidden' });
+    // If the last character is an equals sign, we parse and close the editor
+    const lastChar = this.lastCharacter();
+    if (lastChar?.stringValue == '=') {
+      this.parseFormulaAndClose();
+    }
+  }
+
+  lastCharacter() {
+    const cells = this.findAll({ what: aFormulaEditorCell });
+
+    for (let i = cells.length - 1; i >= 0; i--) {
+      if (cells[i].stringValue != '') {
+        return cells[i];
+      }
     }
 
-    // Mode
-    SVG.update(this.toggleElement, {
-      fill: this.mode === 'label' ? COLORS.GREY_MID : COLORS.BLUE,
-    });
+    return null;
+  }
 
-    SVG.update(this.nextCharElement, {
-      fill: this.mode === 'label' ? COLORS.BLUE : COLORS.GREY_MID,
+  ensureEmptySpace() {
+    // make sure there are at least two empty cells at the end
+    const cells = this.findAll({ what: aFormulaEditorCell });
+    for (let i = 1; i < 3; i++) {
+      if (cells[cells.length - i].stringValue != '') {
+        this.adopt(new FormulaEditorCell());
+      }
+    }
+  }
+
+  getAsString() {
+    const cells = this.findAll({ what: aFormulaEditorCell });
+    let stringValue = cells.reduce((acc, cell) => {
+      return acc + cell.stringValue;
+    }, '');
+    return stringValue.replace('=', '');
+  }
+
+  parseFormulaAndClose() {
+    // Find the formula parser
+    let string = this.getAsString();
+    let result = this.formulaParser!.parse(string, this.position);
+    if (result) {
+      this.deactivate();
+    }
+  }
+
+  render(dt: number, t: number): void {
+    // Layout cells
+    let offset = Vec.add(this.position, Vec(PADDING, PADDING));
+    for (const cell of this.findAll({ what: aFormulaEditorCell })) {
+      cell.position = offset;
+      offset = Vec.add(offset, Vec(cell.width + PADDING, 0));
+      cell.render(dt, t);
+    }
+
+    this.width = offset.x - this.position.x;
+
+    // Update background rect
+    SVG.update(this.svgBackgroundElement, {
+      x: this.position.x,
+      y: this.position.y,
+      width: this.width,
+      height: this.height,
+      visibility: this.active ? 'visible' : 'hidden',
     });
+  }
+
+  distanceToPoint(_point: Position): number | null {
+    return signedDistanceToBox(
+      this.position.x, 
+      this.position.y,
+      this.width,
+      this.height,
+      _point.x,
+      _point.y
+    )
+  }
+
+  addGesture(name: string) {
+    const cells = this.findAll({ what: aFormulaEditorCell });
+    const lastCell = cells[cells.length - 3];
+
+    writingRecognizer.addGesture(name, lastCell.strokeData);
+  }
+
+  printGestures() {
+    writingRecognizer.printGestures();
   }
 }
+
+class FormulaEditorCell extends GameObject {
+  width = 30;
+  height = 40;
+  position: Position = { x: 100, y: 100 };
+
+  stringValue = '';
+
+  timer: number | null = null;
+
+  // Remember stroke data so we can add it to the library if we want
+  strokeData: PositionWithPressure[][] = [];
+
+  protected readonly svgCell = SVG.add('rect', {
+    x: this.position.x,
+    y: this.position.y,
+    width: this.width,
+    height: this.height,
+    rx: 3,
+    fill: COLORS.WHITE,
+  });
+
+  protected readonly textElement = SVG.add('text', {
+    x: this.position.x + 5,
+    y: this.position.y + 30,
+    fill: COLORS.GREY_DARK,
+    'font-size': '30px',
+  });
+
+  render(dt: number, t: number) {
+    if (this.timer != null) {
+      this.timer -= dt;
+      if (this.timer < 0) {
+        this.recognizeStrokes();
+        (this.parent! as FormulaEditor).refresh();
+        this.timer = null;
+      }
+    }
+
+    SVG.update(this.svgCell, {
+      x: this.position.x,
+      y: this.position.y,
+    });
+
+    SVG.update(this.textElement, {
+      x: this.position.x + 5,
+      y: this.position.y + 30,
+    });
+
+    this.textElement.textContent = this.stringValue;
+  }
+
+  captureStroke(stroke: Stroke): boolean {
+    if (stroke.overlapsRect(Rect(this.position, this.width, this.height))) {
+      this.adopt(stroke);
+      this.timer = 0.5;
+      return true;
+    }
+    return false;
+  }
+
+  recognizeStrokes() {
+    const strokes = this.findAll({ what: aStroke }).map(s => s.points);
+    if (strokes.length == 0) return;
+
+    const result = writingRecognizer.recognize(strokes);
+    this.stringValue = result.Name;
+
+    // Remember stroke data if we want to add it to the library
+    this.strokeData = strokes;
+
+    // Clean up strokes that have been recognized
+    this.children.forEach(child => {
+      child.remove();
+    });
+  }
+
+  remove(): void {
+    super.remove();
+    this.svgCell.remove();
+    this.textElement.remove();
+  }
+}
+
+export const aFormulaEditor = (gameObj: GameObject) =>
+  gameObj instanceof FormulaEditor ? gameObj : null;
+
+export const aFormulaEditorCell = (gameObj: GameObject) =>
+  gameObj instanceof FormulaEditorCell ? gameObj : null;

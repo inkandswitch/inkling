@@ -7,7 +7,7 @@ import Events, {
   getPositionWithPressure,
 } from './NativeEvents';
 import Page from './Page';
-import FormulaEditor from './meta/FormulaEditor2';
+import FormulaEditor, { aFormulaEditor, aFormulaEditorCell } from './meta/FormulaEditor';
 import LabelToken from './meta/LabelToken';
 import NumberToken from './meta/NumberToken';
 import Token, { aPrimaryToken, aToken } from './meta/Token';
@@ -17,7 +17,7 @@ import { Position } from '../lib/types';
 import Wire from './meta/Wire';
 import * as constraints from './constraints';
 import { isTokenWithVariable } from './meta/token-helpers';
-import MetaToggle, { aMetaToggle } from './gui/meta-toggle';
+import MetaToggle, { aMetaToggle } from './gui/MetaToggle';
 
 // Variables that store state needed by our gestures go here.
 
@@ -58,7 +58,8 @@ export function applyEvent(
   // Marcel thinking: Passing every single thing as an argument seems kind of messy
   // Maybe if we turn App into a singleton, we could just pass that into here as context?
   pencil: Pencil,
-  formulaEditor: FormulaEditor
+  formulaEditor: FormulaEditor,
+  metaToggle: MetaToggle
 ) {
   // TODO: Need a more reliable way to get root here.
   const root = page.parent!;
@@ -99,6 +100,12 @@ export function applyEvent(
     event.position
   );
 
+  const formulaEditorNearEvent = root.find({
+    what: aFormulaEditor,
+    near: event.position,
+    recursive: false,
+  });
+
   // Below here, you'll find a list of each gesture recognizer in the system, one by one.
   // Each recognized gesture should end with a return, to keep the cyclomatic complexity super low.
   // In other words, we should try really hard to only have blocks (like `if`) go one level deep.
@@ -107,7 +114,6 @@ export function applyEvent(
   // TODO: We could potentially split these up to handle pencil separately from finger, and handle
   // each state separately, since (in theory) these separations cleanly split the gesture space
   // into non-overlapping sets.
-
   // META TOGGLE
   if (
     event.type === 'finger' &&
@@ -143,130 +149,231 @@ export function applyEvent(
     return;
   }
 
-  // ACTIVATE FORMULA EDITOR
-  // TODO: This is not a good gesture
-  // if (
-  //   event.type === 'pencil' &&
-  //   event.state === 'began' &&
-  //   events.fingerStates.length === 1 &&
-  //   tokenNearEvent &&
-  //   tokenNearEvent instanceof Formula
-  // ) {
-  //   formulaEditor.activateFromFormula(tokenNearEvent);
-  //   return
-  // }
 
-  // META PEN
-  // Ad wire from token
-  if (
-    event.type === 'pencil' &&
-    event.state === 'began' &&
-    events.fingerStates.length === 1 &&
-    primaryTokenNearEvent &&
-    isTokenWithVariable(primaryTokenNearEvent)
-  ) {
-    objects.drawWire = page.addWireFromToken(primaryTokenNearEvent);
+  // Tentatively making this a top level if-statement. In principle cleanly divides the the gesture space in two. (We'll have to see if this is a good idea)
+  if (metaToggle.active) {
+    // WRITE INSIDE FORMULA EDITOR
+    if (
+      event.type === 'pencil' && 
+      event.state === 'began' &&
+      formulaEditorNearEvent &&
+      formulaEditorNearEvent.active
+    ) {
+      pencil.startStroke(getPositionWithPressure(event));
+      objects.drawStroke = true;
+      return;
+    }
+
+    if (
+      event.type === 'pencil' &&
+      event.state === 'moved' &&
+      objects.drawStroke
+    ) {
+      pencil.extendStroke(getPositionWithPressure(event));
+      return;
+    }
+
+    if (
+      event.type === 'pencil' &&
+      event.state === 'ended' &&
+      objects.drawStroke &&
+      pencil.stroke?.deref()
+    ) {
+      formulaEditor.captureStroke(pencil.stroke!.deref()!);
+      pencil.endStroke();
+      objects.drawStroke = false;
+      return;
+    }
+
+    // META PEN
+    // Add wire from token
+    if (
+      event.type === 'pencil' &&
+      event.state === 'began' &&
+      primaryTokenNearEvent &&
+      isTokenWithVariable(primaryTokenNearEvent)
+    ) {
+      objects.drawWire = page.addWireFromToken(primaryTokenNearEvent);
+      return;
+    }
+
+    // Add wire from the middle of nowhere
+    if (
+      event.type === 'pencil' &&
+      event.state === 'began' 
+    ) {
+      objects.drawWire = page.addWireFromPosition(event.position);
+      return;
+    }
+
+    // Drag wire endpoint
+    if (event.type === 'pencil' && event.state === 'moved' && objects.drawWire) {
+      objects.drawWire.points[1] = event.position;
+      return;
+    }
+
+    // If it's a tiny wire, remove it, and open formula editor (Simple tap)
+    if (
+      event.type === 'pencil' &&
+      event.state === 'ended' &&
+      objects.drawWire?.isCollapsable()
+    ) {
+      objects.drawWire.remove();
+      formulaEditor.activateFromPosition(event.position);
+      objects.drawWire = undefined;
+      return;
+    }
+
+    // Attach & snap to a token
+    if (
+      event.type === 'pencil' &&
+      event.state === 'ended' &&
+      objects.drawWire &&
+      (tokenNearEvent instanceof NumberToken ||
+        tokenNearEvent instanceof LabelToken)
+    ) {
+      objects.drawWire.attachEnd(tokenNearEvent);
+      objects.drawWire = undefined;
+      return;
+    }
+
+    // Attach & snap to a token
+    if (
+      event.type === 'pencil' &&
+      event.state === 'ended' &&
+      objects.drawWire?.a
+    ) {
+      const n = new NumberToken(0);
+      n.position = event.position;
+      page.adopt(n);
+      objects.drawWire.attachEnd(n);
+      objects.drawWire = undefined;
+      return;
+    }
+
+    // End wire & Open context menu
+    // TODO: Open context menu
+    if (
+      event.type === 'pencil' && 
+      event.state === 'ended' && 
+      objects.drawWire
+    ) {
+      objects.drawWire = undefined;
+      return;
+    }
+
+    // FORMULA EDITOR
+    // Toggle formula editor mode
+    if (
+      event.type === 'pencil' &&
+      event.state === 'began' &&
+      formulaEditor.isActive() &&
+      formulaEditorToggleEvent
+    ) {
+      formulaEditor.toggleMode();
+      return;
+    }
+
+    // Close formula editor
+    if (
+      event.type === 'finger' &&
+      event.state === 'began' &&
+      events.fingerStates.length === 3 &&
+      formulaEditor.isActive()
+    ) {
+      formulaEditor.parseFormulaAndClose();
+      return;
+    }
+
+    // Tapped label while editing formula
+    if (
+      event.type === 'finger' &&
+      event.state === 'began' &&
+      events.fingerStates.length === 1 &&
+      formulaEditor.isActive() &&
+      primaryTokenNearEvent &&
+      primaryTokenNearEvent instanceof LabelToken
+    ) {
+      formulaEditor.addLabelTokenFromExisting(primaryTokenNearEvent.label);
+    }
+
+    // SCRUB TOKENS
+    if (
+      event.type === 'finger' &&
+      event.state === 'began' &&
+      events.fingerStates.length >= 2 &&
+      primaryTokenNearEvent &&
+      primaryTokenNearEvent instanceof NumberToken
+    ) {
+      objects.scrubToken = {
+        token: primaryTokenNearEvent,
+        value: primaryTokenNearEvent.getVariable().value,
+      };
+      return;
+    }
+
+    if (
+      event.type === 'finger' &&
+      event.state === 'moved' &&
+      objects.scrubToken
+    ) {
+      const { token, value } = objects.scrubToken;
+      const delta = state.originalPosition!.y - event.position.y;
+      const m = 1 / Math.pow(10, events.fingerStates.length - 2);
+      const newValue = Math.round((value + delta * m) / m) * m;
+      constraints.now.constant(token.getVariable(), newValue);
+      return;
+    }
+
+    // DRAGGING TOKENS
+    if (
+      event.type === 'finger' &&
+      event.state === 'began' &&
+      events.fingerStates.length === 1 &&
+      tokenNearEvent
+    ) {
+      objects.dragToken = {
+        token: tokenNearEvent,
+        offset: Vec.sub(event.position, tokenNearEvent.position),
+      };
+      return;
+    }
+
+    if (
+      event.type === 'finger' &&
+      event.state === 'moved' &&
+      events.fingerStates.length === 1 &&
+      objects.dragToken
+    ) {
+      const { token, offset } = objects.dragToken;
+      token.position = Vec.sub(event.position, offset);
+      return;
+    }
+
+    if (event.type === 'finger' && event.state === 'ended') {
+      if (
+        primaryTokenNearEvent &&
+        primaryTokenNearEvent instanceof NumberToken &&
+        state.originalPosition &&
+        Vec.dist(state.originalPosition, event.position) < 10
+      ) {
+        primaryTokenNearEvent.onTap();
+      }
+
+      objects.dragToken = undefined;
+      objects.scrubToken = undefined;
+      objects.touchedHandle = undefined;
+      return;
+    }
+
     return;
-  }
-
-  // Add wire from the middle of nowhere
-  if (
-    event.type === 'pencil' &&
-    event.state === 'began' &&
-    events.fingerStates.length === 1
-  ) {
-    objects.drawWire = page.addWireFromPosition(event.position);
-    return;
-  }
-
-  // Drag wire endpoint
-  if (event.type === 'pencil' && event.state === 'moved' && objects.drawWire) {
-    objects.drawWire.points[1] = event.position;
-    return;
-  }
-
-  // If it's a tiny wire, remove it, and open formula editor (Simple tap)
-  if (
-    event.type === 'pencil' &&
-    event.state === 'ended' &&
-    objects.drawWire?.isCollapsable()
-  ) {
-    objects.drawWire.remove();
-    formulaEditor.activateFromPosition(event.position);
-    objects.drawWire = undefined;
-    return;
-  }
-
-  // Attach & snap to a token
-  if (
-    event.type === 'pencil' &&
-    event.state === 'ended' &&
-    objects.drawWire &&
-    (tokenNearEvent instanceof NumberToken ||
-      tokenNearEvent instanceof LabelToken)
-  ) {
-    objects.drawWire.attachEnd(tokenNearEvent);
-    objects.drawWire = undefined;
-    return;
-  }
-
-  // Attach & snap to a token
-  if (
-    event.type === 'pencil' &&
-    event.state === 'ended' &&
-    objects.drawWire?.a
-  ) {
-    const n = new NumberToken(0);
-    n.position = event.position;
-    page.adopt(n);
-    objects.drawWire.attachEnd(n);
-    objects.drawWire = undefined;
-    return;
-  }
-
-  // simply end & open context menu
-  if (event.type === 'pencil' && event.state === 'ended' && objects.drawWire) {
-    objects.drawWire = undefined;
-    return;
-  }
-
-  // FORMULA EDITOR
-  // Toggle formula editor mode
-  if (
-    event.type === 'pencil' &&
-    event.state === 'began' &&
-    formulaEditor.isActive() &&
-    formulaEditorToggleEvent
-  ) {
-    formulaEditor.toggleMode();
-    return;
-  }
-
-  // Close formula editor
-  if (
-    event.type === 'finger' &&
-    event.state === 'began' &&
-    events.fingerStates.length === 3 &&
-    formulaEditor.isActive()
-  ) {
-    formulaEditor.parseFormulaAndClose();
-    return;
-  }
-
-  // Tapped label while editing formula
-  if (
-    event.type === 'finger' &&
-    event.state === 'began' &&
-    events.fingerStates.length === 1 &&
-    formulaEditor.isActive() &&
-    primaryTokenNearEvent &&
-    primaryTokenNearEvent instanceof LabelToken
-  ) {
-    formulaEditor.addLabelTokenFromExisting(primaryTokenNearEvent.label);
   }
 
   // REGULAR PEN
-  if (event.type === 'pencil' && event.state === 'began') {
+  if (
+    event.type === 'pencil' && 
+    event.state === 'began'
+  ) {
     pencil.startStroke(getPositionWithPressure(event));
     objects.drawStroke = true;
     return;
@@ -293,74 +400,7 @@ export function applyEvent(
     return;
   }
 
-  // SCRUB TOKENS
-  if (
-    event.type === 'finger' &&
-    event.state === 'began' &&
-    events.fingerStates.length >= 2 &&
-    primaryTokenNearEvent &&
-    primaryTokenNearEvent instanceof NumberToken
-  ) {
-    objects.scrubToken = {
-      token: primaryTokenNearEvent,
-      value: primaryTokenNearEvent.getVariable().value,
-    };
-    return;
-  }
-
-  if (
-    event.type === 'finger' &&
-    event.state === 'moved' &&
-    objects.scrubToken
-  ) {
-    const { token, value } = objects.scrubToken;
-    const delta = state.originalPosition!.y - event.position.y;
-    const m = 1 / Math.pow(10, events.fingerStates.length - 2);
-    const newValue = Math.round((value + delta * m) / m) * m;
-    constraints.now.constant(token.getVariable(), newValue);
-    return;
-  }
-
-  // DRAGGING TOKENS
-  if (
-    event.type === 'finger' &&
-    event.state === 'began' &&
-    events.fingerStates.length === 1 &&
-    tokenNearEvent
-  ) {
-    objects.dragToken = {
-      token: tokenNearEvent,
-      offset: Vec.sub(event.position, tokenNearEvent.position),
-    };
-    return;
-  }
-
-  if (
-    event.type === 'finger' &&
-    event.state === 'moved' &&
-    events.fingerStates.length === 1 &&
-    objects.dragToken
-  ) {
-    const { token, offset } = objects.dragToken;
-    token.position = Vec.sub(event.position, offset);
-    return;
-  }
-
-  if (event.type === 'finger' && event.state === 'ended') {
-    if (
-      primaryTokenNearEvent &&
-      primaryTokenNearEvent instanceof NumberToken &&
-      state.originalPosition &&
-      Vec.dist(state.originalPosition, event.position) < 10
-    ) {
-      primaryTokenNearEvent.onTap();
-    }
-
-    objects.dragToken = undefined;
-    objects.scrubToken = undefined;
-    objects.touchedHandle = undefined;
-    return;
-  }
+  
 
   // // TAP A HANDLE WITH THE FIRST FINGER —> SELECT THE HANDLE
   // if (

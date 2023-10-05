@@ -15,15 +15,15 @@ import { onEveryFrame } from '../lib/helpers';
 import Gizmo from './Gizmo';
 import { applyEvent } from './Input';
 import { root } from './GameObject';
-import FormulaEditor from './meta/FormulaEditor2';
+import FormulaEditor from './meta/FormulaEditor';
 import Pencil from './tools/Pencil';
 import FormulaParser from './meta/FormulaParser';
-import MetaToggle from './gui/meta-toggle';
+import MetaToggle from './gui/MetaToggle';
 // import '../lib/spreadsheet';
 
 // This is a pretzel, because the interface between NativeEvents and Input is a work in progress.
 const events = new Events((event: Event, state: InputState) => {
-  applyEvent(event, state, events, page, pencil, formulaEditor);
+  applyEvent(event, state, events, page, pencil, formulaEditor, metaToggle);
 });
 
 const page = new Page({ strokeAnalyzer: false });
