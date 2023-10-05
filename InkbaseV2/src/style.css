@@ -36,3 +36,33 @@ svg {
   alignment-baseline: central; /* Ignore the warning — this is valid */
   letter-spacing: -0.5px;
 }
+
+#meta-toggle {
+  &:not(.dragging) {
+    transition: transform 0.5s cubic-bezier(0.4, 1.3, 0.1, 0.98);
+  }
+
+  & circle {
+    fill: currentcolor;
+    transition: scale 0.8s cubic-bezier(0, 1, 0, 1);
+  }
+
+  .inner {
+    fill: white;
+    scale: 0.75;
+  }
+
+  .secret {
+    scale: 0;
+  }
+
+  &.active {
+    color: color(display-p3 1 0.7 0);
+    .inner {
+      scale: 0.85;
+    }
+    .secret {
+      scale: 0.7;
+    }
+  }
+}

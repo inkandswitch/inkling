@@ -16,6 +16,7 @@ import { Position } from '../lib/types';
 import Wire from './meta/Wire';
 import * as constraints from './constraints';
 import { isTokenWithVariable } from './meta/token-helpers';
+import MetaToggle, { aMetaToggle } from './gui/meta-toggle';
 
 // Variables that store state needed by our gestures go here.
 
@@ -38,6 +39,7 @@ const objects: Partial<{
     token: Token;
     offset: Position;
   };
+  touchedMetaToggle: MetaToggle;
 }> = {};
 
 // End gesture state variables.
@@ -54,6 +56,9 @@ export function applyEvent(
   pencil: Pencil,
   formulaEditor: FormulaEditor
 ) {
+  // TODO: Need a more reliable way to get root here.
+  const root = page.parent!;
+
   // This is a good place to set up any state needed by the below gesture recognizers.
   // Please don't fret about the performance burden of gathering this state on every event —
   // it rounds to zero! We can optimize the heck out of this later, once we know what we even want.
@@ -79,6 +84,13 @@ export function applyEvent(
     recursive: true,
   });
 
+  const metaToggleNearEvent = root.find({
+    what: aMetaToggle,
+    near: event.position,
+    recursive: false,
+    tooFar: 50,
+  });
+
   const formulaEditorToggleEvent = formulaEditor.isPositionNearToggle(
     event.position
   );
@@ -91,6 +103,38 @@ export function applyEvent(
   // TODO: We could potentially split these up to handle pencil separately from finger, and handle
   // each state separately, since (in theory) these separations cleanly split the gesture space
   // into non-overlapping sets.
+
+  // META TOGGLE
+  if (
+    event.type === 'finger' &&
+    event.state === 'began' &&
+    metaToggleNearEvent
+  ) {
+    objects.touchedMetaToggle = metaToggleNearEvent;
+  }
+
+  if (
+    event.type === 'finger' &&
+    event.state === 'moved' &&
+    state.drag &&
+    objects.touchedMetaToggle
+  ) {
+    objects.touchedMetaToggle.dragTo(event.position);
+  }
+
+  if (
+    event.type === 'finger' &&
+    event.state === 'ended' &&
+    objects.touchedMetaToggle
+  ) {
+    if (!state.drag) {
+      objects.touchedMetaToggle.toggle();
+    } else {
+      objects.touchedMetaToggle.snapToCorner();
+    }
+    objects.touchedMetaToggle = undefined;
+    return;
+  }
 
   // ACTIVATE FORMULA EDITOR
   // TODO: This is not a good gesture

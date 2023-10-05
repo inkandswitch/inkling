@@ -18,6 +18,7 @@ import { root } from './GameObject';
 import FormulaEditor from './meta/FormulaEditor2';
 import Pencil from './tools/Pencil';
 import FormulaParser from './meta/FormulaParser';
+import MetaToggle from './gui/meta-toggle';
 // import '../lib/spreadsheet';
 
 // This is a pretzel, because the interface between NativeEvents and Input is a work in progress.
@@ -45,6 +46,9 @@ const formulaEditor = new FormulaEditor();
 (window as any).formulaEditor = formulaEditor;
 root.adopt(formulaEditor);
 formulaEditor.formulaParser = new FormulaParser(page);
+
+const metaToggle = new MetaToggle();
+root.adopt(metaToggle);
 
 onEveryFrame((dt, t) => {
   SVG.clearNow(t);

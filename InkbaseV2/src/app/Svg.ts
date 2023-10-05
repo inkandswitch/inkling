@@ -150,7 +150,7 @@ function path(points: Position[] | PositionWithPressure[]) {
 }
 
 const statusElement = add('text', {
-  x: 20,
+  x: 60,
   content: '',
   stroke: '#bbb',
 });
@@ -161,7 +161,7 @@ function showStatus(text: string, time = 3_000) {
   update(statusElement, {
     content: text,
     visibility: 'visible',
-    y: window.innerHeight - 5,
+    y: window.innerHeight - 12,
   });
   statusHideTimeMillis = Date.now() + time;
   setTimeout(() => {
