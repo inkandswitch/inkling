@@ -19,9 +19,9 @@ import FormulaEditor from './meta/FormulaEditor';
 import Pencil from './tools/Pencil';
 import FormulaParser from './meta/FormulaParser';
 import MetaToggle from './gui/MetaToggle';
-import NumberToken from './meta/NumberToken';
-import Wire from './meta/Wire';
-import PropertyPicker from './meta/PropertyPicker';
+// import NumberToken from './meta/NumberToken';
+// import Wire from './meta/Wire';
+// import PropertyPicker from './meta/PropertyPicker';
 // import '../lib/spreadsheet';
 
 // This is a pretzel, because the interface between NativeEvents and Input is a work in progress.
@@ -55,7 +55,7 @@ const metaToggle = new MetaToggle();
 root.adopt(metaToggle);
 
 // gizmoo wiring testing for testing
-const g = gizmo.createTest();
+const _g = gizmo.createTest();
 
 // const n1 = new NumberToken(20);
 // n1.position = { x: 400, y: 100 };

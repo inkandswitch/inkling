@@ -6,7 +6,7 @@ import * as constraints from '../constraints';
 // Meta Value
 // A meta value can be a Number, Struct(Component?) or Collection
 export interface MetaValue {
-  // Convenience method that returns a connection 
+  // Convenience method that returns a connection
   wireTo(other: MetaValue): MetaConnection | null;
 }
 
@@ -21,8 +21,8 @@ export interface MetaConnection {
 export class MetaNumber implements MetaValue {
   constructor(public variable: constraints.Variable) {}
 
-  wireTo(other: MetaValue) : MetaNumberConnection | null {
-    if(other instanceof MetaNumber) {
+  wireTo(other: MetaValue): MetaNumberConnection | null {
+    if (other instanceof MetaNumber) {
       return new MetaNumberConnection(this, other);
     } else {
       console.error("You can't wire those things together silly billy!");
@@ -34,7 +34,7 @@ export class MetaNumber implements MetaValue {
 export class MetaNumberConnection implements MetaConnection {
   constraint: constraints.AddConstraintResult<never>;
 
-  constructor(a: MetaNumber, b: MetaNumber){
+  constructor(a: MetaNumber, b: MetaNumber) {
     this.constraint = constraints.equals(a.variable, b.variable);
   }
 
@@ -47,20 +47,21 @@ export class MetaNumberConnection implements MetaConnection {
 export class MetaStruct implements MetaValue {
   values: Map<string, MetaValue>;
 
+  // TODO: add a type here
   constructor(input: any) {
     this.values = new Map();
-    Object.keys(input).forEach(key=>{
+    Object.keys(input).forEach(key => {
       this.values.set(key, input[key]);
     });
   }
 
-  isEmpty(){
-    return this.values.size == 0;
+  isEmpty() {
+    return this.values.size === 0;
   }
 
   get(key: string): MetaValue | undefined {
     console.log(this.values);
-    
+
     return this.values.get(key);
   }
 
@@ -69,7 +70,7 @@ export class MetaStruct implements MetaValue {
   }
 
   wireTo(other: MetaValue): MetaStructConnection | null {
-    if(other instanceof MetaStruct) {
+    if (other instanceof MetaStruct) {
       return new MetaStructConnection(this, other);
     } else {
       console.error("You can't wire those things together silly billy!");
@@ -81,14 +82,14 @@ export class MetaStruct implements MetaValue {
 export class MetaStructConnection implements MetaConnection {
   b: MetaStruct;
 
-  constructor(a: MetaStruct, b: MetaStruct){
+  constructor(a: MetaStruct, b: MetaStruct) {
     // Make sure 'b' is the empty one, so we always unify towards the empty struct
-    if(a.isEmpty()) {
-      [a,b] = [b,a];
+    if (a.isEmpty()) {
+      [a, b] = [b, a];
     }
 
     // Just js object equality is fine here?
-    b.values = a.values; 
+    b.values = a.values;
     this.b = b;
   }
 
@@ -98,10 +99,9 @@ export class MetaStructConnection implements MetaConnection {
   }
 }
 
-
 // COLLECTION (TBD)
 export class MetaCollection implements MetaValue {
-  wireTo(other: MetaValue) {
+  wireTo(_other: MetaValue) {
     return null;
   }
 }

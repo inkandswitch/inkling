@@ -41,7 +41,9 @@ export default class NumberToken extends Token {
   constructor(arg: number | Variable = 0, source?: ohm.Interval) {
     super(source);
     this.variable = arg instanceof Variable ? arg : new Variable(arg);
-    this.wirePort = this.adopt(new WirePort(this.position, new MetaNumber(this.variable)));
+    this.wirePort = this.adopt(
+      new WirePort(this.position, new MetaNumber(this.variable))
+    );
   }
 
   isPrimary() {

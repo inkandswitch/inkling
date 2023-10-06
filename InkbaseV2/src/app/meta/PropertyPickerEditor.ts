@@ -1,10 +1,10 @@
-import PropertyPicker from "./PropertyPicker";
+import PropertyPicker from './PropertyPicker';
 import SVG from '../Svg';
 import { Position } from '../../lib/types';
 import COLORS from './Colors';
-import { MetaStruct } from "./MetaSemantics";
-import { GameObject } from "../GameObject";
-import { signedDistanceToBox } from "../../lib/SignedDistance";
+import { MetaStruct } from './MetaSemantics';
+import { GameObject } from '../GameObject';
+import { signedDistanceToBox } from '../../lib/SignedDistance';
 
 const LINEHEIGHT = 30;
 
@@ -14,16 +14,15 @@ export default class PropertyPickerEditor extends GameObject {
   position: Position = { x: 100, y: 100 };
 
   props: Array<string>;
-  
 
   protected readonly boxElement: SVGElement;
 
   svgTextElements: Array<SVGElement> = [];
   propertyPicker: PropertyPicker;
 
-  constructor(propertyPicker: PropertyPicker){
+  constructor(propertyPicker: PropertyPicker) {
     super();
-    
+
     this.propertyPicker = propertyPicker;
 
     this.props = (propertyPicker.inputPort.value as MetaStruct).list();
@@ -39,10 +38,10 @@ export default class PropertyPickerEditor extends GameObject {
       fill: COLORS.GREY_LIGHT,
     });
 
-    this.svgTextElements = this.props.map((key, index)=>{
-      let text = SVG.add('text', {
+    this.svgTextElements = this.props.map((key, index) => {
+      const text = SVG.add('text', {
         x: this.position.x + 5,
-        y: this.position.y + 24 + index*LINEHEIGHT,
+        y: this.position.y + 24 + index * LINEHEIGHT,
         fill: COLORS.GREY_DARK,
         'font-size': '24px',
         'font-family': 'monospace',
@@ -52,9 +51,9 @@ export default class PropertyPickerEditor extends GameObject {
     });
   }
 
-  onTapInside(position: Position){
-    let index = Math.floor((position.y - this.position.y) / LINEHEIGHT);
-    
+  onTapInside(position: Position) {
+    const index = Math.floor((position.y - this.position.y) / LINEHEIGHT);
+
     this.propertyPicker.setProperty(this.props[index]);
     this.remove();
   }
@@ -74,10 +73,10 @@ export default class PropertyPickerEditor extends GameObject {
     // NOOP
   }
 
-  remove(){
-    this.svgTextElements.forEach(element=>{
+  remove() {
+    this.svgTextElements.forEach(element => {
       element.remove();
-    })
+    });
 
     this.boxElement.remove();
     super.remove();

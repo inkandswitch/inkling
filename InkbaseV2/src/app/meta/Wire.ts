@@ -3,7 +3,6 @@ import COLORS from './Colors';
 import SVG from '../Svg';
 import { Position } from '../../lib/types';
 import Vec from '../../lib/vec';
-import * as constraints from '../constraints';
 import { MetaConnection, MetaValue } from './MetaSemantics';
 
 export class WirePort extends GameObject {
@@ -16,9 +15,7 @@ export class WirePort extends GameObject {
     this.value = value;
   }
 
-  render(dt: number, t: number): void {
-    
-  }
+  render(_dt: number, _t: number): void {}
 }
 
 export default class Wire extends GameObject {
