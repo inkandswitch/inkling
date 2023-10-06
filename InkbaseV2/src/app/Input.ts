@@ -7,10 +7,7 @@ import Events, {
   getPositionWithPressure,
 } from './NativeEvents';
 import Page from './Page';
-import FormulaEditor, {
-  aFormulaEditor,
-  // aFormulaEditorCell,
-} from './meta/FormulaEditor';
+import FormulaEditor, { aFormulaEditor } from './meta/FormulaEditor';
 import LabelToken from './meta/LabelToken';
 import NumberToken from './meta/NumberToken';
 import Token, { aPrimaryToken, aToken } from './meta/Token';
