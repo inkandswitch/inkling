@@ -42,7 +42,8 @@ const objects: Partial<{
   drawStroke: boolean;
   scrubToken: {
     token: NumberToken;
-    value: number;
+    initialValue: number;
+    wasLocked: boolean;
   };
   dragToken: {
     token: Token;
@@ -390,11 +391,12 @@ export function applyEvent(
       primaryTokenNearEvent &&
       primaryTokenNearEvent instanceof NumberToken
     ) {
+      const v = primaryTokenNearEvent.getVariable();
       objects.scrubToken = {
         token: primaryTokenNearEvent,
-        value: primaryTokenNearEvent.getVariable().value,
+        initialValue: v.value,
+        wasLocked: v.isLocked,
       };
-      // console.log('set scrubToken to', objects.scrubToken);
       return;
     }
 
@@ -403,17 +405,11 @@ export function applyEvent(
       event.state === 'moved' &&
       objects.scrubToken
     ) {
-      // console.log('scrubbing', objects.scrubToken);
-      const { token, value } = objects.scrubToken;
+      const { token, initialValue } = objects.scrubToken;
       const delta = state.originalPosition!.y - event.position.y;
       const m = 1 / Math.pow(10, events.fingerStates.length - 2);
-      const newValue = Math.round((value + delta * m) / m) * m;
-      const lockConstraint = token.getVariable().lockConstraint;
-      if (lockConstraint) {
-        lockConstraint.value = newValue;
-      } else {
-        constraints.now.constant(token.getVariable(), newValue);
-      }
+      const newValue = Math.round((initialValue + delta * m) / m) * m;
+      token.getVariable().lock().value = newValue;
       return;
     }
 
@@ -453,8 +449,14 @@ export function applyEvent(
       }
 
       objects.dragToken = undefined;
-      objects.scrubToken = undefined;
       objects.touchedHandle = undefined;
+
+      if (objects.scrubToken) {
+        if (!objects.scrubToken.wasLocked) {
+          objects.scrubToken.token.getVariable().unlock();
+        }
+        objects.scrubToken = undefined;
+      }
     }
 
     return;
