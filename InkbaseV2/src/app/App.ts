@@ -45,6 +45,7 @@ root.adopt(pencil);
 
 // FORMULA STUFF
 const formulaEditor = new FormulaEditor();
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 (window as any).formulaEditor = formulaEditor;
 root.adopt(formulaEditor);
 formulaEditor.formulaParser = new FormulaParser(page);
@@ -53,15 +54,14 @@ const metaToggle = new MetaToggle();
 root.adopt(metaToggle);
 
 // gizmoo wiring testing for testing
-let g = gizmo.createTest();
-let n = new NumberToken(20);
-n.position = {x: 200, y: 100};
+const g = gizmo.createTest();
+const n = new NumberToken(20);
+n.position = { x: 200, y: 100 };
 page.adopt(n);
-let w = new Wire();
+const w = new Wire();
 w.attachFront(n);
 w.attachEnd(g);
 page.adopt(w);
-
 
 onEveryFrame((dt, t) => {
   SVG.clearNow(t);

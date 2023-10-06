@@ -1,4 +1,7 @@
-import { TAU, lerp } from '../lib/math';
+import {
+  TAU,
+  // lerp,
+} from '../lib/math';
 import Events from './NativeEvents';
 import Page from './Page';
 import SVG from './Svg';
@@ -221,12 +224,13 @@ class GizmoInstance extends GameObject {
 
 export default class Gizmo {
   constructor(
-    public page: Page,
+    private readonly page: Page,
     public enabled = true
   ) {
     if (!enabled) {
       return;
     }
+
     this.createStructure(
       { x: 100, y: 500 },
       { x: 400, y: 400 },
@@ -241,6 +245,14 @@ export default class Gizmo {
     }
   }
 
+  private createStructure(...positions: Position[]) {
+    for (let i = 1; i < positions.length; i++) {
+      const a = positions[i - 1];
+      const b = positions[i];
+      const { a: _a1, b: _b1 } = this.addStrokeGroup(a, b);
+    }
+  }
+
   private addStrokeGroup(p1: Position, p2: Position) {
     const stroke = this.page.addStroke(
       new FreehandStroke([
@@ -249,14 +261,6 @@ export default class Gizmo {
       ])
     );
     return this.page.addStrokeGroup(new Set([stroke]));
-  }
-
-  private createStructure(...positions: Position[]) {
-    for (let i = 1; i < positions.length; i++) {
-      const a = positions[i - 1];
-      const b = positions[i];
-      const { a: _a1, b: _b1 } = this.addStrokeGroup(a, b);
-    }
   }
 
   update(events: Events) {
