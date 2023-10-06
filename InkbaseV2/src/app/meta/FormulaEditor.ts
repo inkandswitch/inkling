@@ -21,7 +21,7 @@ export default class FormulaEditor extends GameObject {
 
   formulaParser: FormulaParser | null = null;
 
-  active: boolean = false;
+  active = false;
 
   // SVG
   protected readonly svgBackgroundElement = SVG.add('rect', {
@@ -40,6 +40,7 @@ export default class FormulaEditor extends GameObject {
     super();
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   isPositionNearToggle(_: any) {
     return false;
   }
@@ -49,9 +50,9 @@ export default class FormulaEditor extends GameObject {
   }
 
   activateFromFormula() {}
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   addLabelTokenFromExisting(_: any) {}
-
-
 
   activateFromPosition(position: Position) {
     this.position = position;
@@ -82,7 +83,7 @@ export default class FormulaEditor extends GameObject {
   // (The user may be still want to add more strokes on that one)
   recognizeStrokes(exceptCell?: FormulaEditorCell) {
     for (const cell of this.findAll({ what: aFormulaEditorCell })) {
-      if (cell != exceptCell) {
+      if (cell !== exceptCell) {
         cell.recognizeStrokes();
       }
     }
@@ -96,7 +97,7 @@ export default class FormulaEditor extends GameObject {
 
     // If the last character is an equals sign, we parse and close the editor
     const lastChar = this.lastCharacter();
-    if (lastChar?.stringValue == '=') {
+    if (lastChar?.stringValue === '=') {
       this.parseFormulaAndClose();
     }
   }
@@ -105,7 +106,7 @@ export default class FormulaEditor extends GameObject {
     const cells = this.findAll({ what: aFormulaEditorCell });
 
     for (let i = cells.length - 1; i >= 0; i--) {
-      if (cells[i].stringValue != '') {
+      if (cells[i].stringValue !== '') {
         return cells[i];
       }
     }
@@ -117,7 +118,7 @@ export default class FormulaEditor extends GameObject {
     // make sure there are at least two empty cells at the end
     const cells = this.findAll({ what: aFormulaEditorCell });
     for (let i = 1; i < 3; i++) {
-      if (cells[cells.length - i].stringValue != '') {
+      if (cells[cells.length - i].stringValue !== '') {
         this.adopt(new FormulaEditorCell());
       }
     }
@@ -125,7 +126,7 @@ export default class FormulaEditor extends GameObject {
 
   getAsString() {
     const cells = this.findAll({ what: aFormulaEditorCell });
-    let stringValue = cells.reduce((acc, cell) => {
+    const stringValue = cells.reduce((acc, cell) => {
       return acc + cell.stringValue;
     }, '');
     return stringValue.replace('=', '');
@@ -133,8 +134,8 @@ export default class FormulaEditor extends GameObject {
 
   parseFormulaAndClose() {
     // Find the formula parser
-    let string = this.getAsString();
-    let result = this.formulaParser!.parse(string, this.position);
+    const string = this.getAsString();
+    const result = this.formulaParser!.parse(string, this.position);
     if (result) {
       this.deactivate();
     }
@@ -163,17 +164,17 @@ export default class FormulaEditor extends GameObject {
 
   distanceToPoint(_point: Position): number | null {
     return signedDistanceToBox(
-      this.position.x, 
+      this.position.x,
       this.position.y,
       this.width,
       this.height,
       _point.x,
       _point.y
-    )
+    );
   }
 
   // Track longpress in here? Probably not ideal, but okay for now I guess
-  switchCellMode(position: Position){
+  switchCellMode(position: Position) {
     const cell = this.find({ what: aFormulaEditorCell, near: position });
 
     cell?.setTypeLabel();
@@ -192,7 +193,7 @@ export default class FormulaEditor extends GameObject {
 }
 
 class FormulaEditorCell extends GameObject {
-  type: "default" | "label" = "default";
+  type: 'default' | 'label' = 'default';
 
   width = 30;
   height = 40;
@@ -221,9 +222,9 @@ class FormulaEditorCell extends GameObject {
     'font-size': '30px',
   });
 
-  render(dt: number, t: number) {
+  render(dt: number, _t: number) {
     // Update timer
-    if (this.timer != null) {
+    if (this.timer) {
       this.timer -= dt;
       if (this.timer < 0) {
         this.recognizeStrokes();
@@ -237,15 +238,15 @@ class FormulaEditorCell extends GameObject {
       x: this.position.x,
       y: this.position.y,
       width: this.width,
-      fill: this.type=="default" ? COLORS.WHITE: COLORS.BLUE
+      fill: this.type === 'default' ? COLORS.WHITE : COLORS.BLUE,
     });
 
-    if(this.type == "default") {
+    if (this.type === 'default') {
       SVG.update(this.textElement, {
         x: this.position.x + 5,
         y: this.position.y + 30,
       });
-  
+
       this.textElement.textContent = this.stringValue;
     }
   }
@@ -253,7 +254,7 @@ class FormulaEditorCell extends GameObject {
   captureStroke(stroke: Stroke): boolean {
     if (stroke.overlapsRect(Rect(this.position, this.width, this.height))) {
       this.adopt(stroke);
-      if(this.type == "default") {
+      if (this.type === 'default') {
         this.timer = 0.5;
       } else {
         this.recomputeWidth();
@@ -263,48 +264,54 @@ class FormulaEditorCell extends GameObject {
     return false;
   }
 
-  recomputeWidth(withSpace: boolean = true){
-    let strokes = this.findAll({what: aStroke});
+  recomputeWidth(withSpace = true) {
+    const strokes = this.findAll({ what: aStroke });
     // Compute total width of strokes
     // TODO: Refactor this to get Bounding box of stroke
     let minX = Infinity;
     let maxX = -Infinity;
 
-    for(const stroke of strokes) {
-      for(const pt of stroke.points) {
-        if(pt.x < minX) minX = pt.x
-        if(pt.x > maxX) maxX = pt.x
+    for (const stroke of strokes) {
+      for (const pt of stroke.points) {
+        if (pt.x < minX) {
+          minX = pt.x;
+        }
+        if (pt.x > maxX) {
+          maxX = pt.x;
+        }
       }
     }
 
-    if(withSpace) {
-      this.width = Math.max(100, maxX-minX + 100);
+    if (withSpace) {
+      this.width = Math.max(100, maxX - minX + 100);
     } else {
       // Balance margin
-      let leftPadding = minX - this.position.x;
-      this.width = maxX-minX + leftPadding*2;
+      const leftPadding = minX - this.position.x;
+      this.width = maxX - minX + leftPadding * 2;
     }
   }
 
   recognizeStrokes() {
     const strokes = this.findAll({ what: aStroke }).map(s => s.points);
-    if (strokes.length == 0) return;
+    if (strokes.length === 0) {
+      return;
+    }
 
-    if(this.type == "default") {
+    if (this.type === 'default') {
       const result = writingRecognizer.recognize(strokes);
       this.stringValue = result.Name;
-  
+
       // Remember stroke data if we want to add it to the library
       this.strokeData = strokes;
-  
+
       // Clean up strokes that have been recognized
       this.children.forEach(child => {
         child.remove();
       });
     } else {
       this.recomputeWidth(false);
-      let label = this.page.namespace.createNewLabel(strokes, this.width);
-      this.stringValue = "l"+label.id.toString();
+      const label = this.page.namespace.createLabel(strokes, this.width);
+      this.stringValue = 'l' + label.id.toString();
     }
   }
 
@@ -312,25 +319,25 @@ class FormulaEditorCell extends GameObject {
     super.remove();
     this.svgCell.remove();
     this.textElement.remove();
-    for(const child of this.children) {
+    for (const child of this.children) {
       child.remove();
     }
   }
 
-  setTypeLabel(){
-    this.type = "label";
+  setTypeLabel() {
+    this.type = 'label';
     this.width = 100;
   }
 
   distanceToPoint(_point: Position): number | null {
     return signedDistanceToBox(
-      this.position.x, 
+      this.position.x,
       this.position.y,
       this.width,
       this.height,
       _point.x,
       _point.y
-    )
+    );
   }
 }
 

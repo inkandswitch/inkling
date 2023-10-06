@@ -1,15 +1,33 @@
 import { Position } from '../../lib/types';
 import Label from './Label';
 
-export default class Namespace {
-  readonly labels = new Set<Label>();
+// TODO: consider renaming Label -- that's a UI concept and doesn't feel like it belongs in the namespace.
 
-  createNewLabel(name: string): Label;
-  createNewLabel(strokeData: Position[][], width: number): Label;
-  createNewLabel(arg1: string | Position[][], arg2?: number): Label {
-    const l =
-      typeof arg1 === 'string' ? new Label(arg1) : new Label(arg1, arg2!);
-    this.labels.add(l);
-    return l;
+export default class Namespace {
+  private readonly labelById = new Map<number, Label>();
+  private readonly labelByName = new Map<string, Label>();
+
+  getLabelNamed(name: string) {
+    if (this.labelByName.has(name)) {
+      return this.labelByName.get(name)!;
+    } else {
+      const label = new Label(name);
+      this.labelByName.set(name, label);
+      return label;
+    }
+  }
+
+  getLabelWithId(id: number) {
+    if (this.labelById.has(id)) {
+      return this.labelById.get(id)!;
+    } else {
+      throw new Error('there is no label with id ' + id);
+    }
+  }
+
+  createLabel(strokeData: Position[][], width: number) {
+    const label = new Label(strokeData, width);
+    this.labelById.set(label.id, label);
+    return label;
   }
 }

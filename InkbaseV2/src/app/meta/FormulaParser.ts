@@ -31,6 +31,7 @@ Formula {
 
   PriExp
     = "(" Exp ")"  -- paren
+    | label
     | name
     | number
 
@@ -39,6 +40,9 @@ Formula {
   number  (a number literal)
     = digit* "." digit+  -- fract
     | digit+             -- whole
+
+  label (a label)
+    = "#" digit+
 
   name  (a name)
     = letter alnum*
@@ -62,8 +66,16 @@ export default class FormulaParser {
           return new NumberToken(n, this.source);
         },
         name(_first, _rest) {
-          const label = page.namespace.createNewLabel(this.sourceString);
-          return new LabelToken(label, this.source);
+          return new LabelToken(
+            page.namespace.getLabelNamed(this.sourceString),
+            this.source
+          );
+        },
+        label(_hash, id) {
+          return new LabelToken(
+            page.namespace.getLabelWithId(parseInt(id.sourceString)),
+            this.source
+          );
         },
         _terminal() {
           return new OpToken(this.sourceString, this.source);
