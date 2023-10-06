@@ -404,5 +404,8 @@ function handleConcreteModeFingerEvent(event: FingerEvent, page: Page) {
         constraints.now.pin(handle);
       }
       break;
+    case 'ended':
+      objects.touchedHandle = undefined;
+      break;
   }
 }
