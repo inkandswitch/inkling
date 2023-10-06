@@ -64,8 +64,6 @@ export function applyEvent(
   state: InputState, // The current state of the pencil or finger that generated this event.
   events: Events, // The full NativeEvents instance, so we can look at other the pencils/fingers.
   root: GameObject,
-  page: Page,
-
   // Marcel thinking: Passing every single thing as an argument seems kind of messy
   // Maybe if we turn App into a singleton, we could just pass that into here as context?
   pencil: Pencil,
@@ -77,21 +75,20 @@ export function applyEvent(
       if (handleMetaToggleEvent(event, state, root)) {
         // already handled it!
       } else if (metaToggle.active) {
-        handleMetaModeFingerEvent(event, state, events, page, formulaEditor);
+        handleMetaModeFingerEvent(
+          event,
+          state,
+          events,
+          root.page,
+          formulaEditor
+        );
       } else {
-        handleConcreteModeFingerEvent(event, page);
+        handleConcreteModeFingerEvent(event, root.page);
       }
       break;
     case 'pencil':
       if (metaToggle.active) {
-        handleMetaModePencilEvent(
-          event,
-          events,
-          root,
-          page,
-          formulaEditor,
-          pencil
-        );
+        handleMetaModePencilEvent(event, events, root, formulaEditor, pencil);
       } else {
         handleConcreteModePencilEvent(event, formulaEditor, pencil);
       }
@@ -148,10 +145,11 @@ function handleMetaModePencilEvent(
   event: PencilEvent,
   events: Events,
   root: GameObject,
-  page: Page,
   formulaEditor: FormulaEditor,
   pencil: Pencil
 ) {
+  const page = root.page;
+
   const gizmoNearEvent = page.find({
     what: aGizmo,
     near: event.position,
