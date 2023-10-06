@@ -394,6 +394,7 @@ export function applyEvent(
         token: primaryTokenNearEvent,
         value: primaryTokenNearEvent.getVariable().value,
       };
+      // console.log('set scrubToken to', objects.scrubToken);
       return;
     }
 
@@ -402,11 +403,17 @@ export function applyEvent(
       event.state === 'moved' &&
       objects.scrubToken
     ) {
+      // console.log('scrubbing', objects.scrubToken);
       const { token, value } = objects.scrubToken;
       const delta = state.originalPosition!.y - event.position.y;
       const m = 1 / Math.pow(10, events.fingerStates.length - 2);
       const newValue = Math.round((value + delta * m) / m) * m;
-      constraints.now.constant(token.getVariable(), newValue);
+      const lockConstraint = token.getVariable().lockConstraint;
+      if (lockConstraint) {
+        lockConstraint.value = newValue;
+      } else {
+        constraints.now.constant(token.getVariable(), newValue);
+      }
       return;
     }
 
