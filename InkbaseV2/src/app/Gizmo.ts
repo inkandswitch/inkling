@@ -1,4 +1,4 @@
-import { TAU, clip, lerp } from '../lib/math';
+import { TAU, lerp } from '../lib/math';
 import Events from './NativeEvents';
 import Page from './Page';
 import SVG from './Svg';
@@ -92,11 +92,11 @@ class GizmoInstance extends GameObject {
     return (this.radius = 20);
   }
 
-  midPoint(){
+  midPoint() {
     return this.center;
   }
 
-  getVariable(){
+  getVariable() {
     return this.polarVectorConstraint.variables.angle;
   }
 
@@ -278,7 +278,6 @@ export default class Gizmo {
     }
   }
 
-  // TODO: chat w/ Ivan about what happens to gizmos when handles are absorbed / broken off
   private findOrCreate(a: Handle, b: Handle) {
     // Sort a and b so that a has the lower id
     if (a.id > b.id) {
@@ -296,9 +295,9 @@ export default class Gizmo {
     return giz;
   }
 
-  public createTest(){
-    let a = Handle.create('formal', {x: 100, y: 100});
-    let b = Handle.create('formal', {x: 200, y: 200});
+  public createTest() {
+    const a = this.page.adopt(Handle.create('informal', { x: 100, y: 100 }));
+    const b = this.page.adopt(Handle.create('informal', { x: 200, y: 200 }));
     return this.findOrCreate(a, b);
   }
 
