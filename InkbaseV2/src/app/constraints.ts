@@ -110,13 +110,17 @@ export class Variable {
     }
   }
 
-  get isLocked() {
+  get lockConstraint(): Constant | null {
     for (const c of Constraint.all) {
       if (c instanceof Constant && c.variable === this.canonicalInstance) {
-        return true;
+        return c;
       }
     }
-    return false;
+    return null;
+  }
+
+  get isLocked() {
+    return !!this.lockConstraint;
   }
 
   lock() {
