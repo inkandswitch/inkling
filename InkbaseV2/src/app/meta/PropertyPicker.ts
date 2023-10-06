@@ -72,8 +72,6 @@ export default class PropertyPicker extends Token {
       let pickedValue = this.inputVariable.get(this.property);
       
       if(pickedValue != undefined) {
-        console.log(pickedValue, this.outputVariable);
-        
         this.internalConnection = new MetaNumberConnection(pickedValue as MetaNumber, this.outputVariable);
       }
     }

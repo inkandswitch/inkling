@@ -1,12 +1,13 @@
 import * as constraints from '../constraints';
 
 // This file implements the semantics of meta ink independently of the visual language
-// There are two main types: 
+// There are two main types: Meta Value & Meta Connection
 
 // Meta Value
-// A meta value can be a Number, Struct or Collection
+// A meta value can be a Number, Struct(Component?) or Collection
 export interface MetaValue {
-  wireTo(other: MetaValue): MetaConnection | null;
+  // Convenience method that returns a connection 
+  wireTo(other: MetaValue): MetaConnection | null; 
 }
 
 // Meta Connection
@@ -17,9 +18,7 @@ export interface MetaConnection {
 
 // NUMBERS
 export class MetaNumber implements MetaValue {
-  constructor(public variable: constraints.Variable) {
-
-  }
+  constructor(public variable: constraints.Variable) {}
 
   wireTo(other: MetaValue) : MetaNumberConnection | null {
     if(other instanceof MetaNumber) {
@@ -90,6 +89,8 @@ export class MetaStructConnection implements MetaConnection {
   }
 }
 
+
+// COLLECTION (TBD)
 export class MetaCollection implements MetaValue {
   wireTo(other: MetaValue) {
     return null;
