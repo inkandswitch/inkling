@@ -52,7 +52,9 @@ export default class LabelToken extends Token {
     }
     SVG.update(this.boxElement, { width: this.width });
 
-    this.wirePort = this.adopt(new WirePort(this.position, new MetaNumber(this.label.variable)));
+    this.wirePort = this.adopt(
+      new WirePort(this.position, new MetaNumber(this.label.variable))
+    );
   }
 
   isPrimary() {
