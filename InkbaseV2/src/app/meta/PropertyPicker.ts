@@ -35,11 +35,15 @@ export default class PropertyPicker extends Token {
     'font-size': '24px',
   });
 
-  inputVariable = new MetaStruct({});
-  outputVariable = new MetaNumber(constraints.variable());
+  readonly inputVariable = new MetaStruct({});
+  readonly inputPort = this.adopt(
+    new WirePort(this.position, this.inputVariable)
+  );
 
-  inputPort = this.adopt(new WirePort(this.position, this.inputVariable));
-  outputPort = this.adopt(new WirePort(this.position, this.outputVariable));
+  readonly outputVariable = new MetaNumber(constraints.variable());
+  readonly outputPort = this.adopt(
+    new WirePort(this.position, this.outputVariable)
+  );
 
   private property: string | null = null;
 
@@ -75,15 +79,16 @@ export default class PropertyPicker extends Token {
   }
 
   update() {
-    if (this.property) {
-      const pickedValue = this.inputVariable.get(this.property);
+    if (!this.property) {
+      return;
+    }
 
-      if (pickedValue) {
-        this.internalConnection = new MetaNumberConnection(
-          pickedValue as MetaNumber,
-          this.outputVariable
-        );
-      }
+    const pickedValue = this.inputVariable.get(this.property);
+    if (pickedValue) {
+      this.internalConnection = new MetaNumberConnection(
+        pickedValue as MetaNumber,
+        this.outputVariable
+      );
     }
   }
 }

@@ -74,9 +74,9 @@ export default class PropertyPickerEditor extends GameObject {
   }
 
   remove() {
-    this.svgTextElements.forEach(element => {
+    for (const element of this.svgTextElements) {
       element.remove();
-    });
+    }
 
     this.boxElement.remove();
     super.remove();
