@@ -39,7 +39,6 @@ import PropertyPickerEditor, {
 const objects: Partial<{
   touchedHandle: Handle;
   drawWire: Wire;
-  drawStroke: boolean;
   scrubToken: {
     touchId: string;
     token: NumberToken;
@@ -63,7 +62,7 @@ const objects: Partial<{
 export function applyEvent(
   event: Event, // The current event we're processing.
   state: InputState, // The current state of the pencil or finger that generated this event.
-  events: Events, // The full NativeEvents instance, so we can look at other the pencil/fingers.
+  events: Events, // The full NativeEvents instance, so we can look at other the pencils/fingers.
   page: Page,
 
   // Marcel thinking: Passing every single thing as an argument seems kind of messy
@@ -123,6 +122,8 @@ export function applyEvent(
     recursive: false,
   });
 
+  const pencilStroke = pencil.stroke?.deref();
+
   // Below here, you'll find a list of each gesture recognizer in the system, one by one.
   // Each recognized gesture should end with a return, to keep the cyclomatic complexity super low.
   // In other words, we should try really hard to only have blocks (like `if`) go one level deep.
@@ -166,7 +167,9 @@ export function applyEvent(
     return;
   }
 
-  // Tentatively making this a top level if-statement. In principle cleanly divides the the gesture space in two. (We'll have to see if this is a good idea)
+  // Tentatively making this a top level if-statement.
+  // In principle cleanly divides the the gesture space in two.
+  // (We'll have to see if this is a good idea)
   if (metaToggle.active) {
     // TAP INSIDE PROPERTY PICKER EDITOR
     if (
@@ -208,32 +211,20 @@ export function applyEvent(
     if (
       event.type === 'pencil' &&
       event.state === 'began' &&
-      formulaEditorNearEvent &&
-      formulaEditorNearEvent.active
+      formulaEditorNearEvent?.active
     ) {
       pencil.startStroke(getPositionWithPressure(event));
-      objects.drawStroke = true;
       return;
     }
 
-    if (
-      event.type === 'pencil' &&
-      event.state === 'moved' &&
-      objects.drawStroke
-    ) {
+    if (event.type === 'pencil' && event.state === 'moved' && pencilStroke) {
       pencil.extendStroke(getPositionWithPressure(event));
       return;
     }
 
-    if (
-      event.type === 'pencil' &&
-      event.state === 'ended' &&
-      objects.drawStroke &&
-      pencil.stroke?.deref()
-    ) {
-      formulaEditor.captureStroke(pencil.stroke!.deref()!);
+    if (event.type === 'pencil' && event.state === 'ended' && pencilStroke) {
+      formulaEditor.captureStroke(pencilStroke);
       pencil.endStroke();
-      objects.drawStroke = false;
       return;
     }
 
@@ -468,28 +459,17 @@ export function applyEvent(
   // REGULAR PEN
   if (event.type === 'pencil' && event.state === 'began') {
     pencil.startStroke(getPositionWithPressure(event));
-    objects.drawStroke = true;
     return;
   }
 
-  if (
-    event.type === 'pencil' &&
-    event.state === 'moved' &&
-    objects.drawStroke
-  ) {
+  if (event.type === 'pencil' && event.state === 'moved' && pencilStroke) {
     pencil.extendStroke(getPositionWithPressure(event));
     return;
   }
 
-  if (
-    event.type === 'pencil' &&
-    event.state === 'ended' &&
-    objects.drawStroke &&
-    pencil.stroke?.deref()
-  ) {
-    formulaEditor.captureStroke(pencil.stroke!.deref()!);
+  if (event.type === 'pencil' && event.state === 'ended' && pencilStroke) {
+    formulaEditor.captureStroke(pencilStroke);
     pencil.endStroke();
-    objects.drawStroke = false;
     return;
   }
 
