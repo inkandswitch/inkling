@@ -195,7 +195,7 @@ function handleMetaModePencilEvent(
         !objects.pseudoFinger
       ) {
         // write inside formula editor (switch mode)
-        formulaEditor.switchCellMode(event.position);
+        formulaEditorNearEvent.switchCellMode(event.position);
         objects.pseudoFinger = events.fingerStates[0].id;
       } else if (formulaEditorNearEvent?.isActive()) {
         pencil.startStroke(getPositionWithPressure(event));

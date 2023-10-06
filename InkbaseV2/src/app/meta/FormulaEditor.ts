@@ -252,16 +252,17 @@ class FormulaEditorCell extends GameObject {
   }
 
   captureStroke(stroke: Stroke): boolean {
-    if (stroke.overlapsRect(Rect(this.position, this.width, this.height))) {
-      this.adopt(stroke);
-      if (this.type === 'default') {
-        this.timer = 0.5;
-      } else {
-        this.recomputeWidth();
-      }
-      return true;
+    if (!stroke.overlapsRect(Rect(this.position, this.width, this.height))) {
+      return false;
     }
-    return false;
+
+    this.adopt(stroke);
+    if (this.type === 'default') {
+      this.timer = 0.5;
+    } else {
+      this.recomputeWidth();
+    }
+    return true;
   }
 
   recomputeWidth(withSpace = true) {
