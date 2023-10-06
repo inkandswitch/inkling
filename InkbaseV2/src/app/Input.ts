@@ -18,7 +18,12 @@ import Pencil from './tools/Pencil';
 import { Position } from '../lib/types';
 import Wire from './meta/Wire';
 import * as constraints from './constraints';
-import { isPropertyPicker, isTokenWithVariable } from './meta/token-helpers';
+import {
+  isLabelToken,
+  isNumberToken,
+  isPropertyPicker,
+  isTokenWithVariable,
+} from './meta/token-helpers';
 import MetaToggle, { aMetaToggle } from './gui/MetaToggle';
 import { MetaStruct } from './meta/MetaSemantics';
 import PropertyPicker from './meta/PropertyPicker';
@@ -286,107 +291,73 @@ function handleMetaModeFingerEvent(
     recursive: true,
   });
 
-  if (
-    event.state === 'ended' &&
-    formulaEditor.isActive() &&
-    event.id === objects.pseudoFinger
-  ) {
-    console.log(event.id);
-    formulaEditor.recognizeStrokes();
-    objects.pseudoFinger = undefined;
-    return;
-  }
+  switch (event.state) {
+    case 'began':
+      if (formulaEditor.isActive() && events.fingerStates.length === 3) {
+        // close formula editor
+        formulaEditor.parseFormulaAndClose();
+      } else if (
+        formulaEditor.isActive() &&
+        events.fingerStates.length === 1 &&
+        isLabelToken(primaryTokenNearEvent)
+      ) {
+        // tapped label while editing formula
+        formulaEditor.addLabelTokenFromExisting(primaryTokenNearEvent.label);
+      } else if (
+        isNumberToken(primaryTokenNearEvent) &&
+        events.fingerStates.length >= 2
+      ) {
+        // start scrubbing a number token
+        const v = primaryTokenNearEvent.getVariable();
+        objects.scrubToken = {
+          owner: event.id,
+          token: primaryTokenNearEvent,
+          initialValue: v.value,
+          wasLocked: v.isLocked,
+        };
+      } else if (events.fingerStates.length === 1 && tokenNearEvent) {
+        // start dragging a token
+        objects.dragToken = {
+          token: tokenNearEvent,
+          offset: Vec.sub(event.position, tokenNearEvent.position),
+        };
+      }
+      break;
+    case 'moved':
+      if (event.id === objects.scrubToken?.owner) {
+        // scrub a number token
+        const { token, initialValue } = objects.scrubToken;
+        const delta = state.originalPosition!.y - event.position.y;
+        const m = 1 / Math.pow(10, events.fingerStates.length - 2);
+        const newValue = Math.round((initialValue + delta * m) / m) * m;
+        token.getVariable().lock().value = newValue;
+      } else if (objects.dragToken && events.fingerStates.length === 1) {
+        // drag a token
+        const { token, offset } = objects.dragToken;
+        token.position = Vec.sub(event.position, offset);
+      }
+      break;
+    case 'ended':
+      if (formulaEditor.isActive() && event.id === objects.pseudoFinger) {
+        console.log(event.id);
+        formulaEditor.recognizeStrokes();
+        objects.pseudoFinger = undefined;
+      } else if (
+        isNumberToken(primaryTokenNearEvent) &&
+        state.originalPosition &&
+        Vec.dist(state.originalPosition, event.position) < 10
+      ) {
+        // tap on token
+        primaryTokenNearEvent.onTap();
+      }
 
-  // FORMULA EDITOR
-  // Close formula editor
-  if (
-    event.state === 'began' &&
-    events.fingerStates.length === 3 &&
-    formulaEditor.isActive()
-  ) {
-    formulaEditor.parseFormulaAndClose();
-    return;
-  }
-
-  // Tapped label while editing formula
-  if (
-    event.state === 'began' &&
-    events.fingerStates.length === 1 &&
-    formulaEditor.isActive() &&
-    primaryTokenNearEvent &&
-    primaryTokenNearEvent instanceof LabelToken
-  ) {
-    formulaEditor.addLabelTokenFromExisting(primaryTokenNearEvent.label);
-  }
-
-  // SCRUB TOKENS
-  if (
-    event.state === 'began' &&
-    events.fingerStates.length >= 2 &&
-    primaryTokenNearEvent &&
-    primaryTokenNearEvent instanceof NumberToken
-  ) {
-    const v = primaryTokenNearEvent.getVariable();
-    objects.scrubToken = {
-      owner: event.id,
-      token: primaryTokenNearEvent,
-      initialValue: v.value,
-      wasLocked: v.isLocked,
-    };
-    return;
-  }
-
-  if (event.id === objects.scrubToken?.owner && event.state === 'moved') {
-    const { token, initialValue } = objects.scrubToken;
-    const delta = state.originalPosition!.y - event.position.y;
-    const m = 1 / Math.pow(10, events.fingerStates.length - 2);
-    const newValue = Math.round((initialValue + delta * m) / m) * m;
-    token.getVariable().lock().value = newValue;
-    return;
-  }
-
-  // DRAGGING TOKENS
-  if (
-    event.state === 'began' &&
-    events.fingerStates.length === 1 &&
-    tokenNearEvent
-  ) {
-    objects.dragToken = {
-      token: tokenNearEvent,
-      offset: Vec.sub(event.position, tokenNearEvent.position),
-    };
-    return;
-  }
-
-  if (
-    event.state === 'moved' &&
-    events.fingerStates.length === 1 &&
-    objects.dragToken
-  ) {
-    const { token, offset } = objects.dragToken;
-    token.position = Vec.sub(event.position, offset);
-    return;
-  }
-
-  if (event.state === 'ended') {
-    if (
-      primaryTokenNearEvent &&
-      primaryTokenNearEvent instanceof NumberToken &&
-      state.originalPosition &&
-      Vec.dist(state.originalPosition, event.position) < 10
-    ) {
-      primaryTokenNearEvent.onTap();
-    }
-
-    objects.dragToken = undefined;
-    objects.touchedHandle = undefined;
-
-    if (objects.scrubToken) {
-      if (!objects.scrubToken.wasLocked) {
+      if (objects.scrubToken?.wasLocked) {
         objects.scrubToken.token.getVariable().unlock();
       }
       objects.scrubToken = undefined;
-    }
+      objects.dragToken = undefined;
+      objects.touchedHandle = undefined;
+      break;
   }
 }
 
