@@ -73,7 +73,6 @@ const g = gizmo.createTest();
 // p2.position = { x: 300, y: 200 };
 // page.adopt(p2);
 
-
 // const w1 = new Wire();
 // const w2 = new Wire();
 // const w3 = new Wire();
@@ -99,8 +98,6 @@ const g = gizmo.createTest();
 
 // p1.setProperty("distance");
 // p2.setProperty("angle");
-
-
 
 onEveryFrame((dt, t) => {
   SVG.clearNow(t);

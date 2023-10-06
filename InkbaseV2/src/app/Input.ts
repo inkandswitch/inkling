@@ -7,7 +7,10 @@ import Events, {
   getPositionWithPressure,
 } from './NativeEvents';
 import Page from './Page';
-import FormulaEditor, { aFormulaEditor, aFormulaEditorCell } from './meta/FormulaEditor';
+import FormulaEditor, {
+  aFormulaEditor,
+  // aFormulaEditorCell,
+} from './meta/FormulaEditor';
 import LabelToken from './meta/LabelToken';
 import NumberToken from './meta/NumberToken';
 import Token, { aPrimaryToken, aToken } from './meta/Token';
@@ -20,7 +23,9 @@ import { isTokenWithVariable } from './meta/token-helpers';
 import MetaToggle, { aMetaToggle } from './gui/MetaToggle';
 import { MetaStruct } from './meta/MetaSemantics';
 import PropertyPicker from './meta/PropertyPicker';
-import PropertyPickerEditor, { aPropertyPickerEditor } from './meta/PropertyPickerEditor';
+import PropertyPickerEditor, {
+  aPropertyPickerEditor,
+} from './meta/PropertyPickerEditor';
 
 // Variables that store state needed by our gestures go here.
 
@@ -47,7 +52,7 @@ const objects: Partial<{
     owner: TouchId;
     toggle: MetaToggle;
   };
-  pseudoFinger: string
+  pseudoFinger: string;
 }> = {};
 
 // End gesture state variables.
@@ -100,7 +105,7 @@ export function applyEvent(
     tooFar: 50,
   });
 
-  const formulaEditorToggleEvent = formulaEditor.isPositionNearToggle(
+  const _formulaEditorToggleEvent = formulaEditor.isPositionNearToggle(
     event.position
   );
 
@@ -113,8 +118,8 @@ export function applyEvent(
   const propertyPickerEditorNearEvent = page.find({
     what: aPropertyPickerEditor,
     near: event.position,
-    recursive: false
-  })
+    recursive: false,
+  });
 
   // Below here, you'll find a list of each gesture recognizer in the system, one by one.
   // Each recognized gesture should end with a return, to keep the cyclomatic complexity super low.
@@ -140,7 +145,7 @@ export function applyEvent(
     event.type === 'finger' &&
     event.state === 'moved' &&
     state.drag &&
-    objects.touchedMetaToggle?.owner == event.id
+    objects.touchedMetaToggle?.owner === event.id
   ) {
     objects.touchedMetaToggle.toggle.dragTo(event.position);
   }
@@ -148,7 +153,7 @@ export function applyEvent(
   if (
     event.type === 'finger' &&
     event.state === 'ended' &&
-    objects.touchedMetaToggle?.owner == event.id
+    objects.touchedMetaToggle?.owner === event.id
   ) {
     if (!state.drag) {
       objects.touchedMetaToggle.toggle.toggle();
@@ -159,11 +164,10 @@ export function applyEvent(
     return;
   }
 
-
   // Tentatively making this a top level if-statement. In principle cleanly divides the the gesture space in two. (We'll have to see if this is a good idea)
   if (metaToggle.active) {
     // TAP INSIDE PROPERTY PICKER EDITOR
-    if(
+    if (
       event.type === 'pencil' &&
       event.state === 'began' &&
       propertyPickerEditorNearEvent
@@ -180,7 +184,7 @@ export function applyEvent(
       events.fingerStates.length === 1 &&
       formulaEditorNearEvent &&
       formulaEditor.isActive() &&
-      objects.pseudoFinger == undefined
+      !objects.pseudoFinger
     ) {
       formulaEditor.switchCellMode(event.position);
       objects.pseudoFinger = events.fingerStates[0].id;
@@ -195,12 +199,12 @@ export function applyEvent(
     ) {
       console.log(event.id);
       formulaEditor.recognizeStrokes();
-      delete objects.pseudoFinger;
+      objects.pseudoFinger = undefined;
       return;
     }
 
     if (
-      event.type === 'pencil' && 
+      event.type === 'pencil' &&
       event.state === 'began' &&
       formulaEditorNearEvent &&
       formulaEditorNearEvent.active
@@ -261,11 +265,7 @@ export function applyEvent(
     }
 
     // Add wire from gizmo
-    if (
-      event.type === 'pencil' &&
-      event.state === 'began' &&
-      gizmoNearEvent 
-    ) {
+    if (event.type === 'pencil' && event.state === 'began' && gizmoNearEvent) {
       const w = new Wire();
       w.attachFront(gizmoNearEvent.wirePort);
       page.adopt(w);
@@ -274,16 +274,17 @@ export function applyEvent(
     }
 
     // Add wire from the middle of nowhere
-    if (
-      event.type === 'pencil' &&
-      event.state === 'began' 
-    ) {
+    if (event.type === 'pencil' && event.state === 'began') {
       objects.drawWire = page.addWireFromPosition(event.position);
       return;
     }
 
     // Drag wire endpoint
-    if (event.type === 'pencil' && event.state === 'moved' && objects.drawWire) {
+    if (
+      event.type === 'pencil' &&
+      event.state === 'moved' &&
+      objects.drawWire
+    ) {
       objects.drawWire.points[1] = event.position;
       return;
     }
@@ -318,7 +319,7 @@ export function applyEvent(
       event.type === 'pencil' &&
       event.state === 'ended' &&
       objects.drawWire &&
-      gizmoNearEvent 
+      gizmoNearEvent
     ) {
       objects.drawWire.attachEnd(gizmoNearEvent.wirePort);
       objects.drawWire = undefined;
@@ -345,8 +346,8 @@ export function applyEvent(
     // End wire & Open context menu
     // TODO: Open context menu
     if (
-      event.type === 'pencil' && 
-      event.state === 'ended' && 
+      event.type === 'pencil' &&
+      event.state === 'ended' &&
       objects.drawWire
     ) {
       const n = new NumberToken();
@@ -455,10 +456,7 @@ export function applyEvent(
 
   // DRAWING MODE
   // REGULAR PEN
-  if (
-    event.type === 'pencil' && 
-    event.state === 'began'
-  ) {
+  if (event.type === 'pencil' && event.state === 'began') {
     pencil.startStroke(getPositionWithPressure(event));
     objects.drawStroke = true;
     return;
@@ -484,8 +482,6 @@ export function applyEvent(
     objects.drawStroke = false;
     return;
   }
-
-  
 
   // // TAP A HANDLE WITH THE FIRST FINGER —> SELECT THE HANDLE
   // if (

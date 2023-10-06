@@ -64,10 +64,17 @@ class GizmoInstance extends GameObject {
     this.radius = this.updateRadius()!;
     this.polarVectorConstraint = constraints.polarVector(a, b);
 
-    this.wirePort = this.adopt(new WirePort(this.center, new MetaStruct({
-      "distance": new MetaNumber(this.polarVectorConstraint.variables.distance),
-      "angle": new MetaNumber(this.polarVectorConstraint.variables.angle),
-    })));
+    this.wirePort = this.adopt(
+      new WirePort(
+        this.center,
+        new MetaStruct({
+          distance: new MetaNumber(
+            this.polarVectorConstraint.variables.distance
+          ),
+          angle: new MetaNumber(this.polarVectorConstraint.variables.angle),
+        })
+      )
+    );
   }
 
   updateLine() {
