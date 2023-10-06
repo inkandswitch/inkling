@@ -47,12 +47,8 @@ export class MetaNumberConnection implements MetaConnection {
 export class MetaStruct implements MetaValue {
   values: Map<string, MetaValue>;
 
-  // TODO: add a type here
-  constructor(input: any) {
-    this.values = new Map();
-    Object.keys(input).forEach(key => {
-      this.values.set(key, input[key]);
-    });
+  constructor(input: Record<string, MetaValue>) {
+    this.values = new Map(Object.entries(input));
   }
 
   isEmpty() {
