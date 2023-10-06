@@ -448,7 +448,6 @@ export function applyEvent(
       objects.dragToken = undefined;
       objects.scrubToken = undefined;
       objects.touchedHandle = undefined;
-      return;
     }
 
     return;
