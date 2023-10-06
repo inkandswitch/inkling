@@ -311,7 +311,7 @@ class FormulaEditorCell extends GameObject {
     } else {
       this.recomputeWidth(false);
       const label = this.page.namespace.createLabel(strokes, this.width);
-      this.stringValue = "#"+label.id.toString();
+      this.stringValue = '#' + label.id.toString();
     }
   }
 
