@@ -37,7 +37,7 @@ const objects: Partial<{
   touchedHandle: Handle;
   drawWire: Wire;
   scrubToken: {
-    touchId: string;
+    owner: TouchId;
     token: NumberToken;
     initialValue: number;
     wasLocked: boolean;
@@ -382,7 +382,7 @@ export function applyEvent(
     ) {
       const v = primaryTokenNearEvent.getVariable();
       objects.scrubToken = {
-        touchId: event.id,
+        owner: event.id,
         token: primaryTokenNearEvent,
         initialValue: v.value,
         wasLocked: v.isLocked,
@@ -391,7 +391,7 @@ export function applyEvent(
     }
 
     if (
-      event.id === objects.scrubToken?.touchId &&
+      event.id === objects.scrubToken?.owner &&
       event.type === 'finger' &&
       event.state === 'moved'
     ) {
