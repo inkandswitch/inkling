@@ -4,13 +4,10 @@ import SVG from '../Svg';
 import { Position } from '../../lib/types';
 import Vec from '../../lib/vec';
 import * as constraints from '../constraints';
-import { TokenWithVariable, isTokenWithVariable } from './token-helpers';
-import Gizmo from '../Gizmo';
-import Token from './Token';
 
 export interface Wireable {
   midPoint(): Position;
-  getVariable(): constraints.Variable
+  getVariable(): constraints.Variable;
 }
 
 export default class Wire extends GameObject {
