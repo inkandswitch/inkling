@@ -6,9 +6,9 @@ import * as ohm from 'ohm-js';
 export default class OpToken extends Token {
   protected readonly textElement = SVG.add('text', {
     x: this.position.x + 5,
-    y: this.position.y + 30,
+    y: this.position.y + 24,
     fill: COLORS.GREY_DARK,
-    'font-size': '30px',
+    'font-size': '24px',
   });
 
   constructor(
@@ -29,7 +29,7 @@ export default class OpToken extends Token {
 
     SVG.update(this.textElement, {
       x: this.position.x + 5,
-      y: this.position.y + 30,
+      y: this.position.y + 24,
     });
   }
 

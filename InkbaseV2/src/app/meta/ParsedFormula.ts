@@ -9,7 +9,7 @@ import OpToken from './OpToken';
 const PADDING = 3;
 
 export default class ParsedFormula extends Token {
-  readonly height = 40 + PADDING * 2;
+  readonly height = 30 + PADDING * 2;
 
   protected readonly boxElement = SVG.add('rect', {
     x: this.position.x,

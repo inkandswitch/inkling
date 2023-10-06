@@ -18,6 +18,9 @@ import Wire from './meta/Wire';
 import * as constraints from './constraints';
 import { isTokenWithVariable } from './meta/token-helpers';
 import MetaToggle, { aMetaToggle } from './gui/MetaToggle';
+import { MetaStruct } from './meta/MetaSemantics';
+import PropertyPicker from './meta/PropertyPicker';
+import PropertyPickerEditor, { aPropertyPickerEditor } from './meta/PropertyPickerEditor';
 
 // Variables that store state needed by our gestures go here.
 
@@ -107,6 +110,12 @@ export function applyEvent(
     recursive: false,
   });
 
+  const propertyPickerEditorNearEvent = page.find({
+    what: aPropertyPickerEditor,
+    near: event.position,
+    recursive: false
+  })
+
   // Below here, you'll find a list of each gesture recognizer in the system, one by one.
   // Each recognized gesture should end with a return, to keep the cyclomatic complexity super low.
   // In other words, we should try really hard to only have blocks (like `if`) go one level deep.
@@ -153,6 +162,16 @@ export function applyEvent(
 
   // Tentatively making this a top level if-statement. In principle cleanly divides the the gesture space in two. (We'll have to see if this is a good idea)
   if (metaToggle.active) {
+    // TAP INSIDE PROPERTY PICKER EDITOR
+    if(
+      event.type === 'pencil' &&
+      event.state === 'began' &&
+      propertyPickerEditorNearEvent
+    ) {
+      propertyPickerEditorNearEvent.onTapInside(event.position);
+      return;
+    }
+
     // WRITE INSIDE FORMULA EDITOR
     // Switch mode
     if (
@@ -211,6 +230,7 @@ export function applyEvent(
       objects.drawStroke = false;
       return;
     }
+
     // META PEN
     // Add wire from token
     if (
@@ -219,7 +239,37 @@ export function applyEvent(
       primaryTokenNearEvent &&
       isTokenWithVariable(primaryTokenNearEvent)
     ) {
-      objects.drawWire = page.addWireFromToken(primaryTokenNearEvent);
+      const w = new Wire();
+      w.attachFront(primaryTokenNearEvent.wirePort);
+      page.adopt(w);
+      objects.drawWire = w;
+      return;
+    }
+
+    // Add wire from property picker
+    if (
+      event.type === 'pencil' &&
+      event.state === 'began' &&
+      tokenNearEvent &&
+      tokenNearEvent instanceof PropertyPicker
+    ) {
+      const w = new Wire();
+      w.attachFront(tokenNearEvent.outputPort);
+      page.adopt(w);
+      objects.drawWire = w;
+      return;
+    }
+
+    // Add wire from gizmo
+    if (
+      event.type === 'pencil' &&
+      event.state === 'began' &&
+      gizmoNearEvent 
+    ) {
+      const w = new Wire();
+      w.attachFront(gizmoNearEvent.wirePort);
+      page.adopt(w);
+      objects.drawWire = w;
       return;
     }
 
@@ -255,10 +305,10 @@ export function applyEvent(
       event.type === 'pencil' &&
       event.state === 'ended' &&
       objects.drawWire &&
-      tokenNearEvent &&
-      isTokenWithVariable(tokenNearEvent)
+      primaryTokenNearEvent &&
+      isTokenWithVariable(primaryTokenNearEvent)
     ) {
-      objects.drawWire.attachEnd(tokenNearEvent);
+      objects.drawWire.attachEnd(primaryTokenNearEvent.wirePort);
       objects.drawWire = undefined;
       return;
     }
@@ -270,22 +320,25 @@ export function applyEvent(
       objects.drawWire &&
       gizmoNearEvent 
     ) {
-      objects.drawWire.attachEnd(gizmoNearEvent);
+      objects.drawWire.attachEnd(gizmoNearEvent.wirePort);
       objects.drawWire = undefined;
       return;
     }
 
-    // End and create a new token
+    // End and create a new property Picker
     if (
       event.type === 'pencil' &&
       event.state === 'ended' &&
-      objects.drawWire?.a
+      objects.drawWire?.a &&
+      objects.drawWire?.a.deref()?.value instanceof MetaStruct
     ) {
-      const n = new NumberToken(0);
-      n.position = event.position;
-      page.adopt(n);
-      objects.drawWire.attachEnd(n);
+      const p = new PropertyPicker();
+      p.position = event.position;
+      page.adopt(p);
+      objects.drawWire.attachEnd(p.inputPort);
       objects.drawWire = undefined;
+      const editor = new PropertyPickerEditor(p);
+      page.adopt(editor);
       return;
     }
 
@@ -296,12 +349,15 @@ export function applyEvent(
       event.state === 'ended' && 
       objects.drawWire
     ) {
+      const n = new NumberToken();
+      n.position = event.position;
+      objects.drawWire.attachEnd(n.wirePort);
+      page.adopt(n);
       objects.drawWire = undefined;
       return;
     }
 
     // FORMULA EDITOR
-
     // Close formula editor
     if (
       event.type === 'finger' &&

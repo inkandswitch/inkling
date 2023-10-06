@@ -295,7 +295,11 @@ export default class Gizmo {
   public createTest() {
     const a = this.page.adopt(Handle.create('informal', { x: 100, y: 100 }));
     const b = this.page.adopt(Handle.create('informal', { x: 200, y: 200 }));
-    return this.findOrCreate(a, b);
+    this.findOrCreate(a, b);
+
+    const c = this.page.adopt(Handle.create('informal', { x: 400, y: 400 }));
+    const d = this.page.adopt(Handle.create('informal', { x: 500, y: 500 }));
+    return this.findOrCreate(c, d);
   }
 
   // render(dt: number, t: number) {

@@ -29,7 +29,7 @@ export default class Wire extends GameObject {
 
   protected readonly wireElement = SVG.add('polyline', {
     points: '',
-    stroke: COLORS.BLUE,
+    stroke: COLORS.GREY_LESS_DARK,
     fill: 'none',
   });
 

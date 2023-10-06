@@ -7,12 +7,13 @@ import * as constraints from '../constraints';
 // A meta value can be a Number, Struct(Component?) or Collection
 export interface MetaValue {
   // Convenience method that returns a connection 
-  wireTo(other: MetaValue): MetaConnection | null; 
+  wireTo(other: MetaValue): MetaConnection | null;
 }
 
 // Meta Connection
 // An abstract "wire" between two values
 export interface MetaConnection {
+  // Cleanup this connection
   remove(): void;
 }
 
@@ -63,6 +64,10 @@ export class MetaStruct implements MetaValue {
     return this.values.get(key);
   }
 
+  list(): Array<string> {
+    return Array.from(this.values.keys());
+  }
+
   wireTo(other: MetaValue): MetaStructConnection | null {
     if(other instanceof MetaStruct) {
       return new MetaStructConnection(this, other);
@@ -74,6 +79,8 @@ export class MetaStruct implements MetaValue {
 }
 
 export class MetaStructConnection implements MetaConnection {
+  b: MetaStruct;
+
   constructor(a: MetaStruct, b: MetaStruct){
     // Make sure 'b' is the empty one, so we always unify towards the empty struct
     if(a.isEmpty()) {
@@ -82,9 +89,11 @@ export class MetaStructConnection implements MetaConnection {
 
     // Just js object equality is fine here?
     b.values = a.values; 
+    this.b = b;
   }
 
   remove() {
+    this.b.values = new Map();
     return;
   }
 }
@@ -96,4 +105,3 @@ export class MetaCollection implements MetaValue {
     return null;
   }
 }
-

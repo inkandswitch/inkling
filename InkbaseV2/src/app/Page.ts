@@ -11,6 +11,7 @@ import { GameObject } from './GameObject';
 import Wire from './meta/Wire';
 import Namespace from './meta/Namespace';
 import { TokenWithVariable } from './meta/token-helpers';
+import Gizmo from './Gizmo';
 
 interface Options {
   strokeAnalyzer: boolean;
@@ -67,8 +68,12 @@ export default class Page extends GameObject {
 
   addWireFromToken(token: TokenWithVariable) {
     const w = new Wire();
-    w.a = new WeakRef(token);
+    w.attachFront(token.wirePort);
     return this.adopt(w);
+  }
+
+  addWireFromGizmo(gizmo: Gizmo) {
+
   }
 
   onstrokeUpdated(stroke: Stroke) {
