@@ -10,7 +10,7 @@ export const aMetaToggle = (gameObj: GameObject) =>
   gameObj instanceof MetaToggle ? gameObj : null;
 
 export default class MetaToggle extends GameObject {
-  element: SVGElement;
+  private readonly element: SVGElement;
   position: Position;
   dragging = false;
 
@@ -70,7 +70,13 @@ export default class MetaToggle extends GameObject {
   }
 
   private getAttrs() {
-    let classes = ['active', 'dragging'].filter(c => (this as any)[c]);
+    const classes: string[] = [];
+    if (this.active) {
+      classes.push('active');
+    }
+    if (this.dragging) {
+      classes.push('dragging');
+    }
 
     return {
       color: 'black',
