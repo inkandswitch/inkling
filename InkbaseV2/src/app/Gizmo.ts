@@ -39,7 +39,7 @@ class GizmoInstance extends GameObject {
   private readonly _a: WeakRef<Handle>;
   private readonly _b: WeakRef<Handle>;
 
-  wirePort: WirePort;
+  readonly wirePort: WirePort;
 
   get a(): Handle | undefined {
     return this._a.deref();
@@ -182,6 +182,8 @@ class GizmoInstance extends GameObject {
     this.updateLine();
     this.updateCenter();
     this.updateRadius();
+
+    this.wirePort.position = this.center;
 
     if (!this.visible) {
       return;
