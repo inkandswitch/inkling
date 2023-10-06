@@ -13,3 +13,9 @@ export const isTokenWithVariable = (
 export const isPropertyPicker = (
   token: Token | null
 ): token is PropertyPicker => token instanceof PropertyPicker;
+
+export const isLabelToken = (token: Token | null): token is LabelToken =>
+  token instanceof LabelToken;
+
+export const isNumberToken = (token: Token | null): token is NumberToken =>
+  token instanceof NumberToken;
