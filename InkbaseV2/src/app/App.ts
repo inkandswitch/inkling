@@ -26,7 +26,16 @@ import MetaToggle from './gui/MetaToggle';
 
 // This is a pretzel, because the interface between NativeEvents and Input is a work in progress.
 const events = new Events((event: Event, state: InputState) => {
-  applyEvent(event, state, events, page, pencil, formulaEditor, metaToggle);
+  applyEvent(
+    event,
+    state,
+    events,
+    root,
+    page,
+    pencil,
+    formulaEditor,
+    metaToggle
+  );
 });
 
 const page = new Page({ strokeAnalyzer: false });

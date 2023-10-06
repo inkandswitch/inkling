@@ -63,6 +63,7 @@ export function applyEvent(
   event: Event, // The current event we're processing.
   state: InputState, // The current state of the pencil or finger that generated this event.
   events: Events, // The full NativeEvents instance, so we can look at other the pencils/fingers.
+  root: GameObject,
   page: Page,
 
   // Marcel thinking: Passing every single thing as an argument seems kind of messy
@@ -71,31 +72,20 @@ export function applyEvent(
   formulaEditor: FormulaEditor,
   metaToggle: MetaToggle
 ) {
-  // TODO: Need a more reliable way to get root here.
-  const root = page.parent!;
   switch (event.type) {
     case 'finger':
       if (handleMetaToggleEvent(event, state, root)) {
         // already handled it!
       } else if (metaToggle.active) {
-        handleEventInMetaMode(
-          event,
-          state,
-          events,
-          root,
-          page,
-          formulaEditor,
-          pencil
-        );
+        handleMetaModeFingerEvent(event, state, events, page, formulaEditor);
       } else {
-        handleFingerEventInConcreteMode(event, page);
+        handleConcreteModeFingerEvent(event, page);
       }
       break;
     case 'pencil':
       if (metaToggle.active) {
-        handleEventInMetaMode(
+        handleMetaModePencilEvent(
           event,
-          state,
           events,
           root,
           page,
@@ -103,7 +93,7 @@ export function applyEvent(
           pencil
         );
       } else {
-        handlePencilEventInConcreteMode(event, formulaEditor, pencil);
+        handleConcreteModePencilEvent(event, formulaEditor, pencil);
       }
       break;
   }
@@ -154,9 +144,8 @@ function handleMetaToggleEvent(
   return false;
 }
 
-function handleEventInMetaMode(
-  event: Event,
-  state: InputState,
+function handleMetaModePencilEvent(
+  event: PencilEvent,
   events: Events,
   root: GameObject,
   page: Page,
@@ -195,11 +184,7 @@ function handleEventInMetaMode(
   const pencilStroke = pencil.stroke?.deref();
 
   // TAP INSIDE PROPERTY PICKER EDITOR
-  if (
-    event.type === 'pencil' &&
-    event.state === 'began' &&
-    propertyPickerEditorNearEvent
-  ) {
+  if (event.state === 'began' && propertyPickerEditorNearEvent) {
     propertyPickerEditorNearEvent.onTapInside(event.position);
     return;
   }
@@ -207,7 +192,6 @@ function handleEventInMetaMode(
   // WRITE INSIDE FORMULA EDITOR
   // Switch mode
   if (
-    event.type === 'pencil' &&
     event.state === 'began' &&
     events.fingerStates.length === 1 &&
     formulaEditorNearEvent &&
@@ -219,33 +203,17 @@ function handleEventInMetaMode(
     return;
   }
 
-  if (
-    event.type === 'finger' &&
-    event.state === 'ended' &&
-    formulaEditor.isActive() &&
-    event.id === objects.pseudoFinger
-  ) {
-    console.log(event.id);
-    formulaEditor.recognizeStrokes();
-    objects.pseudoFinger = undefined;
-    return;
-  }
-
-  if (
-    event.type === 'pencil' &&
-    event.state === 'began' &&
-    formulaEditorNearEvent?.active
-  ) {
+  if (event.state === 'began' && formulaEditorNearEvent?.active) {
     pencil.startStroke(getPositionWithPressure(event));
     return;
   }
 
-  if (event.type === 'pencil' && event.state === 'moved' && pencilStroke) {
+  if (event.state === 'moved' && pencilStroke) {
     pencil.extendStroke(getPositionWithPressure(event));
     return;
   }
 
-  if (event.type === 'pencil' && event.state === 'ended' && pencilStroke) {
+  if (event.state === 'ended' && pencilStroke) {
     formulaEditor.captureStroke(pencilStroke);
     pencil.endStroke();
     return;
@@ -254,7 +222,6 @@ function handleEventInMetaMode(
   // META PEN
   // Add wire from token
   if (
-    event.type === 'pencil' &&
     event.state === 'began' &&
     primaryTokenNearEvent &&
     isTokenWithVariable(primaryTokenNearEvent)
@@ -268,7 +235,6 @@ function handleEventInMetaMode(
 
   // Add wire from property picker
   if (
-    event.type === 'pencil' &&
     event.state === 'began' &&
     tokenNearEvent &&
     tokenNearEvent instanceof PropertyPicker
@@ -281,7 +247,7 @@ function handleEventInMetaMode(
   }
 
   // Add wire from gizmo
-  if (event.type === 'pencil' && event.state === 'began' && gizmoNearEvent) {
+  if (event.state === 'began' && gizmoNearEvent) {
     const w = new Wire();
     w.attachFront(gizmoNearEvent.wirePort);
     page.adopt(w);
@@ -290,23 +256,19 @@ function handleEventInMetaMode(
   }
 
   // Add wire from the middle of nowhere
-  if (event.type === 'pencil' && event.state === 'began') {
+  if (event.state === 'began') {
     objects.drawWire = page.addWireFromPosition(event.position);
     return;
   }
 
   // Drag wire endpoint
-  if (event.type === 'pencil' && event.state === 'moved' && objects.drawWire) {
+  if (event.state === 'moved' && objects.drawWire) {
     objects.drawWire.points[1] = event.position;
     return;
   }
 
   // If it's a tiny wire, remove it, and open formula editor (Simple tap)
-  if (
-    event.type === 'pencil' &&
-    event.state === 'ended' &&
-    objects.drawWire?.isCollapsable()
-  ) {
+  if (event.state === 'ended' && objects.drawWire?.isCollapsable()) {
     objects.drawWire.remove();
     formulaEditor.activateFromPosition(event.position);
     objects.drawWire = undefined;
@@ -315,7 +277,6 @@ function handleEventInMetaMode(
 
   // Attach & snap to a token
   if (
-    event.type === 'pencil' &&
     event.state === 'ended' &&
     objects.drawWire &&
     primaryTokenNearEvent &&
@@ -327,12 +288,7 @@ function handleEventInMetaMode(
   }
 
   // Attach & snap to a gizmo
-  if (
-    event.type === 'pencil' &&
-    event.state === 'ended' &&
-    objects.drawWire &&
-    gizmoNearEvent
-  ) {
+  if (event.state === 'ended' && objects.drawWire && gizmoNearEvent) {
     objects.drawWire.attachEnd(gizmoNearEvent.wirePort);
     objects.drawWire = undefined;
     return;
@@ -340,7 +296,6 @@ function handleEventInMetaMode(
 
   // End and create a new property Picker
   if (
-    event.type === 'pencil' &&
     event.state === 'ended' &&
     objects.drawWire?.a &&
     objects.drawWire?.a.deref()?.value instanceof MetaStruct
@@ -357,7 +312,7 @@ function handleEventInMetaMode(
 
   // End wire & Open context menu
   // TODO: Open context menu
-  if (event.type === 'pencil' && event.state === 'ended' && objects.drawWire) {
+  if (event.state === 'ended' && objects.drawWire) {
     const n = new NumberToken();
     n.position = event.position;
     objects.drawWire.attachEnd(n.wirePort);
@@ -365,11 +320,41 @@ function handleEventInMetaMode(
     objects.drawWire = undefined;
     return;
   }
+}
+
+function handleMetaModeFingerEvent(
+  event: FingerEvent,
+  state: InputState,
+  events: Events,
+  page: Page,
+  formulaEditor: FormulaEditor
+) {
+  const tokenNearEvent = page.find({
+    what: aToken,
+    near: event.position,
+    recursive: false,
+  });
+
+  const primaryTokenNearEvent = page.find({
+    what: aPrimaryToken,
+    near: event.position,
+    recursive: true,
+  });
+
+  if (
+    event.state === 'ended' &&
+    formulaEditor.isActive() &&
+    event.id === objects.pseudoFinger
+  ) {
+    console.log(event.id);
+    formulaEditor.recognizeStrokes();
+    objects.pseudoFinger = undefined;
+    return;
+  }
 
   // FORMULA EDITOR
   // Close formula editor
   if (
-    event.type === 'finger' &&
     event.state === 'began' &&
     events.fingerStates.length === 3 &&
     formulaEditor.isActive()
@@ -380,7 +365,6 @@ function handleEventInMetaMode(
 
   // Tapped label while editing formula
   if (
-    event.type === 'finger' &&
     event.state === 'began' &&
     events.fingerStates.length === 1 &&
     formulaEditor.isActive() &&
@@ -392,7 +376,6 @@ function handleEventInMetaMode(
 
   // SCRUB TOKENS
   if (
-    event.type === 'finger' &&
     event.state === 'began' &&
     events.fingerStates.length >= 2 &&
     primaryTokenNearEvent &&
@@ -408,11 +391,7 @@ function handleEventInMetaMode(
     return;
   }
 
-  if (
-    event.id === objects.scrubToken?.owner &&
-    event.type === 'finger' &&
-    event.state === 'moved'
-  ) {
+  if (event.id === objects.scrubToken?.owner && event.state === 'moved') {
     const { token, initialValue } = objects.scrubToken;
     const delta = state.originalPosition!.y - event.position.y;
     const m = 1 / Math.pow(10, events.fingerStates.length - 2);
@@ -423,7 +402,6 @@ function handleEventInMetaMode(
 
   // DRAGGING TOKENS
   if (
-    event.type === 'finger' &&
     event.state === 'began' &&
     events.fingerStates.length === 1 &&
     tokenNearEvent
@@ -436,7 +414,6 @@ function handleEventInMetaMode(
   }
 
   if (
-    event.type === 'finger' &&
     event.state === 'moved' &&
     events.fingerStates.length === 1 &&
     objects.dragToken
@@ -446,7 +423,7 @@ function handleEventInMetaMode(
     return;
   }
 
-  if (event.type === 'finger' && event.state === 'ended') {
+  if (event.state === 'ended') {
     if (
       primaryTokenNearEvent &&
       primaryTokenNearEvent instanceof NumberToken &&
@@ -468,7 +445,7 @@ function handleEventInMetaMode(
   }
 }
 
-function handlePencilEventInConcreteMode(
+function handleConcreteModePencilEvent(
   event: PencilEvent,
   formulaEditor: FormulaEditor,
   pencil: Pencil
@@ -492,7 +469,7 @@ function handlePencilEventInConcreteMode(
   }
 }
 
-function handleFingerEventInConcreteMode(event: FingerEvent, page: Page) {
+function handleConcreteModeFingerEvent(event: FingerEvent, page: Page) {
   switch (event.state) {
     case 'began': {
       const handleNearEvent = page.find({
