@@ -348,12 +348,13 @@ function handleMetaModeFingerEvent(
       ) {
         // tap on token
         primaryTokenNearEvent.onTap();
+      } else if (event.id === objects.scrubToken?.owner) {
+        if (!objects.scrubToken.wasLocked) {
+          objects.scrubToken.token.getVariable().unlock();
+        }
+        objects.scrubToken = undefined;
       }
 
-      if (objects.scrubToken?.wasLocked) {
-        objects.scrubToken.token.getVariable().unlock();
-      }
-      objects.scrubToken = undefined;
       objects.dragToken = undefined;
       objects.touchedHandle = undefined;
       break;
