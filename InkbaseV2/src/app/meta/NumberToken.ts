@@ -3,6 +3,8 @@ import COLORS from './Colors';
 import SVG from '../Svg';
 import { Variable } from '../constraints';
 import * as ohm from 'ohm-js';
+import { WirePort } from './Wire';
+import { MetaNumber } from './MetaSemantics';
 
 export default class NumberToken extends Token {
   protected readonly boxElement = SVG.add('rect', {
@@ -16,9 +18,9 @@ export default class NumberToken extends Token {
 
   protected readonly wholeTextElement = SVG.add('text', {
     x: this.position.x + 5,
-    y: this.position.y + 30,
+    y: this.position.y + 10,
     fill: COLORS.WHITE,
-    'font-size': '30px',
+    'font-size': '24px',
     'font-family': 'monospace',
   });
 
@@ -32,11 +34,14 @@ export default class NumberToken extends Token {
 
   readonly variable: Variable;
 
+  wirePort: WirePort;
+
   constructor(value?: number, source?: ohm.Interval);
   constructor(variable: Variable, source?: ohm.Interval);
   constructor(arg: number | Variable = 0, source?: ohm.Interval) {
     super(source);
     this.variable = arg instanceof Variable ? arg : new Variable(arg);
+    this.wirePort = this.adopt(new WirePort(this.position, new MetaNumber(this.variable)));
   }
 
   isPrimary() {
@@ -67,13 +72,15 @@ export default class NumberToken extends Token {
 
     SVG.update(this.wholeTextElement, {
       x: this.position.x + 5,
-      y: this.position.y + 30,
+      y: this.position.y + 24,
     });
 
     SVG.update(this.fracTextElement, {
       x: this.position.x + 5 + wholeWidth + 2,
-      y: this.position.y + 30,
+      y: this.position.y + 24,
     });
+
+    this.wirePort.position = this.midPoint();
   }
 
   getVariable() {

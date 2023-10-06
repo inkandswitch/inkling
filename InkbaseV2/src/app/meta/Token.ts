@@ -8,7 +8,7 @@ import Vec from '../../lib/vec';
 export default abstract class Token extends GameObject {
   position: Position = { x: 100, y: 100 };
   width = 90;
-  height = 40;
+  height = 30;
 
   constructor(public source?: ohm.Interval) {
     super();

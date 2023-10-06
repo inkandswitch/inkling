@@ -3,6 +3,8 @@ import COLORS from './Colors';
 import SVG from '../Svg';
 import Label from './Label';
 import * as ohm from 'ohm-js';
+import { WirePort } from './Wire';
+import { MetaNumber } from './MetaSemantics';
 
 export default class LabelToken extends Token {
   protected readonly boxElement = SVG.add('rect', {
@@ -22,6 +24,8 @@ export default class LabelToken extends Token {
   });
 
   readonly strokeElements: SVGElement[] = [];
+
+  wirePort: WirePort;
 
   constructor(
     public readonly label: Label,
@@ -47,6 +51,8 @@ export default class LabelToken extends Token {
       this.width = label.display.width;
     }
     SVG.update(this.boxElement, { width: this.width });
+
+    this.wirePort = this.adopt(new WirePort(this.position, new MetaNumber(this.label.variable)));
   }
 
   isPrimary() {
@@ -69,6 +75,8 @@ export default class LabelToken extends Token {
         transform: `translate(${this.position.x}, ${this.position.y})`,
       });
     }
+
+    this.wirePort.position = this.midPoint();
   }
 
   getVariable() {

@@ -12,6 +12,8 @@ import FreehandStroke from './strokes/FreehandStroke';
 import * as constraints from './constraints';
 import Line from '../lib/line';
 import { GameObject } from './GameObject';
+import { WirePort } from './meta/Wire';
+import { MetaNumber, MetaStruct } from './meta/MetaSemantics';
 
 function stroke(color: string, width = 6) {
   return {
@@ -37,6 +39,8 @@ class GizmoInstance extends GameObject {
   private readonly _a: WeakRef<Handle>;
   private readonly _b: WeakRef<Handle>;
 
+  wirePort: WirePort;
+
   get a(): Handle | undefined {
     return this._a.deref();
   }
@@ -59,6 +63,11 @@ class GizmoInstance extends GameObject {
     this.center = this.updateCenter()!;
     this.radius = this.updateRadius()!;
     this.polarVectorConstraint = constraints.polarVector(a, b);
+
+    this.wirePort = this.adopt(new WirePort(this.center, new MetaStruct({
+      "distance": new MetaNumber(this.polarVectorConstraint.variables.distance),
+      "angle": new MetaNumber(this.polarVectorConstraint.variables.angle),
+    })));
   }
 
   updateLine() {

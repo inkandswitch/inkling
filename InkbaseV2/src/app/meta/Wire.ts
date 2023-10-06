@@ -4,16 +4,28 @@ import SVG from '../Svg';
 import { Position } from '../../lib/types';
 import Vec from '../../lib/vec';
 import * as constraints from '../constraints';
+import { MetaConnection, MetaValue } from './MetaSemantics';
 
-export interface Wireable {
-  midPoint(): Position;
-  getVariable(): constraints.Variable;
+export class WirePort extends GameObject {
+  position: Position;
+  value: MetaValue;
+
+  constructor(position: Position, value: MetaValue) {
+    super();
+    this.position = position;
+    this.value = value;
+  }
+
+  render(dt: number, t: number): void {
+    
+  }
 }
 
 export default class Wire extends GameObject {
   points: Position[] = [];
-  a?: WeakRef<Wireable>;
-  b?: WeakRef<Wireable>;
+  a?: WeakRef<WirePort>;
+  b?: WeakRef<WirePort>;
+  connection: MetaConnection | null = null;
 
   protected readonly wireElement = SVG.add('polyline', {
     points: '',
@@ -26,11 +38,11 @@ export default class Wire extends GameObject {
     const b = this.b?.deref();
 
     if (a) {
-      this.points[0] = a.midPoint();
+      this.points[0] = a.position;
     }
 
     if (b) {
-      this.points[1] = b.midPoint();
+      this.points[1] = b.position;
     }
 
     SVG.update(this.wireElement, { points: SVG.points(this.points) });
@@ -41,12 +53,12 @@ export default class Wire extends GameObject {
     return p1 && p2 && Vec.dist(p1, p2) < 10;
   }
 
-  attachFront(element: Wireable) {
+  attachFront(element: WirePort) {
     this.a = new WeakRef(element);
     this.updateConstraint();
   }
 
-  attachEnd(element: Wireable) {
+  attachEnd(element: WirePort) {
     this.b = new WeakRef(element);
     this.updateConstraint();
   }
@@ -55,7 +67,7 @@ export default class Wire extends GameObject {
     const a = this.a?.deref();
     const b = this.b?.deref();
     if (a && b) {
-      constraints.equals(a.getVariable(), b.getVariable());
+      this.connection = a.value.wireTo(b.value);
     }
   }
 

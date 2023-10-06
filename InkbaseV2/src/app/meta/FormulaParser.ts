@@ -49,9 +49,7 @@ Formula {
 
   tokens
     = (number | name | any)*
-
 }
-
 `);
 
 export default class FormulaParser {
