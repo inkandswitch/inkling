@@ -10,7 +10,6 @@ import Events, {
 } from './NativeEvents';
 import Page from './Page';
 import FormulaEditor, { aFormulaEditor } from './meta/FormulaEditor';
-import LabelToken from './meta/LabelToken';
 import NumberToken from './meta/NumberToken';
 import Token, { aPrimaryToken, aToken } from './meta/Token';
 import Handle, { aCanonicalHandle } from './strokes/Handle';
