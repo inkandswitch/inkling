@@ -33,8 +33,6 @@ class GizmoInstance extends GameObject {
   visible = true;
 
   polarVectorConstraint: constraints.AddConstraintResult<'angle' | 'distance'>;
-  distanceConstraint: constraints.AddConstraintResult<never> | undefined;
-  angleConstraint: constraints.AddConstraintResult<never> | undefined;
 
   private readonly _a: WeakRef<Handle>;
   private readonly _b: WeakRef<Handle>;
@@ -157,33 +155,11 @@ class GizmoInstance extends GameObject {
   }
 
   toggleDistance() {
-    if (!this.distanceConstraint) {
-      const handles = this.handles;
-      if (handles) {
-        this.distanceConstraint = constraints.constant(
-          this.polarVectorConstraint.variables.distance,
-          Vec.dist(handles.a.position, handles.b.position)
-        );
-      }
-    } else {
-      this.distanceConstraint.remove();
-      this.distanceConstraint = undefined;
-    }
+    this.polarVectorConstraint.variables.distance.toggleLock();
   }
 
   toggleAngle() {
-    if (!this.angleConstraint) {
-      const handles = this.handles;
-      if (handles) {
-        this.angleConstraint = constraints.constant(
-          this.polarVectorConstraint.variables.angle,
-          Vec.angle(Vec.sub(handles.b.position, handles.a.position))
-        );
-      }
-    } else {
-      this.angleConstraint.remove();
-      this.angleConstraint = undefined;
-    }
+    this.polarVectorConstraint.variables.angle.toggleLock();
   }
 
   render() {
@@ -207,11 +183,19 @@ class GizmoInstance extends GameObject {
       SVG.arcPath(this.center, 20, angle + TAU / 4, Math.PI / 3),
     ].join();
 
-    SVG.now('path', { d, ...stroke(this.angleConstraint ? green : grey) });
+    SVG.now('path', {
+      d,
+      ...stroke(
+        this.polarVectorConstraint.variables.angle.isLocked ? green : grey
+      ),
+    });
 
     SVG.now('polyline', {
       points: SVG.points(handles.a.position, handles.b.position),
-      ...stroke(this.distanceConstraint ? green : grey, 3),
+      ...stroke(
+        this.polarVectorConstraint.variables.distance.isLocked ? green : grey,
+        3
+      ),
     });
   }
 
