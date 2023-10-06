@@ -57,7 +57,7 @@ const objects: Partial<{
     owner: TouchId;
     toggle: MetaToggle;
   };
-  pseudoFinger: string;
+  pseudoFinger: TouchId;
 }> = {};
 
 // End gesture state variables.
