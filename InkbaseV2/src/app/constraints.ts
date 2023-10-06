@@ -123,8 +123,10 @@ export class Variable {
     return !!this.lockConstraint;
   }
 
-  lock() {
-    constant(this.canonicalInstance);
+  lock(): Constant {
+    return constant(this.canonicalInstance).constraints.find(
+      isConstantConstraint
+    )!;
   }
 
   unlock() {
@@ -855,6 +857,9 @@ class Constant extends Constraint {
     return this.toAddConstraintResult();
   }
 }
+
+const isConstantConstraint = (c: Constraint): c is Constant =>
+  c instanceof Constant;
 
 export function equals(a: Variable, b: Variable): AddConstraintResult<never> {
   return addConstraint(
