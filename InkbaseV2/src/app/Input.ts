@@ -18,7 +18,7 @@ import Pencil from './tools/Pencil';
 import { Position } from '../lib/types';
 import Wire from './meta/Wire';
 import * as constraints from './constraints';
-import { isTokenWithVariable } from './meta/token-helpers';
+import { isPropertyPicker, isTokenWithVariable } from './meta/token-helpers';
 import MetaToggle, { aMetaToggle } from './gui/MetaToggle';
 import { MetaStruct } from './meta/MetaSemantics';
 import PropertyPicker from './meta/PropertyPicker';
@@ -180,142 +180,90 @@ function handleMetaModePencilEvent(
 
   const pencilStroke = pencil.stroke?.deref();
 
-  // TAP INSIDE PROPERTY PICKER EDITOR
-  if (event.state === 'began' && propertyPickerEditorNearEvent) {
-    propertyPickerEditorNearEvent.onTapInside(event.position);
-    return;
-  }
-
-  // WRITE INSIDE FORMULA EDITOR
-  // Switch mode
-  if (
-    event.state === 'began' &&
-    events.fingerStates.length === 1 &&
-    formulaEditorNearEvent &&
-    formulaEditor.isActive() &&
-    !objects.pseudoFinger
-  ) {
-    formulaEditor.switchCellMode(event.position);
-    objects.pseudoFinger = events.fingerStates[0].id;
-    return;
-  }
-
-  if (event.state === 'began' && formulaEditorNearEvent?.active) {
-    pencil.startStroke(getPositionWithPressure(event));
-    return;
-  }
-
-  if (event.state === 'moved' && pencilStroke) {
-    pencil.extendStroke(getPositionWithPressure(event));
-    return;
-  }
-
-  if (event.state === 'ended' && pencilStroke) {
-    formulaEditor.captureStroke(pencilStroke);
-    pencil.endStroke();
-    return;
-  }
-
-  // META PEN
-  // Add wire from token
-  if (
-    event.state === 'began' &&
-    primaryTokenNearEvent &&
-    isTokenWithVariable(primaryTokenNearEvent)
-  ) {
-    const w = new Wire();
-    w.attachFront(primaryTokenNearEvent.wirePort);
-    page.adopt(w);
-    objects.drawWire = w;
-    return;
-  }
-
-  // Add wire from property picker
-  if (
-    event.state === 'began' &&
-    tokenNearEvent &&
-    tokenNearEvent instanceof PropertyPicker
-  ) {
-    const w = new Wire();
-    w.attachFront(tokenNearEvent.outputPort);
-    page.adopt(w);
-    objects.drawWire = w;
-    return;
-  }
-
-  // Add wire from gizmo
-  if (event.state === 'began' && gizmoNearEvent) {
-    const w = new Wire();
-    w.attachFront(gizmoNearEvent.wirePort);
-    page.adopt(w);
-    objects.drawWire = w;
-    return;
-  }
-
-  // Add wire from the middle of nowhere
-  if (event.state === 'began') {
-    objects.drawWire = page.addWireFromPosition(event.position);
-    return;
-  }
-
-  // Drag wire endpoint
-  if (event.state === 'moved' && objects.drawWire) {
-    objects.drawWire.points[1] = event.position;
-    return;
-  }
-
-  // If it's a tiny wire, remove it, and open formula editor (Simple tap)
-  if (event.state === 'ended' && objects.drawWire?.isCollapsable()) {
-    objects.drawWire.remove();
-    formulaEditor.activateFromPosition(event.position);
-    objects.drawWire = undefined;
-    return;
-  }
-
-  // Attach & snap to a token
-  if (
-    event.state === 'ended' &&
-    objects.drawWire &&
-    primaryTokenNearEvent &&
-    isTokenWithVariable(primaryTokenNearEvent)
-  ) {
-    objects.drawWire.attachEnd(primaryTokenNearEvent.wirePort);
-    objects.drawWire = undefined;
-    return;
-  }
-
-  // Attach & snap to a gizmo
-  if (event.state === 'ended' && objects.drawWire && gizmoNearEvent) {
-    objects.drawWire.attachEnd(gizmoNearEvent.wirePort);
-    objects.drawWire = undefined;
-    return;
-  }
-
-  // End and create a new property Picker
-  if (
-    event.state === 'ended' &&
-    objects.drawWire?.a &&
-    objects.drawWire?.a.deref()?.value instanceof MetaStruct
-  ) {
-    const p = new PropertyPicker();
-    p.position = event.position;
-    page.adopt(p);
-    objects.drawWire.attachEnd(p.inputPort);
-    objects.drawWire = undefined;
-    const editor = new PropertyPickerEditor(p);
-    page.adopt(editor);
-    return;
-  }
-
-  // End wire & Open context menu
-  // TODO: Open context menu
-  if (event.state === 'ended' && objects.drawWire) {
-    const n = new NumberToken();
-    n.position = event.position;
-    objects.drawWire.attachEnd(n.wirePort);
-    page.adopt(n);
-    objects.drawWire = undefined;
-    return;
+  switch (event.state) {
+    case 'began':
+      if (propertyPickerEditorNearEvent) {
+        // tap inside property picker editor
+        propertyPickerEditorNearEvent.onTapInside(event.position);
+      } else if (
+        formulaEditorNearEvent?.isActive() &&
+        events.fingerStates.length === 1 &&
+        !objects.pseudoFinger
+      ) {
+        // write inside formula editor (switch mode)
+        formulaEditor.switchCellMode(event.position);
+        objects.pseudoFinger = events.fingerStates[0].id;
+      } else if (formulaEditorNearEvent?.isActive()) {
+        pencil.startStroke(getPositionWithPressure(event));
+      } else if (isTokenWithVariable(primaryTokenNearEvent)) {
+        // add wire from token
+        const w = new Wire();
+        w.attachFront(primaryTokenNearEvent.wirePort);
+        page.adopt(w);
+        objects.drawWire = w;
+      } else if (isPropertyPicker(tokenNearEvent)) {
+        // add wire from property picker
+        const w = new Wire();
+        w.attachFront(tokenNearEvent.outputPort);
+        page.adopt(w);
+        objects.drawWire = w;
+      } else if (gizmoNearEvent) {
+        // add wire from gizmo
+        const w = new Wire();
+        w.attachFront(gizmoNearEvent.wirePort);
+        page.adopt(w);
+        objects.drawWire = w;
+      } else {
+        // add wire from the middle of nowhere
+        objects.drawWire = page.addWireFromPosition(event.position);
+      }
+      break;
+    case 'moved':
+      if (pencilStroke) {
+        pencil.extendStroke(getPositionWithPressure(event));
+      } else if (objects.drawWire) {
+        // drag wire endpoint
+        objects.drawWire.points[1] = event.position;
+      }
+      break;
+    case 'ended':
+      if (pencilStroke) {
+        formulaEditor.captureStroke(pencilStroke);
+        pencil.endStroke();
+      } else if (objects.drawWire?.isCollapsable()) {
+        // if it's a tiny wire, remove it and open formula editor (simple tap)
+        objects.drawWire.remove();
+        objects.drawWire = undefined;
+        formulaEditor.activateFromPosition(event.position);
+      } else if (
+        objects.drawWire &&
+        isTokenWithVariable(primaryTokenNearEvent)
+      ) {
+        // attach & snap to a token
+        objects.drawWire.attachEnd(primaryTokenNearEvent.wirePort);
+        objects.drawWire = undefined;
+      } else if (objects.drawWire && gizmoNearEvent) {
+        // attach & snap to a gizmo
+        objects.drawWire.attachEnd(gizmoNearEvent.wirePort);
+        objects.drawWire = undefined;
+      } else if (objects.drawWire?.a?.deref()?.value instanceof MetaStruct) {
+        // end and create a new property picker
+        const p = new PropertyPicker();
+        p.position = event.position;
+        page.adopt(p);
+        objects.drawWire.attachEnd(p.inputPort);
+        objects.drawWire = undefined;
+        const editor = new PropertyPickerEditor(p);
+        page.adopt(editor);
+      } else if (objects.drawWire) {
+        // end wire & Open context menu
+        // TODO: open context menu
+        const n = new NumberToken();
+        n.position = event.position;
+        objects.drawWire.attachEnd(n.wirePort);
+        page.adopt(n);
+        objects.drawWire = undefined;
+      }
   }
 }
 
