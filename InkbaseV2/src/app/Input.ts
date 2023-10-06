@@ -72,7 +72,7 @@ export function applyEvent(
 ) {
   switch (event.type) {
     case 'finger':
-      if (handleMetaToggleEvent(event, state, root)) {
+      if (handleMetaToggleFingerEvent(event, state, root)) {
         // already handled it!
       } else if (metaToggle.active) {
         handleMetaModeFingerEvent(
@@ -96,7 +96,7 @@ export function applyEvent(
   }
 }
 
-function handleMetaToggleEvent(
+function handleMetaToggleFingerEvent(
   event: FingerEvent,
   state: InputState,
   root: GameObject
@@ -108,34 +108,33 @@ function handleMetaToggleEvent(
     tooFar: 50,
   });
 
-  if (event.state === 'began' && metaToggleNearEvent) {
-    objects.touchedMetaToggle = {
-      owner: event.id,
-      toggle: metaToggleNearEvent,
-    };
-    return true;
-  }
-
-  if (
-    event.state === 'moved' &&
-    state.drag &&
-    objects.touchedMetaToggle?.owner === event.id
-  ) {
-    objects.touchedMetaToggle.toggle.dragTo(event.position);
-    return true;
-  }
-
-  if (
-    event.state === 'ended' &&
-    objects.touchedMetaToggle?.owner === event.id
-  ) {
-    if (!state.drag) {
-      objects.touchedMetaToggle.toggle.toggle();
-    } else {
-      objects.touchedMetaToggle.toggle.snapToCorner();
-    }
-    objects.touchedMetaToggle = undefined;
-    return true;
+  switch (event.state) {
+    case 'began':
+      if (metaToggleNearEvent) {
+        objects.touchedMetaToggle = {
+          owner: event.id,
+          toggle: metaToggleNearEvent,
+        };
+        return true;
+      }
+      break;
+    case 'moved':
+      if (state.drag && objects.touchedMetaToggle?.owner === event.id) {
+        objects.touchedMetaToggle.toggle.dragTo(event.position);
+        return true;
+      }
+      break;
+    case 'ended':
+      if (objects.touchedMetaToggle?.owner === event.id) {
+        if (!state.drag) {
+          objects.touchedMetaToggle.toggle.toggle();
+        } else {
+          objects.touchedMetaToggle.toggle.snapToCorner();
+        }
+        objects.touchedMetaToggle = undefined;
+        return true;
+      }
+      break;
   }
 
   return false;
