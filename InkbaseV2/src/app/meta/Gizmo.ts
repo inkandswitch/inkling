@@ -79,12 +79,6 @@ class GizmoInstance extends GameObject {
     if (!handles) {
       return this.line;
     }
-
-    // let a_b = Vec.renormalize(Vec.sub(b.position, a.position), 10000);
-    // return (this.line = Line(
-    //   Vec.sub(a.position, a_b),
-    //   Vec.add(b.position, a_b)
-    // ));
     return (this.line = Line(handles.a.position, handles.b.position));
   }
 
@@ -98,11 +92,6 @@ class GizmoInstance extends GameObject {
   }
 
   updateRadius() {
-    // let d = Vec.dist(this.b.position, this.a.position) / 2;
-    // let unscaled = lerp(d, 100, 200, 0, 1, true);
-    // let curved = 0.5 + 0.5 * unscaled ** 2;
-    // let scaled = lerp(curved, 0, 1, 100, 200, true);
-    // return (this.radius = Math.max(d, scaled));
     return (this.radius = 20);
   }
 
@@ -128,11 +117,6 @@ class GizmoInstance extends GameObject {
         return true;
       }
     }
-
-    // const fingerMove = events.findLast('finger', 'moved');
-    // if (fingerMove) {
-    //   return true;
-    // }
 
     const fingerUp = events.find('finger', 'ended');
 
@@ -268,9 +252,6 @@ export default class Gizmo {
       return;
     }
 
-    // Assume all gizmos will be hidden
-    // this.all.forEach(v => (v.visible = false));
-
     for (const { a, b } of this.page.strokeGroups) {
       const gizmo = this.findOrCreate(a, b);
       if (gizmo.visible || a.isSelected || b.isSelected) {
@@ -308,65 +289,6 @@ export default class Gizmo {
     const d = this.page.adopt(Handle.create('informal', { x: 500, y: 500 }));
     return this.findOrCreate(c, d);
   }
-
-  // render(dt: number, t: number) {
-  //   this.all.forEach(gizmo => gizmo.render(dt, t));
-  //   this.selection.distPos = null;
-  //   this.selection.anglePos = null;
-  //   if (Object.values(this.selection.dragging).length == 2) this.crossbow();
-  // }
-
-  // crossbow() {
-  //   let dist = Vec.dist(a.position, b.position);
-
-  //   let superA = Vec.lerp(b.position, a.position, 10_000);
-  //   let superB = Vec.lerp(a.position, b.position, 10_000);
-
-  //   SVG.now('polyline', {
-  //     points: SVG.points(superA, superB),
-  //     ...green,
-  //   });
-
-  //   let theta = Vec.angle(Vec.sub(b.position, a.position));
-
-  //   let wedge = Math.PI;
-
-  //   let C = Vec.avg(a.position, b.position);
-  //   dist /= 2;
-  //   let D = Vec.add(C, Vec.polar(theta, dist));
-  //   let O = Vec.add(C, Vec.polar(theta + wedge / 2, dist));
-  //   let N = Vec.add(C, Vec.polar(theta - wedge / 2, dist));
-
-  //   let A = {
-  //     d: `
-  //     M ${D.x}, ${D.y}
-  //     A ${dist},${dist} 0 0,1  ${O.x}, ${O.y}
-  //     M ${D.x}, ${D.y}
-  //     A ${dist},${dist} 0 0,0  ${N.x}, ${N.y}
-  //   `,
-  //   };
-  //   SVG.now('path', { ...blue, ...A });
-
-  //   D = Vec.add(C, Vec.polar(theta, -dist));
-  //   O = Vec.add(C, Vec.polar(theta + wedge / 2, -dist));
-  //   N = Vec.add(C, Vec.polar(theta - wedge / 2, -dist));
-
-  //   let B = {
-  //     d: `
-  //     M ${D.x}, ${D.y}
-  //     A ${dist},${dist} 0 0,1  ${O.x}, ${O.y}
-  //     M ${D.x}, ${D.y}
-  //     A ${dist},${dist} 0 0,0  ${N.x}, ${N.y}
-  //   `,
-  //   };
-
-  //   SVG.now('path', { ...blue, ...B });
-
-  //   this.selection.distPos = C;
-
-  //   if (this.selection.distLocked) {
-  //   }
-  // }
 }
 
 export const aGizmo = (gameObj: GameObject) =>
