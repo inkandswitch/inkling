@@ -18,6 +18,10 @@ export default class Stroke extends GameObject {
     super();
   }
 
+  updatePath(newPoints: Array<PositionWithPressure>) {
+    this.points = newPoints;
+  }
+
   render(): void {
     SVG.update(this.element, {
       points: SVG.points(this.points),

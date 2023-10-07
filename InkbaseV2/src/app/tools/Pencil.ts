@@ -1,9 +1,9 @@
 import { GameObject } from '../GameObject';
 import Stroke from '../strokes/Stroke';
 
-import { PositionWithPressure, PositionWithRadius } from '../../lib/types';
+import { PositionWithPressure } from '../../lib/types';
 
-export default class pencil extends GameObject {
+export default class Pencil extends GameObject {
   stroke: WeakRef<Stroke> | null = null;
 
   startStroke(point: PositionWithPressure) {

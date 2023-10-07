@@ -1,14 +1,11 @@
-import {
-  TAU,
-  // lerp,
-} from '../lib/math';
+import { TAU } from '../lib/math';
 import Events from './NativeEvents';
 import Page from './Page';
 import SVG from './Svg';
 import Handle from './strokes/Handle';
 import Vec from '../lib/vec';
 import { Position } from '../lib/types';
-import FreehandStroke from './strokes/FreehandStroke';
+import Stroke from './strokes/Stroke';
 import * as constraints from './constraints';
 import Line from '../lib/line';
 import { GameObject } from './GameObject';
@@ -257,7 +254,7 @@ export default class Gizmo {
 
   private addStrokeGroup(p1: Position, p2: Position) {
     const stroke = this.page.addStroke(
-      new FreehandStroke([
+      new Stroke([
         { ...p1, pressure: 1 },
         { ...p2, pressure: 1 },
       ])

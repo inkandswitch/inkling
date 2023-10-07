@@ -1,4 +1,4 @@
-import FreehandStroke, { aFreehandStroke } from './FreehandStroke';
+import Stroke, { aStroke } from './Stroke';
 import Handle from './Handle';
 
 import TransformationMatrix from '../../lib/TransformationMatrix';
@@ -28,7 +28,7 @@ export default class StrokeGroup extends GameObject {
 
   svgElements: SVGElement[] = [];
 
-  constructor(strokes: Set<FreehandStroke>) {
+  constructor(strokes: Set<Stroke>) {
     super();
 
     for (const stroke of strokes) {
@@ -52,8 +52,8 @@ export default class StrokeGroup extends GameObject {
     );
   }
 
-  get strokes(): FreehandStroke[] {
-    return this.findAll({ what: aFreehandStroke, recursive: false });
+  get strokes(): Stroke[] {
+    return this.findAll({ what: aStroke, recursive: false });
   }
 
   onHandleMoved() {
@@ -87,7 +87,7 @@ export default class StrokeGroup extends GameObject {
     return minDistance;
   }
 
-  // addStroke(stroke: FreehandStroke){
+  // addStroke(stroke: Stroke){
   //   this.strokes.add(stroke);
   //   this.dirty = true;
 

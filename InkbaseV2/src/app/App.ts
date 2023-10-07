@@ -1,14 +1,5 @@
 import Events, { Event, InputState } from './NativeEvents';
 import Page from './Page';
-import Snaps from './Snaps';
-// import Selection from './Selection';
-// import FreehandSelection from './FreehandSelection';
-// import ToolPicker from './ToolPicker';
-// import FreehandTool from './tools/FreehandTool';
-// import FormalTool from './tools/FormalTool';
-// import ColorTool from './tools/ColorTool';
-// import Tool from './tools/Tool';
-// import ConstraintTool from './tools/ConstraintTool';
 import SVG from './Svg';
 import * as constraints from './constraints';
 import { onEveryFrame } from '../lib/helpers';
@@ -32,12 +23,6 @@ const events = new Events((event: Event, state: InputState) => {
 const page = new Page({ strokeAnalyzer: false });
 root.adopt(page);
 root.currentPage = page;
-
-const snaps = new Snaps({ handleSnaps: true, alignmentSnaps: false });
-root.adopt(snaps);
-
-// const selection = new Selection(page, snaps);
-// const freehandSelection = new FreehandSelection(page);
 
 const gizmo = new Gizmo(page, false);
 
@@ -104,30 +89,12 @@ onEveryFrame((dt, t) => {
   constraints.now.clear();
 
   // Potentially deprecated — consider whether & how these should be migrated to Input.ts
-  // toolPicker.update(events);
-  // toolPicker.selected?.update(events);
-  // selection.update1(events);
   gizmo.update(events);
-  // selection.update2(events);
-  // freehandSelection.update(events);
 
   // Tell NativeEvent to handle all events sent from Swift, evaluating Input for each
   events.update();
 
   constraints.solve();
 
-  // render everything
   root.render(dt, t);
-
-  // Ivan is currently using this to debug Input — he'll remove it soon
-  // SVG.now('foreignObject', {
-  //   x: 50,
-  //   y: 50,
-  //   width: 1000,
-  //   height: 1000,
-  //   content: JSON.stringify({
-  //     pencil: events.pencilState,
-  //     fingers: events.fingerStates,
-  //   }),
-  // });
 });
