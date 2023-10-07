@@ -400,12 +400,12 @@ function handleConcreteModeFingerEvent(event: FingerEvent, page: Page) {
     case 'moved':
       if (objects.touchedHandle) {
         // TODO: replace this with the correct gestures
-        const handle = objects.touchedHandle;
-        handle.position = event.position;
-        constraints.now.pin(handle);
+        page.moveHandle(objects.touchedHandle, event.position);
+        constraints.now.pin(objects.touchedHandle);
       }
       break;
     case 'ended':
+      objects.touchedHandle?.absorbNearbyHandles();
       objects.touchedHandle = undefined;
       break;
   }
