@@ -1,6 +1,6 @@
 import { GameObject } from '../GameObject';
 import { Position, PositionWithPressure } from '../../lib/types';
-import COLORS from './Colors';
+import COLORS from '../Colors';
 import SVG from '../Svg';
 import Stroke, { aStroke } from '../ink/Stroke';
 import Vec from '../../lib/vec';

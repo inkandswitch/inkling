@@ -1,4 +1,4 @@
-import COLORS from './Colors';
+import COLORS from '../Colors';
 import Token from './Token';
 import SVG from '../Svg';
 import * as ohm from 'ohm-js';

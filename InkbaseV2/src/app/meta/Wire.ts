@@ -1,5 +1,5 @@
 import { GameObject } from '../GameObject';
-import COLORS from './Colors';
+import COLORS from '../Colors';
 import SVG from '../Svg';
 import { Position } from '../../lib/types';
 import Vec from '../../lib/vec';

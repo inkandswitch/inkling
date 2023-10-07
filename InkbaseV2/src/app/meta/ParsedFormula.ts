@@ -1,5 +1,5 @@
 import Token from './Token';
-import COLORS from './Colors';
+import COLORS from '../Colors';
 import SVG from '../Svg';
 import Vec from '../../lib/vec';
 import { isTokenWithVariable } from './token-helpers';

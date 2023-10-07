@@ -1,6 +1,6 @@
 import Token from './Token';
 import SVG from '../Svg';
-import COLORS from './Colors';
+import COLORS from '../Colors';
 import { Position } from '../../lib/types';
 import { WirePort } from './Wire';
 import * as constraints from '../constraints';

@@ -1,5 +1,5 @@
 import Token from './Token';
-import COLORS from './Colors';
+import COLORS from '../Colors';
 import SVG from '../Svg';
 import { Variable } from '../constraints';
 import * as ohm from 'ohm-js';
