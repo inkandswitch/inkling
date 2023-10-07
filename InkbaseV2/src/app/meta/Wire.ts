@@ -60,7 +60,7 @@ export default class Wire extends GameObject {
     this.updateConstraint();
   }
 
-  updateConstraint() {
+  private updateConstraint() {
     const a = this.a?.deref();
     const b = this.b?.deref();
     if (a && b) {
