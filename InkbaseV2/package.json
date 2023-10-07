@@ -8,21 +8,16 @@
     "build": "snowpack build",
     "check": "gts check",
     "clean": "gts clean",
-    "compile": "tsc",
-    "fix": "gts fix",
-    "prepare": "npm run compile",
-    "pretest": "npm run compile",
-    "posttest": "npm run check"
+    "fix": "gts fix"
   },
   "keywords": [],
   "license": "MIT",
   "devDependencies": {
-    "gts": "^5.0.0",
+    "gts": "^5.2.0",
     "snowpack": "3.0.13",
-    "typescript": "~5.1.6"
+    "typescript": "^5.2.2"
   },
   "dependencies": {
-    "ohm-js": "^17.1.0",
-    "perfect-freehand": "^1.2.0"
+    "ohm-js": "^17.1.0"
   }
 }
