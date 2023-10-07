@@ -4,9 +4,10 @@ import { GameObject } from '../GameObject';
 import Vec from '../../lib/vec';
 import Line from '../../lib/line';
 import Rect from '../../lib/rect';
+import COLORS from '../Colors';
 
 export default class Stroke extends GameObject {
-  color: string = '#000';
+  color: string = COLORS.INK;
 
   protected element = SVG.add('polyline', SVG.inkElm, {
     fill: 'none',

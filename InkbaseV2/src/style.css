@@ -1,3 +1,14 @@
+:root {
+  --ink-color: #000a;
+  --grey-dark-color: #4d5254;
+  --grey-less-dark-color: #777;
+  --grey-mid-color: #e7e7e7;
+  --grey-light-color: #e7e7e7;
+  --grey-bright-color: #fafafa;
+  --white-color: #ffffff;
+  --blue-color: #b0c4ec;
+}
+
 *,
 *::before,
 *::after {
