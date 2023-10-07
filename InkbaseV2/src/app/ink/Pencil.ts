@@ -1,5 +1,5 @@
 import { GameObject } from '../GameObject';
-import Stroke from '../strokes/Stroke';
+import Stroke from './Stroke';
 
 import { PositionWithPressure } from '../../lib/types';
 

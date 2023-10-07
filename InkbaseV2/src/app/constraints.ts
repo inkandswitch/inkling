@@ -2,7 +2,7 @@ import { minimize } from '../lib/g9';
 import { Position } from '../lib/types';
 import { generateId, removeOne } from '../lib/helpers';
 import Vec from '../lib/vec';
-import Handle from './strokes/Handle';
+import Handle from './ink/Handle';
 import SVG from './Svg';
 
 type VariableInfo = CanonicalVariableInfo | AbsorbedVariableInfo;

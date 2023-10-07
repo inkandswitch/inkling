@@ -2,7 +2,7 @@ import { GameObject } from '../GameObject';
 import { Position, PositionWithPressure } from '../../lib/types';
 import COLORS from './Colors';
 import SVG from '../Svg';
-import Stroke, { aStroke } from '../strokes/Stroke';
+import Stroke, { aStroke } from '../ink/Stroke';
 import Vec from '../../lib/vec';
 import Rect from '../../lib/rect';
 

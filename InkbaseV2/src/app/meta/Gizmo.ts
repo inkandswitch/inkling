@@ -1,16 +1,16 @@
-import { TAU } from '../lib/math';
-import Events from './NativeEvents';
-import Page from './Page';
-import SVG from './Svg';
-import Handle from './strokes/Handle';
-import Vec from '../lib/vec';
-import { Position } from '../lib/types';
-import Stroke from './strokes/Stroke';
-import * as constraints from './constraints';
-import Line from '../lib/line';
-import { GameObject } from './GameObject';
-import { WirePort } from './meta/Wire';
-import { MetaNumber, MetaStruct } from './meta/MetaSemantics';
+import { TAU } from '../../lib/math';
+import Events from '../NativeEvents';
+import Page from '../Page';
+import SVG from '../Svg';
+import Handle from '../ink/Handle';
+import Vec from '../../lib/vec';
+import { Position } from '../../lib/types';
+import Stroke from '../ink/Stroke';
+import * as constraints from '../constraints';
+import Line from '../../lib/line';
+import { GameObject } from '../GameObject';
+import { WirePort } from './Wire';
+import { MetaNumber, MetaStruct } from './MetaSemantics';
 
 function stroke(color: string, width = 6) {
   return {

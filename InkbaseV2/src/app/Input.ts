@@ -1,5 +1,5 @@
 import Vec from '../lib/vec';
-import { aGizmo } from './Gizmo';
+import { aGizmo } from './meta/Gizmo';
 import Events, {
   Event,
   FingerEvent,
@@ -12,8 +12,8 @@ import Page from './Page';
 import FormulaEditor, { aFormulaEditor } from './meta/FormulaEditor';
 import NumberToken from './meta/NumberToken';
 import Token, { aPrimaryToken, aToken } from './meta/Token';
-import Handle, { aCanonicalHandle } from './strokes/Handle';
-import Pencil from './tools/Pencil';
+import Handle, { aCanonicalHandle } from './ink/Handle';
+import Pencil from './ink/Pencil';
 import { Position } from '../lib/types';
 import Wire from './meta/Wire';
 import * as constraints from './constraints';

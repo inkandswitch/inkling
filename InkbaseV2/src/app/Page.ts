@@ -1,11 +1,11 @@
-import StrokeGroup, { aStrokeGroup } from './strokes/StrokeGroup';
-import Stroke from './strokes/Stroke';
+import StrokeGroup, { aStrokeGroup } from './ink/StrokeGroup';
+import Stroke from './ink/Stroke';
 import { Position } from '../lib/types';
 import { GameObject } from './GameObject';
 import Wire from './meta/Wire';
 import Namespace from './meta/Namespace';
 import { TokenWithVariable } from './meta/token-helpers';
-import Gizmo from './Gizmo';
+import Gizmo from './meta/Gizmo';
 
 interface Options {
   strokeAnalyzer: boolean;
