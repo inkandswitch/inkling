@@ -9,6 +9,10 @@ import COLORS from '../Colors';
 export default class Stroke extends GameObject {
   color: string = COLORS.INK;
 
+  // TODO: This is being added to the GUI layer so that it renders in front of the formula editor.
+  // I think we need to detect when someone writes into a formula and add that ink specially to the meta layer.
+  // Also worth considering: the ink that goes into a formula needs to be full strength, whereas normal
+  // ink on the canvas will be faded in meta mode.
   protected element = SVG.add('polyline', SVG.guiElm, {
     fill: 'none',
     stroke: this.color,
