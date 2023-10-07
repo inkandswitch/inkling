@@ -198,6 +198,7 @@ class GizmoInstance extends GameObject {
       SVG.arcPath(this.center, 20, angle + TAU / 4, Math.PI / 3),
     ].join();
 
+    // TODO(Ivan): These shouldn't use SVG.now anymore
     SVG.now('path', {
       d,
       ...stroke(

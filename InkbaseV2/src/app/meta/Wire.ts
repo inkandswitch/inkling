@@ -24,7 +24,7 @@ export default class Wire extends GameObject {
   b?: WeakRef<WirePort>;
   connection: MetaConnection | null = null;
 
-  protected readonly wireElement = SVG.add('polyline', {
+  protected readonly wireElement = SVG.add('polyline', SVG.metaElm, {
     points: '',
     stroke: COLORS.GREY_LESS_DARK,
     fill: 'none',

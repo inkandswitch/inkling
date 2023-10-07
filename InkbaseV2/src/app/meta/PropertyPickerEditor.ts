@@ -29,7 +29,7 @@ export default class PropertyPickerEditor extends GameObject {
     this.height = this.props.length * LINEHEIGHT;
     this.position = propertyPicker.position;
 
-    this.boxElement = SVG.add('rect', {
+    this.boxElement = SVG.add('rect', SVG.metaElm, {
       x: this.position.x,
       y: this.position.y,
       width: this.width,
@@ -39,7 +39,7 @@ export default class PropertyPickerEditor extends GameObject {
     });
 
     this.svgTextElements = this.props.map((key, index) => {
-      const text = SVG.add('text', {
+      const text = SVG.add('text', SVG.metaElm, {
         x: this.position.x + 5,
         y: this.position.y + 24 + index * LINEHEIGHT,
         fill: COLORS.GREY_DARK,

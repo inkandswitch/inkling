@@ -7,7 +7,7 @@ import { WirePort } from './Wire';
 import { MetaNumber } from './MetaSemantics';
 
 export default class NumberToken extends Token {
-  protected readonly boxElement = SVG.add('rect', {
+  protected readonly boxElement = SVG.add('rect', SVG.metaElm, {
     x: this.position.x,
     y: this.position.y,
     width: this.width,
@@ -16,7 +16,7 @@ export default class NumberToken extends Token {
     fill: COLORS.GREY_DARK,
   });
 
-  protected readonly wholeTextElement = SVG.add('text', {
+  protected readonly wholeTextElement = SVG.add('text', SVG.metaElm, {
     x: this.position.x + 5,
     y: this.position.y + 10,
     fill: COLORS.WHITE,
@@ -24,7 +24,7 @@ export default class NumberToken extends Token {
     'font-family': 'monospace',
   });
 
-  protected readonly fracTextElement = SVG.add('text', {
+  protected readonly fracTextElement = SVG.add('text', SVG.metaElm, {
     x: this.position.x + 5,
     y: this.position.y + 10,
     fill: COLORS.GREY_LIGHT,

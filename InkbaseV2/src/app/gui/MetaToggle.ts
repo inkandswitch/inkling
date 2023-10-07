@@ -24,18 +24,14 @@ export default class MetaToggle extends GameObject {
       y: padding,
     };
 
-    this.element = SVG.add(
-      'g',
-      {
-        id: 'meta-toggle',
-        ...this.getAttrs(), // This avoids an unstyled flash on first load
-      },
-      SVG.guiElm
-    );
+    this.element = SVG.add('g', SVG.guiElm, {
+      id: 'meta-toggle',
+      ...this.getAttrs(), // This avoids an unstyled flash on first load
+    });
 
-    SVG.add('circle', { class: 'outer', r: radius }, this.element);
-    SVG.add('circle', { class: 'inner', r: radius }, this.element);
-    SVG.add('circle', { class: 'secret', r: radius }, this.element);
+    SVG.add('circle', this.element, { class: 'outer', r: radius });
+    SVG.add('circle', this.element, { class: 'inner', r: radius });
+    SVG.add('circle', this.element, { class: 'secret', r: radius });
   }
 
   toggle() {

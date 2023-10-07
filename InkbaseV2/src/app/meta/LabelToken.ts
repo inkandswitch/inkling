@@ -7,7 +7,7 @@ import { WirePort } from './Wire';
 import { MetaNumber } from './MetaSemantics';
 
 export default class LabelToken extends Token {
-  protected readonly boxElement = SVG.add('rect', {
+  protected readonly boxElement = SVG.add('rect', SVG.metaElm, {
     x: this.position.x,
     y: this.position.y,
     width: this.width,
@@ -16,7 +16,7 @@ export default class LabelToken extends Token {
     fill: COLORS.BLUE,
   });
 
-  protected readonly textElement = SVG.add('text', {
+  protected readonly textElement = SVG.add('text', SVG.metaElm, {
     x: this.position.x + 5,
     y: this.position.y + 30,
     fill: COLORS.WHITE,
@@ -39,7 +39,7 @@ export default class LabelToken extends Token {
     } else {
       for (const stroke of label.display.strokeData) {
         this.strokeElements.push(
-          SVG.add('polyline', {
+          SVG.add('polyline', SVG.metaElm, {
             points: SVG.points(stroke),
             transform: `translate(${this.position.x}, ${this.position.y})`,
             stroke: 'white',

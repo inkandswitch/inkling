@@ -6,26 +6,22 @@ type Attributes = Record<string, string | number>;
 
 const NS = 'http://www.w3.org/2000/svg';
 
-const _rootElm = document.querySelector('svg') as SVGSVGElement;
-const canvasElm = document.querySelector('#canvas') as SVGSVGElement;
+const inkElm = document.querySelector('#ink') as SVGSVGElement;
+const metaElm = document.querySelector('#meta') as SVGSVGElement;
 const guiElm = document.querySelector('#gui') as SVGSVGElement;
 const nowElm = document.querySelector('#now') as SVGGElement;
 
 function add(
   type: 'text',
-  attributes?: Attributes,
-  parent?: SVGElement
+  parent: SVGElement,
+  attributes?: Attributes
 ): SVGTextElement;
 function add(
   type: string,
-  attributes?: Attributes,
-  parent?: SVGElement
+  parent: SVGElement,
+  attributes?: Attributes
 ): SVGElement;
-function add(
-  type: string,
-  attributes: Attributes = {},
-  parent: SVGElement = canvasElm
-) {
+function add(type: string, parent: SVGElement, attributes: Attributes = {}) {
   return parent.appendChild(
     update(document.createElementNS(NS, type), attributes)
   );
@@ -75,7 +71,7 @@ function now(type: string, attributes: Attributes) {
   const life = +attributes.life || 0;
   delete attributes.life;
 
-  const elm = add(type, attributes, nowElm);
+  const elm = add(type, nowElm, attributes);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (elm as any).__expiry = lastTime + life;
@@ -151,7 +147,7 @@ function path(points: Position[] | PositionWithPressure[]) {
     .join(' ');
 }
 
-const statusElement = add('text', {
+const statusElement = add('text', guiElm, {
   x: 60,
   content: '',
   stroke: '#bbb',
@@ -183,6 +179,7 @@ export default {
   arcPath,
   path,
   showStatus,
-  canvasElm,
+  inkElm,
+  metaElm,
   guiElm,
 };

@@ -23,12 +23,12 @@ function PropertyPickerPath(pos: Position, w: number, h: number) {
 }
 
 export default class PropertyPicker extends Token {
-  protected readonly boxElement = SVG.add('path', {
+  protected readonly boxElement = SVG.add('path', SVG.metaElm, {
     d: PropertyPickerPath(this.position, this.width, this.height),
     fill: COLORS.GREY_DARK,
   });
 
-  protected readonly textElement = SVG.add('text', {
+  protected readonly textElement = SVG.add('text', SVG.metaElm, {
     x: this.position.x + 5,
     y: this.position.y + 24,
     fill: COLORS.WHITE,

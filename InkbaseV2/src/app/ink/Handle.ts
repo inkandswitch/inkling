@@ -66,17 +66,18 @@ export default class Handle extends GameObject {
       elements: {
         normal: SVG.add(
           'circle',
+          SVG.inkElm,
           type === 'formal'
             ? { cx: 0, cy: 0, r: 3, fill: 'black' }
             : { r: 5, fill: 'rgba(100, 100, 100, .2)' }
         ),
-        selected: SVG.add('circle', {
+        selected: SVG.add('circle', SVG.inkElm, {
           cx: 0,
           cy: 0,
           r: 7,
           fill: 'none',
         }),
-        label: SVG.add('text', {
+        label: SVG.add('text', SVG.inkElm, {
           x: 0,
           y: 0,
           visibility: SHOW_DEBUG_INFO ? 'visible' : 'hidden',

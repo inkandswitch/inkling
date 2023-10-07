@@ -4,7 +4,7 @@ import SVG from '../Svg';
 import * as ohm from 'ohm-js';
 
 export default class OpToken extends Token {
-  protected readonly textElement = SVG.add('text', {
+  protected readonly textElement = SVG.add('text', SVG.metaElm, {
     x: this.position.x + 5,
     y: this.position.y + 24,
     fill: COLORS.GREY_DARK,

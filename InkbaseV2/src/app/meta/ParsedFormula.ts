@@ -11,7 +11,7 @@ const PADDING = 3;
 export default class ParsedFormula extends Token {
   readonly height = 30 + PADDING * 2;
 
-  protected readonly boxElement = SVG.add('rect', {
+  protected readonly boxElement = SVG.add('rect', SVG.metaElm, {
     x: this.position.x,
     y: this.position.y,
     width: this.width,

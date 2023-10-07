@@ -24,7 +24,7 @@ export default class FormulaEditor extends GameObject {
   active = false;
 
   // SVG
-  protected readonly svgBackgroundElement = SVG.add('rect', {
+  protected readonly svgBackgroundElement = SVG.add('rect', SVG.metaElm, {
     x: this.position.x,
     y: this.position.y,
     width: this.width,
@@ -206,7 +206,7 @@ class FormulaEditorCell extends GameObject {
   // Remember stroke data so we can add it to the library if we want
   strokeData: PositionWithPressure[][] = [];
 
-  protected readonly svgCell = SVG.add('rect', {
+  protected readonly svgCell = SVG.add('rect', SVG.metaElm, {
     x: this.position.x,
     y: this.position.y,
     width: this.width,
@@ -215,7 +215,7 @@ class FormulaEditorCell extends GameObject {
     fill: COLORS.WHITE,
   });
 
-  protected readonly textElement = SVG.add('text', {
+  protected readonly textElement = SVG.add('text', SVG.metaElm, {
     x: this.position.x + 5,
     y: this.position.y + 30,
     fill: COLORS.GREY_DARK,

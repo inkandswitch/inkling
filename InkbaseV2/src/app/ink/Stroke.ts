@@ -8,7 +8,7 @@ import Rect from '../../lib/rect';
 export default class Stroke extends GameObject {
   color: string = '#000';
 
-  protected element = SVG.add('polyline', {
+  protected element = SVG.add('polyline', SVG.inkElm, {
     fill: 'none',
     stroke: this.color,
     'stroke-width': 2,
