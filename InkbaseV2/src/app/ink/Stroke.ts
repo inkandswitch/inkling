@@ -9,7 +9,7 @@ import COLORS from '../Colors';
 export default class Stroke extends GameObject {
   color: string = COLORS.INK;
 
-  protected element = SVG.add('polyline', SVG.inkElm, {
+  protected element = SVG.add('polyline', SVG.guiElm, {
     fill: 'none',
     stroke: this.color,
     'stroke-width': 2,

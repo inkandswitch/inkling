@@ -13,7 +13,7 @@ let colors = [
 
 // Grab the above listed colors from the stylesheet.
 // This is a temporary measure. Ultimately, we shouldn't be setting colors via JS.
-for (const color in colors) {
+for (const color of colors) {
   let cssName = color.toLowerCase().replace('_', '-');
   COLORS[color] = window
     .getComputedStyle(document.body)
