@@ -5,7 +5,7 @@ import { GameObject } from './GameObject';
 import Wire from './meta/Wire';
 import Namespace from './meta/Namespace';
 import { TokenWithVariable } from './meta/token-helpers';
-import Gizmo from './meta/Gizmo';
+import Gizmo, { aGizmo } from './meta/Gizmo';
 import Handle from './ink/Handle';
 import Vec from '../lib/vec';
 
@@ -18,6 +18,10 @@ export default class Page extends GameObject {
 
   constructor(_options: Options) {
     super();
+  }
+
+  private get gizmos() {
+    return this.findAll({ what: aGizmo });
   }
 
   get strokeGroups() {
@@ -69,10 +73,9 @@ export default class Page extends GameObject {
   ): Handle | null {
     if (
       // TODO: decide based on acceleration?
-      Vec.dist(handle.position, newPos) < 1 ||
+      Vec.dist(handle.position, newPos) < 30 ||
       handle.absorbedHandles.length === 0
     ) {
-      console.log(Vec.dist(handle.position, newPos));
       return null;
     }
 
@@ -103,12 +106,12 @@ export default class Page extends GameObject {
   private getHandlesImmediatelyConnectedTo(handle: Handle) {
     const connectedHandles = new Set<Handle>();
 
-    for (const thing of this.strokeGroups) {
+    for (const thing of [...this.strokeGroups, ...this.gizmos]) {
       if (handle === thing.a) {
-        connectedHandles.add(thing.b);
+        connectedHandles.add(thing.b!);
       }
       if (handle === thing.b) {
-        connectedHandles.add(thing.a);
+        connectedHandles.add(thing.a!);
       }
     }
 
