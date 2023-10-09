@@ -13,6 +13,7 @@ export default class Namespace {
     } else {
       const label = new Label(name);
       this.labelByName.set(name, label);
+      this.labelById.set(label.id, label);
       return label;
     }
   }

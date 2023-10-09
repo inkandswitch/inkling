@@ -11,6 +11,7 @@ import {
   MetaConnection,
   MetaNumberConnection,
 } from './MetaSemantics';
+import Label from './Label';
 
 function PropertyPickerPath(pos: Position, w: number, h: number) {
   return `
@@ -35,7 +36,7 @@ export default class PropertyPicker extends Token {
     'font-size': '24px',
   });
 
-  readonly inputVariable = new MetaStruct({});
+  readonly inputVariable = new MetaStruct([]);
   readonly inputPort = this.adopt(
     new WirePort(this.position, this.inputVariable)
   );
@@ -45,7 +46,7 @@ export default class PropertyPicker extends Token {
     new WirePort(this.position, this.outputVariable)
   );
 
-  private property: string | null = null;
+  private property: Label | null = null;
 
   internalConnection: MetaConnection | null = null;
 
@@ -69,11 +70,11 @@ export default class PropertyPicker extends Token {
       y: this.position.y + 24,
     });
 
-    this.textElement.textContent = this.property;
+    this.textElement.textContent = this.property?.display as string;
     this.width = this.textElement.getComputedTextLength() + 10;
   }
 
-  setProperty(newValue: string) {
+  setProperty(newValue: Label) {
     this.property = newValue;
     this.update();
   }

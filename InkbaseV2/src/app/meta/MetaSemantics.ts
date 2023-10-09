@@ -1,4 +1,5 @@
 import * as constraints from '../constraints';
+import Label from './Label';
 
 // This file implements the semantics of meta ink independently of the visual language
 // There are two main types: Meta Value & Meta Connection
@@ -19,7 +20,7 @@ export interface MetaConnection {
 
 // NUMBERS
 export class MetaNumber implements MetaValue {
-  constructor(public variable: constraints.Variable) {}
+  constructor(public variable: constraints.Variable) { }
 
   wireTo(other: MetaValue): MetaNumberConnection | null {
     if (other instanceof MetaNumber) {
@@ -45,23 +46,26 @@ export class MetaNumberConnection implements MetaConnection {
 
 // STRUCTS
 export class MetaStruct implements MetaValue {
-  values: Map<string, MetaValue>;
+  values: Map<Label, MetaValue>;
 
-  constructor(input: Record<string, MetaValue>) {
-    this.values = new Map(Object.entries(input));
+  constructor(input: Array<[Label, MetaValue]>) {
+    this.values = new Map();
+    input.forEach(([label, value]) => {
+      this.values.set(label, value);
+    })
   }
 
   isEmpty() {
     return this.values.size === 0;
   }
 
-  get(key: string): MetaValue | undefined {
+  get(key: Label): MetaValue | undefined {
     console.log(this.values);
 
     return this.values.get(key);
   }
 
-  list(): Array<string> {
+  list(): Array<Label> {
     return Array.from(this.values.keys());
   }
 

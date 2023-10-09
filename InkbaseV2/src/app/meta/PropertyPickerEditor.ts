@@ -5,6 +5,7 @@ import COLORS from '../Colors';
 import { MetaStruct } from './MetaSemantics';
 import { GameObject } from '../GameObject';
 import { signedDistanceToBox } from '../../lib/SignedDistance';
+import Label from './Label';
 
 const LINEHEIGHT = 30;
 
@@ -13,7 +14,7 @@ export default class PropertyPickerEditor extends GameObject {
   height = 44;
   position: Position = { x: 100, y: 100 };
 
-  props: Array<string>;
+  props: Array<Label>;
 
   protected readonly boxElement: SVGElement;
 
@@ -38,7 +39,7 @@ export default class PropertyPickerEditor extends GameObject {
       fill: COLORS.GREY_LIGHT,
     });
 
-    this.svgTextElements = this.props.map((key, index) => {
+    this.svgTextElements = this.props.map((label, index) => {
       const text = SVG.add('text', SVG.metaElm, {
         x: this.position.x + 5,
         y: this.position.y + 24 + index * LINEHEIGHT,
@@ -46,7 +47,7 @@ export default class PropertyPickerEditor extends GameObject {
         'font-size': '24px',
         'font-family': 'monospace',
       });
-      text.textContent = key;
+      text.textContent = label.display as string;
       return text;
     });
   }
