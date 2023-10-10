@@ -1,7 +1,7 @@
 import { Position } from '../../lib/types';
 import { generateId, notUndefined } from '../../lib/helpers';
 import SVG from '../Svg';
-import * as constraints from '../constraints';
+import { Variable } from '../constraints';
 import { GameObject, root } from '../GameObject';
 import Vec from '../../lib/vec';
 
@@ -18,7 +18,6 @@ interface CanonicalInstanceState {
   id: number;
   type: HandleType;
   absorbedHandles: WeakRef<Handle>[];
-  position: Position;
   elements: {
     normal: SVGElement;
     selected: SVGElement;
@@ -44,7 +43,8 @@ export default class Handle extends GameObject {
     position: Position,
     listener: HandleListener | null = null
   ): Handle {
-    const handle = new Handle(this.makeCanonicalInstanceState(type, position));
+    const handle = new Handle(this.makeCanonicalInstanceState(type));
+    handle.position = position;
     if (listener) {
       handle.addListener(listener);
     }
@@ -54,7 +54,6 @@ export default class Handle extends GameObject {
 
   private static makeCanonicalInstanceState(
     type: HandleType,
-    position: Position,
     id = generateId()
   ): CanonicalInstanceState {
     return {
@@ -62,7 +61,6 @@ export default class Handle extends GameObject {
       id,
       type,
       absorbedHandles: [],
-      position,
       elements: {
         normal: SVG.add(
           'circle',
@@ -91,6 +89,8 @@ export default class Handle extends GameObject {
 
   // --- instance stuff ---
 
+  public readonly xVariable = new Variable(0, { object: this, property: 'x' });
+  public readonly yVariable = new Variable(0, { object: this, property: 'y' });
   private readonly listeners = new Set<HandleListener>();
 
   private constructor(private instanceState: InstanceState) {
@@ -129,18 +129,32 @@ export default class Handle extends GameObject {
           this.promoteToCanonical();
   }
 
-  get position(): Position {
-    return (this.canonicalInstance.instanceState as CanonicalInstanceState)
-      .position;
+  get isCanonical(): boolean {
+    return this.instanceState.isCanonical;
   }
 
+  get x() {
+    return this.xVariable.value;
+  }
+
+  get y() {
+    return this.yVariable.value;
+  }
+
+  get position(): Position {
+    return this;
+  }
+
+  // TODO: if the handle's x and/or y are changed by the
+  // constraint solver, should notify handlers
+  // (but only once per frame).
   set position(pos: Position) {
     if (!this.instanceState.isCanonical) {
       this.canonicalInstance.position = pos;
       return;
     }
 
-    this.instanceState.position = pos;
+    ({ x: this.xVariable.value, y: this.yVariable.value } = pos);
 
     // notify listeners
     this.notifyListeners(listener => listener.onHandleMoved(this));
@@ -205,6 +219,8 @@ export default class Handle extends GameObject {
     that.removeFromDOM();
 
     for (const handle of [that, ...that.absorbedHandles]) {
+      console.log(this, 'absorbing', handle);
+
       // update the instance state of the absorbed handle
       handle.instanceState = {
         isCanonical: false,
@@ -215,11 +231,13 @@ export default class Handle extends GameObject {
       // add it to my absorbed set
       this.instanceState.absorbedHandles.push(new WeakRef(handle));
 
+      // my x and y vars absorb its x and y vars, resp.
+      this.xVariable.absorb(that.yVariable);
+      this.yVariable.absorb(that.yVariable);
+
       // notify its listeners
       handle.notifyListeners(listener => listener.onHandleMoved(that));
     }
-
-    constraints.onHandlesReconfigured();
   }
 
   absorbNearbyHandles() {
@@ -234,6 +252,17 @@ export default class Handle extends GameObject {
       tooFar: 10,
       do: that => this.absorb(that),
     });
+  }
+
+  setupVariableRelationships() {
+    if (!this.instanceState.isCanonical) {
+      return;
+    }
+
+    for (const handle of this.absorbedHandles) {
+      this.xVariable.absorb(handle.xVariable);
+      this.yVariable.absorb(handle.yVariable);
+    }
   }
 
   // methods that can only be called on canonical handles
@@ -277,8 +306,6 @@ export default class Handle extends GameObject {
         'argument to Handle.breakOff() is not an absorbed handle'
       );
     }
-
-    constraints.onHandlesReconfigured();
   }
 
   render(t: number, dt: number) {
@@ -292,18 +319,18 @@ export default class Handle extends GameObject {
     }
 
     SVG.update(state.elements.normal, {
-      transform: `translate(${state.position.x} ${state.position.y})`,
+      transform: `translate(${this.x} ${this.y})`,
     });
 
     SVG.update(state.elements.selected, {
-      transform: `translate(${state.position.x} ${state.position.y})`,
+      transform: `translate(${this.x} ${this.y})`,
       fill: state.isSelected ? 'rgba(180, 134, 255, 0.42)' : 'none',
     });
 
     SVG.update(state.elements.label, {
       transform: `translate(${
-        state.position.x - state.elements.label.getBBox().width / 2
-      } ${state.position.y - 10})`,
+        this.x - state.elements.label.getBBox().width / 2
+      } ${this.y - 10})`,
       content: `${this.id}@(${Math.round(this.position.x)}, ${Math.round(
         this.position.y
       )})`,
@@ -361,9 +388,13 @@ export default class Handle extends GameObject {
     // change my instance state to make me a canonical handle
     this.instanceState = Handle.makeCanonicalInstanceState(
       this.type,
-      this.position,
       this.instanceState.origId
     );
+
+    // promote my x and y variables to canonical variables, too
+    // (so that their values are not tied to my x and y variables' values)
+    this.xVariable.promoteToCanonical();
+    this.yVariable.promoteToCanonical();
 
     return this;
   }
@@ -377,6 +408,4 @@ export const aHandle = (gameObj: GameObject) =>
   gameObj instanceof Handle ? gameObj : null;
 
 export const aCanonicalHandle = (gameObj: GameObject) =>
-  gameObj instanceof Handle && gameObj.canonicalInstance === gameObj
-    ? gameObj
-    : null;
+  gameObj instanceof Handle && gameObj.isCanonical ? gameObj : null;

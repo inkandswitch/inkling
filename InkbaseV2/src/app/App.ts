@@ -94,7 +94,7 @@ onEveryFrame((dt, t) => {
   // Tell NativeEvent to handle all events sent from Swift, evaluating Input for each
   events.update();
 
-  constraints.solve();
+  constraints.solve(root);
 
   root.render(dt, t);
 });

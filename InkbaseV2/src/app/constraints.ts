@@ -1,9 +1,10 @@
 import { minimize } from '../lib/g9';
-import { Position } from '../lib/types';
 import { generateId, removeOne } from '../lib/helpers';
-import Vec from '../lib/vec';
-import Handle from './ink/Handle';
 import SVG from './Svg';
+import { GameObject } from './GameObject';
+import { Position } from '../lib/types';
+import Vec from '../lib/vec';
+import Handle, { aCanonicalHandle } from './ink/Handle';
 
 type VariableInfo = CanonicalVariableInfo | AbsorbedVariableInfo;
 
@@ -23,13 +24,18 @@ export class Variable {
   static readonly all = new Set<Variable>();
 
   readonly id = generateId();
+  represents?: { object: object; property: string };
   info: VariableInfo = {
     isCanonical: true,
     absorbedVariables: new Set(),
   };
   wasRemoved = false;
 
-  constructor(private _value: number = 0) {
+  constructor(
+    private _value: number = 0,
+    represents?: { object: object; property: string }
+  ) {
+    this.represents = represents;
     Variable.all.add(this);
   }
 
@@ -80,6 +86,8 @@ export class Variable {
       return;
     }
 
+    const thatLockConstraint = that.lockConstraint;
+
     // console.log(this.id, 'absorbing', that.id);
     for (const otherVariable of that.info.absorbedVariables) {
       // console.log(this.id, 'absorbing', otherVariable.id);
@@ -97,16 +105,44 @@ export class Variable {
       valueOffset: valueOffset,
     };
     this.info.absorbedVariables.add(that);
+
+    if (thatLockConstraint) {
+      thatLockConstraint.remove();
+      this.lock();
+    }
   }
 
-  resetInfo() {
+  promoteToCanonical() {
     if (this.info.isCanonical) {
-      this.info.absorbedVariables.clear();
+      // nothing to do
     } else {
-      this.info = {
-        isCanonical: true,
-        absorbedVariables: new Set(),
-      };
+      this.info.canonicalInstance.breakOff(this);
+    }
+  }
+
+  breakOff(that: Variable) {
+    if (!this.info.isCanonical) {
+      throw new Error('Handle.breakOff() called on absorbed variable');
+    }
+    if (!this.info.absorbedVariables.has(that)) {
+      throw new Error('cannot break off a variable that has not been absorbed');
+    }
+
+    this.info.absorbedVariables.delete(that);
+    that.info = { isCanonical: true, absorbedVariables: new Set() };
+
+    if (this.isLocked) {
+      that.lock();
+    }
+  }
+
+  breakOffAbsorbedVariables() {
+    if (!this.info.isCanonical) {
+      return;
+    }
+
+    for (const absorbedVariable of this.info.absorbedVariables) {
+      this.breakOff(absorbedVariable);
     }
   }
 
@@ -152,22 +188,23 @@ export class Variable {
 interface ClusterForSolver {
   constraints: Constraint[];
   variables: Variable[];
-  handles: Handle[];
-  handleGetsXFrom: Map<Handle, Variable>;
-  handleGetsYFrom: Map<Handle, Variable>;
-  constrainedState: StateSet;
+  constrained: Set<Variable>; // TODO: replace with `free` (easier to explain)
 }
 
 let _clustersForSolver: Set<ClusterForSolver> | null = null;
 
-function getClustersForSolver(): Set<ClusterForSolver> {
+function getClustersForSolver(root: GameObject): Set<ClusterForSolver> {
   if (_clustersForSolver) {
     return _clustersForSolver;
   }
 
   for (const variable of Variable.all) {
-    variable.resetInfo();
+    variable.breakOffAbsorbedVariables();
   }
+  root.forEach({
+    what: aCanonicalHandle,
+    do: handle => handle.setupVariableRelationships(),
+  });
 
   interface Cluster {
     constraints: Constraint[];
@@ -189,28 +226,20 @@ function getClustersForSolver(): Set<ClusterForSolver> {
   }
 
   _clustersForSolver = new Set(
-    Array.from(clusters).map(cluster => {
-      const origConstraints = cluster.constraints;
-      const { constraints, variables, handleGetsXFrom, handleGetsYFrom } =
+    Array.from(clusters).map(({ constraints: origConstraints }) => {
+      const { constraints, variables } =
         getDedupedConstraintsAndVariables(origConstraints);
 
-      const constrainedState = new StateSet();
+      const constrained = new Set<Variable>();
       // TODO: do we really need to look at origConstraints when computing the constrained state?
       // I'm doing this because some constraints are removed in deduping, but it's possible that
       // there's enough info in the deduped constraints. On the other hand, also looking at
       // origConstraints doesn't hurt so I'm leaving it here for now. (Think about this later.)
       for (const constraint of [...origConstraints, ...constraints]) {
-        constraint.addConstrainedState(constrainedState);
+        constraint.addConstrainedVariables(constrained);
       }
 
-      return {
-        constraints,
-        variables,
-        handles: getHandlesIn(constraints),
-        handleGetsXFrom,
-        handleGetsYFrom,
-        constrainedState,
-      };
+      return { constraints, variables, constrained };
     })
   );
 
@@ -227,29 +256,12 @@ function getClustersForSolver(): Set<ClusterForSolver> {
 // TODO: this function works, but it's gross. Refactor.
 function getDedupedConstraintsAndVariables(constraints: Constraint[]) {
   // console.log('orig constraints', constraints);
-  let result: Omit<ClusterForSolver, 'handles' | 'constrainedState'> | null =
-    null;
+  let result: Omit<ClusterForSolver, 'constrained'> | null = null;
   while (true) {
     const oldNumConstraints = result
       ? result.constraints.length
       : constraints.length;
-    const handleGetsXFrom = result
-      ? result.handleGetsXFrom
-      : new Map<Handle, Variable>();
-    const handleGetsYFrom = result
-      ? result.handleGetsYFrom
-      : new Map<Handle, Variable>();
     result = dedupVariables(dedupConstraints(constraints));
-    for (const [handle, variable] of handleGetsXFrom) {
-      if (!result.handleGetsXFrom.has(handle)) {
-        result.handleGetsXFrom.set(handle, variable);
-      }
-    }
-    for (const [handle, variable] of handleGetsYFrom) {
-      if (!result.handleGetsYFrom.has(handle)) {
-        result.handleGetsYFrom.set(handle, variable);
-      }
-    }
     // console.log('new len', result.constraints.length, 'old', oldNumConstraints);
     if (result.constraints.length === oldNumConstraints) {
       return result;
@@ -294,19 +306,6 @@ function dedupVariables(constraints: Constraint[]) {
     constraints.splice(idx, 1);
   }
 
-  // When properties are used, unify the state from the handle
-  // with that of the variable that is associated with it.
-  const handleGetsXFrom = new Map<Handle, Variable>();
-  const handleGetsYFrom = new Map<Handle, Variable>();
-  for (const c of constraints) {
-    if (c instanceof Property) {
-      (c.property === 'x' ? handleGetsXFrom : handleGetsYFrom).set(
-        c.handle.canonicalInstance,
-        c.variable.canonicalInstance
-      );
-    }
-  }
-
   // Here's another kind of deduping that we can do for variables: when
   // we have Sum(a, b, c) and Constant(c), variable a can absorb b w/
   // an "offset" of c. (There's a lot more that we could do here, this
@@ -338,30 +337,11 @@ function dedupVariables(constraints: Constraint[]) {
     }
   }
 
-  return {
-    variables: Array.from(variables),
-    constraints,
-    handleGetsXFrom,
-    handleGetsYFrom,
-  };
-}
-
-function getHandlesIn(constraints: Constraint[]) {
-  const handles = new Set<Handle>();
-  for (const constraint of constraints) {
-    for (const handle of constraint.handles) {
-      handles.add(handle.canonicalInstance);
-    }
-  }
-  return Array.from(handles);
+  return { variables: Array.from(variables), constraints };
 }
 
 function forgetClustersForSolver() {
   _clustersForSolver = null;
-}
-
-export function onHandlesReconfigured() {
-  forgetClustersForSolver();
 }
 
 // #endregion constraint and thing clusters for solver
@@ -381,46 +361,8 @@ function captureNewConstraints<T>(dest: Set<Constraint>, fn: () => T): T {
 
 // #region solving
 
-class StateSet {
-  private readonly xs = new Set<Handle>();
-  private readonly ys = new Set<Handle>();
-  private readonly vars = new Set<Variable>();
-
-  hasX(handle: Handle): boolean {
-    return this.xs.has(handle.canonicalInstance);
-  }
-
-  hasY(handle: Handle): boolean {
-    return this.ys.has(handle.canonicalInstance);
-  }
-
-  hasVar(variable: Variable): boolean {
-    return this.vars.has(variable.canonicalInstance);
-  }
-
-  addX(handle: Handle) {
-    this.xs.add(handle.canonicalInstance);
-  }
-
-  addY(handle: Handle) {
-    this.ys.add(handle.canonicalInstance);
-  }
-
-  addVar(variable: Variable) {
-    this.vars.add(variable.canonicalInstance);
-  }
-
-  toJSON() {
-    return {
-      vars: Array.from(this.vars).map(v => ({ id: v.id, value: v.value })),
-      xs: Array.from(this.xs).map(h => ({ id: h.id, x: h.position.x })),
-      ys: Array.from(this.ys).map(h => ({ id: h.id, y: h.position.y })),
-    };
-  }
-}
-
-export function solve() {
-  const clusters = getClustersForSolver();
+export function solve(root: GameObject) {
+  const clusters = getClustersForSolver(root);
   for (const cluster of clusters) {
     solveCluster(cluster);
   }
@@ -429,52 +371,24 @@ export function solve() {
 function solveCluster({
   constraints,
   variables,
-  handles,
-  handleGetsXFrom,
-  handleGetsYFrom,
-  constrainedState,
+  constrained,
 }: ClusterForSolver) {
   if (constraints.length === 0) {
     // nothing to solve!
     return;
   }
 
-  const knownState = computeKnownState(constraints);
+  const knowns = computeKnowns(constraints);
 
   // The state that goes into `inputs` is the stuff that can be modified by the solver.
   // It excludes any value that we've already computed from known values like pin and
   // constant constraints.
   const inputs: number[] = [];
-  const inputDescriptions: string[] = [];
   const varIdx = new Map<Variable, number>();
   for (const variable of variables) {
-    if (!knownState.hasVar(variable) && constrainedState.hasVar(variable)) {
+    if (!knowns.has(variable) && constrained.has(variable)) {
       varIdx.set(variable, inputs.length);
       inputs.push(variable.value);
-      inputDescriptions.push(`var ${variable.id}`);
-    }
-  }
-  const xIdx = new Map<Handle, number>();
-  const yIdx = new Map<Handle, number>();
-  for (const handle of handles) {
-    if (knownState.hasX(handle) || !constrainedState.hasX(handle)) {
-      // no op
-    } else if (handleGetsXFrom.has(handle)) {
-      xIdx.set(handle, varIdx.get(handleGetsXFrom.get(handle)!)!);
-    } else {
-      xIdx.set(handle, inputs.length);
-      inputs.push(handle.position.x);
-      inputDescriptions.push(`x ${handle.id}`);
-    }
-
-    if (knownState.hasY(handle) || !constrainedState.hasY(handle)) {
-      // no op
-    } else if (handleGetsYFrom.has(handle)) {
-      yIdx.set(handle, varIdx.get(handleGetsYFrom.get(handle)!)!);
-    } else {
-      yIdx.set(handle, inputs.length);
-      inputs.push(handle.position.y);
-      inputDescriptions.push(`y ${handle.id}`);
     }
   }
 
@@ -484,22 +398,9 @@ function solveCluster({
     let error = 0;
     for (const constraint of constraints) {
       if (constraint instanceof Constant || constraint instanceof Pin) {
-        // Ignore -- these guys already did their job in propagateKnownState().
+        // Ignore -- these guys already did their job in propagateKnowns().
         continue;
       }
-      const positions = constraint.handles.map(handle => {
-        handle = handle.canonicalInstance;
-        const xi = xIdx.get(handle);
-        const yi = yIdx.get(handle);
-        if (xi === undefined && yi === undefined) {
-          return handle.position;
-        } else {
-          return {
-            x: xi === undefined ? handle.position.x : currState[xi],
-            y: yi === undefined ? handle.position.y : currState[yi],
-          };
-        }
-      });
       const values = constraint.variables.map(variable => {
         const valueOffset = variable.valueOffset;
         variable = variable.canonicalInstance;
@@ -508,10 +409,7 @@ function solveCluster({
           (vi === undefined ? variable.value : currState[vi]) - valueOffset
         );
       });
-      error += Math.pow(
-        constraint.getError(positions, values, knownState, constrainedState),
-        2
-      );
+      error += Math.pow(constraint.getError(values, knowns, constrained), 2);
     }
     return error;
   }
@@ -526,13 +424,12 @@ function solveCluster({
       'while working on cluster with',
       constraints,
       variables,
-      handles,
       'with inputs',
-      inputs.map((input, idx) => ({ input, is: inputDescriptions[idx] })),
-      'known state',
-      knownState.toJSON(),
-      'and constrained state',
-      constrainedState.toJSON()
+      inputs,
+      'knowns',
+      knowns,
+      'and constrained variables',
+      constrained
     );
     SVG.showStatus('' + e);
     throw e;
@@ -543,33 +440,18 @@ function solveCluster({
   // Now we write the solution from the solver back into our variables and handles.
   const outputs = result.solution;
   for (const variable of variables) {
-    if (!knownState.hasVar(variable) && constrainedState.hasVar(variable)) {
+    if (!knowns.has(variable) && constrained.has(variable)) {
       variable.value = outputs.shift()!;
     }
   }
-  for (const handle of handles) {
-    const x =
-      knownState.hasX(handle) || !constrainedState.hasX(handle)
-        ? handle.position.x
-        : handleGetsXFrom.has(handle)
-        ? handleGetsXFrom.get(handle)!.value
-        : outputs.shift()!;
-    const y =
-      knownState.hasY(handle) || !constrainedState.hasY(handle)
-        ? handle.position.y
-        : handleGetsYFrom.has(handle)
-        ? handleGetsYFrom.get(handle)!.value
-        : outputs.shift()!;
-    handle.position = { x, y };
-  }
 }
 
-function computeKnownState(constraints: Constraint[]) {
-  const knownState = new StateSet();
+function computeKnowns(constraints: Constraint[]) {
+  const knownVariables = new Set<Variable>();
   while (true) {
     let didSomething = false;
     for (const constraint of constraints) {
-      if (constraint.propagateKnownState(knownState)) {
+      if (constraint.propagateKnowns(knownVariables)) {
         didSomething = true;
       }
     }
@@ -577,7 +459,7 @@ function computeKnownState(constraints: Constraint[]) {
       break;
     }
   }
-  return knownState;
+  return knownVariables;
 }
 
 // #endregion solving
@@ -589,7 +471,6 @@ class ConstraintKeyGenerator {
 
   constructor(
     private readonly type: string,
-    private readonly handleGroups: Handle[][],
     private readonly variableGroups: Variable[][]
   ) {
     this.key = this.generateKey();
@@ -600,14 +481,6 @@ class ConstraintKeyGenerator {
   }
 
   private generateKey(dedupHandlesAndVars = false) {
-    const handleIdGroups = this.handleGroups
-      .map(handleGroup =>
-        handleGroup
-          .map(handle => (dedupHandlesAndVars ? handle.id : handle.ownId))
-          .sort()
-          .join(',')
-      )
-      .map(handleIdGroup => `[${handleIdGroup}]`);
     const variableIdGroups = this.variableGroups
       .map(variableGroup =>
         variableGroup
@@ -618,7 +491,7 @@ class ConstraintKeyGenerator {
           .join(',')
       )
       .map(variableIdGroup => `[${variableIdGroup}]`);
-    return `${this.type}([${handleIdGroups}],[${variableIdGroups}])`;
+    return `${this.type}([${variableIdGroups}])`;
   }
 }
 
@@ -626,7 +499,9 @@ export type OwnedVariables<OwnedVariableNames extends string> = {
   [Key in OwnedVariableNames]: Variable;
 };
 
-export interface AddConstraintResult<OwnedVariableNames extends string> {
+export interface AddConstraintResult<
+  OwnedVariableNames extends string = never,
+> {
   constraints: Constraint[];
   variables: OwnedVariables<OwnedVariableNames>;
   remove(): void;
@@ -651,37 +526,15 @@ function addConstraint<
 // #endregion adding constraints
 
 class ManipulationSet {
-  readonly xs: Set<Handle>;
-  readonly ys: Set<Handle>;
-  readonly vars: Set<Variable>;
+  readonly variables: Set<Variable>;
 
-  constructor({
-    xs,
-    ys,
-    vars,
-  }: {
-    xs: Handle[];
-    ys: Handle[];
-    vars: Variable[];
-  }) {
-    this.xs = new Set(xs.map(handle => handle.canonicalInstance));
-    this.ys = new Set(ys.map(handle => handle.canonicalInstance));
-    this.vars = new Set(vars.map(variable => variable.canonicalInstance));
+  constructor(vars: Variable[]) {
+    this.variables = new Set(vars.map(variable => variable.canonicalInstance));
   }
 
   overlapsWith(that: ManipulationSet) {
-    for (const h of that.xs) {
-      if (this.xs.has(h)) {
-        return true;
-      }
-    }
-    for (const h of that.ys) {
-      if (this.ys.has(h)) {
-        return true;
-      }
-    }
-    for (const v of that.vars) {
-      if (this.vars.has(v)) {
+    for (const v of that.variables) {
+      if (this.variables.has(v)) {
         return true;
       }
     }
@@ -689,14 +542,8 @@ class ManipulationSet {
   }
 
   absorb(that: ManipulationSet) {
-    for (const h of that.xs) {
-      this.xs.add(h);
-    }
-    for (const h of that.ys) {
-      this.ys.add(h);
-    }
-    for (const v of that.vars) {
-      this.vars.add(v);
+    for (const v of that.variables) {
+      this.variables.add(v);
     }
   }
 }
@@ -720,7 +567,6 @@ abstract class Constraint<OwnedVariableNames extends string = never> {
   wasRemoved = false;
 
   constructor(
-    public readonly handles: Handle[],
     public readonly variables: Variable[],
     private readonly keyGenerator: ConstraintKeyGenerator
   ) {
@@ -746,8 +592,8 @@ abstract class Constraint<OwnedVariableNames extends string = never> {
     this.wasRemoved = true;
 
     // Remove the variables that I own and any constraint that references them.
-    for (const variable of Object.values(this.ownedVariables)) {
-      (variable as Variable).remove();
+    for (const variable of Object.values(this.ownedVariables) as Variable[]) {
+      variable.remove();
     }
   }
 
@@ -759,15 +605,15 @@ abstract class Constraint<OwnedVariableNames extends string = never> {
     return this.keyGenerator.getKeyWithDedupedHandlesAndVars();
   }
 
-  abstract addConstrainedState(constrainedState: StateSet): void;
+  abstract addConstrainedVariables(constrained: Set<Variable>): void;
 
   /**
-   * If this constraint can determine the values of any xs, ys, or variables
-   * based on other state that is already known, it should set the values
-   * of those things, add them to the known state set, and return `true`.
-   * Otherwise, it should return `false`.
+   * If this constraint can determine the values of any variables based on
+   * other state that is already known, it should set the values of those
+   * variables, add them to `knowns`, and return `true`. Otherwise, it
+   * should return `false`.
    */
-  propagateKnownState(_knownState: StateSet): boolean {
+  propagateKnowns(_knowns: Set<Variable>): boolean {
     return false;
   }
 
@@ -778,10 +624,9 @@ abstract class Constraint<OwnedVariableNames extends string = never> {
    * the value of that variable to make the error equal to zero.
    */
   abstract getError(
-    handlePositions: Position[],
     variableValues: number[],
-    knownState: StateSet,
-    constrainedState: StateSet
+    knowns: Set<Variable>,
+    constrained: Set<Variable>
   ): number;
 
   abstract onClash(constraint: this): AddConstraintResult<OwnedVariableNames>;
@@ -795,11 +640,7 @@ abstract class Constraint<OwnedVariableNames extends string = never> {
   }
 
   getManipulationSet(): ManipulationSet {
-    return new ManipulationSet({
-      xs: this.handles,
-      ys: this.handles,
-      vars: this.variables,
-    });
+    return new ManipulationSet(this.variables);
   }
 }
 
@@ -810,9 +651,9 @@ export function variable(value = 0): Variable {
 export function constant(
   variable: Variable,
   value: number = variable.value
-): AddConstraintResult<never> {
+): AddConstraintResult {
   return addConstraint(
-    new ConstraintKeyGenerator('constant', [], [[variable]]),
+    new ConstraintKeyGenerator('constant', [[variable]]),
     keyGenerator => new Constant(variable, value, keyGenerator),
     existingConstraint => existingConstraint.onClash(value)
   );
@@ -824,32 +665,32 @@ class Constant extends Constraint {
     public value: number,
     keyGenerator: ConstraintKeyGenerator
   ) {
-    super([], [variable], keyGenerator);
+    super([variable], keyGenerator);
   }
 
   readonly ownedVariables = {};
 
-  addConstrainedState(constrainedState: StateSet): void {
-    constrainedState.addVar(this.variable);
+  addConstrainedVariables(constrained: Set<Variable>): void {
+    constrained.add(this.variable);
   }
 
-  propagateKnownState(knownState: StateSet): boolean {
-    if (!knownState.hasVar(this.variable)) {
+  propagateKnowns(knowns: Set<Variable>): boolean {
+    if (!knowns.has(this.variable)) {
       this.variable.value = this.value;
-      knownState.addVar(this.variable);
+      knowns.add(this.variable);
       return true;
     } else {
       return false;
     }
   }
 
-  getError(_positions: Position[], _values: number[]): number {
+  getError(_values: number[]): number {
     throw new Error('Constant.getError() should never be called!');
   }
 
-  onClash(constraint: this): AddConstraintResult<never>;
-  onClash(value: number): AddConstraintResult<never>;
-  onClash(constraintOrValue: this | number): AddConstraintResult<never> {
+  onClash(constraint: this): AddConstraintResult;
+  onClash(value: number): AddConstraintResult;
+  onClash(constraintOrValue: this | number): AddConstraintResult {
     this.value =
       constraintOrValue instanceof Constant
         ? constraintOrValue.value
@@ -861,50 +702,50 @@ class Constant extends Constraint {
 const isConstantConstraint = (c: Constraint): c is Constant =>
   c instanceof Constant;
 
-export function equals(a: Variable, b: Variable): AddConstraintResult<never> {
+export function equals(a: Variable, b: Variable): AddConstraintResult {
   return addConstraint(
-    new ConstraintKeyGenerator('equals', [], [[a, b]]),
+    new ConstraintKeyGenerator('equals', [[a, b]]),
     keyGenerator => new Equals(a, b, keyGenerator),
     existingConstraint => existingConstraint.onClash()
   );
 }
 
-class Equals extends Constraint<never> {
+class Equals extends Constraint {
   constructor(
     readonly a: Variable,
     readonly b: Variable,
     keyGenerator: ConstraintKeyGenerator
   ) {
-    super([], [a, b], keyGenerator);
+    super([a, b], keyGenerator);
   }
 
   readonly ownedVariables = {};
 
-  addConstrainedState(constrainedState: StateSet): void {
-    constrainedState.addVar(this.a);
-    constrainedState.addVar(this.b);
+  addConstrainedVariables(constrained: Set<Variable>): void {
+    constrained.add(this.a);
+    constrained.add(this.b);
   }
 
-  propagateKnownState(knownState: StateSet): boolean {
-    if (!knownState.hasVar(this.a) && knownState.hasVar(this.b)) {
+  propagateKnowns(knowns: Set<Variable>): boolean {
+    if (!knowns.has(this.a) && knowns.has(this.b)) {
       this.a.value = this.b.value;
-      knownState.addVar(this.a);
+      knowns.add(this.a);
       return true;
-    } else if (knownState.hasVar(this.a) && !knownState.hasVar(this.b)) {
+    } else if (knowns.has(this.a) && !knowns.has(this.b)) {
       this.b.value = this.a.value;
-      knownState.addVar(this.b);
+      knowns.add(this.b);
       return true;
     } else {
       return false;
     }
   }
 
-  getError(_positions: Position[], values: number[]) {
+  getError(values: number[]) {
     const [aValue, bValue] = values;
     return aValue - bValue;
   }
 
-  onClash(): AddConstraintResult<never> {
+  onClash(): AddConstraintResult {
     return this.toAddConstraintResult();
   }
 }
@@ -914,73 +755,69 @@ export function sum(
   a: Variable,
   b: Variable,
   c: Variable
-): AddConstraintResult<never> {
+): AddConstraintResult {
   return addConstraint(
-    new ConstraintKeyGenerator('sum', [], [[a], [b, c]]),
+    new ConstraintKeyGenerator('sum', [[a], [b, c]]),
     keyGenerator => new Sum(a, b, c, keyGenerator),
     existingConstraint => existingConstraint.onClash(a, b, c)
   );
 }
 
-class Sum extends Constraint<never> {
+class Sum extends Constraint {
   constructor(
     readonly a: Variable,
     readonly b: Variable,
     readonly c: Variable,
     keyGenerator: ConstraintKeyGenerator
   ) {
-    super([], [a, b, c], keyGenerator);
+    super([a, b, c], keyGenerator);
   }
 
   readonly ownedVariables = {};
 
-  addConstrainedState(constrainedState: StateSet): void {
-    constrainedState.addVar(this.a);
-    constrainedState.addVar(this.b);
-    constrainedState.addVar(this.c);
+  addConstrainedVariables(constrained: Set<Variable>): void {
+    constrained.add(this.a);
+    constrained.add(this.b);
+    constrained.add(this.c);
   }
 
-  propagateKnownState(knownState: StateSet): boolean {
-    if (
-      !knownState.hasVar(this.a) &&
-      knownState.hasVar(this.b) &&
-      knownState.hasVar(this.c)
-    ) {
+  propagateKnowns(knowns: Set<Variable>): boolean {
+    if (!knowns.has(this.a) && knowns.has(this.b) && knowns.has(this.c)) {
       this.a.value = this.b.value + this.c.value;
-      knownState.addVar(this.a);
+      knowns.add(this.a);
       return true;
     } else if (
-      knownState.hasVar(this.a) &&
-      !knownState.hasVar(this.b) &&
-      knownState.hasVar(this.c)
+      knowns.has(this.a) &&
+      !knowns.has(this.b) &&
+      knowns.has(this.c)
     ) {
       this.b.value = this.a.value - this.c.value;
-      knownState.addVar(this.b);
+      knowns.add(this.b);
       return true;
     } else if (
-      knownState.hasVar(this.a) &&
-      knownState.hasVar(this.b) &&
-      !knownState.hasVar(this.c)
+      knowns.has(this.a) &&
+      knowns.has(this.b) &&
+      !knowns.has(this.c)
     ) {
       this.c.value = this.a.value - this.b.value;
-      knownState.addVar(this.c);
+      knowns.add(this.c);
       return true;
     } else {
       return false;
     }
   }
 
-  getError(_positions: Position[], [aValue, bValue, cValue]: number[]) {
+  getError([aValue, bValue, cValue]: number[]) {
     return aValue - (bValue + cValue);
   }
 
-  onClash(a: Variable, b: Variable, c: Variable): AddConstraintResult<never>;
-  onClash(newerConstraint: this): AddConstraintResult<never>;
+  onClash(a: Variable, b: Variable, c: Variable): AddConstraintResult;
+  onClash(newerConstraint: this): AddConstraintResult;
   onClash(
     _newerConstraintOrA: this | Variable,
     _b?: Variable,
     _c?: Variable
-  ): AddConstraintResult<never> {
+  ): AddConstraintResult {
     // TODO: implement this
     throw new Error('TODO');
   }
@@ -989,48 +826,51 @@ class Sum extends Constraint<never> {
 export function pin(
   handle: Handle,
   pos: Position = handle.position
-): AddConstraintResult<never> {
+): AddConstraintResult {
   return addConstraint(
-    new ConstraintKeyGenerator('pin', [[handle]], []),
+    new ConstraintKeyGenerator('pin', [[handle.xVariable], [handle.yVariable]]),
     keyGenerator => new Pin(handle, pos, keyGenerator),
     existingConstraint => existingConstraint.onClash(pos)
   );
 }
 
-class Pin extends Constraint<never> {
+class Pin extends Constraint {
   constructor(
     private readonly handle: Handle,
     public position: Position,
     keyGenerator: ConstraintKeyGenerator
   ) {
-    super([handle], [], keyGenerator);
+    super([handle.xVariable, handle.yVariable], keyGenerator);
   }
 
   readonly ownedVariables = {};
 
-  addConstrainedState(constrainedState: StateSet): void {
-    constrainedState.addX(this.handle);
-    constrainedState.addY(this.handle);
+  addConstrainedVariables(constrained: Set<Variable>): void {
+    constrained.add(this.handle.xVariable);
+    constrained.add(this.handle.yVariable);
   }
 
-  propagateKnownState(knownState: StateSet): boolean {
-    if (!knownState.hasX(this.handle) || !knownState.hasY(this.handle)) {
+  propagateKnowns(knowns: Set<Variable>): boolean {
+    if (
+      !knowns.has(this.handle.xVariable) ||
+      !knowns.has(this.handle.yVariable)
+    ) {
       this.handle.position = this.position;
-      knownState.addX(this.handle);
-      knownState.addY(this.handle);
+      knowns.add(this.handle.xVariable);
+      knowns.add(this.handle.yVariable);
       return true;
     } else {
       return false;
     }
   }
 
-  getError(_positions: Position[], _values: number[]): number {
+  getError(_values: number[]): number {
     throw new Error('Pin.getError() should never be called!');
   }
 
-  onClash(constraint: this): AddConstraintResult<never>;
-  onClash(position: Position): AddConstraintResult<never>;
-  onClash(constraintOrPosition: this | Position): AddConstraintResult<never> {
+  onClash(constraint: this): AddConstraintResult;
+  onClash(position: Position): AddConstraintResult;
+  onClash(constraintOrPosition: this | Position): AddConstraintResult {
     this.position =
       constraintOrPosition instanceof Pin
         ? constraintOrPosition.position
@@ -1039,16 +879,12 @@ class Pin extends Constraint<never> {
   }
 }
 
-export function horizontal(a: Handle, b: Handle): AddConstraintResult<never> {
-  const ay = property(a, 'y').variables.variable;
-  const by = property(b, 'y').variables.variable;
-  return equals(ay, by);
+export function horizontal(a: Handle, b: Handle): AddConstraintResult {
+  return equals(a.yVariable, b.yVariable);
 }
 
-export function vertical(a: Handle, b: Handle): AddConstraintResult<never> {
-  const ax = property(a, 'x').variables.variable;
-  const bx = property(b, 'x').variables.variable;
-  return equals(ax, bx);
+export function vertical(a: Handle, b: Handle): AddConstraintResult {
+  return equals(a.xVariable, b.xVariable);
 }
 
 export function distance(
@@ -1056,7 +892,10 @@ export function distance(
   b: Handle
 ): AddConstraintResult<'distance'> {
   return addConstraint(
-    new ConstraintKeyGenerator('distance', [[a, b]], []),
+    new ConstraintKeyGenerator('distance', [
+      [a.xVariable, b.xVariable],
+      [a.yVariable, b.yVariable],
+    ]),
     keyGenerator => new Distance(a, b, keyGenerator),
     existingConstraint => existingConstraint.onClash()
   );
@@ -1067,7 +906,7 @@ export function equalDistance(
   a2: Handle,
   b1: Handle,
   b2: Handle
-): AddConstraintResult<never> {
+): AddConstraintResult {
   const { distance: distanceA } = distance(a1, a2).variables;
   const { distance: distanceB } = distance(b1, b2).variables;
   return equals(distanceA, distanceB);
@@ -1080,10 +919,16 @@ class Distance extends Constraint<'distance'> {
     keyGenerator: ConstraintKeyGenerator
   ) {
     super(
-      [a, b],
-      [new Variable(Vec.dist(a.position, b.position))],
+      [
+        new Variable(Vec.dist(a.position, b.position)),
+        a.xVariable,
+        a.yVariable,
+        b.xVariable,
+        b.yVariable,
+      ],
       keyGenerator
     );
+    this.distance.represents = { object: this, property: 'distance' };
   }
 
   readonly ownedVariables = { distance: this.distance };
@@ -1092,25 +937,26 @@ class Distance extends Constraint<'distance'> {
     return this.variables[0];
   }
 
-  addConstrainedState(constrainedState: StateSet): void {
-    constrainedState.addX(this.a);
-    constrainedState.addY(this.a);
-    constrainedState.addX(this.b);
-    constrainedState.addY(this.b);
+  addConstrainedVariables(constrained: Set<Variable>): void {
+    constrained.add(this.a.xVariable);
+    constrained.add(this.a.yVariable);
+    constrained.add(this.b.xVariable);
+    constrained.add(this.b.yVariable);
   }
 
   getError(
-    [aPos, bPos]: Position[],
-    [length]: number[],
-    _knownState: StateSet,
-    constrainedState: StateSet
+    [dist, ax, ay, bx, by]: number[],
+    _knowns: Set<Variable>,
+    constrained: Set<Variable>
   ): number {
+    const aPos = { x: ax, y: ay };
+    const bPos = { x: bx, y: by };
     const currDist = Vec.dist(aPos, bPos);
-    if (!constrainedState.hasVar(this.distance)) {
+    if (!constrained.has(this.distance)) {
       this.distance.value = currDist;
       return 0;
     } else {
-      return currDist - length;
+      return currDist - dist;
     }
   }
 
@@ -1135,7 +981,10 @@ class Distance extends Constraint<'distance'> {
 
 export function angle(a: Handle, b: Handle): AddConstraintResult<'angle'> {
   return addConstraint(
-    new ConstraintKeyGenerator('angle', [[a, b]], []),
+    new ConstraintKeyGenerator('angle', [
+      [a.xVariable, b.xVariable],
+      [a.yVariable, b.yVariable],
+    ]),
     keyGenerator => new Angle(a, b, keyGenerator),
     existingConstraint => existingConstraint.onClash(a, b)
   );
@@ -1181,10 +1030,16 @@ class Angle extends Constraint<'angle'> {
     keyGenerator: ConstraintKeyGenerator
   ) {
     super(
-      [a, b],
-      [new Variable(Vec.angle(Vec.sub(b.position, a.position)))],
+      [
+        new Variable(Vec.angle(Vec.sub(b.position, a.position))),
+        a.xVariable,
+        a.yVariable,
+        b.xVariable,
+        b.yVariable,
+      ],
       keyGenerator
     );
+    this.angle.represents = { object: this, property: 'angle' };
   }
 
   readonly ownedVariables = { angle: this.angle };
@@ -1193,18 +1048,17 @@ class Angle extends Constraint<'angle'> {
     return this.variables[0];
   }
 
-  addConstrainedState(constrainedState: StateSet): void {
-    constrainedState.addX(this.a);
-    constrainedState.addY(this.a);
-    constrainedState.addX(this.b);
-    constrainedState.addY(this.b);
+  addConstrainedVariables(constrained: Set<Variable>): void {
+    constrained.add(this.a.xVariable);
+    constrained.add(this.a.yVariable);
+    constrained.add(this.b.xVariable);
+    constrained.add(this.b.yVariable);
   }
 
   getError(
-    [aPos, bPos]: Position[],
-    [angle]: number[],
-    knownState: StateSet,
-    constrainedState: StateSet
+    [angle, ax, ay, bx, by]: number[],
+    knowns: Set<Variable>,
+    constrained: Set<Variable>
   ): number {
     // The old way, which has problems b/c errors are in terms of angles.
     // const currentAngle = Vec.angle(Vec.sub(bPos, aPos));
@@ -1213,36 +1067,38 @@ class Angle extends Constraint<'angle'> {
     // The new way, implemented in terms of the minimum amount of displacement
     // required to satisfy the constraint.
 
-    if (!constrainedState.hasVar(this.angle)) {
+    if (!constrained.has(this.angle)) {
       this.angle.value = Vec.angle(Vec.sub(this.b.position, this.a.position));
       return 0;
     }
 
+    const aPos = { x: ax, y: ay };
+    const bPos = { x: bx, y: by };
     const r = Vec.dist(bPos, aPos);
     let error = Infinity;
 
-    if (!knownState.hasX(this.b) && !knownState.hasY(this.b)) {
-      const x = aPos.x + r * Math.cos(angle);
-      const y = aPos.y + r * Math.sin(angle);
+    if (!knowns.has(this.b.xVariable) && !knowns.has(this.b.yVariable)) {
+      const x = ax + r * Math.cos(angle);
+      const y = ay + r * Math.sin(angle);
       error = Math.min(error, Vec.dist(bPos, { x, y }));
-    } else if (!knownState.hasX(this.b)) {
-      const x = aPos.x + (bPos.y - aPos.y) / Math.tan(angle);
-      error = Math.min(error, Math.abs(x - bPos.x));
-    } else if (!knownState.hasY(this.b)) {
-      const y = aPos.y + (bPos.x - aPos.x) * Math.tan(angle);
-      error = Math.min(error, Math.abs(y - bPos.y));
+    } else if (!knowns.has(this.b.xVariable)) {
+      const x = ax + (by - ay) / Math.tan(angle);
+      error = Math.min(error, Math.abs(x - bx));
+    } else if (!knowns.has(this.b.yVariable)) {
+      const y = ay + (bx - ax) * Math.tan(angle);
+      error = Math.min(error, Math.abs(y - by));
     }
 
-    if (!knownState.hasX(this.a) && !knownState.hasY(this.a)) {
-      const x = bPos.x + r * Math.cos(angle + Math.PI);
-      const y = bPos.y + r * Math.sin(angle + Math.PI);
+    if (!knowns.has(this.a.xVariable) && !knowns.has(this.a.yVariable)) {
+      const x = bx + r * Math.cos(angle + Math.PI);
+      const y = by + r * Math.sin(angle + Math.PI);
       error = Math.min(error, Vec.dist(aPos, { x, y }));
-    } else if (!knownState.hasX(this.a)) {
-      const x = bPos.x + (aPos.y - bPos.y) / Math.tan(angle + Math.PI);
-      error = Math.min(error, Math.abs(x - aPos.x));
-    } else if (!knownState.hasY(this.b)) {
-      const y = bPos.y + (aPos.x - bPos.x) * Math.tan(angle + Math.PI);
-      error = Math.min(error, Math.abs(y - aPos.y));
+    } else if (!knowns.has(this.a.xVariable)) {
+      const x = bx + (ay - by) / Math.tan(angle + Math.PI);
+      error = Math.min(error, Math.abs(x - ax));
+    } else if (!knowns.has(this.a.yVariable)) {
+      const y = by + (ax - bx) * Math.tan(angle + Math.PI);
+      error = Math.min(error, Math.abs(y - ay));
     }
 
     if (!Number.isFinite(error)) {
@@ -1252,12 +1108,12 @@ class Angle extends Constraint<'angle'> {
       error = Math.min(
         // error we'd get from moving b to satisfy the constraint
         Vec.dist(bPos, {
-          x: aPos.x + r * Math.cos(angle),
-          y: aPos.y + r * Math.sin(angle),
+          x: ax + r * Math.cos(angle),
+          y: ay + r * Math.sin(angle),
         }),
         // error we'd get from moving a to satisfy the constraint
         Vec.dist(aPos, {
-          x: bPos.x + r * Math.cos(angle + Math.PI),
+          x: bx + r * Math.cos(angle + Math.PI),
           y: Math.sin(angle + Math.PI),
         })
       );
@@ -1352,130 +1208,13 @@ export function polarVector(
   };
 }
 
-export function property(handle: Handle, property: 'x' | 'y') {
-  return addConstraint(
-    new ConstraintKeyGenerator('property-' + property, [[handle]], []),
-    keyGenerator => new Property(handle, property, keyGenerator),
-    existingConstraint => existingConstraint.onClash()
-  );
-}
-
-class Property extends Constraint<'variable'> {
-  constructor(
-    public readonly handle: Handle,
-    public property: 'x' | 'y',
-    keyGenerator: ConstraintKeyGenerator
-  ) {
-    super([handle], [new Variable(handle.position[property])], keyGenerator);
-  }
-
-  readonly ownedVariables = { variable: this.variable };
-
-  get variable() {
-    return this.variables[0];
-  }
-
-  addConstrainedState(constrainedState: StateSet): void {
-    if (this.property === 'x') {
-      constrainedState.addX(this.handle);
-    } else {
-      constrainedState.addY(this.handle);
-    }
-  }
-
-  propagateKnownState(knownState: StateSet): boolean {
-    switch (this.property) {
-      case 'x':
-        if (!knownState.hasX(this.handle) && knownState.hasVar(this.variable)) {
-          this.handle.position = {
-            x: this.variable.value,
-            y: this.handle.position.y,
-          };
-          knownState.addX(this.handle);
-          return true;
-        } else if (
-          knownState.hasX(this.handle) &&
-          !knownState.hasVar(this.variable)
-        ) {
-          this.variable.value = this.handle.position.x;
-          knownState.addVar(this.variable);
-          return true;
-        } else {
-          return false;
-        }
-      case 'y':
-        if (!knownState.hasY(this.handle) && knownState.hasVar(this.variable)) {
-          this.handle.position = {
-            x: this.handle.position.x,
-            y: this.variable.value,
-          };
-          knownState.addY(this.handle);
-          return true;
-        } else if (
-          knownState.hasY(this.handle) &&
-          !knownState.hasVar(this.variable)
-        ) {
-          this.variable.value = this.handle.position.y;
-          knownState.addVar(this.variable);
-          return true;
-        } else {
-          return false;
-        }
-      default:
-        throw new Error('unsupported property ' + this.property);
-    }
-  }
-
-  getError(
-    [handlePos]: Position[],
-    [varValue]: number[],
-    _knownState: StateSet,
-    constrainedState: StateSet
-  ) {
-    const currValue = handlePos[this.property];
-    if (!constrainedState.hasVar(this.variable)) {
-      this.variable.value = currValue;
-      return 0;
-    } else {
-      return currValue - varValue;
-    }
-  }
-
-  getManipulationSet(): ManipulationSet {
-    const handles = this.handles.map(h => h.canonicalInstance);
-    return new ManipulationSet({
-      xs: this.property === 'x' ? handles : [],
-      ys: this.property === 'y' ? handles : [],
-      vars: this.variables,
-    });
-  }
-
-  onClash(): AddConstraintResult<'variable'>;
-  onClash(that: this): AddConstraintResult<'variable'>;
-  onClash(that?: this): AddConstraintResult<'variable'> {
-    if (that && this.variable !== that.variable) {
-      const eq = equals(this.variable, that.variable);
-      return {
-        constraints: [that, ...eq.constraints],
-        variables: that.ownedVariables,
-        remove() {
-          that.remove();
-          eq.remove();
-        },
-      };
-    } else {
-      return this.toAddConstraintResult();
-    }
-  }
-}
-
 export function formula(
   args: Variable[],
   fn: (xs: number[]) => number
 ): AddConstraintResult<'result'> {
   const result = new Variable(fn(args.map(arg => arg.value)));
   return addConstraint(
-    new ConstraintKeyGenerator('formula#' + generateId(), [], []),
+    new ConstraintKeyGenerator('formula#' + generateId(), []),
     keyGenerator => new Formula(args, result, fn, keyGenerator),
     existingConstraint => existingConstraint.onClash()
   );
@@ -1488,24 +1227,22 @@ class Formula extends Constraint<'result'> {
     private readonly fn: (xs: number[]) => number,
     keyGenerator: ConstraintKeyGenerator
   ) {
-    super([], [...args, result], keyGenerator);
+    super([...args, result], keyGenerator);
+    this.result.represents = { object: this, property: 'result' };
   }
 
   readonly ownedVariables = { result: this.result };
 
-  addConstrainedState(constrainedState: StateSet): void {
+  addConstrainedVariables(constrained: Set<Variable>): void {
     for (const arg of this.args) {
-      constrainedState.addVar(arg);
+      constrained.add(arg);
     }
   }
 
-  propagateKnownState(knownState: StateSet): boolean {
-    if (
-      !knownState.hasVar(this.result) &&
-      this.args.every(arg => knownState.hasVar(arg))
-    ) {
+  propagateKnowns(knowns: Set<Variable>): boolean {
+    if (!knowns.has(this.result) && this.args.every(arg => knowns.has(arg))) {
       this.result.value = this.computeResult();
-      knownState.addVar(this.result);
+      knowns.add(this.result);
       return true;
     } else {
       return false;
@@ -1513,13 +1250,12 @@ class Formula extends Constraint<'result'> {
   }
 
   getError(
-    _handlePositions: Position[],
     variableValues: number[],
-    _knownState: StateSet,
-    constrainedState: StateSet
+    _knowns: Set<Variable>,
+    constrained: Set<Variable>
   ): number {
     const currValue = this.computeResult(variableValues);
-    if (!constrainedState.hasVar(this.result)) {
+    if (!constrained.has(this.result)) {
       this.result.value = currValue;
       return 0;
     } else {
@@ -1606,10 +1342,6 @@ export const now = {
 
   polarVector(a: Handle, b: Handle) {
     return captureNewConstraints(tempConstraints, () => polarVector(a, b));
-  },
-
-  property(handle: Handle, p: 'x' | 'y') {
-    return captureNewConstraints(tempConstraints, () => property(handle, p));
   },
 
   formula(args: Variable[], fn: (xs: number[]) => number) {
