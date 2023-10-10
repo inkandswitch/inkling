@@ -1,6 +1,6 @@
 const COLORS: Record<string, string> = {};
 
-let colors = [
+const colors = [
   'GREY_DARK',
   'GREY_LESS_DARK',
   'GREY_MID',
@@ -14,7 +14,7 @@ let colors = [
 // Grab the above listed colors from the stylesheet.
 // This is a temporary measure. Ultimately, we shouldn't be setting colors via JS.
 for (const color of colors) {
-  let cssName = color.toLowerCase().replace('_', '-');
+  const cssName = color.toLowerCase().replaceAll(/_/g, '-');
   COLORS[color] = window
     .getComputedStyle(document.body)
     .getPropertyValue(`--${cssName}-color`);
