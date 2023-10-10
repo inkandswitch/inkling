@@ -230,8 +230,15 @@ function getClustersForSolver(root: GameObject): Set<ClusterForSolver> {
       // I'm doing this because some constraints are removed in deduping, but it's possible that
       // there's enough info in the deduped constraints. On the other hand, also looking at
       // origConstraints doesn't hurt so I'm leaving it here for now. (Think about this later.)
-      for (const constraint of [...origConstraints, ...constraints]) {
-        constraint.addConstrainedVariables(constrained);
+      while (true) {
+        const oldNumConstrainedVariables = constrained.size;
+        for (const constraint of [...origConstraints, ...constraints]) {
+          constraint.addConstrainedVariables(constrained);
+        }
+        if (constrained.size === oldNumConstrainedVariables) {
+          // no varibles were added since last time, so we're done
+          break;
+        }
       }
 
       return { constraints, variables, constrained };
@@ -716,8 +723,12 @@ class Equals extends Constraint {
   readonly ownedVariables = {};
 
   addConstrainedVariables(constrained: Set<Variable>): void {
-    constrained.add(this.a);
-    constrained.add(this.b);
+    if (constrained.has(this.a)) {
+      constrained.add(this.b);
+    }
+    if (constrained.has(this.b)) {
+      constrained.add(this.a);
+    }
   }
 
   propagateKnowns(knowns: Set<Variable>): boolean {
@@ -734,8 +745,17 @@ class Equals extends Constraint {
     }
   }
 
-  getError(values: number[]) {
+  getError(
+    values: number[],
+    _knowns: Set<Variable>,
+    constrained: Set<Variable>
+  ) {
     const [aValue, bValue] = values;
+    if (!constrained.has(this.a)) {
+      this.a.value = this.b.value;
+    } else if (!constrained.has(this.b)) {
+      this.b.value = this.a.value;
+    }
     return aValue - bValue;
   }
 
@@ -770,9 +790,15 @@ class Sum extends Constraint {
   readonly ownedVariables = {};
 
   addConstrainedVariables(constrained: Set<Variable>): void {
-    constrained.add(this.a);
-    constrained.add(this.b);
-    constrained.add(this.c);
+    if (
+      constrained.has(this.a) ||
+      constrained.has(this.b) ||
+      constrained.has(this.c)
+    ) {
+      constrained.add(this.a);
+      constrained.add(this.b);
+      constrained.add(this.c);
+    }
   }
 
   propagateKnowns(knowns: Set<Variable>): boolean {
@@ -801,7 +827,30 @@ class Sum extends Constraint {
     }
   }
 
-  getError([aValue, bValue, cValue]: number[]) {
+  getError(
+    [aValue, bValue, cValue]: number[],
+    _knowns: Set<Variable>,
+    constrained: Set<Variable>
+  ) {
+    if (
+      !constrained.has(this.a) &&
+      constrained.has(this.b) &&
+      constrained.has(this.c)
+    ) {
+      this.a.value = this.b.value + this.c.value;
+    } else if (
+      constrained.has(this.a) &&
+      !constrained.has(this.b) &&
+      constrained.has(this.c)
+    ) {
+      this.b.value = this.a.value - this.c.value;
+    } else if (
+      constrained.has(this.a) &&
+      constrained.has(this.b) &&
+      !constrained.has(this.c)
+    ) {
+      this.c.value = this.a.value - this.b.value;
+    }
     return aValue - (bValue + cValue);
   }
 
@@ -932,10 +981,12 @@ class Distance extends Constraint<'distance'> {
   }
 
   addConstrainedVariables(constrained: Set<Variable>): void {
-    constrained.add(this.a.xVariable);
-    constrained.add(this.a.yVariable);
-    constrained.add(this.b.xVariable);
-    constrained.add(this.b.yVariable);
+    if (constrained.has(this.distance)) {
+      constrained.add(this.a.xVariable);
+      constrained.add(this.a.yVariable);
+      constrained.add(this.b.xVariable);
+      constrained.add(this.b.yVariable);
+    }
   }
 
   getError(
@@ -948,10 +999,8 @@ class Distance extends Constraint<'distance'> {
     const currDist = Vec.dist(aPos, bPos);
     if (!constrained.has(this.distance)) {
       this.distance.value = currDist;
-      return 0;
-    } else {
-      return currDist - dist;
     }
+    return currDist - dist;
   }
 
   onClash(that: this): AddConstraintResult<'distance'>;
@@ -1043,10 +1092,12 @@ class Angle extends Constraint<'angle'> {
   }
 
   addConstrainedVariables(constrained: Set<Variable>): void {
-    constrained.add(this.a.xVariable);
-    constrained.add(this.a.yVariable);
-    constrained.add(this.b.xVariable);
-    constrained.add(this.b.yVariable);
+    if (constrained.has(this.angle)) {
+      constrained.add(this.a.xVariable);
+      constrained.add(this.a.yVariable);
+      constrained.add(this.b.xVariable);
+      constrained.add(this.b.yVariable);
+    }
   }
 
   getError(
