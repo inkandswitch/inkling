@@ -66,8 +66,14 @@ class GizmoInstance extends GameObject {
       new WirePort(
         this.center,
         new MetaStruct([
-          [new Label("distance"), new MetaNumber(this.polarVectorConstraint.variables.distance)],
-          [new Label("angle"), new MetaNumber(this.polarVectorConstraint.variables.angle)]
+          [
+            new Label('distance'),
+            new MetaNumber(this.polarVectorConstraint.variables.distance),
+          ],
+          [
+            new Label('angle'),
+            new MetaNumber(this.polarVectorConstraint.variables.angle),
+          ],
         ])
       )
     );
