@@ -182,7 +182,10 @@ export class Variable {
 interface ClusterForSolver {
   constraints: Constraint[];
   variables: Variable[];
-  constrained: Set<Variable>; // TODO: replace with `free` (easier to explain)
+  // Set of variables that are "free". The value of each of these variables can be set by
+  // their owning constraint's `getError` method in order to make the error due to that
+  // constraint equal to zero.
+  freeVariables: Set<Variable>;
 }
 
 let _clustersForSolver: Set<ClusterForSolver> | null = null;
@@ -225,23 +228,22 @@ function getClustersForSolver(root: GameObject): Set<ClusterForSolver> {
       const { constraints, variables } =
         getDedupedConstraintsAndVariables(origConstraints);
 
-      const constrained = new Set<Variable>();
-      // TODO: do we really need to look at origConstraints when computing the constrained state?
-      // I'm doing this because some constraints are removed in deduping, but it's possible that
-      // there's enough info in the deduped constraints. On the other hand, also looking at
-      // origConstraints doesn't hurt so I'm leaving it here for now. (Think about this later.)
-      while (true) {
-        const oldNumConstrainedVariables = constrained.size;
-        for (const constraint of [...origConstraints, ...constraints]) {
-          constraint.addConstrainedVariables(constrained);
-        }
-        if (constrained.size === oldNumConstrainedVariables) {
-          // no varibles were added since last time, so we're done
-          break;
+      const variableCounts = new Map<Variable, number>();
+      for (const constraint of constraints) {
+        for (const variable of constraint.variables) {
+          const n = variableCounts.get(variable.canonicalInstance) ?? 0;
+          variableCounts.set(variable.canonicalInstance, n + 1);
         }
       }
 
-      return { constraints, variables, constrained };
+      const freeVariables = new Set<Variable>();
+      for (const [variable, count] of variableCounts.entries()) {
+        if (count === 1) {
+          freeVariables.add(variable.canonicalInstance);
+        }
+      }
+
+      return { constraints, variables, freeVariables };
     })
   );
 
@@ -257,7 +259,7 @@ function getClustersForSolver(root: GameObject): Set<ClusterForSolver> {
 
 function getDedupedConstraintsAndVariables(constraints: Constraint[]) {
   // console.log('orig constraints', constraints);
-  let result: Omit<ClusterForSolver, 'constrained'> | null = null;
+  let result: Omit<ClusterForSolver, 'freeVariables'> | null = null;
   while (true) {
     const oldNumConstraints = result
       ? result.constraints.length
@@ -372,7 +374,7 @@ export function solve(root: GameObject) {
 function solveCluster({
   constraints,
   variables,
-  constrained,
+  freeVariables,
 }: ClusterForSolver) {
   if (constraints.length === 0) {
     // nothing to solve!
@@ -387,7 +389,7 @@ function solveCluster({
   const inputs: number[] = [];
   const varIdx = new Map<Variable, number>();
   for (const variable of variables) {
-    if (!knowns.has(variable) && constrained.has(variable)) {
+    if (!knowns.has(variable) && !freeVariables.has(variable)) {
       varIdx.set(variable, inputs.length);
       inputs.push(variable.value);
     }
@@ -410,7 +412,7 @@ function solveCluster({
           (vi === undefined ? variable.value : currState[vi]) - valueOffset
         );
       });
-      error += Math.pow(constraint.getError(values, knowns, constrained), 2);
+      error += Math.pow(constraint.getError(values, knowns, freeVariables), 2);
     }
     return error;
   }
@@ -429,8 +431,8 @@ function solveCluster({
       inputs,
       'knowns',
       knowns,
-      'and constrained variables',
-      constrained
+      'and free variables',
+      freeVariables
     );
     SVG.showStatus('' + e);
     throw e;
@@ -441,7 +443,7 @@ function solveCluster({
   // Now we write the solution from the solver back into our variables and handles.
   const outputs = result.solution;
   for (const variable of variables) {
-    if (!knowns.has(variable) && constrained.has(variable)) {
+    if (!knowns.has(variable) && !freeVariables.has(variable)) {
       variable.value = outputs.shift()!;
     }
   }
@@ -606,8 +608,6 @@ abstract class Constraint<OwnedVariableNames extends string = never> {
     return this.keyGenerator.getKeyWithDedupedHandlesAndVars();
   }
 
-  abstract addConstrainedVariables(constrained: Set<Variable>): void;
-
   /**
    * If this constraint can determine the values of any variables based on
    * other state that is already known, it should set the values of those
@@ -620,14 +620,15 @@ abstract class Constraint<OwnedVariableNames extends string = never> {
 
   /**
    * Returns the current error for this constraint. (OK if it's negative.)
-   * If this constraint owns a variable whose state is not constrained,
-   * ignore the corresponding value in `variableValues` and instead set
-   * the value of that variable to make the error equal to zero.
+   * If this constraint owns a "free" variable, i.e., one  whose value can be
+   * determined locally, ignore the corresponding value in `variableValues`
+   * and instead set the value of that variable to make the error equal to
+   * zero.
    */
   abstract getError(
     variableValues: number[],
     knowns: Set<Variable>,
-    constrained: Set<Variable>
+    freeVariables: Set<Variable>
   ): number;
 
   abstract onClash(constraint: this): AddConstraintResult<OwnedVariableNames>;
@@ -671,10 +672,6 @@ class Constant extends Constraint {
 
   readonly ownedVariables = {};
 
-  addConstrainedVariables(constrained: Set<Variable>): void {
-    constrained.add(this.variable);
-  }
-
   propagateKnowns(knowns: Set<Variable>): boolean {
     if (!knowns.has(this.variable)) {
       this.variable.value = this.value;
@@ -685,7 +682,7 @@ class Constant extends Constraint {
     }
   }
 
-  getError(_values: number[]): number {
+  getError(): number {
     throw new Error('Constant.getError() should never be called!');
   }
 
@@ -722,15 +719,6 @@ class Equals extends Constraint {
 
   readonly ownedVariables = {};
 
-  addConstrainedVariables(constrained: Set<Variable>): void {
-    if (constrained.has(this.a)) {
-      constrained.add(this.b);
-    }
-    if (constrained.has(this.b)) {
-      constrained.add(this.a);
-    }
-  }
-
   propagateKnowns(knowns: Set<Variable>): boolean {
     if (!knowns.has(this.a) && knowns.has(this.b)) {
       this.a.value = this.b.value;
@@ -745,18 +733,8 @@ class Equals extends Constraint {
     }
   }
 
-  getError(
-    values: number[],
-    _knowns: Set<Variable>,
-    constrained: Set<Variable>
-  ) {
-    const [aValue, bValue] = values;
-    if (!constrained.has(this.a)) {
-      this.a.value = this.b.value;
-    } else if (!constrained.has(this.b)) {
-      this.b.value = this.a.value;
-    }
-    return aValue - bValue;
+  getError(): number {
+    throw new Error('Equals.getError() should never be called!');
   }
 
   onClash(): AddConstraintResult {
@@ -789,18 +767,6 @@ class Sum extends Constraint {
 
   readonly ownedVariables = {};
 
-  addConstrainedVariables(constrained: Set<Variable>): void {
-    if (
-      constrained.has(this.a) ||
-      constrained.has(this.b) ||
-      constrained.has(this.c)
-    ) {
-      constrained.add(this.a);
-      constrained.add(this.b);
-      constrained.add(this.c);
-    }
-  }
-
   propagateKnowns(knowns: Set<Variable>): boolean {
     if (!knowns.has(this.a) && knowns.has(this.b) && knowns.has(this.c)) {
       this.a.value = this.b.value + this.c.value;
@@ -827,30 +793,7 @@ class Sum extends Constraint {
     }
   }
 
-  getError(
-    [aValue, bValue, cValue]: number[],
-    _knowns: Set<Variable>,
-    constrained: Set<Variable>
-  ) {
-    if (
-      !constrained.has(this.a) &&
-      constrained.has(this.b) &&
-      constrained.has(this.c)
-    ) {
-      this.a.value = this.b.value + this.c.value;
-    } else if (
-      constrained.has(this.a) &&
-      !constrained.has(this.b) &&
-      constrained.has(this.c)
-    ) {
-      this.b.value = this.a.value - this.c.value;
-    } else if (
-      constrained.has(this.a) &&
-      constrained.has(this.b) &&
-      !constrained.has(this.c)
-    ) {
-      this.c.value = this.a.value - this.b.value;
-    }
+  getError([aValue, bValue, cValue]: number[]) {
     return aValue - (bValue + cValue);
   }
 
@@ -888,11 +831,6 @@ class Pin extends Constraint {
 
   readonly ownedVariables = {};
 
-  addConstrainedVariables(constrained: Set<Variable>): void {
-    constrained.add(this.handle.xVariable);
-    constrained.add(this.handle.yVariable);
-  }
-
   propagateKnowns(knowns: Set<Variable>): boolean {
     if (
       !knowns.has(this.handle.xVariable) ||
@@ -907,7 +845,7 @@ class Pin extends Constraint {
     }
   }
 
-  getError(_values: number[]): number {
+  getError(): number {
     throw new Error('Pin.getError() should never be called!');
   }
 
@@ -980,24 +918,15 @@ class Distance extends Constraint<'distance'> {
     return this.variables[0];
   }
 
-  addConstrainedVariables(constrained: Set<Variable>): void {
-    if (constrained.has(this.distance)) {
-      constrained.add(this.a.xVariable);
-      constrained.add(this.a.yVariable);
-      constrained.add(this.b.xVariable);
-      constrained.add(this.b.yVariable);
-    }
-  }
-
   getError(
     [dist, ax, ay, bx, by]: number[],
     _knowns: Set<Variable>,
-    constrained: Set<Variable>
+    freeVariables: Set<Variable>
   ): number {
     const aPos = { x: ax, y: ay };
     const bPos = { x: bx, y: by };
     const currDist = Vec.dist(aPos, bPos);
-    if (!constrained.has(this.distance)) {
+    if (freeVariables.has(this.distance.canonicalInstance)) {
       this.distance.value = currDist;
     }
     return currDist - dist;
@@ -1091,19 +1020,10 @@ class Angle extends Constraint<'angle'> {
     return this.variables[0];
   }
 
-  addConstrainedVariables(constrained: Set<Variable>): void {
-    if (constrained.has(this.angle)) {
-      constrained.add(this.a.xVariable);
-      constrained.add(this.a.yVariable);
-      constrained.add(this.b.xVariable);
-      constrained.add(this.b.yVariable);
-    }
-  }
-
   getError(
     [angle, ax, ay, bx, by]: number[],
     knowns: Set<Variable>,
-    constrained: Set<Variable>
+    freeVariables: Set<Variable>
   ): number {
     // The old way, which has problems b/c errors are in terms of angles.
     // const currentAngle = Vec.angle(Vec.sub(bPos, aPos));
@@ -1112,7 +1032,7 @@ class Angle extends Constraint<'angle'> {
     // The new way, implemented in terms of the minimum amount of displacement
     // required to satisfy the constraint.
 
-    if (!constrained.has(this.angle)) {
+    if (freeVariables.has(this.angle.canonicalInstance)) {
       this.angle.value = Vec.angle(Vec.sub(this.b.position, this.a.position));
       return 0;
     }
@@ -1278,12 +1198,6 @@ class Formula extends Constraint<'result'> {
 
   readonly ownedVariables = { result: this.result };
 
-  addConstrainedVariables(constrained: Set<Variable>): void {
-    for (const arg of this.args) {
-      constrained.add(arg);
-    }
-  }
-
   propagateKnowns(knowns: Set<Variable>): boolean {
     if (!knowns.has(this.result) && this.args.every(arg => knowns.has(arg))) {
       this.result.value = this.computeResult();
@@ -1297,15 +1211,13 @@ class Formula extends Constraint<'result'> {
   getError(
     variableValues: number[],
     _knowns: Set<Variable>,
-    constrained: Set<Variable>
+    freeVariables: Set<Variable>
   ): number {
     const currValue = this.computeResult(variableValues);
-    if (!constrained.has(this.result)) {
+    if (freeVariables.has(this.result.canonicalInstance)) {
       this.result.value = currValue;
-      return 0;
-    } else {
-      return currValue - this.result.value;
     }
+    return currValue - this.result.value;
   }
 
   onClash(): AddConstraintResult<'result'>;
