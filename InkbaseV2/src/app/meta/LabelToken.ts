@@ -37,7 +37,7 @@ export default class LabelToken extends Token {
       this.width = this.textElement.getComputedTextLength() + 10;
     } else {
       for (const stroke of label.display.strokeData) {
-        let strokeElement = SVG.add('polyline', SVG.metaElm, {
+        const strokeElement = SVG.add('polyline', SVG.metaElm, {
           points: SVG.points(stroke),
           transform: `translate(${this.position.x}, ${this.position.y})`,
           stroke: 'black',

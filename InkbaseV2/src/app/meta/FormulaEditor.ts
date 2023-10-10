@@ -49,10 +49,10 @@ export default class FormulaEditor extends GameObject {
     return this.active;
   }
 
-  activateFromFormula() { }
+  activateFromFormula() {}
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  addLabelTokenFromExisting(_: any) { }
+  addLabelTokenFromExisting(_: any) {}
 
   activateFromPosition(position: Position) {
     this.position = position;
@@ -312,14 +312,16 @@ class FormulaEditorCell extends GameObject {
     } else {
       this.recomputeWidth(false);
       // Normalize strokes
-      let normalizedStrokes = strokes.map(points => {
+      const normalizedStrokes = strokes.map(points => {
         return points.map(pt => {
           return Vec.sub(pt, this.position);
         });
       });
 
-
-      const label = this.page.namespace.createLabel(normalizedStrokes, this.width);
+      const label = this.page.namespace.createLabel(
+        normalizedStrokes,
+        this.width
+      );
       console.log(label);
 
       this.stringValue = '#' + label.id.toString();
