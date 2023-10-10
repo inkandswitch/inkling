@@ -106,10 +106,13 @@ export class Variable {
     };
     this.info.absorbedVariables.add(that);
 
-    if (thatLockConstraint) {
-      thatLockConstraint.remove();
-      this.lock();
-    }
+    // TODO: make this work
+    // if (thatLockConstraint) {
+    //   thatLockConstraint.remove();
+    //   this.lock();
+    // }
+
+    forgetClustersForSolver();
   }
 
   promoteToCanonical() {
@@ -131,9 +134,12 @@ export class Variable {
     this.info.absorbedVariables.delete(that);
     that.info = { isCanonical: true, absorbedVariables: new Set() };
 
-    if (this.isLocked) {
-      that.lock();
-    }
+    // TODO: make this work
+    // if (this.isLocked) {
+    //   that.lock();
+    // }
+
+    forgetClustersForSolver();
   }
 
   breakOffAbsorbedVariables() {

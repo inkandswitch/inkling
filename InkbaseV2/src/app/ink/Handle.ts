@@ -219,8 +219,6 @@ export default class Handle extends GameObject {
     that.removeFromDOM();
 
     for (const handle of [that, ...that.absorbedHandles]) {
-      console.log(this, 'absorbing', handle);
-
       // update the instance state of the absorbed handle
       handle.instanceState = {
         isCanonical: false,
