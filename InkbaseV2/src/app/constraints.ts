@@ -1307,12 +1307,3 @@ export const now = {
 };
 
 // #endregion temporary constraints
-
-// #region debugging
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-(window as any).allConstraints = Constraint.all;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-(window as any).allVariables = Variable.all;
-
-// #endregion debugging
