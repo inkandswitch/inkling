@@ -107,6 +107,9 @@ export default class FormulaParser {
         name(_first, _rest) {
           this.args.tokens.push(this.token);
         },
+        label(_hash, _id) {
+          this.args.tokens.push(this.token);
+        },
         number(_) {
           this.args.tokens.push(this.token);
         },
@@ -128,6 +131,9 @@ export default class FormulaParser {
           return `(${e.compile()})`;
         },
         name(_first, _rest) {
+          return `v${this.token.getVariable().id}`;
+        },
+        label(_hash, _id) {
           return `v${this.token.getVariable().id}`;
         },
         number(_) {

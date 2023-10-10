@@ -32,21 +32,19 @@ export default class LabelToken extends Token {
     source?: ohm.Interval
   ) {
     super(source);
-    console.log('lll', label.display);
     if (typeof label.display === 'string') {
       this.textElement.textContent = label.display;
       this.width = this.textElement.getComputedTextLength() + 10;
     } else {
       for (const stroke of label.display.strokeData) {
-        this.strokeElements.push(
-          SVG.add('polyline', SVG.metaElm, {
-            points: SVG.points(stroke),
-            transform: `translate(${this.position.x}, ${this.position.y})`,
-            stroke: 'white',
-            fill: 'none',
-            'stroke-width': 2,
-          })
-        );
+        let strokeElement = SVG.add('polyline', SVG.metaElm, {
+          points: SVG.points(stroke),
+          transform: `translate(${this.position.x}, ${this.position.y})`,
+          stroke: 'black',
+          fill: 'none',
+          'stroke-width': 2,
+        });
+        this.strokeElements.push(strokeElement);
       }
       this.width = label.display.width;
     }
