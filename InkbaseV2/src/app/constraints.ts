@@ -1159,7 +1159,7 @@ class Angle extends Constraint<'angle'> {
         // error we'd get from moving a to satisfy the constraint
         Vec.dist(aPos, {
           x: bx + r * Math.cos(angle + Math.PI),
-          y: Math.sin(angle + Math.PI),
+          y: by + r * Math.sin(angle + Math.PI),
         })
       );
     }
