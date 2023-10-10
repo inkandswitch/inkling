@@ -106,11 +106,10 @@ export class Variable {
     };
     this.info.absorbedVariables.add(that);
 
-    // TODO: make this work
-    // if (thatLockConstraint) {
-    //   thatLockConstraint.remove();
-    //   this.lock();
-    // }
+    if (thatLockConstraint) {
+      thatLockConstraint.remove();
+      this.lock();
+    }
 
     forgetClustersForSolver();
   }
@@ -134,22 +133,11 @@ export class Variable {
     this.info.absorbedVariables.delete(that);
     that.info = { isCanonical: true, absorbedVariables: new Set() };
 
-    // TODO: make this work
-    // if (this.isLocked) {
-    //   that.lock();
-    // }
+    if (this.isLocked) {
+      that.lock();
+    }
 
     forgetClustersForSolver();
-  }
-
-  breakOffAbsorbedVariables() {
-    if (!this.info.isCanonical) {
-      return;
-    }
-
-    for (const absorbedVariable of this.info.absorbedVariables) {
-      this.breakOff(absorbedVariable);
-    }
   }
 
   get lockConstraint(): Constant | null {
@@ -204,8 +192,9 @@ function getClustersForSolver(root: GameObject): Set<ClusterForSolver> {
     return _clustersForSolver;
   }
 
+  // TODO: document what's going on here
   for (const variable of Variable.all) {
-    variable.breakOffAbsorbedVariables();
+    variable.info = { isCanonical: true, absorbedVariables: new Set() };
   }
   root.forEach({
     what: aCanonicalHandle,
@@ -259,7 +248,6 @@ function getClustersForSolver(root: GameObject): Set<ClusterForSolver> {
   return _clustersForSolver;
 }
 
-// TODO: this function works, but it's gross. Refactor.
 function getDedupedConstraintsAndVariables(constraints: Constraint[]) {
   // console.log('orig constraints', constraints);
   let result: Omit<ClusterForSolver, 'constrained'> | null = null;
