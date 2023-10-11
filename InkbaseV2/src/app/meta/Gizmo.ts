@@ -32,9 +32,7 @@ class GizmoInstance extends GameObject {
 
   visible = true;
 
-  readonly polarVectorConstraint: constraints.AddConstraintResult<
-    'angle' | 'distance'
-  >;
+  readonly distance: Variable;
   readonly angleInRadians: Variable;
   readonly angleInDegrees: Variable;
   private readonly _a: WeakRef<Handle>;
@@ -63,27 +61,21 @@ class GizmoInstance extends GameObject {
     this.line = this.updateLine()!;
     this.center = this.updateCenter()!;
     this.radius = this.updateRadius()!;
-    this.polarVectorConstraint = constraints.polarVector(a, b);
-    this.angleInRadians = this.polarVectorConstraint.variables.angle;
-    this.angleInDegrees = new Variable(
-      (this.angleInRadians.value * 180) / Math.PI
-    );
-    constraints.linearRelationship(
-      this.angleInDegrees,
+    ({ distance: this.distance, angle: this.angleInRadians } =
+      constraints.polarVector(a, b).variables);
+    this.angleInDegrees = constraints.linearRelationship(
       180 / Math.PI,
-      this.polarVectorConstraint.variables.angle,
+      this.angleInRadians,
       0
-    );
+    ).variables.y;
 
     this.wirePort = this.adopt(
       new WirePort(
         this.center,
         new MetaStruct([
-          new MetaLabel(
-            'distance',
-            this.polarVectorConstraint.variables.distance
-          ),
-          new MetaLabel('angle', this.polarVectorConstraint.variables.angle),
+          new MetaLabel('distance', this.distance),
+          new MetaLabel('angle-degrees', this.angleInDegrees),
+          new MetaLabel('angle-radians', this.angleInRadians),
         ])
       )
     );
@@ -163,11 +155,13 @@ class GizmoInstance extends GameObject {
   }
 
   toggleDistance() {
-    this.polarVectorConstraint.variables.distance.toggleLock();
+    this.distance.toggleLock();
   }
 
   toggleAngle() {
-    this.polarVectorConstraint.variables.angle.toggleLock();
+    // doesn't matter which angle we lock, one is absorbed by the other
+    // so they share the same lock
+    this.angleInRadians.toggleLock();
   }
 
   render() {
@@ -196,17 +190,12 @@ class GizmoInstance extends GameObject {
     // TODO(Ivan): These shouldn't use SVG.now anymore
     SVG.now('path', {
       d,
-      ...stroke(
-        this.polarVectorConstraint.variables.angle.isLocked ? green : grey
-      ),
+      ...stroke(this.angleInRadians.isLocked ? green : grey),
     });
 
     SVG.now('polyline', {
       points: SVG.points(handles.a.position, handles.b.position),
-      ...stroke(
-        this.polarVectorConstraint.variables.distance.isLocked ? green : grey,
-        3
-      ),
+      ...stroke(this.distance.isLocked ? green : grey, 3),
     });
   }
 
@@ -298,7 +287,7 @@ export default class Gizmo {
 
     const c = this.page.adopt(Handle.create('informal', { x: 400, y: 400 }));
     const d = this.page.adopt(Handle.create('informal', { x: 500, y: 500 }));
-    return this.findOrCreate(c, d);
+    this.findOrCreate(c, d);
   }
 }
 

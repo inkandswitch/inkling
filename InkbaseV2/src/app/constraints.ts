@@ -233,9 +233,23 @@ function getClustersForSolver(root: GameObject): Set<ClusterForSolver> {
       const { constraints, variables } =
         getDedupedConstraintsAndVariables(origConstraints);
 
+      // const ownedVariables = new Set<Variable>();
+      // for (const constraint of constraints) {
+      //   for (const variable of Object.values(
+      //     constraint.ownedVariables
+      //   ) as Variable[]) {
+      //     ownedVariables.add(variable);
+      //   }
+      // }
+
       const variableCounts = new Map<Variable, number>();
       for (const constraint of constraints) {
         for (const variable of constraint.variables) {
+          // TODO: think this through
+          // if (!ownedVariables.has(variable)) {
+          //   continue;
+          // }
+
           const n = variableCounts.get(variable.canonicalInstance) ?? 0;
           variableCounts.set(variable.canonicalInstance, n + 1);
         }
@@ -770,11 +784,11 @@ class Equals extends Constraint {
 
 /** y = m * x + b */
 export function linearRelationship(
-  y: Variable,
   m: number,
   x: Variable,
   b: number
-): AddConstraintResult {
+): AddConstraintResult<'y'> {
+  const y = new Variable(m * x.value + b);
   return addConstraint(
     new ConstraintKeyGenerator('linear', [[y], [x]]),
     keyGenerator => new LinearRelationship(y, m, x, b, keyGenerator),
@@ -782,7 +796,7 @@ export function linearRelationship(
   );
 }
 
-class LinearRelationship extends Constraint {
+class LinearRelationship extends Constraint<'y'> {
   constructor(
     readonly y: Variable,
     public m: number,
@@ -793,7 +807,7 @@ class LinearRelationship extends Constraint {
     super([y, x], keyGenerator);
   }
 
-  readonly ownedVariables = {};
+  readonly ownedVariables = { y: this.y };
 
   propagateKnowns(): boolean {
     throw new Error(
@@ -805,14 +819,19 @@ class LinearRelationship extends Constraint {
     throw new Error('LinearRelationship.getError() should never be called!');
   }
 
-  onClash(y: Variable, m: number, x: Variable, b: number): AddConstraintResult;
-  onClash(newerConstraint: this): AddConstraintResult;
+  onClash(
+    y: Variable,
+    m: number,
+    x: Variable,
+    b: number
+  ): AddConstraintResult<'y'>;
+  onClash(newerConstraint: this): AddConstraintResult<'y'>;
   onClash(
     newerConstraintOrY: this | Variable,
     m?: number,
     _x?: Variable,
     b?: number
-  ): AddConstraintResult {
+  ): AddConstraintResult<'y'> {
     if (newerConstraintOrY instanceof Variable) {
       this.m = m!;
       this.b = b!;
@@ -1337,9 +1356,9 @@ export const now = {
     return captureNewConstraints(tempConstraints, () => equals(a, b));
   },
 
-  linearRelationship(y: Variable, m: number, x: Variable, b: number) {
+  linearRelationship(m: number, x: Variable, b: number) {
     return captureNewConstraints(tempConstraints, () =>
-      linearRelationship(y, m, x, b)
+      linearRelationship(m, x, b)
     );
   },
 

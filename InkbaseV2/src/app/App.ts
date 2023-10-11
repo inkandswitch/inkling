@@ -42,7 +42,7 @@ const metaToggle = new MetaToggle();
 root.adopt(metaToggle);
 
 // gizmoo wiring testing for testing
-const _g = gizmo.createTest();
+gizmo.createTest();
 
 const component = new Component();
 page.adopt(component);
