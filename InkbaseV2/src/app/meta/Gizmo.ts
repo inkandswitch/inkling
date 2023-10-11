@@ -115,10 +115,6 @@ class GizmoInstance extends GameObject {
     return this.center;
   }
 
-  getVariable() {
-    return this.polarVectorConstraint.variables.angle;
-  }
-
   update(events: Events) {
     const handles = this.handles;
     if (!handles) {
