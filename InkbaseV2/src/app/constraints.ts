@@ -461,7 +461,7 @@ function solveCluster({
   ((window as any).solverResultMessages ||= new Set<string>()).add(
     result.message
   );
-  if (result.message.includes('maxit')) {
+  if (!result || result.message?.includes('maxit')) {
     console.error('solveCluster is giving up!', result);
     return;
   }
