@@ -40,7 +40,14 @@ export default class NumberToken extends Token {
   constructor(variable: Variable, source?: ohm.Interval);
   constructor(arg: number | Variable = 0, source?: ohm.Interval) {
     super(source);
-    this.variable = arg instanceof Variable ? arg : new Variable(arg);
+    if (arg instanceof Variable) {
+      this.variable = arg;
+    } else {
+      this.variable = new Variable(arg, {
+        object: this,
+        property: 'number-token-value',
+      });
+    }
     this.wirePort = this.adopt(
       new WirePort(this.position, new MetaNumber(this.variable))
     );

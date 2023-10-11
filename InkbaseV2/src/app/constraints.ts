@@ -805,6 +805,7 @@ class LinearRelationship extends Constraint<'y'> {
     keyGenerator: ConstraintKeyGenerator
   ) {
     super([y, x], keyGenerator);
+    y.represents = { object: this, property: 'linear-relationship-y' };
   }
 
   readonly ownedVariables = { y: this.y };

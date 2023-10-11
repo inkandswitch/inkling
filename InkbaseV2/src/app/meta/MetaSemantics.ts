@@ -77,6 +77,7 @@ export class MetaStruct implements MetaValue {
 
   createLabel(strokeData: string | Position[][]) {
     const label = new MetaLabel(strokeData, new Variable(0));
+    label.variable.represents = { object: label, property: 'label-value' };
     this.labelsById.set(label.id, label);
     if (typeof strokeData === 'string') {
       this.labelsByString.set(label.display as string, label);

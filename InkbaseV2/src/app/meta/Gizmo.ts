@@ -69,6 +69,20 @@ class GizmoInstance extends GameObject {
       0
     ).variables.y;
 
+    // this helps w/ debugging
+    this.distance.represents = {
+      object: this,
+      property: 'distance',
+    };
+    this.angleInRadians.represents = {
+      object: this,
+      property: 'angle-radians',
+    };
+    this.angleInDegrees.represents = {
+      object: this,
+      property: 'angle-degrees',
+    };
+
     this.wirePort = this.adopt(
       new WirePort(
         this.center,
