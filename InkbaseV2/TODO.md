@@ -4,8 +4,9 @@ TODO
 Bugs
 ----
 
-* 2 gizmos + formula: [2 (locked) * g1.angleDegrees = g2.angleDegrees]
-  -- scrubbing g2.angleDegrees makes g1 move, but not the other way around
+* 2 gizmos + formula: [2 (locked) * g1.angle = g2.angle]
+  -- scrubbing g2.angle makes g1 move, but not the other way around
+  -- same happens if you do it w/ distance
 
 * 2 gizmos (a1, a2) and (b1, b2) that get snapped together (a1+b1, a2+b2)
   stay parallel even after we break the handles apart
