@@ -233,22 +233,21 @@ function getClustersForSolver(root: GameObject): Set<ClusterForSolver> {
       const { constraints, variables } =
         getDedupedConstraintsAndVariables(origConstraints);
 
-      // const ownedVariables = new Set<Variable>();
-      // for (const constraint of constraints) {
-      //   for (const variable of Object.values(
-      //     constraint.ownedVariables
-      //   ) as Variable[]) {
-      //     ownedVariables.add(variable);
-      //   }
-      // }
+      const ownedVariables = new Set<Variable>();
+      for (const constraint of constraints) {
+        for (const variable of Object.values(
+          constraint.ownedVariables
+        ) as Variable[]) {
+          ownedVariables.add(variable.canonicalInstance);
+        }
+      }
 
       const variableCounts = new Map<Variable, number>();
       for (const constraint of constraints) {
         for (const variable of constraint.variables) {
-          // TODO: think this through
-          // if (!ownedVariables.has(variable)) {
-          //   continue;
-          // }
+          if (!ownedVariables.has(variable.canonicalInstance)) {
+            continue;
+          }
 
           const n = variableCounts.get(variable.canonicalInstance) ?? 0;
           variableCounts.set(variable.canonicalInstance, n + 1);
