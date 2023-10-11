@@ -342,7 +342,7 @@ function handleMetaModeFingerEvent(
         const delta = state.originalPosition!.y - event.position.y;
         const m = 1 / Math.pow(10, events.fingerStates.length - 2);
         const newValue = Math.round((initialValue + delta * m) / m) * m;
-        token.getVariable().lock().value = newValue;
+        token.getVariable().lock(newValue);
       } else if (objects.dragToken && events.fingerStates.length === 1) {
         // drag a token
         const { token, offset } = objects.dragToken;

@@ -75,9 +75,17 @@ export class Variable {
         child._value = (newValue - b) / m;
       }
     } else {
-      const { m, b } = this.info.offset;
-      this.info.canonicalInstance.value = m * newValue + b;
+      this.info.canonicalInstance.value = this.toCanonicalValue(newValue);
     }
+  }
+
+  private toCanonicalValue(value: number) {
+    if (this.info.isCanonical) {
+      return value;
+    }
+
+    const { m, b } = this.info.offset;
+    return m * value + b;
   }
 
   absorb(that: Variable, offset = { m: 1, b: 0 }) {
@@ -92,7 +100,6 @@ export class Variable {
 
     // console.log(this.id, 'absorbing', that.id);
     for (const otherVariable of that.info.absorbedVariables) {
-      // console.log(this.id, 'absorbing', otherVariable.id);
       otherVariable.value = this.value;
       const otherVariableInfo = otherVariable.info as AbsorbedVariableInfo;
       otherVariableInfo.canonicalInstance = this;
@@ -159,10 +166,13 @@ export class Variable {
     return !!this.lockConstraint;
   }
 
-  lock(): Constant {
-    return constant(this.canonicalInstance).constraints.find(
+  lock(value?: number) {
+    const k = constant(this.canonicalInstance).constraints.find(
       isConstantConstraint
     )!;
+    if (value !== undefined) {
+      k.value = this.toCanonicalValue(value!);
+    }
   }
 
   unlock() {
