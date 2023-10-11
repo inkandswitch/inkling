@@ -215,7 +215,7 @@ function handleMetaModePencilEvent(
       } else if (componentNearEvent) {
         // add wire from component
         const w = new Wire();
-        w.attachFront(componentNearEvent.wirePort);
+        w.attachFront(componentNearEvent.getWirePortNear(event.position));
         page.adopt(w);
         objects.drawWire = w;
       } else if (isPropertyPicker(tokenNearEvent)) {

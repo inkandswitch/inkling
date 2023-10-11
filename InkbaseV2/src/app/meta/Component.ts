@@ -3,7 +3,7 @@ import { Position } from "../../lib/types";
 import { GameObject } from "../GameObject";
 import Svg from "../Svg";
 import { MetaStruct } from './MetaSemantics';
-import { WirePort } from "./Wire";
+import Wire, { WirePort } from "./Wire";
 
 
 export default class Component extends GameObject {
@@ -16,11 +16,14 @@ export default class Component extends GameObject {
 
   readonly scope = new MetaStruct([]);
 
-  // TODO: Potentially we need to manage multiple wireports if we wire to the boundry
-  readonly wirePort = new WirePort(
-    this.position,
-    this.scope
-  );
+  readonly wirePorts: Array<WirePort> = [];
+
+  // TBD: Add ports on the edge of a component?
+  getWirePortNear(pos: Position): WirePort {
+    let newPort = new WirePort(pos, this.scope);
+    this.wirePorts.push(newPort);
+    return newPort
+  }
 
   render(dt: number, t: number): void {
     // NO-OP
