@@ -7,6 +7,7 @@ import Vec from '../../lib/vec';
 import { Position } from '../../lib/types';
 import Stroke from '../ink/Stroke';
 import * as constraints from '../constraints';
+import { Variable } from '../constraints';
 import Line from '../../lib/line';
 import { GameObject } from '../GameObject';
 import { WirePort } from './Wire';
@@ -32,8 +33,11 @@ class GizmoInstance extends GameObject {
 
   visible = true;
 
-  polarVectorConstraint: constraints.AddConstraintResult<'angle' | 'distance'>;
-
+  readonly polarVectorConstraint: constraints.AddConstraintResult<
+    'angle' | 'distance'
+  >;
+  readonly angleInRadians: Variable;
+  readonly angleInDegrees: Variable;
   private readonly _a: WeakRef<Handle>;
   private readonly _b: WeakRef<Handle>;
 
@@ -61,6 +65,16 @@ class GizmoInstance extends GameObject {
     this.center = this.updateCenter()!;
     this.radius = this.updateRadius()!;
     this.polarVectorConstraint = constraints.polarVector(a, b);
+    this.angleInRadians = this.polarVectorConstraint.variables.angle;
+    this.angleInDegrees = new Variable(
+      (this.angleInRadians.value * 180) / Math.PI
+    );
+    constraints.linearRelationship(
+      this.angleInDegrees,
+      180 / Math.PI,
+      this.polarVectorConstraint.variables.angle,
+      0
+    );
 
     this.wirePort = this.adopt(
       new WirePort(
@@ -70,10 +84,7 @@ class GizmoInstance extends GameObject {
             new Label('distance'),
             new MetaNumber(this.polarVectorConstraint.variables.distance),
           ],
-          [
-            new Label('angle'),
-            new MetaNumber(this.polarVectorConstraint.variables.angle),
-          ],
+          [new Label('angle'), new MetaNumber(this.angleInDegrees)],
         ])
       )
     );
