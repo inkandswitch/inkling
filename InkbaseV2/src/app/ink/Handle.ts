@@ -230,7 +230,7 @@ export default class Handle extends GameObject {
       this.instanceState.absorbedHandles.push(new WeakRef(handle));
 
       // my x and y vars absorb its x and y vars, resp.
-      this.xVariable.absorb(that.yVariable);
+      this.xVariable.absorb(that.xVariable);
       this.yVariable.absorb(that.yVariable);
 
       // notify its listeners
