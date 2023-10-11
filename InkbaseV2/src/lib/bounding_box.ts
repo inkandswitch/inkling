@@ -1,7 +1,6 @@
 import { Position } from './types';
 
 export function boundingBoxFromStrokes(strokes: Position[][]) {
-
   let minX = Infinity;
   let maxX = -Infinity;
   let minY = Infinity;
@@ -26,9 +25,11 @@ export function boundingBoxFromStrokes(strokes: Position[][]) {
   }
 
   return {
-    minX, maxX, minY, maxY,
+    minX,
+    maxX,
+    minY,
+    maxY,
     width: maxX - minX,
     height: maxY - minY,
-  }
-
+  };
 }

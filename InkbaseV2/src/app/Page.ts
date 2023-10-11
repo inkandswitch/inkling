@@ -48,7 +48,7 @@ export default class Page extends GameObject {
     return this.adopt(w);
   }
 
-  addWireFromGizmo(_gizmo: Gizmo) { }
+  addWireFromGizmo(_gizmo: Gizmo) {}
 
   moveHandle(handle: Handle, newPos: Position): Handle {
     if (handle.canonicalInstance !== handle) {

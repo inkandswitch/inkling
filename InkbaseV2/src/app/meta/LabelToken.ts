@@ -3,7 +3,7 @@ import COLORS from '../Colors';
 import SVG from '../Svg';
 import * as ohm from 'ohm-js';
 import { WirePort } from './Wire';
-import { MetaNumber, MetaLabel } from './MetaSemantics';
+import { MetaLabel } from './MetaSemantics';
 import { boundingBoxFromStrokes } from '../../lib/bounding_box';
 
 export default class LabelToken extends Token {
@@ -53,9 +53,7 @@ export default class LabelToken extends Token {
     }
     SVG.update(this.boxElement, { width: this.width });
 
-    this.wirePort = this.adopt(
-      new WirePort(this.position, this.label)
-    );
+    this.wirePort = this.adopt(new WirePort(this.position, this.label));
   }
 
   isPrimary() {

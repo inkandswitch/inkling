@@ -187,7 +187,7 @@ function handleMetaModePencilEvent(
     what: aComponent,
     near: event.position,
     recursive: false,
-  })
+  });
 
   const pencilStroke = pencil.stroke?.deref();
 

@@ -48,7 +48,9 @@ const component = new Component();
 page.adopt(component);
 
 // This API seems a bit messy, but maybe fine in practice. Tbd if there is a better way of doing this.
-const labelInsideComponent = new LabelToken(component.scope.createLabel("test"));
+const labelInsideComponent = new LabelToken(
+  component.scope.createLabel('test')
+);
 labelInsideComponent.position = { x: 410, y: 110 };
 component.adopt(labelInsideComponent);
 

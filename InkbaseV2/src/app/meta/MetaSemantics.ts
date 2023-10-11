@@ -22,7 +22,7 @@ export interface MetaConnection {
 
 // NUMBERS
 export class MetaNumber implements MetaValue {
-  constructor(public variable: constraints.Variable) { }
+  constructor(public variable: constraints.Variable) {}
 
   wireTo(other: MetaValue): MetaNumberConnection | null {
     if (other instanceof MetaNumber || other instanceof MetaNumber) {
@@ -46,14 +46,13 @@ export class MetaNumberConnection implements MetaConnection {
   }
 }
 
-
 export class MetaLabel implements MetaValue {
   readonly id: number = generateId();
 
   constructor(
     public readonly display: string | Position[][],
     public variable: constraints.Variable
-  ) { }
+  ) {}
 
   wireTo(other: MetaValue): MetaConnection | null {
     if (other instanceof MetaNumber || other instanceof MetaNumber) {
@@ -79,7 +78,7 @@ export class MetaStruct implements MetaValue {
   createLabel(strokeData: string | Position[][]) {
     const label = new MetaLabel(strokeData, new Variable(0));
     this.labelsById.set(label.id, label);
-    if (typeof strokeData == "string") {
+    if (typeof strokeData === 'string') {
       this.labelsByString.set(label.display as string, label);
     }
     return label;

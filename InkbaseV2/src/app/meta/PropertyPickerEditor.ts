@@ -2,10 +2,9 @@ import PropertyPicker from './PropertyPicker';
 import SVG from '../Svg';
 import { Position } from '../../lib/types';
 import COLORS from '../Colors';
-import { MetaStruct } from './MetaSemantics';
+import { MetaLabel, MetaStruct } from './MetaSemantics';
 import { GameObject } from '../GameObject';
 import { signedDistanceToBox } from '../../lib/SignedDistance';
-import MetaLabel from './MetaLabel';
 
 const LINEHEIGHT = 30;
 

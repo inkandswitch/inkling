@@ -1,14 +1,12 @@
-import { signedDistanceToBox } from "../../lib/SignedDistance";
-import Rect from "../../lib/rect";
-import { Position } from "../../lib/types";
-import { GameObject } from "../GameObject";
-import Svg from "../Svg";
+import { signedDistanceToBox } from '../../lib/SignedDistance';
+import Rect from '../../lib/rect';
+import { Position } from '../../lib/types';
+import { GameObject } from '../GameObject';
+import Svg from '../Svg';
 import { MetaStruct } from './MetaSemantics';
-import Wire, { WirePort } from "./Wire";
-
+import { WirePort } from './Wire';
 
 export default class Component extends GameObject {
-
   // TODO: Decide what "shape" if any, components should have
 
   position: Position = { x: 400, y: 100 };
@@ -21,28 +19,30 @@ export default class Component extends GameObject {
 
   // TBD: Add ports on the edge of a component?
   getWirePortNear(pos: Position): WirePort {
-    let portPos = Rect.closestPointOnPerimeter(Rect(this.position, this.width, this.height), pos);
-    let newPort = new WirePort(portPos, this.scope);
+    const portPos = Rect.closestPointOnPerimeter(
+      Rect(this.position, this.width, this.height),
+      pos
+    );
+    const newPort = new WirePort(portPos, this.scope);
     this.wirePorts.push(newPort);
     return newPort;
   }
 
   render(dt: number, t: number): void {
     // NO-OP
-    Svg.now("rect", {
+    Svg.now('rect', {
       x: this.position.x,
       y: this.position.y,
       width: this.width,
       height: this.height,
-      stroke: "black",
-      fill: "none",
-      rx: 3
-    })
+      stroke: 'black',
+      fill: 'none',
+      rx: 3,
+    });
 
     for (const child of this.children) {
       child.render(dt, t);
     }
-
   }
 
   distanceToPoint(pos: Position): number | null {

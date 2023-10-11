@@ -50,10 +50,10 @@ export default class FormulaEditor extends GameObject {
     return this.active;
   }
 
-  activateFromFormula() { }
+  activateFromFormula() {}
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  addLabelTokenFromExisting(_: any) { }
+  addLabelTokenFromExisting(_: any) {}
 
   activateFromPosition(position: Position) {
     this.position = position;
@@ -304,7 +304,6 @@ class FormulaEditorCell extends GameObject {
           return Vec.sub(pt, this.position);
         });
       });
-
 
       const label = this.page.scope.createLabel(normalizedStrokes);
       console.log(label);

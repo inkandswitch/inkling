@@ -1,5 +1,4 @@
 import { Position } from './types';
-import Vec from './vec';
 
 interface Rect {
   position: Position;
@@ -43,4 +42,4 @@ Rect.closestPointOnPerimeter = (rect: Rect, point: Position): Position => {
   } else {
     return { x: px, y: y + height };
   }
-}
+};

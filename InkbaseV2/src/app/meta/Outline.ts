@@ -1,3 +1,1 @@
-export default class Outline {
-
-}
+export default class Outline {}

@@ -11,7 +11,7 @@ import { Variable } from '../constraints';
 import Line from '../../lib/line';
 import { GameObject } from '../GameObject';
 import { WirePort } from './Wire';
-import { MetaLabel, MetaNumber, MetaStruct } from './MetaSemantics';
+import { MetaLabel, MetaStruct } from './MetaSemantics';
 
 function stroke(color: string, width = 6) {
   return {
@@ -79,7 +79,10 @@ class GizmoInstance extends GameObject {
       new WirePort(
         this.center,
         new MetaStruct([
-          new MetaLabel('distance', this.polarVectorConstraint.variables.distance),
+          new MetaLabel(
+            'distance',
+            this.polarVectorConstraint.variables.distance
+          ),
           new MetaLabel('angle', this.polarVectorConstraint.variables.angle),
         ])
       )
