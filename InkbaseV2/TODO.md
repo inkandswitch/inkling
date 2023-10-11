@@ -1,7 +1,8 @@
 TODO
 ====
 
-Bugs:
+Bugs
+----
 * 2 gizmos + formula: [2 (locked) * g1.angleDegrees = g2.angleDegrees]
   -- scrubbing g2.angleDegrees makes g1 move, but not the other way around
 * 2 gizmos (a1, a2) and (b1, b2) that get snapped together (a1+b1, a2+b2)
@@ -11,9 +12,12 @@ Bugs:
 * scrubbing connected "angle-radians" properties of 2 gizmos is slow /
   resists change (doesn't happen w/ "angle-degrees")
 
+UX
+--
+
+* wire number tokens directly into formula editor's squares
+
 Constraints
 -----------
-
 * ... should only have weak refs to handles
 * ... should be game objects?
-
