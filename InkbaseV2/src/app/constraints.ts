@@ -419,7 +419,7 @@ function solveCluster({
 
   let result: ReturnType<typeof minimize>;
   try {
-    result = minimize(computeTotalError, inputs);
+    result = minimize(computeTotalError, inputs, 1_000, 1e-3);
   } catch (e) {
     console.log(
       'minimizeError threw',
@@ -439,6 +439,16 @@ function solveCluster({
   }
 
   // SVG.showStatus(`${result.iterations} iterations`);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (window as any).solverResult = result;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ((window as any).solverResultMessages ||= new Set<string>()).add(
+    result.message
+  );
+  if (result.message.includes('maxit')) {
+    console.error('solveCluster is giving up!', result);
+    return;
+  }
 
   // Now we write the solution from the solver back into our variables and handles.
   const outputs = result.solution;
