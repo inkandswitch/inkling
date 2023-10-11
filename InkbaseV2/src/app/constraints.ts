@@ -16,8 +16,8 @@ interface CanonicalVariableInfo {
 interface AbsorbedVariableInfo {
   isCanonical: false;
   canonicalInstance: Variable;
-  // canonicalInstance.value === absorbedVariable.value + valueOffset
-  valueOffset: number;
+  // canonicalInstance.value === offset.m * absorbedVariable.value + offset.b
+  offset: { m: number; b: number };
 }
 
 export class Variable {
@@ -58,8 +58,8 @@ export class Variable {
     return this.info.isCanonical ? this : this.info.canonicalInstance;
   }
 
-  get valueOffset() {
-    return this.info.isCanonical ? 0 : this.info.valueOffset;
+  get offset() {
+    return this.info.isCanonical ? { m: 1, b: 0 } : this.info.offset;
   }
 
   get value() {
@@ -70,19 +70,20 @@ export class Variable {
     if (this.info.isCanonical) {
       this._value = newValue;
       for (const child of this.info.absorbedVariables) {
-        const valueOffset = (child.info as AbsorbedVariableInfo).valueOffset;
-        child._value = newValue - valueOffset;
+        const { m, b } = (child.info as AbsorbedVariableInfo).offset;
+        child._value = (newValue - b) / m;
       }
     } else {
-      this.info.canonicalInstance.value = newValue + this.info.valueOffset;
+      const { m, b } = this.info.offset;
+      this.info.canonicalInstance.value = m * newValue + b;
     }
   }
 
-  absorb(that: Variable, valueOffset = 0) {
+  absorb(that: Variable, offset = { m: 1, b: 0 }) {
     if (this === that) {
       return;
     } else if (!this.info.isCanonical || !that.info.isCanonical) {
-      this.canonicalInstance.absorb(that.canonicalInstance, valueOffset);
+      this.canonicalInstance.absorb(that.canonicalInstance, offset);
       return;
     }
 
@@ -94,7 +95,11 @@ export class Variable {
       otherVariable.value = this.value;
       const otherVariableInfo = otherVariable.info as AbsorbedVariableInfo;
       otherVariableInfo.canonicalInstance = this;
-      otherVariableInfo.valueOffset += valueOffset;
+      // m1 * (m2 * x + b2) + b1 = m1 * m2 * x + m1 * b2 + b1
+      otherVariableInfo.offset = {
+        m: offset.m * otherVariableInfo.offset.m,
+        b: offset.m * otherVariableInfo.offset.b + offset.b,
+      };
       this.info.absorbedVariables.add(otherVariable);
     }
 
@@ -102,7 +107,7 @@ export class Variable {
     that.info = {
       isCanonical: false,
       canonicalInstance: this,
-      valueOffset: valueOffset,
+      offset: offset,
     };
     this.info.absorbedVariables.add(that);
 
@@ -309,10 +314,23 @@ function dedupVariables(constraints: Constraint[]) {
     constraints.splice(idx, 1);
   }
 
+  idx = 0;
+  while (idx < constraints.length) {
+    const constraint = constraints[idx];
+    if (!(constraint instanceof LinearRelationship)) {
+      idx++;
+      continue;
+    }
+
+    const { y, m, x, b } = constraint;
+    y.absorb(x, { m, b });
+    constraints.splice(idx, 1);
+  }
+
   // Here's another kind of deduping that we can do for variables: when
-  // we have Sum(a, b, c) and Constant(c), variable a can absorb b w/
-  // an "offset" of c. (There's a lot more that we could do here, this
-  // is just an initial experiment.)
+  // we have Sum(a, b, c) and Constant(c), variable a can absorb b w/ an
+  // "offset" of { m: 1, b: c }. (There's a lot more that we could do
+  // here, this is just an initial experiment.)
   // TODO: handle all possible cases.
   idx = 0;
   while (idx < constraints.length) {
@@ -328,7 +346,7 @@ function dedupVariables(constraints: Constraint[]) {
         c instanceof Constant &&
         c.variable.canonicalInstance === k.canonicalInstance
     ) as Constant;
-    a.absorb(b, constant.value);
+    a.absorb(b, { m: 1, b: constant.value });
     constraints.splice(idx, 1);
   }
 
@@ -405,12 +423,10 @@ function solveCluster({
         continue;
       }
       const values = constraint.variables.map(variable => {
-        const valueOffset = variable.valueOffset;
+        const { m, b } = variable.offset;
         variable = variable.canonicalInstance;
         const vi = varIdx.get(variable);
-        return (
-          (vi === undefined ? variable.value : currState[vi]) - valueOffset
-        );
+        return ((vi === undefined ? variable.value : currState[vi]) - b) / m;
       });
       error += Math.pow(constraint.getError(values, knowns, freeVariables), 2);
     }
@@ -748,6 +764,62 @@ class Equals extends Constraint {
   }
 
   onClash(): AddConstraintResult {
+    return this.toAddConstraintResult();
+  }
+}
+
+/** y = m * x + b */
+export function linearRelationship(
+  y: Variable,
+  m: number,
+  x: Variable,
+  b: number
+): AddConstraintResult {
+  return addConstraint(
+    new ConstraintKeyGenerator('linear', [[y], [x]]),
+    keyGenerator => new LinearRelationship(y, m, x, b, keyGenerator),
+    existingConstraint => existingConstraint.onClash(y, m, x, b)
+  );
+}
+
+class LinearRelationship extends Constraint {
+  constructor(
+    readonly y: Variable,
+    public m: number,
+    readonly x: Variable,
+    public b: number,
+    keyGenerator: ConstraintKeyGenerator
+  ) {
+    super([y, x], keyGenerator);
+  }
+
+  readonly ownedVariables = {};
+
+  propagateKnowns(): boolean {
+    throw new Error(
+      'LinearRelationship.propagateKnowns() should never be called!'
+    );
+  }
+
+  getError(): number {
+    throw new Error('LinearRelationship.getError() should never be called!');
+  }
+
+  onClash(y: Variable, m: number, x: Variable, b: number): AddConstraintResult;
+  onClash(newerConstraint: this): AddConstraintResult;
+  onClash(
+    newerConstraintOrY: this | Variable,
+    m?: number,
+    _x?: Variable,
+    b?: number
+  ): AddConstraintResult {
+    if (newerConstraintOrY instanceof Variable) {
+      this.m = m!;
+      this.b = b!;
+    } else {
+      this.m = newerConstraintOrY.m;
+      this.b = newerConstraintOrY.b;
+    }
     return this.toAddConstraintResult();
   }
 }
@@ -1263,6 +1335,12 @@ export const now = {
 
   equals(a: Variable, b: Variable) {
     return captureNewConstraints(tempConstraints, () => equals(a, b));
+  },
+
+  linearRelationship(y: Variable, m: number, x: Variable, b: number) {
+    return captureNewConstraints(tempConstraints, () =>
+      linearRelationship(y, m, x, b)
+    );
   },
 
   sum(a: Variable, b: Variable, c: Variable) {
