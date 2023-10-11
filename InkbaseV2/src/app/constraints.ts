@@ -37,6 +37,7 @@ export class Variable {
   ) {
     this.represents = represents;
     Variable.all.add(this);
+    // console.trace('new variable created', this);
   }
 
   /** Removes this variable and any constraint that reference it. */
@@ -850,7 +851,7 @@ export function sum(
   c: Variable
 ): AddConstraintResult {
   return addConstraint(
-    new ConstraintKeyGenerator('sum', [[a], [b, c]]),
+    new ConstraintKeyGenerator('sum', [[a, b, c]]),
     keyGenerator => new Sum(a, b, c, keyGenerator),
     existingConstraint => existingConstraint.onClash(a, b, c)
   );
@@ -1209,7 +1210,7 @@ class Angle extends Constraint<'angle'> {
         const diff = new Variable(this.angle.value - that.angle.value);
         const k = constant(diff);
         const s = sum(this.angle, that.angle, diff);
-        return {
+        const ans = {
           constraints: [that, ...k.constraints, ...s.constraints],
           variables: that.ownedVariables,
           remove() {
@@ -1218,6 +1219,11 @@ class Angle extends Constraint<'angle'> {
             s.remove();
           },
         };
+        diff.represents = {
+          object: ans,
+          property: 'angle-offset',
+        };
+        return ans;
       }
     } else {
       const a = thatOrA;
