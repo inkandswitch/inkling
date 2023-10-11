@@ -88,8 +88,7 @@ class GizmoInstance extends GameObject {
         this.center,
         new MetaStruct([
           new MetaLabel('distance', this.distance),
-          new MetaLabel('angle-degrees', this.angleInDegrees),
-          new MetaLabel('angle-radians', this.angleInRadians),
+          new MetaLabel('angle', this.angleInDegrees),
         ])
       )
     );
