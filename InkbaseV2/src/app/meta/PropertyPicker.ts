@@ -7,11 +7,11 @@ import * as constraints from '../constraints';
 import Vec from '../../lib/vec';
 import {
   MetaStruct,
+  MetaLabel,
   MetaNumber,
   MetaConnection,
   MetaNumberConnection,
 } from './MetaSemantics';
-import Label from './Label';
 
 function PropertyPickerPath(pos: Position, w: number, h: number) {
   return `
@@ -46,7 +46,7 @@ export default class PropertyPicker extends Token {
     new WirePort(this.position, this.outputVariable)
   );
 
-  private property: Label | null = null;
+  private property: MetaLabel | null = null;
 
   internalConnection: MetaConnection | null = null;
 
@@ -74,7 +74,7 @@ export default class PropertyPicker extends Token {
     this.width = this.textElement.getComputedTextLength() + 10;
   }
 
-  setProperty(newValue: Label) {
+  setProperty(newValue: MetaLabel) {
     this.property = newValue;
     this.update();
   }
@@ -84,12 +84,9 @@ export default class PropertyPicker extends Token {
       return;
     }
 
-    const pickedValue = this.inputVariable.get(this.property);
-    if (pickedValue) {
-      this.internalConnection = new MetaNumberConnection(
-        pickedValue as MetaNumber,
-        this.outputVariable
-      );
-    }
+    this.internalConnection = new MetaNumberConnection(
+      this.property,
+      this.outputVariable
+    );
   }
 }

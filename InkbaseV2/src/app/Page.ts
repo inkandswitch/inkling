@@ -3,18 +3,18 @@ import Stroke from './ink/Stroke';
 import { Position } from '../lib/types';
 import { GameObject } from './GameObject';
 import Wire from './meta/Wire';
-import Namespace from './meta/Namespace';
 import { TokenWithVariable } from './meta/token-helpers';
 import Gizmo, { aGizmo } from './meta/Gizmo';
 import Handle from './ink/Handle';
 import Vec from '../lib/vec';
+import { MetaStruct } from './meta/MetaSemantics';
 
 interface Options {
   strokeAnalyzer: boolean;
 }
 
 export default class Page extends GameObject {
-  readonly namespace = new Namespace();
+  readonly scope = new MetaStruct([]);
 
   constructor(_options: Options) {
     super();
@@ -48,7 +48,7 @@ export default class Page extends GameObject {
     return this.adopt(w);
   }
 
-  addWireFromGizmo(_gizmo: Gizmo) {}
+  addWireFromGizmo(_gizmo: Gizmo) { }
 
   moveHandle(handle: Handle, newPos: Position): Handle {
     if (handle.canonicalInstance !== handle) {

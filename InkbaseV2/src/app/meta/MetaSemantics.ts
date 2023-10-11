@@ -1,5 +1,7 @@
 import * as constraints from '../constraints';
-import Label from './Label';
+import { Variable } from '../constraints';
+import { Position } from '../../lib/types';
+import { generateId } from '../../lib/helpers';
 
 // This file implements the semantics of meta ink independently of the visual language
 // There are two main types: Meta Value & Meta Connection
@@ -23,7 +25,7 @@ export class MetaNumber implements MetaValue {
   constructor(public variable: constraints.Variable) { }
 
   wireTo(other: MetaValue): MetaNumberConnection | null {
-    if (other instanceof MetaNumber) {
+    if (other instanceof MetaNumber || other instanceof MetaNumber) {
       return new MetaNumberConnection(this, other);
     } else {
       console.error("You can't wire those things together silly billy!");
@@ -35,7 +37,7 @@ export class MetaNumber implements MetaValue {
 export class MetaNumberConnection implements MetaConnection {
   constraint: constraints.AddConstraintResult<never>;
 
-  constructor(a: MetaNumber, b: MetaNumber) {
+  constructor(a: MetaNumber | MetaLabel, b: MetaNumber | MetaLabel) {
     this.constraint = constraints.equals(a.variable, b.variable);
   }
 
@@ -44,29 +46,59 @@ export class MetaNumberConnection implements MetaConnection {
   }
 }
 
-// STRUCTS
-export class MetaStruct implements MetaValue {
-  values: Map<Label, MetaValue>;
 
-  constructor(input: Array<[Label, MetaValue]>) {
-    this.values = new Map();
-    input.forEach(([label, value]) => {
-      this.values.set(label, value);
-    })
+export class MetaLabel implements MetaValue {
+  readonly id: number = generateId();
+
+  constructor(
+    public readonly display: string | Position[][],
+    public variable: constraints.Variable
+  ) { }
+
+  wireTo(other: MetaValue): MetaConnection | null {
+    if (other instanceof MetaNumber || other instanceof MetaNumber) {
+      return new MetaNumberConnection(this, other);
+    } else {
+      console.error("You can't wire those things together silly billy!");
+      return null;
+    }
+  }
+}
+
+// STRUCTS (Collection of labels (Names))
+export class MetaStruct implements MetaValue {
+  labelsById = new Map<number, MetaLabel>();
+  labelsByString = new Map<string, MetaLabel>();
+
+  constructor(input: Array<MetaLabel>) {
+    for (const label of input) {
+      this.labelsById.set(label.id, label);
+    }
+  }
+
+  createLabel(strokeData: string | Position[][]) {
+    const label = new MetaLabel(strokeData, new Variable(0));
+    this.labelsById.set(label.id, label);
+    if (typeof strokeData == "string") {
+      this.labelsByString.set(label.display as string, label);
+    }
+    return label;
+  }
+
+  getLabelByString(textLabel: string): MetaLabel | undefined {
+    return this.labelsByString.get(textLabel);
+  }
+
+  getLabelById(id: number): MetaLabel | undefined {
+    return this.labelsById.get(id);
   }
 
   isEmpty() {
-    return this.values.size === 0;
+    return this.labelsById.size === 0;
   }
 
-  get(key: Label): MetaValue | undefined {
-    console.log(this.values);
-
-    return this.values.get(key);
-  }
-
-  list(): Array<Label> {
-    return Array.from(this.values.keys());
+  list(): Array<MetaLabel> {
+    return Array.from(this.labelsById.values());
   }
 
   wireTo(other: MetaValue): MetaStructConnection | null {
@@ -88,13 +120,13 @@ export class MetaStructConnection implements MetaConnection {
       [a, b] = [b, a];
     }
 
-    // Just js object equality is fine here?
-    b.values = a.values;
+    // Just point to the same Map in memory is fine here?
+    b.labelsById = a.labelsById;
     this.b = b;
   }
 
   remove() {
-    this.b.values = new Map();
+    this.b.labelsById = new Map();
     return;
   }
 }

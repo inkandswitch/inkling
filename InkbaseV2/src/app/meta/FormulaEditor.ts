@@ -9,6 +9,7 @@ import Rect from '../../lib/rect';
 import WritingRecognizer from '../recognizers/WritingRecognizer';
 import FormulaParser from './FormulaParser';
 import { signedDistanceToBox } from '../../lib/SignedDistance';
+import { boundingBoxFromStrokes } from '../../lib/bounding_box';
 
 const PADDING = 2;
 
@@ -49,10 +50,10 @@ export default class FormulaEditor extends GameObject {
     return this.active;
   }
 
-  activateFromFormula() {}
+  activateFromFormula() { }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  addLabelTokenFromExisting(_: any) {}
+  addLabelTokenFromExisting(_: any) { }
 
   activateFromPosition(position: Position) {
     this.position = position;
@@ -267,28 +268,14 @@ class FormulaEditorCell extends GameObject {
 
   recomputeWidth(withSpace = true) {
     const strokes = this.findAll({ what: aStroke });
-    // Compute total width of strokes
-    // TODO: Refactor this to get Bounding box of stroke
-    let minX = Infinity;
-    let maxX = -Infinity;
-
-    for (const stroke of strokes) {
-      for (const pt of stroke.points) {
-        if (pt.x < minX) {
-          minX = pt.x;
-        }
-        if (pt.x > maxX) {
-          maxX = pt.x;
-        }
-      }
-    }
+    const bb = boundingBoxFromStrokes(strokes.map(stroke => stroke.points));
 
     if (withSpace) {
-      this.width = Math.max(100, maxX - minX + 100);
+      this.width = Math.max(100, bb.width + 100);
     } else {
       // Balance margin
-      const leftPadding = minX - this.position.x;
-      this.width = maxX - minX + leftPadding * 2;
+      const leftPadding = bb.minX - this.position.x;
+      this.width = bb.width + leftPadding * 2;
     }
   }
 
@@ -318,14 +305,11 @@ class FormulaEditorCell extends GameObject {
         });
       });
 
-      const label = this.page.namespace.createLabel(
-        normalizedStrokes,
-        this.width
-      );
+
+      const label = this.page.scope.createLabel(normalizedStrokes);
       console.log(label);
 
       this.stringValue = '#' + label.id.toString();
-      console.log(this.page.namespace);
     }
   }
 

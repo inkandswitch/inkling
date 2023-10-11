@@ -65,13 +65,13 @@ export default class FormulaParser {
         },
         name(_first, _rest) {
           return new LabelToken(
-            page.namespace.getLabelNamed(this.sourceString),
+            page.scope.getLabelByString(this.sourceString)!,
             this.source
           );
         },
         label(_hash, id) {
           return new LabelToken(
-            page.namespace.getLabelWithId(parseInt(id.sourceString)),
+            page.scope.getLabelById(parseInt(id.sourceString))!,
             this.source
           );
         },

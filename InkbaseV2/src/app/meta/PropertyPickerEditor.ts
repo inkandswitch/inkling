@@ -5,7 +5,7 @@ import COLORS from '../Colors';
 import { MetaStruct } from './MetaSemantics';
 import { GameObject } from '../GameObject';
 import { signedDistanceToBox } from '../../lib/SignedDistance';
-import Label from './Label';
+import MetaLabel from './MetaLabel';
 
 const LINEHEIGHT = 30;
 
@@ -14,7 +14,7 @@ export default class PropertyPickerEditor extends GameObject {
   height = 44;
   position: Position = { x: 100, y: 100 };
 
-  props: Array<Label>;
+  props: Array<MetaLabel>;
 
   protected readonly boxElement: SVGElement;
 

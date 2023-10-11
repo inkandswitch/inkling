@@ -1,10 +1,10 @@
 import Token from './Token';
 import COLORS from '../Colors';
 import SVG from '../Svg';
-import Label from './Label';
 import * as ohm from 'ohm-js';
 import { WirePort } from './Wire';
-import { MetaNumber } from './MetaSemantics';
+import { MetaNumber, MetaLabel } from './MetaSemantics';
+import { boundingBoxFromStrokes } from '../../lib/bounding_box';
 
 export default class LabelToken extends Token {
   protected readonly boxElement = SVG.add('rect', SVG.metaElm, {
@@ -28,7 +28,7 @@ export default class LabelToken extends Token {
   wirePort: WirePort;
 
   constructor(
-    public readonly label: Label,
+    public readonly label: MetaLabel,
     source?: ohm.Interval
   ) {
     super(source);
@@ -36,7 +36,7 @@ export default class LabelToken extends Token {
       this.textElement.textContent = label.display;
       this.width = this.textElement.getComputedTextLength() + 10;
     } else {
-      for (const stroke of label.display.strokeData) {
+      for (const stroke of label.display) {
         const strokeElement = SVG.add('polyline', SVG.metaElm, {
           points: SVG.points(stroke),
           transform: `translate(${this.position.x}, ${this.position.y})`,
@@ -46,12 +46,15 @@ export default class LabelToken extends Token {
         });
         this.strokeElements.push(strokeElement);
       }
-      this.width = label.display.width;
+
+      const bb = boundingBoxFromStrokes(label.display);
+      const leftPadding = bb.minX;
+      this.width = bb.width + leftPadding * 2;
     }
     SVG.update(this.boxElement, { width: this.width });
 
     this.wirePort = this.adopt(
-      new WirePort(this.position, new MetaNumber(this.label.variable))
+      new WirePort(this.position, this.label)
     );
   }
 
