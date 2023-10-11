@@ -1,4 +1,5 @@
 import { signedDistanceToBox } from "../../lib/SignedDistance";
+import Rect from "../../lib/rect";
 import { Position } from "../../lib/types";
 import { GameObject } from "../GameObject";
 import Svg from "../Svg";
@@ -20,9 +21,10 @@ export default class Component extends GameObject {
 
   // TBD: Add ports on the edge of a component?
   getWirePortNear(pos: Position): WirePort {
-    let newPort = new WirePort(pos, this.scope);
+    let portPos = Rect.closestPointOnPerimeter(Rect(this.position, this.width, this.height), pos);
+    let newPort = new WirePort(portPos, this.scope);
     this.wirePorts.push(newPort);
-    return newPort
+    return newPort;
   }
 
   render(dt: number, t: number): void {
@@ -40,6 +42,7 @@ export default class Component extends GameObject {
     for (const child of this.children) {
       child.render(dt, t);
     }
+
   }
 
   distanceToPoint(pos: Position): number | null {
