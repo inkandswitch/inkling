@@ -30,6 +30,7 @@ import PropertyPickerEditor, {
   aPropertyPickerEditor,
 } from './meta/PropertyPickerEditor';
 import { GameObject } from './GameObject';
+import { aComponent } from './meta/Component';
 
 // Variables that store state needed by our gestures go here.
 
@@ -182,6 +183,12 @@ function handleMetaModePencilEvent(
     recursive: false,
   });
 
+  const componentNearEvent = page.find({
+    what: aComponent,
+    near: event.position,
+    recursive: false,
+  })
+
   const pencilStroke = pencil.stroke?.deref();
 
   switch (event.state) {
@@ -203,6 +210,12 @@ function handleMetaModePencilEvent(
         // add wire from token
         const w = new Wire();
         w.attachFront(primaryTokenNearEvent.wirePort);
+        page.adopt(w);
+        objects.drawWire = w;
+      } else if (componentNearEvent) {
+        // add wire from component
+        const w = new Wire();
+        w.attachFront(componentNearEvent.wirePort);
         page.adopt(w);
         objects.drawWire = w;
       } else if (isPropertyPicker(tokenNearEvent)) {

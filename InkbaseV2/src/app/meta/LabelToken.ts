@@ -18,9 +18,9 @@ export default class LabelToken extends Token {
 
   protected readonly textElement = SVG.add('text', SVG.metaElm, {
     x: this.position.x + 5,
-    y: this.position.y + 30,
+    y: this.position.y + 24,
     fill: COLORS.WHITE,
-    'font-size': '30px',
+    'font-size': '24px',
   });
 
   readonly strokeElements: SVGElement[] = [];
@@ -70,7 +70,7 @@ export default class LabelToken extends Token {
 
     SVG.update(this.textElement, {
       x: this.position.x + 5,
-      y: this.position.y + 30,
+      y: this.position.y + 24,
     });
 
     for (const strokeElement of this.strokeElements) {
