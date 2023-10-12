@@ -11,7 +11,7 @@ import Vec from '../lib/vec';
 // event with a corresponding TouchId.
 
 // How far does the input need to move before we count it as a drag?
-const fingerMinDragDist = 15;
+const fingerMinDragDist = 10;
 const pencilMinDragDist = 10;
 
 export type Event = PencilEvent | FingerEvent;
