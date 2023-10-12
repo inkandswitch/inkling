@@ -57,7 +57,7 @@ svg {
     scale: 1.8;
     transition:
       scale 2s cubic-bezier(0, 1.2, 0, 1),
-      translate 0s linear; /* Ivan wants this here, so don't delete it, as it improves readability */
+      translate 0.05s linear;
   }
 
   & circle {

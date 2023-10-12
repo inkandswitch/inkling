@@ -2,13 +2,13 @@ import Stroke, { aStroke } from './Stroke';
 import Handle from './Handle';
 
 import TransformationMatrix from '../../lib/TransformationMatrix';
-import { Position, PositionWithPressure } from '../../lib/types';
+import { Position } from '../../lib/types';
 
 import { farthestPair } from '../../lib/helpers';
 import { GameObject } from '../GameObject';
 
 export default class StrokeGroup extends GameObject {
-  private pointData: PositionWithPressure[][];
+  private pointData: Position[][];
 
   // These strong references are OK b/c a and b will always be my children
   readonly a: Handle;

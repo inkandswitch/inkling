@@ -4,22 +4,28 @@ import SVG from './Svg';
 import * as constraints from './constraints';
 import { onEveryFrame } from '../lib/helpers';
 import Gizmo from './meta/Gizmo';
-import { applyEvent } from './Input';
+import * as Input from './Input';
 import { root } from './GameObject';
 import FormulaEditor from './meta/FormulaEditor';
-import Pencil from './ink/Pencil';
 import FormulaParser from './meta/FormulaParser';
 import MetaToggle from './gui/MetaToggle';
 import Component from './meta/Component';
 import LabelToken from './meta/LabelToken';
-// import NumberToken from './meta/NumberToken';
-// import Wire from './meta/Wire';
-// import PropertyPicker from './meta/PropertyPicker';
-// import '../lib/spreadsheet';
 
 // This is a pretzel, because the interface between NativeEvents and Input is a work in progress.
 const events = new Events((event: Event, state: InputState) => {
-  applyEvent(event, state, events, root, pencil, formulaEditor, metaToggle);
+  Input.applyEvent({
+    event,
+    state,
+    events,
+    root,
+    page,
+    formulaEditor,
+    metaToggle,
+    pseudo: false,
+    pseudoCount: 0,
+    pseudoTouches: {},
+  });
 });
 
 const page = new Page({ strokeAnalyzer: false });
@@ -27,9 +33,6 @@ root.adopt(page);
 root.currentPage = page;
 
 const gizmo = new Gizmo(page, false);
-
-const pencil = new Pencil();
-root.adopt(pencil);
 
 // FORMULA STUFF
 const formulaEditor = new FormulaEditor();
@@ -67,4 +70,6 @@ onEveryFrame((dt, t) => {
   constraints.solve(root);
 
   root.render(dt, t);
+
+  Input.render();
 });

@@ -1,5 +1,5 @@
 import SVG from '../Svg';
-import { Position, PositionWithPressure } from '../../lib/types';
+import { Position } from '../../lib/types';
 import { GameObject } from '../GameObject';
 import Vec from '../../lib/vec';
 import Line from '../../lib/line';
@@ -7,6 +7,7 @@ import Rect from '../../lib/rect';
 import COLORS from '../Colors';
 
 export default class Stroke extends GameObject {
+  public points: Position[] = [];
   color: string = COLORS.INK;
 
   // TODO: This is being added to the GUI layer so that it renders in front of the formula editor.
@@ -15,15 +16,10 @@ export default class Stroke extends GameObject {
   // ink on the canvas will be faded in meta mode.
   protected element = SVG.add('polyline', SVG.guiElm, {
     fill: 'none',
-    stroke: this.color,
     'stroke-width': 2,
   });
 
-  constructor(public points: PositionWithPressure[]) {
-    super();
-  }
-
-  updatePath(newPoints: Array<PositionWithPressure>) {
+  updatePath(newPoints: Array<Position>) {
     this.points = newPoints;
   }
 

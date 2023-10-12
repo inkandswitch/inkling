@@ -1,5 +1,5 @@
 import { GameObject } from '../GameObject';
-import { Position, PositionWithPressure } from '../../lib/types';
+import { Position } from '../../lib/types';
 import COLORS from '../Colors';
 import SVG from '../Svg';
 import Stroke, { aStroke } from '../ink/Stroke';
@@ -205,7 +205,7 @@ class FormulaEditorCell extends GameObject {
   timer: number | null = null;
 
   // Remember stroke data so we can add it to the library if we want
-  strokeData: PositionWithPressure[][] = [];
+  strokeData: Position[][] = [];
 
   protected readonly svgCell = SVG.add('rect', SVG.metaElm, {
     x: this.position.x,

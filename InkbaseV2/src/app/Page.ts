@@ -36,20 +36,6 @@ export default class Page extends GameObject {
     return this.adopt(stroke);
   }
 
-  addWireFromPosition(position: Position) {
-    const w = new Wire();
-    w.points = [{ ...position }, { ...position }];
-    return this.adopt(w);
-  }
-
-  addWireFromToken(token: TokenWithVariable) {
-    const w = new Wire();
-    w.attachFront(token.wirePort);
-    return this.adopt(w);
-  }
-
-  addWireFromGizmo(_gizmo: Gizmo) {}
-
   moveHandle(handle: Handle, newPos: Position): Handle {
     if (handle.canonicalInstance !== handle) {
       return this.moveHandle(handle.canonicalInstance, newPos);

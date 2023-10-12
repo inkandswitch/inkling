@@ -4,7 +4,7 @@ import SVG from './Svg';
 
 const DEFAULT_TOO_FAR = 20;
 
-interface FindOptions<T extends GameObject> {
+export interface FindOptions<T extends GameObject> {
   what(gameObj: GameObject): T | null;
   that?(gameObj: T): boolean;
   recursive?: boolean;

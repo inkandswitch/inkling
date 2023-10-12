@@ -48,11 +48,12 @@ export interface FingerEvent extends SharedEventProperties {
 }
 
 interface SharedStateProperties {
-  down: boolean; // Is the pencil/finger currently down?
-  drag: boolean; // Has the pencil/finger moved at least a tiny bit since being put down?
+  down: boolean; // Is the touch currently down?
+  drag: boolean; // Has the touch moved at least a tiny bit since being put down?
+  dragDist: number; // How far has the touch moved?
   // TODO — do we want to store the original & current *event* instead of cherry-picking their properties?
-  position: Position | null; // Where is the pencil/finger now?
-  originalPosition: Position | null; // Where was the pencil/finger initially put down?
+  position: Position | null; // Where is the touch now?
+  originalPosition: Position | null; // Where was the touch initially put down?
 }
 
 export interface PencilState extends SharedStateProperties {
@@ -118,49 +119,6 @@ export default class Events {
     this.events = [];
   }
 
-  // Deprecated
-  find(
-    type: 'pencil',
-    state: EventState,
-    id?: TouchId
-  ): PencilEvent | undefined;
-  find(
-    type: 'finger',
-    state: EventState,
-    id?: TouchId
-  ): FingerEvent | undefined;
-  find(type: EventType, state: EventState, id?: TouchId) {
-    return this.events.find(
-      e => e.type === type && e.state === state && (!id || e.id === id)
-    );
-  }
-
-  // Deprecated
-  findAll(type: 'pencil', state: EventState, id?: TouchId): PencilEvent[];
-  findAll(type: 'finger', state: EventState, id?: TouchId): FingerEvent[];
-  findAll(type: EventType, state: EventState, id?: TouchId) {
-    return this.events.filter(
-      e => e.type === type && e.state === state && (!id || e.id === id)
-    );
-  }
-
-  // Deprecated
-  findLast(
-    type: 'pencil',
-    state: EventState,
-    id?: TouchId
-  ): PencilEvent | undefined;
-  findLast(
-    type: 'finger',
-    state: EventState,
-    id?: TouchId
-  ): FingerEvent | undefined;
-  findLast(type: EventType, state: EventState, id?: TouchId) {
-    return this.events.findLast(
-      e => e.type === type && e.state === state && (!id || e.id === id)
-    );
-  }
-
   // prettier-ignore
   private setupNativeEventHandler() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -197,6 +155,7 @@ export default class Events {
       id: event.id,
       down: true,
       drag: false,
+      dragDist: 0,
       position: event.position,
       originalPosition: event.position,
       event,
@@ -210,6 +169,7 @@ export default class Events {
     this.pencilState = {
       down: true,
       drag: false,
+      dragDist: 0,
       position: event.position,
       originalPosition: event.position,
       event,
@@ -220,10 +180,10 @@ export default class Events {
   fingerMoved(event: FingerEvent) {
     const state = this.fingerStatesById[event.id];
     if (!state) {
-      throw new Error('Received finger move event with no matching begin.');
+      throw new Error('Received finger move event with no matching began.');
     }
-    state.drag ||=
-      Vec.dist(event.position, state.originalPosition!) > fingerMinDragDist;
+    state.dragDist = Vec.dist(event.position, state.originalPosition!);
+    state.drag ||= state.dragDist > fingerMinDragDist;
     state.position = event.position;
     state.event = event;
     return state;
@@ -232,10 +192,10 @@ export default class Events {
   pencilMoved(event: PencilEvent) {
     const state = this.pencilState;
     if (!state) {
-      throw new Error('Received pencil move event with no matching begin.');
+      throw new Error('Received pencil move event with no matching began.');
     }
-    state.drag ||=
-      Vec.dist(event.position, state.originalPosition!) > pencilMinDragDist;
+    state.dragDist = Vec.dist(event.position, state.originalPosition!);
+    state.drag ||= state.dragDist > pencilMinDragDist;
     state.position = event.position;
     state.event = event;
     return state;
@@ -244,7 +204,7 @@ export default class Events {
   fingerEnded(event: FingerEvent) {
     const state = this.fingerStatesById[event.id];
     if (!state) {
-      throw new Error('Received finger ended event with no matching begin.');
+      throw new Error('Received finger ended event with no matching began.');
     }
     state.down = false;
     state.event = event;
@@ -254,7 +214,7 @@ export default class Events {
   pencilEnded(event: PencilEvent) {
     const state = this.pencilState;
     if (!state) {
-      throw new Error('Received pencil ended event with no matching begin.');
+      throw new Error('Received pencil ended event with no matching began.');
     }
     state.down = false;
     state.event = event;
