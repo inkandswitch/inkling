@@ -33,7 +33,7 @@ export function scrubNumberToken(ctx: EventContext): Gesture | void {
 
       return new Gesture('Scrub Number Token', {
         moved: ctx => {
-          if (fingers != ctx.pseudoCount) {
+          if (fingers !== ctx.pseudoCount) {
             fingers = ctx.pseudoCount;
             initialValue = v.value;
             initialY = ctx.event.position.y;

@@ -38,7 +38,7 @@ export function pencilFormulaEditor(ctx: EventContext): Gesture | void {
       } else {
         return new Gesture('Writing In Formula Editor', {
           moved: ctx => stroke.points.push(ctx.event.position),
-          ended: ctx => formulaEditor.captureStroke(stroke),
+          ended: _ctx => formulaEditor.captureStroke(stroke),
         });
       }
     }

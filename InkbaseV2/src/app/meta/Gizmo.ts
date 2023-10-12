@@ -119,7 +119,8 @@ class GizmoInstance extends GameObject {
     return this.center;
   }
 
-  update(events: Events) {
+  // TODO: remove this method?
+  update(_events: Events) {
     const handles = this.handles;
     if (!handles) {
       return false;

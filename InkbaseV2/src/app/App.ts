@@ -58,12 +58,12 @@ const labelInsideComponent = new LabelToken(
 labelInsideComponent.position = { x: 410, y: 110 };
 component.adopt(labelInsideComponent);
 
-let stroke = new Stroke();
+const stroke = new Stroke();
 component.adopt(stroke);
 stroke.points = [
   { x: 410, y: 110 },
   { x: 420, y: 120 },
-  { x: 410, y: 170 }
+  { x: 410, y: 170 },
 ];
 component.updateOutline();
 

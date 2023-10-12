@@ -16,7 +16,7 @@ export function touchHandle(ctx: EventContext): Gesture | void {
         ctx.root.page.moveHandle(handle, ctx.event.position);
         constraints.now.pin(handle);
       },
-      ended: ctx => handle.absorbNearbyHandles(),
+      ended: _ctx => handle.absorbNearbyHandles(),
     });
   }
 }

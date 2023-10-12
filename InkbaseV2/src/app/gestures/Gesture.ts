@@ -35,6 +35,8 @@ type GestureAPI = Partial<{
 type VoidFn = () => void;
 type PredicateFn = (ctx: EventContext) => boolean;
 type EventHandler = (ctx: EventContext) => EventHandlerResult;
+// TODO: should this be a type parameter of EventHandler?
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type EventHandlerResult = Gesture | any;
 type EventHandlerName = EventState | 'dragged';
 
@@ -85,7 +87,7 @@ export class Gesture {
     }
 
     // Run the event handler
-    let result = this.api[eventHandlerName]?.call(this, ctx);
+    const result = this.api[eventHandlerName]?.call(this, ctx);
 
     // Track how many touches we've claimed, and run the `done` handler when they're all released
     if (ctx.event.state === 'began') {

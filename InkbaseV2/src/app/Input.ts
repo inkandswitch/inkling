@@ -36,12 +36,12 @@ const gesturesByTouchId: Record<TouchId, Gesture> = {};
 // This function is called by NativeEvent (via App) once for every event sent from Swift.
 export function applyEvent(ctx: EventContext) {
   // Terminology:
-  // Event — a single finger or pencil event sent to us from Swift, either "began", "moved", or "ended".
+  // Event — a single finger or pencil event sent to us from Swift, either "began", "moved", or "ended".
   // Touch — a series of finger or pencil events (from "began" to "ended) with a consistent TouchId.
-  // Gesture — a class instance that "claims" one or more touches and then receives all their events.
+  // Gesture — a class instance that "claims" one or more touches and then receives all their events.
   // Gesture Creator — a function that looks at a "began" event to decide whether to create a new Gesture for it.
   // Pseudo — a finger touch that's not claimed by any gesture
-  // Pseudo Gesture — a gesture that's only created when some pseudo touches exist.
+  // Pseudo Gesture — a gesture that's only created when some pseudo touches exist.
 
   // Key Assumption #1: The pencil will always match a gesture.
   // Key Assumption #2: A finger will always match a gesture or become a pseudo.
@@ -60,7 +60,7 @@ export function applyEvent(ctx: EventContext) {
   ctx.pseudo = ctx.pseudoCount > 0;
 
   // STEP ONE — Try to match this event to a gesture that previously claimed this touch.
-  let gestureForTouch = gesturesByTouchId[ctx.event.id];
+  const gestureForTouch = gesturesByTouchId[ctx.event.id];
   if (gestureForTouch) {
     runGesture(gestureForTouch, ctx);
     if (ctx.event.state === 'ended') {
@@ -75,10 +75,10 @@ export function applyEvent(ctx: EventContext) {
     throw new Error('A non-began event failed to match any gesture/pseudo.');
   }
 
-  // STEP TWO — see if any existing gestures want to claim this new touch.
+  // STEP TWO — see if any existing gestures want to claim this new touch.
   // (There's no sense of priority here; gestures are checked in creation order. Might need to revise this.)
   for (const id in gesturesByTouchId) {
-    let gesture = gesturesByTouchId[id];
+    const gesture = gesturesByTouchId[id];
     if (gesture.claimsTouch(ctx)) {
       gesturesByTouchId[ctx.event.id] = gesture;
       runGesture(gesture, ctx);
@@ -88,7 +88,7 @@ export function applyEvent(ctx: EventContext) {
 
   // STEP THREE — try to create a new gesture for this touch.
   for (const gestureCreator of gestureCreators[ctx.event.type]) {
-    let gesture = gestureCreator(ctx);
+    const gesture = gestureCreator(ctx);
     if (gesture) {
       gesturesByTouchId[ctx.event.id] = gesture;
       runGesture(gesture, ctx);
@@ -107,7 +107,7 @@ export function applyEvent(ctx: EventContext) {
 }
 
 function runGesture(gesture: Gesture, ctx: EventContext) {
-  let result = gesture.applyEvent(ctx);
+  const result = gesture.applyEvent(ctx);
 
   if (result instanceof Gesture) {
     // Replace the old gesture with the new gesture

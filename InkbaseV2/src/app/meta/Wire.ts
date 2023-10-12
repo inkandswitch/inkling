@@ -1,5 +1,4 @@
 import { GameObject } from '../GameObject';
-import COLORS from '../Colors';
 import SVG from '../Svg';
 import { Position } from '../../lib/types';
 import Vec from '../../lib/vec';
@@ -15,7 +14,7 @@ export class WirePort extends GameObject {
     this.value = value;
   }
 
-  render(_dt: number, _t: number): void { }
+  render(_dt: number, _t: number): void {}
 }
 
 export default class Wire extends GameObject {
@@ -28,7 +27,7 @@ export default class Wire extends GameObject {
     points: '',
     stroke: 'black',
     fill: 'none',
-    'stroke-width': '0.5'
+    'stroke-width': '0.5',
   });
 
   render(): void {

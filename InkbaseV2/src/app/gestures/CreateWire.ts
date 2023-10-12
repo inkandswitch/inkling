@@ -20,7 +20,7 @@ export function createWire(ctx: EventContext): Gesture | void {
     const token = find({ what: aToken, near, recursive: false });
     const gizmo = find({ what: aGizmo, near });
 
-    let wire: Wire = ctx.page.adopt(new Wire());
+    const wire: Wire = ctx.page.adopt(new Wire());
 
     if (isTokenWithVariable(primaryToken)) {
       wire.attachFront(primaryToken.wirePort);

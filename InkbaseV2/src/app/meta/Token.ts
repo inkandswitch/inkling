@@ -9,7 +9,7 @@ export default abstract class Token extends GameObject {
   position: Position = { x: 100, y: 100 };
   width = 90;
   height = 30;
-  public hidden: boolean = false;
+  public hidden = false;
 
   constructor(public source?: ohm.Interval) {
     super();

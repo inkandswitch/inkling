@@ -64,19 +64,19 @@ export default class LabelToken extends Token {
     SVG.update(this.boxElement, {
       x: this.position.x,
       y: this.position.y,
-      visibility: this.hidden ? 'hidden' : 'visible'
+      visibility: this.hidden ? 'hidden' : 'visible',
     });
 
     SVG.update(this.textElement, {
       x: this.position.x + 5,
       y: this.position.y + 24,
-      visibility: this.hidden ? 'hidden' : 'visible'
+      visibility: this.hidden ? 'hidden' : 'visible',
     });
 
     for (const strokeElement of this.strokeElements) {
       SVG.update(strokeElement, {
         transform: `translate(${this.position.x}, ${this.position.y})`,
-        visibility: this.hidden ? 'hidden' : 'visible'
+        visibility: this.hidden ? 'hidden' : 'visible',
       });
     }
 
