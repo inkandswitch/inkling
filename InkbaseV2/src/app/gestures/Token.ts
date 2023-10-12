@@ -1,17 +1,19 @@
 import { EventContext, Gesture } from './Gesture';
 import { aPrimaryToken, aToken } from '../meta/Token';
 import { isNumberToken } from '../meta/token-helpers';
+import Vec from '../../lib/vec';
 
 export function touchToken(ctx: EventContext): Gesture | void {
   const token = ctx.page.find({
     what: aToken,
     near: ctx.event.position,
-    recursive: false,
   });
 
   if (token) {
+    const offset = Vec.sub(token.position, ctx.event.position);
+
     return new Gesture('Touch Token', {
-      dragged: ctx => (token.position = ctx.event.position),
+      dragged: ctx => (token.position = Vec.add(ctx.event.position, offset)),
       ended: ctx => !ctx.state.drag && isNumberToken(token) && token.onTap(),
     });
   }
