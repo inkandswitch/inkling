@@ -9,7 +9,7 @@ import { WirePort } from "./Wire";
 import ClipperShape from "@doodle3d/clipper-js"
 
 export default class Component extends GameObject {
-  // TODO: Decide what "shape" if any, components should have
+  editing = false;
 
   position: Position = { x: 400, y: 100 };
   width = 100;
@@ -28,8 +28,6 @@ export default class Component extends GameObject {
     'stroke-width': '0.5'
   });
 
-
-  // TBD: Add ports on the edge of a component?
   getWirePortNear(pos: Position): WirePort {
     let closestPoint = closestPointOnPolygon(this.outline, pos);
 
@@ -45,7 +43,7 @@ export default class Component extends GameObject {
 
     for (const child of this.children) {
       if (child instanceof Token) {
-        child.hidden = true;
+        child.hidden = !this.editing;
       }
       child.render(dt, t);
     }
