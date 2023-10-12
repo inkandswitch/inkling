@@ -9,6 +9,10 @@
   --blue-color: #b0c4ec;
 }
 
+.meta-mode {
+  --ink-color: #0005;
+}
+
 *,
 *::before,
 *::after {
@@ -89,4 +93,10 @@ svg {
   fill: none;
   stroke: #00000011;
   stroke-width: 20;
+}
+
+.stroke {
+  fill: none;
+  stroke-width: 2;
+  stroke: var(--ink-color);
 }
