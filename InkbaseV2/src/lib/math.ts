@@ -65,3 +65,7 @@ export const easeInOut = (t: number) => {
     ? lerp(ease(t * 2), 0, 1, 0, 0.5)
     : lerp(ease((1 - t) * 2), 1, 0, 0.5, 1);
 };
+
+export function nearestMultiple(n: number, m: number) {
+  return Math.round(n / m) * m;
+}
