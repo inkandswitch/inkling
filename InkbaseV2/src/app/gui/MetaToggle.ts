@@ -14,7 +14,7 @@ export default class MetaToggle extends GameObject {
   position: Position;
   dragging = false;
 
-  public active = true; // Temporary hack — this should be somewhere more global
+  public active = false; // Temporary hack — this should be somewhere more global
 
   constructor() {
     super();

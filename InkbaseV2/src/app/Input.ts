@@ -1,27 +1,33 @@
-import { EventContext, Gesture } from './gestures/Gesture';
-import { handleDrag } from './gestures/HandleDrag';
-import { pencilInk } from './gestures/PencilInk';
-import { Event, TouchId } from './NativeEvents';
-import { touchMetaToggle } from './gestures/MetaToggle';
-import SVG from './Svg';
-import { pencilMeta } from './gestures/PencilMeta';
-import { scrubToken } from './gestures/ScrubToken';
 import {
   closeFormulaEditor,
   pencilFormulaEditor,
-} from './gestures/FormulaGestures';
-import { pencilTapPropertyPicker } from './gestures/PropertyPicker';
-import { touchToken } from './gestures/DragToken';
+  tapFormulaLabel,
+} from './gestures/FormulaEditor';
+import { Event, TouchId } from './NativeEvents';
+import { EventContext, Gesture } from './gestures/Gesture';
+import { touchHandle } from './gestures/Handle';
+import { touchMetaToggle } from './gestures/MetaToggle';
+import { touchToken, scrubNumberToken } from './gestures/Token';
+import { drawInk } from './gestures/DrawInk';
+import { createWire } from './gestures/CreateWire';
+import { tapPropertyPicker } from './gestures/PropertyPicker';
+import SVG from './Svg';
 
 const gestureCreators = {
   finger: [
     closeFormulaEditor,
-    scrubToken,
+    scrubNumberToken,
     touchToken,
-    handleDrag,
+    touchHandle,
     touchMetaToggle,
   ],
-  pencil: [pencilTapPropertyPicker, pencilFormulaEditor, pencilMeta, pencilInk],
+  pencil: [
+    tapPropertyPicker,
+    tapFormulaLabel,
+    pencilFormulaEditor,
+    createWire,
+    drawInk,
+  ],
 };
 
 const pseudoTouches: Record<TouchId, Event> = {};
@@ -123,12 +129,10 @@ export function render() {
   for (const id in pseudoTouches) {
     const event = pseudoTouches[id];
     SVG.now('circle', {
+      class: 'pseudo-touch',
       cx: event.position.x,
       cy: event.position.y,
-      r: 40,
-      fill: 'none',
-      stroke: '#00000005',
-      'stroke-width': 5,
+      r: 32,
     });
   }
 }

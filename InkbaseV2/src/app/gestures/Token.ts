@@ -1,8 +1,23 @@
 import { EventContext, Gesture } from './Gesture';
-import { aPrimaryToken } from '../meta/Token';
+import { aPrimaryToken, aToken } from '../meta/Token';
 import { isNumberToken } from '../meta/token-helpers';
 
-export function scrubToken(ctx: EventContext): Gesture | void {
+export function touchToken(ctx: EventContext): Gesture | void {
+  const token = ctx.page.find({
+    what: aToken,
+    near: ctx.event.position,
+    recursive: false,
+  });
+
+  if (token) {
+    return new Gesture('Touch Token', {
+      dragged: ctx => (token.position = ctx.event.position),
+      ended: ctx => !ctx.state.drag && isNumberToken(token) && token.onTap(),
+    });
+  }
+}
+
+export function scrubNumberToken(ctx: EventContext): Gesture | void {
   if (ctx.pseudo) {
     const token = ctx.page.find({
       what: aPrimaryToken,
@@ -28,11 +43,7 @@ export function scrubToken(ctx: EventContext): Gesture | void {
           const value = Math.round((initialValue + delta * m) / m) * m;
           token.getVariable().lock(value);
         },
-        ended: () => {
-          if (!wasLocked) {
-            token.getVariable().unlock();
-          }
-        },
+        ended: () => !wasLocked && token.getVariable().unlock(),
       });
     }
   }

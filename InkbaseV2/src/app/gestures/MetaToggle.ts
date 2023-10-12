@@ -9,16 +9,18 @@ export function touchMetaToggle(ctx: EventContext): Gesture | void {
     tooFar: 50,
   });
 
+  const dragThreshold = 100;
+
   if (metaToggle) {
     return new Gesture('Touch Meta Toggle', {
       moved: ctx => {
-        if (ctx.state.dragDist > 100) {
+        if (ctx.state.dragDist > dragThreshold) {
           metaToggle.dragTo(ctx.event.position);
         }
       },
       ended: ctx => {
         metaToggle.snapToCorner();
-        if (ctx.state.dragDist < 100) {
+        if (ctx.state.dragDist <= dragThreshold) {
           metaToggle.toggle();
         }
       },

@@ -9,7 +9,7 @@ import Wire from '../meta/Wire';
 import { MetaStruct } from '../meta/MetaSemantics';
 import PropertyPicker from '../meta/PropertyPicker';
 
-export function pencilMeta(ctx: EventContext): Gesture | void {
+export function createWire(ctx: EventContext): Gesture | void {
   if (ctx.metaToggle.active) {
     // Rebind for concision
     const find = ctx.page.find.bind(ctx.page);

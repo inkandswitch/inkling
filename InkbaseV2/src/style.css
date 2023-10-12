@@ -84,3 +84,9 @@ svg {
     }
   }
 }
+
+.pseudo-touch {
+  fill: none;
+  stroke: #00000011;
+  stroke-width: 20;
+}

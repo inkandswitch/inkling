@@ -1,7 +1,7 @@
 import { EventContext, Gesture } from './Gesture';
 import { aPropertyPickerEditor } from '../meta/PropertyPickerEditor';
 
-export function pencilTapPropertyPicker(ctx: EventContext): Gesture | void {
+export function tapPropertyPicker(ctx: EventContext): Gesture | void {
   if (ctx.metaToggle.active) {
     const propertyPicker = ctx.page.find({
       what: aPropertyPickerEditor,
@@ -10,7 +10,7 @@ export function pencilTapPropertyPicker(ctx: EventContext): Gesture | void {
     });
 
     if (propertyPicker) {
-      return new Gesture('Pencil Tap Property Picker', {
+      return new Gesture('Tap Property Picker', {
         began: () => propertyPicker.onTapInside(ctx.event.position),
       });
     }
