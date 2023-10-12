@@ -11,6 +11,7 @@ import FormulaParser from './meta/FormulaParser';
 import MetaToggle from './gui/MetaToggle';
 import Component from './meta/Component';
 import LabelToken from './meta/LabelToken';
+import Stroke from './ink/Stroke';
 
 // This is a pretzel, because the interface between NativeEvents and Input is a work in progress.
 const events = new Events((event: Event, state: InputState) => {
@@ -56,6 +57,15 @@ const labelInsideComponent = new LabelToken(
 );
 labelInsideComponent.position = { x: 410, y: 110 };
 component.adopt(labelInsideComponent);
+
+let stroke = new Stroke();
+component.adopt(stroke);
+stroke.points = [
+  { x: 410, y: 110 },
+  { x: 420, y: 120 },
+  { x: 410, y: 170 }
+];
+component.updateOutline();
 
 onEveryFrame((dt, t) => {
   SVG.clearNow(t);

@@ -15,7 +15,7 @@ export function createWire(ctx: EventContext): Gesture | void {
     const find = ctx.page.find.bind(ctx.page);
     const near = ctx.event.position;
 
-    const primaryToken = find({ what: aPrimaryToken, near });
+    const primaryToken = find({ what: aPrimaryToken, near, recursive: false });
     const component = find({ what: aComponent, near, recursive: false });
     const token = find({ what: aToken, near, recursive: false });
     const gizmo = find({ what: aGizmo, near });

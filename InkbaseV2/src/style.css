@@ -48,7 +48,8 @@ svg {
   text-anchor: middle;
   font-weight: 250;
   font-size: 12px;
-  alignment-baseline: central; /* Ignore the warning — this is valid */
+  alignment-baseline: central;
+  /* Ignore the warning — this is valid */
   letter-spacing: -0.5px;
 }
 
@@ -80,9 +81,11 @@ svg {
 
   &.active {
     color: color(display-p3 1 0.7 0);
+
     .inner {
       scale: 0.85;
     }
+
     .secret {
       scale: 0.7;
     }
@@ -103,7 +106,7 @@ svg {
 
 #meta {
   opacity: 0;
-  transition: opacity 0.5s cubic-bezier(0, 1, 0, 1);
+  transition: opacity 0.2s cubic-bezier(0, 1, 0, 1);
 }
 
 .meta-mode #meta {

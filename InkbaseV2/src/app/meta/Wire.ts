@@ -15,7 +15,7 @@ export class WirePort extends GameObject {
     this.value = value;
   }
 
-  render(_dt: number, _t: number): void {}
+  render(_dt: number, _t: number): void { }
 }
 
 export default class Wire extends GameObject {
@@ -26,8 +26,9 @@ export default class Wire extends GameObject {
 
   protected readonly wireElement = SVG.add('polyline', SVG.metaElm, {
     points: '',
-    stroke: COLORS.GREY_LESS_DARK,
+    stroke: 'black',
     fill: 'none',
+    'stroke-width': '0.5'
   });
 
   render(): void {

@@ -19,20 +19,20 @@ export default class Groups {
   connections: any[] = [];
 
   // TODO: Make this incremental
-  update(strokes){
-    
+  update(strokes) {
+
     // Find Connection points between strokes
     // Loop through each pair
     // TODO: Find loops in single strokes
     this.connections = [];
     for (let i = 0; i < strokes.length; i++) {
       const a = strokes[i];
-      for (let j = i+1; j < strokes.length; j++) {
+      for (let j = i + 1; j < strokes.length; j++) {
         const b = strokes[j];
-        
+
         let connections = findConnectionsBetweenStrokes(a.points, b.points)
-        
-        for(const connection of connections) {
+
+        for (const connection of connections) {
           this.connections.push({
             strokes: [a, b],
             indexes: connection.mid,
@@ -46,25 +46,25 @@ export default class Groups {
     // Turn connections into a graph
     let nodes = [];
     let edges = [];
-    this.connections.forEach((connection, i)=>{
+    this.connections.forEach((connection, i) => {
       // TODO: Collapse nodes
       let node = {
         position: connection.point,
         id: i
       }
-      
+
 
 
     })
-    
-    
+
+
     this.dirty = true
   }
 
-  addStroke(stroke: FreehandStroke){
+  addStroke(stroke: FreehandStroke) {
     let points = rdp_simplify(stroke.points, 2)
     let shape = new ClipperShape([points], true, true, true, true)
-    shape = shape.offset( 7.5, {
+    shape = shape.offset(7.5, {
       jointType: 'jtRound',
       endType: 'etOpenRound',
       miterLimit: 2.0,
@@ -77,26 +77,26 @@ export default class Groups {
     // Add to groups
     let found = false;
     let foundGroup = null;
-    
-    for(const group of this.groups) {
-      if(group.intersects(shape)) {
+
+    for (const group of this.groups) {
+      if (group.intersects(shape)) {
         found = true;
         group.addStroke(stroke, shape);
         break;
       }
     }
 
-    
 
-    if(!found) {
+
+    if (!found) {
       let group = new Group(stroke, shape);
-      this.groups.push(group);  
+      this.groups.push(group);
     }
 
-    
+
 
     this.dirty = true
-    
+
   }
 
   render(svg: SVG) {
@@ -143,9 +143,9 @@ function findConnectionsBetweenStrokes(strokeA, strokeB) {
 
 
     let closest = findClostestPointOnStroke(strokeB, strokeA[i]);
-    
-    if(closest.dist < 10) {
-      if(!currentConnection) {
+
+    if (closest.dist < 10) {
+      if (!currentConnection) {
         currentConnection = {
           start: [i, closest.index],
           end: [i, closest.index],
@@ -154,13 +154,13 @@ function findConnectionsBetweenStrokes(strokeA, strokeB) {
         }
       } else {
         currentConnection.end = [i, closest.index]
-        if(closest.dist < currentConnection.dist) {
+        if (closest.dist < currentConnection.dist) {
           currentConnection.mid = [i, closest.index]
           currentConnection.dist = closest.dist
         }
       }
     } else {
-      if(currentConnection) {
+      if (currentConnection) {
         connections.push(currentConnection);
         currentConnection = null
       }
@@ -174,7 +174,7 @@ function findConnectionsBetweenStrokes(strokeA, strokeB) {
     // }
   }
 
-  if(currentConnection) {
+  if (currentConnection) {
     connections.push(currentConnection);
   }
 
@@ -200,9 +200,9 @@ function findClostestPointOnStroke(stroke, point) {
   return { dist: minDist, index };
 }
 
-function clipperShapeSVGPath(shape){
+function clipperShapeSVGPath(shape) {
   let svgPath = "";
-  for(const path of shape.paths) {
+  for (const path of shape.paths) {
     svgPath += `M ${path[0].X} ${path[0].Y} `;
     for (let i = 1; i < path.length; i++) {
       svgPath += `L ${path[i].X} ${path[i].Y} `;
@@ -213,29 +213,29 @@ function clipperShapeSVGPath(shape){
 }
 
 function rdp_simplify(line, epsilon = 20) {
-  if(line.length == 2) {
+  if (line.length == 2) {
     return line
   }
-  
+
   let start = line[0]
-  let end = line[line.length-1]
-  
+  let end = line[line.length - 1]
+
   var largestDistance = -1;
   var furthestIndex = -1;
-  
+
   for (let i = 0; i < line.length; i++) {
     let point = line[i]
     let dist = point_line_distance(point, start, end)
-    if(dist > largestDistance) {
+    if (dist > largestDistance) {
       largestDistance = dist
       furthestIndex = i
     }
   }
-  
-  if(largestDistance > epsilon) {
-    let segment_a = rdp_simplify(line.slice(0,furthestIndex), epsilon)
+
+  if (largestDistance > epsilon) {
+    let segment_a = rdp_simplify(line.slice(0, furthestIndex), epsilon)
     let segment_b = rdp_simplify(line.slice(furthestIndex), epsilon)
-    
+
     return segment_a.concat(segment_b.slice(1))
   }
   return [start, end]
@@ -243,7 +243,7 @@ function rdp_simplify(line, epsilon = 20) {
 
 function point_line_distance(p, a, b) {
   let norm = scalar_projection(p, a, b)
-  return Vec.len(Vec.sub(p,norm))
+  return Vec.len(Vec.sub(p, norm))
 }
 
 function scalar_projection(p, a, b) {
