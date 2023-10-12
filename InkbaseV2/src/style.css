@@ -100,3 +100,11 @@ svg {
   stroke-width: 2;
   stroke: var(--ink-color);
 }
+
+#meta {
+  display: none;
+}
+
+.meta-mode #meta {
+  display: block;
+}
