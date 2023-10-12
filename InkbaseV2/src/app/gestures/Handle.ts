@@ -6,6 +6,7 @@ export function touchHandle(ctx: EventContext): Gesture | void {
   const handle = ctx.root.page.find({
     what: aCanonicalHandle,
     near: ctx.event.position,
+    tooFar: 40,
   });
 
   if (handle) {

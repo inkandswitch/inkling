@@ -247,7 +247,7 @@ export default class Handle extends GameObject {
     this.page.forEach({
       what: aHandle,
       near: this.position,
-      tooFar: 10,
+      tooFar: 20,
       do: that => this.absorb(that),
     });
   }
