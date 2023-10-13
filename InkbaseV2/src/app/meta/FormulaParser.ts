@@ -22,7 +22,7 @@ Formula {
     | MulExp
 
   MulExp
-    = MulExp ("*" | "/" | "%") UnExp  -- mul
+    = MulExp ("×" | "/" | "%") UnExp  -- mul
     | UnExp
 
   UnExp

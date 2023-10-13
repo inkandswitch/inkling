@@ -15625,7 +15625,7 @@ const strokes: TokenStrokes[] = [
     ],
   },
   {
-    name: '*',
+    name: '×',
     strokes: [
       [
         {
