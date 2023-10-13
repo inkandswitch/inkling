@@ -36,7 +36,7 @@
 
   --meta-green: color(display-p3 0 1 0.8);
   --meta-yellow: color(display-p3 1 0.7 0);
-  --meta-light-blue: color(display-p3 0 0.5 1 / 0.5);
+  --meta-light-blue: color(display-p3 0.8 0.9 1);
 
   --meta-toggle: var(--meta-black);
 
@@ -171,7 +171,7 @@ svg * {
 .formula-editor-cell {
   fill: var(--meta-white);
 
-  &[is-default-type='true'] {
+  &[is-default-type='false'] {
     fill: var(--meta-light-blue);
   }
 }
