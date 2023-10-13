@@ -14,7 +14,9 @@ export default class Gizmo extends GameObject {
   center: Position;
 
   private g = SVG.add('g', SVG.metaElm, { class: 'gizmo' });
-  private path = SVG.add('path', this.g);
+  private paths = SVG.add('g', this.g);
+  private arc1 = SVG.add('path', this.paths);
+  private arc2 = SVG.add('path', this.paths);
   private polyline = SVG.add('polyline', this.g);
 
   readonly distance: Variable;
@@ -110,14 +112,25 @@ export default class Gizmo extends GameObject {
       return;
     }
 
-    const angle = Vec.angle(Vec.sub(handles.b.position, handles.a.position));
+    const angle = this.angleInDegrees.value;
+    const aLock = this.angleInRadians.isLocked;
+    const dLock = this.distance.isLocked;
 
-    const d = [
-      SVG.arcPath(this.center, 20, angle - TAU / 4, Math.PI / 3),
-      SVG.arcPath(this.center, 20, angle + TAU / 4, Math.PI / 3),
-    ].join();
+    const xOffset = aLock ? 0 : dLock ? 9.4 : 12;
+    const yOffset = dLock ? -3.5 : 0;
+    const arcPath = SVG.arcPath(Vec.zero, 10, TAU / 4, Math.PI / 3);
 
-    SVG.update(this.path, { d });
+    SVG.update(this.paths, {
+      style: `transform: translate(${this.center.x}px, ${this.center.y}px) rotate(${angle}deg)`,
+    });
+    SVG.update(this.arc1, {
+      d: arcPath,
+      style: `transform: translate(${xOffset}px, ${yOffset}px)`,
+    });
+    SVG.update(this.arc2, {
+      d: arcPath,
+      style: `transform: rotate(${180}deg) translate(${xOffset}px, ${yOffset}px)`,
+    });
     SVG.update(this.polyline, {
       points: SVG.points(handles.a.position, handles.b.position),
     });

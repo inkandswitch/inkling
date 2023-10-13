@@ -140,6 +140,10 @@ svg * {
   stroke: var(--meta-black);
   stroke-width: 2;
 
+  & path {
+    transition: transform 0.4s cubic-bezier(0, 1.2, 0, 1);
+  }
+
   & polyline {
     stroke-width: 2;
   }
