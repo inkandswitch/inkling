@@ -74,7 +74,7 @@ export default class NumberToken extends Token {
       y: this.position.y,
       width: this.width,
       'is-locked': this.getVariable().isLocked.toString(),
-      'is-embedded': this.embedded.toString()
+      'is-embedded': this.embedded.toString(),
     });
 
     SVG.update(this.wholeTextElement, {

@@ -178,7 +178,7 @@ export default class FormulaParser {
     // console.log('compiledExpr', compiledExpr);
     try {
       // replace x with *
-      compiledExpr = compiledExpr.replaceAll("×", "*");
+      compiledExpr = compiledExpr.replaceAll('×', '*');
       return new Function(`[${argNames}]`, `return ${compiledExpr}`) as (
         xs: number[]
       ) => number;
