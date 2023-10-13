@@ -1,5 +1,4 @@
 import Token from './Token';
-import COLORS from '../Colors';
 import SVG from '../Svg';
 import { Variable } from '../constraints';
 import * as ohm from 'ohm-js';
@@ -13,13 +12,13 @@ export default class NumberToken extends Token {
     width: this.width,
     height: this.height,
     rx: 3,
-    fill: COLORS.GREY_DARK,
+    class: 'token-box',
   });
 
   protected readonly wholeTextElement = SVG.add('text', SVG.metaElm, {
     x: this.position.x + 5,
     y: this.position.y + 10,
-    fill: COLORS.WHITE,
+    class: 'token-text',
     'font-size': '24px',
     'font-family': 'monospace',
   });
@@ -27,7 +26,7 @@ export default class NumberToken extends Token {
   protected readonly fracTextElement = SVG.add('text', SVG.metaElm, {
     x: this.position.x + 5,
     y: this.position.y + 10,
-    fill: COLORS.GREY_LIGHT,
+    class: 'token-frac-text',
     'font-size': '10px',
     'font-family': 'monospace',
   });
@@ -74,9 +73,7 @@ export default class NumberToken extends Token {
       x: this.position.x,
       y: this.position.y,
       width: this.width,
-      fill: this.getVariable().isLocked
-        ? COLORS.GREY_LESS_DARK
-        : COLORS.GREY_DARK,
+      'is-locked': this.getVariable().isLocked.toString(),
     });
 
     SVG.update(this.wholeTextElement, {

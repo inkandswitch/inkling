@@ -1,7 +1,6 @@
 import PropertyPicker from './PropertyPicker';
 import SVG from '../Svg';
 import { Position } from '../../lib/types';
-import COLORS from '../Colors';
 import { MetaLabel, MetaStruct } from './MetaSemantics';
 import { GameObject } from '../GameObject';
 import { signedDistanceToBox } from '../../lib/SignedDistance';
@@ -35,14 +34,14 @@ export default class PropertyPickerEditor extends GameObject {
       width: this.width,
       height: this.height,
       rx: 3,
-      fill: COLORS.GREY_LIGHT,
+      class: 'property-picker-editor-box',
     });
 
     this.svgTextElements = this.props.map((label, index) => {
       const text = SVG.add('text', SVG.metaElm, {
         x: this.position.x + 5,
         y: this.position.y + 24 + index * LINEHEIGHT,
-        fill: COLORS.GREY_DARK,
+        class: 'property-picker-editor-text',
         'font-size': '24px',
         'font-family': 'monospace',
       });

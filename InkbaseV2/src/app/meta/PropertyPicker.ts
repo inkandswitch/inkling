@@ -1,6 +1,5 @@
 import Token from './Token';
 import SVG from '../Svg';
-import COLORS from '../Colors';
 import { Position } from '../../lib/types';
 import { WirePort } from './Wire';
 import * as constraints from '../constraints';
@@ -26,13 +25,13 @@ function PropertyPickerPath(pos: Position, w: number, h: number) {
 export default class PropertyPicker extends Token {
   protected readonly boxElement = SVG.add('path', SVG.metaElm, {
     d: PropertyPickerPath(this.position, this.width, this.height),
-    fill: COLORS.GREY_DARK,
+    class: 'property-picker-box',
   });
 
   protected readonly textElement = SVG.add('text', SVG.metaElm, {
     x: this.position.x + 5,
     y: this.position.y + 24,
-    fill: COLORS.WHITE,
+    class: 'property-picker-text',
     'font-size': '24px',
   });
 

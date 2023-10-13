@@ -132,7 +132,7 @@ export function render() {
       class: 'pseudo-touch',
       cx: event.position.x,
       cy: event.position.y,
-      r: 32,
+      r: 4,
     });
   }
 }

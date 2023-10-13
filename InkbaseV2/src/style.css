@@ -1,38 +1,45 @@
 :root {
-  --bg-color: #f2f2f2;
+  --bg-color: color(display-p3 0.9 0.9 0.9);
   --ink-color: #000a;
 
-  --grey-dark-color: #4d5254;
-  --grey-less-dark-color: #777;
-  --grey-mid-color: #e7e7e7;
-  --grey-light-color: #e7e7e7;
-  --grey-bright-color: #fafafa;
-  --white-color: #ffffff;
-  --blue-color: #b0c4ec;
-
   --meta-black: transparent;
+  --meta-dark-grey: transparent;
   --meta-grey: transparent;
+  --meta-light-grey: transparent;
+  --meta-white: transparent;
+
   --meta-green: transparent;
   --meta-yellow: transparent;
+  --meta-light-blue: transparent;
 
   --meta-toggle: var(--ink-color);
+
   --handle-fill: var(--ink-color);
   --handle-stroke: transparent;
 
-  --transition-fill: fill 1.4s cubic-bezier(0, 1.5, 0, 1);
-  --transition-stroke: stroke 1.4s cubic-bezier(0, 1.5, 0, 1);
+  /* --pseudo-touch: color(display-p3 0 1 0.8); */
+  --pseudo-touch: transparent;
+
+  --transition-fill: fill 1.4s cubic-bezier(0, 1.4, 0, 1);
+  --transition-stroke: stroke 1.4s cubic-bezier(0, 1.4, 0, 1);
 }
 
 :root[meta-mode] {
-  --bg-color: #e2e2e2;
+  --bg-color: color(display-p3 0.85 0.85 0.85);
   --ink-color: #0002;
 
-  --meta-black: black;
-  --meta-grey: color(display-p3 0.3 0.3 0.3);
+  --meta-black: #000;
+  --meta-dark-grey: color(display-p3 0.3 0.3 0.3);
+  --meta-grey: color(display-p3 0.5 0.5 0.5);
+  --meta-light-grey: color(display-p3 0.7 0.7 0.7);
+  --meta-white: color(display-p3 0.9 0.9 0.9);
+
   --meta-green: color(display-p3 0 1 0.8);
   --meta-yellow: color(display-p3 1 0.7 0);
+  --meta-light-blue: color(display-p3 0 0.5 1 / 0.5);
 
   --meta-toggle: var(--meta-black);
+
   --handle-fill: var(--meta-black);
   --handle-stroke: var(--meta-black);
 }
@@ -118,9 +125,7 @@ svg * {
 }
 
 .pseudo-touch {
-  fill: none;
-  stroke: #00000011;
-  stroke-width: 20;
+  fill: var(--pseudo-touch);
 }
 
 .stroke {
@@ -151,6 +156,82 @@ svg * {
   & polyline {
     stroke-width: 2;
   }
+}
+
+.component {
+  fill: none;
+  stroke: var(--meta-black);
+  stroke-width: 2;
+}
+
+.formula-editor {
+  fill: var(--meta-light-grey);
+}
+
+.formula-editor-cell {
+  fill: var(--meta-white);
+
+  &[is-default-type='true'] {
+    fill: var(--meta-light-blue);
+  }
+}
+
+.formula-editor-cell-text {
+  fill: var(--meta-dark-grey);
+}
+
+.label-box {
+  fill: var(--meta-light-blue);
+}
+
+.label-text {
+  fill: var(--meta-white);
+}
+
+.token-box {
+  fill: var(--meta-dark-grey);
+
+  &[is-locked='true'] {
+    fill: var(--meta-grey);
+  }
+}
+
+.token-text {
+  fill: var(--meta-white);
+}
+
+.token-frac-text {
+  fill: var(--meta-light-grey);
+}
+
+.op.token {
+  fill: var(--meta-dark-grey);
+}
+
+.parsed-formula {
+  fill: var(--meta-light-grey);
+}
+
+.property-picker-box {
+  fill: var(--meta-black);
+}
+
+.property-picker-text {
+  fill: var(--meta-white);
+}
+
+.property-picker-editor-box {
+  fill: var(--meta-black);
+}
+
+.property-picker-editor-text {
+  fill: var(--meta-white);
+}
+
+.wire {
+  fill: none;
+  stroke: var(--meta-black);
+  stroke-width: 0.5;
 }
 
 @keyframes zoom-in {

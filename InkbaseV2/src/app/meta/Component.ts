@@ -1,7 +1,7 @@
 import { closestPointOnPolygon } from '../../lib/polygon';
 import { Position } from '../../lib/types';
 import { GameObject } from '../GameObject';
-import Svg from '../Svg';
+import SVG from '../Svg';
 import { aStroke } from '../ink/Stroke';
 import { MetaStruct } from './MetaSemantics';
 import Token from './Token';
@@ -22,10 +22,8 @@ export default class Component extends GameObject {
 
   readonly wirePorts: Array<WirePort> = [];
 
-  protected readonly svgOutline = Svg.add('path', Svg.metaElm, {
-    stroke: 'black',
-    fill: 'none',
-    'stroke-width': '0.5',
+  protected readonly svgOutline = SVG.add('path', SVG.metaElm, {
+    class: 'component',
   });
 
   getWirePortNear(pos: Position): WirePort {
@@ -37,8 +35,8 @@ export default class Component extends GameObject {
   }
 
   render(dt: number, t: number): void {
-    Svg.update(this.svgOutline, {
-      d: Svg.path(this.outline),
+    SVG.update(this.svgOutline, {
+      d: SVG.path(this.outline),
     });
 
     for (const child of this.children) {

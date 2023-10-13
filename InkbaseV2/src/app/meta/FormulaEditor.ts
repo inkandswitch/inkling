@@ -1,6 +1,5 @@
 import { GameObject } from '../GameObject';
 import { Position } from '../../lib/types';
-import COLORS from '../Colors';
 import SVG from '../Svg';
 import Stroke, { aStroke } from '../ink/Stroke';
 import Vec from '../../lib/vec';
@@ -31,8 +30,8 @@ export default class FormulaEditor extends GameObject {
     width: this.width,
     height: this.height,
     rx: 3,
-    fill: COLORS.GREY_LIGHT,
     visibility: 'hidden',
+    class: 'formula-editor',
   });
 
   protected readonly svgCellElements: Array<SVGElement> = [];
@@ -213,13 +212,13 @@ class FormulaEditorCell extends GameObject {
     width: this.width,
     height: this.height,
     rx: 3,
-    fill: COLORS.WHITE,
+    class: 'formula-editor-cell',
   });
 
   protected readonly textElement = SVG.add('text', SVG.metaElm, {
     x: this.position.x + 5,
     y: this.position.y + 30,
-    fill: COLORS.GREY_DARK,
+    class: 'formula-editor-cell-text',
     'font-size': '30px',
   });
 
@@ -239,7 +238,7 @@ class FormulaEditorCell extends GameObject {
       x: this.position.x,
       y: this.position.y,
       width: this.width,
-      fill: this.type === 'default' ? COLORS.WHITE : COLORS.BLUE,
+      'is-default-type': (this.type === 'default').toString(),
     });
 
     if (this.type === 'default') {

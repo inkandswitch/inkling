@@ -1,5 +1,4 @@
 import Token from './Token';
-import COLORS from '../Colors';
 import SVG from '../Svg';
 import Vec from '../../lib/vec';
 import { isTokenWithVariable } from './token-helpers';
@@ -17,7 +16,7 @@ export default class ParsedFormula extends Token {
     width: this.width,
     height: this.height,
     rx: 3,
-    fill: COLORS.GREY_LIGHT,
+    class: 'parsed-formula',
   });
 
   constructor(

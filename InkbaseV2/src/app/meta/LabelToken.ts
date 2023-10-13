@@ -1,5 +1,4 @@
 import Token from './Token';
-import COLORS from '../Colors';
 import SVG from '../Svg';
 import * as ohm from 'ohm-js';
 import { WirePort } from './Wire';
@@ -13,13 +12,13 @@ export default class LabelToken extends Token {
     width: this.width,
     height: this.height,
     rx: 3,
-    fill: COLORS.BLUE,
+    class: 'label-box',
   });
 
   protected readonly textElement = SVG.add('text', SVG.metaElm, {
     x: this.position.x + 5,
     y: this.position.y + 24,
-    fill: COLORS.WHITE,
+    class: 'label-text',
     'font-size': '24px',
   });
 

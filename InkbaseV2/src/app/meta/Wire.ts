@@ -23,11 +23,9 @@ export default class Wire extends GameObject {
   b?: WeakRef<WirePort>;
   connection: MetaConnection | null = null;
 
-  protected readonly wireElement = SVG.add('polyline', SVG.metaElm, {
+  protected readonly elm = SVG.add('polyline', SVG.metaElm, {
     points: '',
-    stroke: 'black',
-    fill: 'none',
-    'stroke-width': '0.5',
+    class: 'wire',
   });
 
   render(): void {
@@ -42,7 +40,7 @@ export default class Wire extends GameObject {
       this.points[1] = b.position;
     }
 
-    SVG.update(this.wireElement, { points: SVG.points(this.points) });
+    SVG.update(this.elm, { points: SVG.points(this.points) });
   }
 
   isCollapsable() {
@@ -69,7 +67,7 @@ export default class Wire extends GameObject {
   }
 
   remove(): void {
-    this.wireElement.remove();
+    this.elm.remove();
     super.remove();
   }
 }
