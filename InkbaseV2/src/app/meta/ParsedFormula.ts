@@ -39,12 +39,13 @@ export default class ParsedFormula extends Token {
     return false;
   }
 
-  render(): void {
+  render(dt: number, t: number): void {
     // Layout child tokens in horizontal sequence
     let nextTokenPosition = Vec.add(this.position, Vec(PADDING, PADDING));
     for (const token of this.children as Set<Token>) {
       token.position = nextTokenPosition;
-      token.render();
+      token.render(dt, t);
+      token.embedded = true;
       nextTokenPosition = Vec.add(
         nextTokenPosition,
         Vec(token.width + PADDING, 0)

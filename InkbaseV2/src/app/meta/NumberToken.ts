@@ -11,7 +11,7 @@ export default class NumberToken extends Token {
     y: this.position.y,
     width: this.width,
     height: this.height,
-    rx: 3,
+    //rx: 3,
     class: 'token-box',
   });
 
@@ -74,6 +74,7 @@ export default class NumberToken extends Token {
       y: this.position.y,
       width: this.width,
       'is-locked': this.getVariable().isLocked.toString(),
+      'is-embedded': this.embedded.toString()
     });
 
     SVG.update(this.wholeTextElement, {

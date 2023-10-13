@@ -49,13 +49,15 @@ export default class FormulaEditor extends GameObject {
     return this.active;
   }
 
-  activateFromFormula() {}
+  activateFromFormula() { }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  addLabelTokenFromExisting(_: any) {}
+  addLabelTokenFromExisting(_: any) { }
 
   activateFromPosition(position: Position) {
     this.position = position;
+    this.adopt(new FormulaEditorCell());
+    this.adopt(new FormulaEditorCell());
     this.adopt(new FormulaEditorCell());
     this.adopt(new FormulaEditorCell());
     this.adopt(new FormulaEditorCell());
@@ -193,7 +195,7 @@ export default class FormulaEditor extends GameObject {
 }
 
 class FormulaEditorCell extends GameObject {
-  type: 'default' | 'label' = 'default';
+  type: 'default' | 'label' | 'property' = 'default';
 
   width = 30;
   height = 40;

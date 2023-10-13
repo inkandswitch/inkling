@@ -19,6 +19,7 @@ function PropertyPickerPath(pos: Position, w: number, h: number) {
     L ${pos.x + w} ${pos.y + h}
     L ${pos.x} ${pos.y + h}
     L ${pos.x - 20} ${pos.y + h / 2}
+    L ${pos.x} ${pos.y}
   `;
 }
 
@@ -30,9 +31,9 @@ export default class PropertyPicker extends Token {
 
   protected readonly textElement = SVG.add('text', SVG.metaElm, {
     x: this.position.x + 5,
-    y: this.position.y + 24,
+    y: this.position.y + 21,
     class: 'property-picker-text',
-    'font-size': '24px',
+    'font-size': '18px',
   });
 
   readonly inputVariable = new MetaStruct([]);
@@ -66,7 +67,7 @@ export default class PropertyPicker extends Token {
 
     SVG.update(this.textElement, {
       x: this.position.x + 5,
-      y: this.position.y + 24,
+      y: this.position.y + 21,
     });
 
     this.textElement.textContent = this.property?.display as string;

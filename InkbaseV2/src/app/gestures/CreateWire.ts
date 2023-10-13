@@ -8,6 +8,7 @@ import { isPropertyPicker, isTokenWithVariable } from '../meta/token-helpers';
 import Wire from '../meta/Wire';
 import { MetaStruct } from '../meta/MetaSemantics';
 import PropertyPicker from '../meta/PropertyPicker';
+import Vec from '../../lib/vec';
 
 export function createWire(ctx: EventContext): Gesture | void {
   if (ctx.metaToggle.active) {
@@ -55,7 +56,7 @@ export function createWire(ctx: EventContext): Gesture | void {
           ctx.page.adopt(new PropertyPickerEditor(p));
         } else {
           const n = ctx.page.adopt(new NumberToken());
-          n.position = ctx.event.position;
+          n.position = Vec.sub(ctx.event.position, Vec(0, 12));
           wire.attachEnd(n.wirePort);
         }
       },

@@ -32,6 +32,7 @@
   --meta-dark-grey: color(display-p3 0.3 0.3 0.3);
   --meta-grey: color(display-p3 0.5 0.5 0.5);
   --meta-light-grey: color(display-p3 0.7 0.7 0.7);
+  --meta-superlight-grey: color(display-p3 0.8 0.8 0.8);
   --meta-white: color(display-p3 0.9 0.9 0.9);
 
   --meta-green: color(display-p3 0 1 0.8);
@@ -189,7 +190,14 @@ svg * {
 }
 
 .token-box {
-  fill: var(--meta-dark-grey);
+  fill: var(--bg-color);
+  stroke: var(--meta-black);
+  stroke-width: 0.5;
+
+  &[is-embedded='true'] {
+    stroke: none;
+    fill: var(--meta-superlight-grey);
+  }
 
   &[is-locked='true'] {
     fill: var(--meta-grey);
@@ -197,11 +205,11 @@ svg * {
 }
 
 .token-text {
-  fill: var(--meta-white);
+  fill: var(--meta-black);
 }
 
 .token-frac-text {
-  fill: var(--meta-light-grey);
+  fill: var(--meta-dark-greygrey);
 }
 
 .op.token {
@@ -209,15 +217,19 @@ svg * {
 }
 
 .parsed-formula {
-  fill: var(--meta-light-grey);
+  fill: var(--bg-color);
+  stroke: var(--meta-black);
+  stroke-width: 0.5;
 }
 
 .property-picker-box {
-  fill: var(--meta-black);
+  stroke: var(--meta-black);
+  fill: var(--bg-color);
+  stroke-width: 0.5;
 }
 
 .property-picker-text {
-  fill: var(--meta-white);
+  fill: var(--meta-black);
 }
 
 .property-picker-editor-box {

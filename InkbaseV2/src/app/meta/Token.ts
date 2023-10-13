@@ -9,6 +9,8 @@ export default abstract class Token extends GameObject {
   position: Position = { x: 100, y: 100 };
   width = 90;
   height = 30;
+
+  public embedded = false;
   public hidden = false;
 
   constructor(public source?: ohm.Interval) {
@@ -32,7 +34,7 @@ export default abstract class Token extends GameObject {
     return Vec.add(this.position, Vec.mulS(Vec(this.width, this.height), 0.5));
   }
 
-  render(): void {
+  render(dt: number, t: number): void {
     // NO-OP
   }
 }
