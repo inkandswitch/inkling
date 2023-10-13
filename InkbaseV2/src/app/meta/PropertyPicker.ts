@@ -34,6 +34,8 @@ export default class PropertyPicker extends Token {
     y: this.position.y + 21,
     class: 'property-picker-text',
     'font-size': '18px',
+    'font-family': 'monospace',
+    // 'font-weight': 'light'
   });
 
   readonly inputVariable = new MetaStruct([]);
