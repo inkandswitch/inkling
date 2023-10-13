@@ -1,4 +1,4 @@
-import Stroke from '../ink/Stroke';
+import FormulaStroke from '../ink/FormulaStroke';
 import { aFormulaEditor } from '../meta/FormulaEditor';
 import { aPrimaryToken } from '../meta/Token';
 import { isLabelToken } from '../meta/token-helpers';
@@ -28,7 +28,7 @@ export function pencilFormulaEditor(ctx: EventContext): Gesture | void {
       recursive: false,
     });
 
-    const stroke = ctx.page.addStroke(new Stroke());
+    const stroke = ctx.page.addStroke(new FormulaStroke());
 
     if (formulaEditor) {
       if (ctx.pseudo) {

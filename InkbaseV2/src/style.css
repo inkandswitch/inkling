@@ -25,14 +25,14 @@
 
 :root[meta-mode] {
   --bg-color: #e2e2e2;
-  --ink-color: #0001;
+  --ink-color: #0002;
 
   --meta-black: black;
   --meta-grey: color(display-p3 0.3 0.3 0.3);
   --meta-green: color(display-p3 0 1 0.8);
   --meta-yellow: color(display-p3 1 0.7 0);
 
-  --meta-toggle: var(--meta-grey);
+  --meta-toggle: var(--meta-black);
   --handle-fill: var(--meta-black);
   --handle-stroke: var(--meta-black);
 }
@@ -127,6 +127,10 @@ svg * {
   fill: none;
   stroke: var(--ink-color);
   stroke-width: 2;
+}
+
+.formula.stroke {
+  stroke: var(--meta-black);
 }
 
 .handle {
