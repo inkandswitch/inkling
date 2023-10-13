@@ -44,6 +44,22 @@ formulaEditor.formulaParser = new FormulaParser(page);
 const metaToggle = new MetaToggle();
 root.adopt(metaToggle);
 
+onEveryFrame((dt, t) => {
+  SVG.clearNow(t);
+  constraints.now.clear();
+
+  events.update();
+  constraints.solve(root);
+  root.render(dt, t);
+  Input.render();
+});
+
+/*
+ * MESSY TESTING CODE
+ * LIVES IN APP, FOR LACK OF HOME
+ * KEEP IT DOWN BELOW
+ */
+
 // gizmooo wiring testing for testing for testing
 let a = page.adopt(Handle.create({ x: 100, y: 100 }));
 let b = page.adopt(Handle.create({ x: 200, y: 200 }));
@@ -73,13 +89,3 @@ stroke.points = [
   { x: 410, y: 170 },
 ];
 component.updateOutline();
-
-onEveryFrame((dt, t) => {
-  SVG.clearNow(t);
-  constraints.now.clear();
-
-  events.update();
-  constraints.solve(root);
-  root.render(dt, t);
-  Input.render();
-});
