@@ -12,6 +12,7 @@ import MetaToggle from './gui/MetaToggle';
 import Component from './meta/Component';
 import LabelToken from './meta/LabelToken';
 import Stroke from './ink/Stroke';
+import Handle from './ink/Handle';
 
 // This is a pretzel, because the interface between NativeEvents and Input is a work in progress.
 const events = new Events((event: Event, state: InputState) => {
@@ -33,8 +34,6 @@ const page = new Page({ strokeAnalyzer: false });
 root.adopt(page);
 root.currentPage = page;
 
-const gizmo = new Gizmo(page, false);
-
 // FORMULA STUFF
 const formulaEditor = new FormulaEditor();
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -45,8 +44,16 @@ formulaEditor.formulaParser = new FormulaParser(page);
 const metaToggle = new MetaToggle();
 root.adopt(metaToggle);
 
-// gizmoo wiring testing for testing
-gizmo.createTest();
+// gizmooo wiring testing for testing for testing
+let a = page.adopt(Handle.create({ x: 100, y: 100 }));
+let b = page.adopt(Handle.create({ x: 200, y: 200 }));
+let giz = new Gizmo(a, b);
+a.adopt(giz);
+
+a = page.adopt(Handle.create({ x: 400, y: 400 }));
+b = page.adopt(Handle.create({ x: 500, y: 500 }));
+giz = new Gizmo(a, b);
+a.adopt(giz);
 
 const component = new Component();
 page.adopt(component);
@@ -71,15 +78,8 @@ onEveryFrame((dt, t) => {
   SVG.clearNow(t);
   constraints.now.clear();
 
-  // Potentially deprecated — consider whether & how these should be migrated to Input.ts
-  gizmo.update(events);
-
-  // Tell NativeEvent to handle all events sent from Swift, evaluating Input for each
   events.update();
-
   constraints.solve(root);
-
   root.render(dt, t);
-
   Input.render();
 });

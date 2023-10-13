@@ -36,7 +36,7 @@ export default class MetaToggle extends GameObject {
 
   toggle() {
     this.active = !this.active;
-    document.body.classList.toggle('meta-mode', this.active);
+    document.documentElement.toggleAttribute('meta-mode', this.active);
   }
 
   distanceToPoint(point: Position) {

@@ -30,7 +30,7 @@ export default class StrokeGroup extends GameObject {
     // Generate Handles
     const points = this.strokes.flatMap(stroke => stroke.points);
     [this.a, this.b] = farthestPair(points).map(pos =>
-      this.adopt(Handle.create('informal', pos, this))
+      this.adopt(Handle.create(pos, this))
     );
 
     // Generate transform data

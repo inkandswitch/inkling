@@ -1,11 +1,8 @@
 import { TAU } from '../../lib/math';
-import Events from '../NativeEvents';
-import Page from '../Page';
 import SVG from '../Svg';
 import Handle from '../ink/Handle';
 import Vec from '../../lib/vec';
 import { Position } from '../../lib/types';
-import Stroke from '../ink/Stroke';
 import * as constraints from '../constraints';
 import { Variable } from '../constraints';
 import Line from '../../lib/line';
@@ -13,24 +10,12 @@ import { GameObject } from '../GameObject';
 import { WirePort } from './Wire';
 import { MetaLabel, MetaStruct } from './MetaSemantics';
 
-function stroke(color: string, width = 6) {
-  return {
-    stroke: color,
-    fill: 'none',
-    'stroke-linecap': 'round',
-    'stroke-width': width,
-  };
-}
-
-const green = 'color(display-p3 0 1 0.8)';
-const grey = 'color(display-p3 0.8 0.8 0.8)';
-
-class GizmoInstance extends GameObject {
-  line: Line;
+export default class Gizmo extends GameObject {
   center: Position;
-  radius: number;
 
-  visible = true;
+  private g = SVG.add('g', SVG.metaElm, { class: 'gizmo' });
+  private path = SVG.add('path', this.g);
+  private polyline = SVG.add('polyline', this.g);
 
   readonly distance: Variable;
   readonly angleInRadians: Variable;
@@ -58,9 +43,7 @@ class GizmoInstance extends GameObject {
     super();
     this._a = new WeakRef(a);
     this._b = new WeakRef(b);
-    this.line = this.updateLine()!;
-    this.center = this.updateCenter()!;
-    this.radius = this.updateRadius()!;
+    this.center = this.updateCenter();
     ({ distance: this.distance, angle: this.angleInRadians } =
       constraints.polarVector(a, b).variables);
     this.angleInDegrees = constraints.linearRelationship(
@@ -94,14 +77,6 @@ class GizmoInstance extends GameObject {
     );
   }
 
-  updateLine() {
-    const handles = this.handles;
-    if (!handles) {
-      return this.line;
-    }
-    return (this.line = Line(handles.a.position, handles.b.position));
-  }
-
   updateCenter() {
     const handles = this.handles;
     if (!handles) {
@@ -111,61 +86,8 @@ class GizmoInstance extends GameObject {
     return (this.center = Vec.avg(handles.a.position, handles.b.position));
   }
 
-  updateRadius() {
-    return (this.radius = 20);
-  }
-
   midPoint() {
     return this.center;
-  }
-
-  // TODO: remove this method?
-  update(_events: Events) {
-    const handles = this.handles;
-    if (!handles) {
-      return false;
-    }
-
-    // const fingerDown = events.find('finger', 'began');
-
-    // if (fingerDown) {
-    //   const dist = Line.distToPoint(this.line, fingerDown.position);
-    //   if (dist < 20) {
-    //     return true;
-    //   }
-    // }
-
-    // const fingerUp = events.find('finger', 'ended');
-
-    // if (fingerUp) {
-    //   if (Vec.dist(handles.a.position, fingerUp.position) < 20) {
-    //     return true;
-    //   }
-    //   if (Vec.dist(handles.b.position, fingerUp.position) < 20) {
-    //     return true;
-    //   }
-
-    //   const d = Vec.dist(this.center, fingerUp.position);
-    //   if (Math.abs(d - this.radius) < 20) {
-    //     this.toggleAngle();
-    //     return true;
-    //   }
-
-    //   if (Line.distToPoint(this.line, fingerUp.position) < 20) {
-    //     this.toggleDistance();
-    //     return true;
-    //   }
-    // }
-
-    return false;
-  }
-
-  tap(pos: Position) {
-    if (Vec.dist(this.center, pos) < this.radius * 2) {
-      this.toggleAngle();
-    } else {
-      this.toggleDistance();
-    }
   }
 
   toggleDistance() {
@@ -179,15 +101,9 @@ class GizmoInstance extends GameObject {
   }
 
   render() {
-    this.updateLine();
     this.updateCenter();
-    this.updateRadius();
 
     this.wirePort.position = this.center;
-
-    if (!this.visible) {
-      return;
-    }
 
     const handles = this.handles;
     if (!handles) {
@@ -201,105 +117,22 @@ class GizmoInstance extends GameObject {
       SVG.arcPath(this.center, 20, angle + TAU / 4, Math.PI / 3),
     ].join();
 
-    // TODO(Ivan): These shouldn't use SVG.now anymore
-    SVG.now('path', {
-      d,
-      ...stroke(this.angleInRadians.isLocked ? green : grey),
-    });
-
-    SVG.now('polyline', {
+    SVG.update(this.path, { d });
+    SVG.update(this.polyline, {
       points: SVG.points(handles.a.position, handles.b.position),
-      ...stroke(this.distance.isLocked ? green : grey, 3),
     });
   }
 
   distanceToPoint(point: Position) {
-    const l = Line.distToPoint(this.line, point);
+    if (!this.handles) {
+      return Infinity;
+    }
+    const line = Line(this.handles.a.position, this.handles.b.position);
+    const l = Line.distToPoint(line, point);
     const a = Vec.dist(this.center, point);
     return Math.min(l, a);
   }
 }
 
-export default class Gizmo {
-  constructor(
-    private readonly page: Page,
-    public enabled = true
-  ) {
-    if (!enabled) {
-      return;
-    }
-
-    this.createStructure(
-      { x: 100, y: 500 },
-      { x: 400, y: 400 },
-      { x: 500, y: 200 },
-      { x: 600, y: 100 },
-      { x: 700, y: 300 },
-      { x: 600, y: 500 },
-      { x: 900, y: 600 }
-    );
-    for (const { a, b } of this.page.strokeGroups) {
-      this.findOrCreate(a, b);
-    }
-  }
-
-  private createStructure(...positions: Position[]) {
-    for (let i = 1; i < positions.length; i++) {
-      const a = positions[i - 1];
-      const b = positions[i];
-      const { a: _a1, b: _b1 } = this.addStrokeGroup(a, b);
-    }
-  }
-
-  private addStrokeGroup(p1: Position, p2: Position) {
-    const stroke = this.page.addStroke(new Stroke());
-    stroke.updatePath([{ ...p1 }, { ...p2 }]);
-    return this.page.addStrokeGroup(new Set([stroke]));
-  }
-
-  update(events: Events) {
-    if (!this.enabled) {
-      return;
-    }
-
-    for (const { a, b } of this.page.strokeGroups) {
-      const gizmo = this.findOrCreate(a, b);
-      if (gizmo.visible || a.isSelected || b.isSelected) {
-        gizmo.visible = true; // Show this gizmo
-        gizmo.update(events);
-      } else {
-        gizmo.visible = false;
-      }
-    }
-  }
-
-  private findOrCreate(a: Handle, b: Handle) {
-    // Sort a and b so that a has the lower id
-    if (a.id > b.id) {
-      [a, b] = [b, a];
-    }
-
-    for (const gizmo of a.children) {
-      if (gizmo instanceof GizmoInstance && gizmo.a === a && gizmo.b === b) {
-        return gizmo;
-      }
-    }
-
-    const giz = new GizmoInstance(a, b);
-    a.adopt(giz);
-    return giz;
-  }
-
-  public createTest() {
-    const a = this.page.adopt(Handle.create('informal', { x: 100, y: 100 }));
-    const b = this.page.adopt(Handle.create('informal', { x: 200, y: 200 }));
-    this.findOrCreate(a, b);
-
-    const c = this.page.adopt(Handle.create('informal', { x: 400, y: 400 }));
-    const d = this.page.adopt(Handle.create('informal', { x: 500, y: 500 }));
-    this.findOrCreate(c, d);
-  }
-}
-
 export const aGizmo = (gameObj: GameObject) =>
-  gameObj instanceof GizmoInstance ? gameObj : null;
+  gameObj instanceof Gizmo ? gameObj : null;

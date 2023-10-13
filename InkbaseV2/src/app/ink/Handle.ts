@@ -11,18 +11,11 @@ export interface HandleListener {
   onHandleMoved(moved: Handle): void;
 }
 
-export type HandleType = 'formal' | 'informal';
-
 interface CanonicalInstanceState {
   isCanonical: true;
   id: number;
-  type: HandleType;
   absorbedHandles: WeakRef<Handle>[];
-  elements: {
-    normal: SVGElement;
-    selected: SVGElement;
-    label: SVGTextElement;
-  };
+  element: SVGElement;
   isSelected: boolean;
   wasRemoved: boolean;
 }
@@ -39,11 +32,10 @@ export default class Handle extends GameObject {
   // --- static stuff ---
 
   static create(
-    type: HandleType,
     position: Position,
     listener: HandleListener | null = null
   ): Handle {
-    const handle = new Handle(this.makeCanonicalInstanceState(type));
+    const handle = new Handle(this.makeCanonicalInstanceState());
     handle.position = position;
     if (listener) {
       handle.addListener(listener);
@@ -53,35 +45,13 @@ export default class Handle extends GameObject {
   }
 
   private static makeCanonicalInstanceState(
-    type: HandleType,
     id = generateId()
   ): CanonicalInstanceState {
     return {
       isCanonical: true,
       id,
-      type,
       absorbedHandles: [],
-      elements: {
-        normal: SVG.add(
-          'circle',
-          SVG.inkElm,
-          type === 'formal'
-            ? { cx: 0, cy: 0, r: 3, fill: 'black' }
-            : { r: 5, fill: 'rgba(100, 100, 100, .2)' }
-        ),
-        selected: SVG.add('circle', SVG.inkElm, {
-          cx: 0,
-          cy: 0,
-          r: 7,
-          fill: 'none',
-        }),
-        label: SVG.add('text', SVG.inkElm, {
-          x: 0,
-          y: 0,
-          visibility: SHOW_DEBUG_INFO ? 'visible' : 'hidden',
-          content: '?',
-        }),
-      },
+      element: SVG.add('circle', SVG.inkElm, { class: 'handle', r: 3 }),
       isSelected: false,
       wasRemoved: false,
     };
@@ -114,12 +84,6 @@ export default class Handle extends GameObject {
     return this.instanceState.isCanonical
       ? this.instanceState.id
       : this.instanceState.origId;
-  }
-
-  get type(): HandleType {
-    return !this.instanceState.isCanonical
-      ? this.canonicalInstance.type
-      : this.instanceState.type;
   }
 
   get canonicalInstance(): Handle {
@@ -211,8 +175,6 @@ export default class Handle extends GameObject {
       return;
     } else if (this === that) {
       return;
-    } else if (this.instanceState.type !== that.instanceState.type) {
-      throw new Error('handle type mismatch');
     }
 
     // remove the absorbed canonical handle from the DOM and canonical instance set
@@ -267,7 +229,7 @@ export default class Handle extends GameObject {
 
   get absorbedHandles(): Handle[] {
     if (!this.instanceState.isCanonical) {
-      throw new Error('accessed absorbedHandles on absorbed handle');
+      throw new Error('Accessed absorbedHandles on absorbed handle');
     }
 
     return this.instanceState.absorbedHandles
@@ -277,12 +239,12 @@ export default class Handle extends GameObject {
 
   breakOff(handle: Handle, destination: Handle | null = null) {
     if (!this.instanceState.isCanonical) {
-      throw new Error('called breakOff() on an absorbed handle');
+      throw new Error('Called breakOff() on an absorbed handle');
     }
 
     const absorbedHandles = this.absorbedHandles;
     if (absorbedHandles.length === 0) {
-      throw new Error('called breakOff() on a singleton handle');
+      throw new Error('Called breakOff() on a singleton handle');
     }
 
     if (this === handle) {
@@ -300,9 +262,7 @@ export default class Handle extends GameObject {
       handle.promoteToCanonical();
       destination?.absorb(handle);
     } else {
-      throw new Error(
-        'argument to Handle.breakOff() is not an absorbed handle'
-      );
+      throw new Error("Argument to Handle.breakOff() isn't an absorbed handle");
     }
   }
 
@@ -316,33 +276,14 @@ export default class Handle extends GameObject {
       return;
     }
 
-    SVG.update(state.elements.normal, {
-      transform: `translate(${this.x} ${this.y})`,
-    });
-
-    SVG.update(state.elements.selected, {
-      transform: `translate(${this.x} ${this.y})`,
-      fill: state.isSelected ? 'rgba(180, 134, 255, 0.42)' : 'none',
-    });
-
-    SVG.update(state.elements.label, {
-      transform: `translate(${
-        this.x - state.elements.label.getBBox().width / 2
-      } ${this.y - 10})`,
-      content: `${this.id}@(${Math.round(this.position.x)}, ${Math.round(
-        this.position.y
-      )})`,
-    });
+    SVG.update(state.element, { cx: this.x, cy: this.y });
   }
 
   private removeFromDOM() {
     if (!this.instanceState.isCanonical) {
-      throw new Error('called removeFromDOM() on absorbed handle');
+      throw new Error('Called removeFromDOM() on absorbed handle');
     }
-
-    this.instanceState.elements.normal.remove();
-    this.instanceState.elements.selected.remove();
-    this.instanceState.elements.label.remove();
+    this.instanceState.element.remove();
   }
 
   private notifyListeners(fn: (listener: HandleListener) => void) {
@@ -355,7 +296,7 @@ export default class Handle extends GameObject {
     fn: (handle: Handle, listener: HandleListener) => void
   ) {
     if (!this.instanceState.isCanonical) {
-      throw new Error('called  notifyAbsorbedListeners() on absorbed handle');
+      throw new Error('Called notifyAbsorbedListeners() on absorbed handle');
     }
 
     for (const handle of this.absorbedHandles) {
@@ -369,7 +310,7 @@ export default class Handle extends GameObject {
 
   private promoteToCanonical(): this {
     if (this.instanceState.isCanonical) {
-      throw new Error('called promoteToCanonical() on canonical handle');
+      throw new Error('Called promoteToCanonical() on canonical handle');
     }
 
     // remove me from my previous canonical handle
@@ -385,7 +326,6 @@ export default class Handle extends GameObject {
 
     // change my instance state to make me a canonical handle
     this.instanceState = Handle.makeCanonicalInstanceState(
-      this.type,
       this.instanceState.origId
     );
 
