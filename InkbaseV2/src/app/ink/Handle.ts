@@ -5,8 +5,6 @@ import { Variable } from '../constraints';
 import { GameObject, root } from '../GameObject';
 import Vec from '../../lib/vec';
 
-const SHOW_DEBUG_INFO = false;
-
 export interface HandleListener {
   onHandleMoved(moved: Handle): void;
 }
