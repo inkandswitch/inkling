@@ -80,7 +80,6 @@ export default class Handle extends GameObject {
     this.page.forEach({
       what: aCanonicalHandle,
       near: this.position,
-      tooFar: 20,
       do: that => {
         if (that !== this) {
           this.absorb(that);
