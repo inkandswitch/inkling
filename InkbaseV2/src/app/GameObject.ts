@@ -174,3 +174,6 @@ export const root = new (class extends GameObject {
     }
   }
 })();
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(window as any).root = root;
