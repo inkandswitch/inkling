@@ -167,7 +167,7 @@ export default class FormulaParser {
     const argNames = vars.map(v => `v${v.id}`);
     const compiledExpr = this.semantics(m).compile();
     const func = this.createFormulaFn(argNames, compiledExpr);
-    return constraints.formula(vars, func).variables.result;
+    return constraints.formula(vars, func).result;
   }
 
   createFormulaFn(

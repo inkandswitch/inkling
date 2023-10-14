@@ -47,14 +47,14 @@ export default class Gizmo extends GameObject {
     this._b = new WeakRef(b);
     this.center = this.updateCenter();
     ({ distance: this.distance, angle: this.angleInRadians } =
-      constraints.polarVector(a, b).variables);
+      constraints.polarVector(a, b));
     this.angleInDegrees = constraints.linearRelationship(
+      constraints.variable((this.angleInRadians.value * 180) / Math.PI),
       180 / Math.PI,
       this.angleInRadians,
       0
-    ).variables.y;
+    ).y;
 
-    // this helps w/ debugging
     this.distance.represents = {
       object: this,
       property: 'distance',
@@ -144,6 +144,11 @@ export default class Gizmo extends GameObject {
     const l = Line.distToPoint(line, point);
     const a = Vec.dist(this.center, point);
     return Math.min(l, a);
+  }
+
+  remove() {
+    // TODO: remove DOM stuff
+    super.remove();
   }
 }
 

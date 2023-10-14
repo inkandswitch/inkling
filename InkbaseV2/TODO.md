@@ -4,6 +4,10 @@ TODO
 Bugs
 ----
 
+* There are things that are still not working b/c of my big constraint system rewrite:
+  * handles don't break off properly anymore
+  * "free variables" not working yet
+
 * 2 gizmos + formula: [2 (locked) * g1.angle = g2.angle]
   -- scrubbing g2.angle makes g1 move, but not the other way around
   -- same happens if you do it w/ distance

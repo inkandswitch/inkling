@@ -11,11 +11,10 @@ export function touchHandle(ctx: EventContext): Gesture | void {
 
   if (handle) {
     return new Gesture('Touch Handle', {
-      began: ctx => constraints.pin(handle),
-      moved: ctx => {
+      began: _ctx => constraints.pin(handle),
+      moved: ctx =>
         // TODO: replace this with the correct gestures (eg: 2 finger)
-        ctx.root.page.moveHandle(handle, ctx.event.position);
-      },
+        ctx.root.page.moveHandle(handle, ctx.event.position),
       ended: _ctx => {
         handle.absorbNearbyHandles();
         constraints.pin(handle).remove();

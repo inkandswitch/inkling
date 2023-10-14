@@ -35,12 +35,11 @@ export default class Page extends GameObject {
   }
 
   moveHandle(handle: Handle, newPos: Position): Handle {
-    if (handle.canonicalInstance !== handle) {
+    if (!handle.isCanonical) {
       return this.moveHandle(handle.canonicalInstance, newPos);
     }
 
     const handleThatBreaksOff = this.getHandleThatBreaksOff(handle, newPos);
-    // console.log('htbo', handleThatBreaksOff, Vec.dist(handle.position, newPos));
     if (!handleThatBreaksOff) {
       handle.position = newPos;
       return handle;
@@ -56,9 +55,8 @@ export default class Page extends GameObject {
     newPos: Position
   ): Handle | null {
     if (
-      // TODO: decide based on acceleration?
       Vec.dist(handle.position, newPos) < 30 ||
-      handle.absorbedHandles.length === 0
+      handle.absorbedHandles.size === 0
     ) {
       return null;
     }
@@ -84,18 +82,17 @@ export default class Page extends GameObject {
   }
 
   /**
-   * returns a set of handles that are immediately connected to the given handle
-   * (but not to its canonical handle, if it has been absorbed)
+   * Returns a set of handles that are immediately connected to the given handle.
    */
   private getHandlesImmediatelyConnectedTo(handle: Handle) {
     const connectedHandles = new Set<Handle>();
 
     for (const thing of [...this.strokeGroups, ...this.gizmos]) {
-      if (handle === thing.a) {
-        connectedHandles.add(thing.b!);
+      if (handle === thing.a && thing.b) {
+        connectedHandles.add(thing.b);
       }
-      if (handle === thing.b) {
-        connectedHandles.add(thing.a!);
+      if (handle === thing.b && thing.a) {
+        connectedHandles.add(thing.a);
       }
     }
 

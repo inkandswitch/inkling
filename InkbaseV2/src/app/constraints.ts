@@ -1,10 +1,12 @@
-import { minimize } from '../lib/g9';
-import { generateId, removeOne } from '../lib/helpers';
-import SVG from './Svg';
 import { GameObject } from './GameObject';
+import SVG from './Svg';
+import Handle, { aHandle } from './ink/Handle';
+import { generateId } from '../lib/helpers';
 import { Position } from '../lib/types';
 import Vec from '../lib/vec';
-import Handle, { aCanonicalHandle } from './ink/Handle';
+import { minimize } from '../lib/g9';
+
+// #region variables
 
 type VariableInfo = CanonicalVariableInfo | AbsorbedVariableInfo;
 
@@ -23,33 +25,36 @@ interface AbsorbedVariableInfo {
 export class Variable {
   static readonly all = new Set<Variable>();
 
+  static create(value = 0, represents?: { object: object; property: string }) {
+    return new Variable(value, represents);
+  }
+
   readonly id = generateId();
-  represents?: { object: object; property: string };
   info: VariableInfo = {
     isCanonical: true,
     absorbedVariables: new Set(),
   };
-  wasRemoved = false;
+  represents?: { object: object; property: string };
 
-  constructor(
+  private constructor(
     private _value: number = 0,
     represents?: { object: object; property: string }
   ) {
     this.represents = represents;
     Variable.all.add(this);
-    // console.trace('new variable created', this);
   }
 
   /** Removes this variable and any constraint that reference it. */
   remove() {
-    if (this.wasRemoved) {
+    if (!Variable.all.has(this)) {
+      // needed to break cycles
       return;
     }
 
     Variable.all.delete(this);
-    this.wasRemoved = true;
     for (const constraint of Constraint.all) {
       if (constraint.variables.includes(this)) {
+        // TODO: consider replacing variable w/ a "tombstone"
         constraint.remove();
       }
     }
@@ -70,16 +75,16 @@ export class Variable {
   set value(newValue: number) {
     if (this.info.isCanonical) {
       this._value = newValue;
-      for (const child of this.info.absorbedVariables) {
-        const { m, b } = (child.info as AbsorbedVariableInfo).offset;
-        child._value = (newValue - b) / m;
+      for (const that of this.info.absorbedVariables) {
+        const { m, b } = (that.info as AbsorbedVariableInfo).offset;
+        that._value = (newValue - b) / m;
       }
     } else {
       this.info.canonicalInstance.value = this.toCanonicalValue(newValue);
     }
   }
 
-  private toCanonicalValue(value: number) {
+  toCanonicalValue(value: number) {
     if (this.info.isCanonical) {
       return value;
     }
@@ -88,17 +93,21 @@ export class Variable {
     return m * value + b;
   }
 
-  absorb(that: Variable, offset = { m: 1, b: 0 }) {
+  // y.makeEqualTo(x, { m, b }) ==> y = m * x + b
+  makeEqualTo(that: Variable, offset = { m: 1, b: 0 }) {
     if (this === that) {
       return;
     } else if (!this.info.isCanonical || !that.info.isCanonical) {
-      this.canonicalInstance.absorb(that.canonicalInstance, offset);
+      // TODO: fix this!
+      // It is wrong because the relationship between `this` and its canonical variable
+      // and `that` and its canonical variable is not necessarily the same as the
+      // relationship between `this` and `that`!
+      this.canonicalInstance.makeEqualTo(that.canonicalInstance, offset);
       return;
     }
 
     const thatLockConstraint = that.lockConstraint;
 
-    // console.log(this.id, 'absorbing', that.id);
     for (const otherVariable of that.info.absorbedVariables) {
       otherVariable.value = this.value;
       const otherVariableInfo = otherVariable.info as AbsorbedVariableInfo;
@@ -123,8 +132,6 @@ export class Variable {
       thatLockConstraint.remove();
       this.lock();
     }
-
-    forgetClustersForSolver();
   }
 
   promoteToCanonical() {
@@ -167,12 +174,10 @@ export class Variable {
   }
 
   lock(value?: number) {
-    const k = constant(this.canonicalInstance).constraints.find(
-      isConstantConstraint
-    )!;
-    if (value !== undefined) {
-      k.value = this.toCanonicalValue(value!);
-    }
+    constant(
+      this.canonicalInstance,
+      value !== undefined ? this.toCanonicalValue(value) : undefined
+    );
   }
 
   unlock() {
@@ -192,397 +197,14 @@ export class Variable {
   }
 }
 
-// #region constraint and thing clusters for solver
-
-// A group of constraints (and things that they operate on) that should be solved together.
-interface ClusterForSolver {
-  constraints: Constraint[];
-  variables: Variable[];
-  // Set of variables that are "free". The value of each of these variables can be set by
-  // their owning constraint's `getError` method in order to make the error due to that
-  // constraint equal to zero.
-  freeVariables: Set<Variable>;
-}
-
-let _clustersForSolver: Set<ClusterForSolver> | null = null;
-
-function getClustersForSolver(root: GameObject): Set<ClusterForSolver> {
-  if (_clustersForSolver) {
-    return _clustersForSolver;
-  }
-
-  // TODO: document what's going on here
-  for (const variable of Variable.all) {
-    variable.info = { isCanonical: true, absorbedVariables: new Set() };
-  }
-  root.forEach({
-    what: aCanonicalHandle,
-    do: handle => handle.setupVariableRelationships(),
-  });
-
-  interface Cluster {
-    constraints: Constraint[];
-    manipulationSet: ManipulationSet;
-  }
-
-  const clusters = new Set<Cluster>();
-  for (const constraint of Constraint.all) {
-    const constraints = [constraint];
-    const manipulationSet = constraint.getManipulationSet();
-    for (const cluster of clusters) {
-      if (cluster.manipulationSet.overlapsWith(manipulationSet)) {
-        constraints.push(...cluster.constraints);
-        manipulationSet.absorb(cluster.manipulationSet);
-        clusters.delete(cluster);
-      }
-    }
-    clusters.add({ constraints, manipulationSet });
-  }
-
-  _clustersForSolver = new Set(
-    Array.from(clusters).map(({ constraints: origConstraints }) => {
-      const { constraints, variables } =
-        getDedupedConstraintsAndVariables(origConstraints);
-
-      const ownedVariables = new Set<Variable>();
-      for (const constraint of constraints) {
-        for (const variable of Object.values(
-          constraint.ownedVariables
-        ) as Variable[]) {
-          ownedVariables.add(variable.canonicalInstance);
-        }
-      }
-
-      const variableCounts = new Map<Variable, number>();
-      for (const constraint of constraints) {
-        for (const variable of constraint.variables) {
-          if (!ownedVariables.has(variable.canonicalInstance)) {
-            continue;
-          }
-
-          const n = variableCounts.get(variable.canonicalInstance) ?? 0;
-          variableCounts.set(variable.canonicalInstance, n + 1);
-        }
-      }
-
-      const freeVariables = new Set<Variable>();
-      for (const [variable, count] of variableCounts.entries()) {
-        if (count === 1) {
-          freeVariables.add(variable.canonicalInstance);
-        }
-      }
-
-      return { constraints, variables, freeVariables };
-    })
-  );
-
-  // for debugging
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (window as any).clusters = _clustersForSolver;
-
-  // console.log('clusters', _clustersForSolver);
-  SVG.showStatus(`${clusters.size} clusters`);
-
-  return _clustersForSolver;
-}
-
-function getDedupedConstraintsAndVariables(constraints: Constraint[]) {
-  // console.log('orig constraints', constraints);
-  let result: Omit<ClusterForSolver, 'freeVariables'> | null = null;
-  while (true) {
-    const oldNumConstraints = result
-      ? result.constraints.length
-      : constraints.length;
-    result = dedupVariables(dedupConstraints(constraints));
-    // console.log('new len', result.constraints.length, 'old', oldNumConstraints);
-    if (result.constraints.length === oldNumConstraints) {
-      return result;
-    }
-  }
-}
-
-function dedupConstraints(constraints: Constraint[]): Constraint[] {
-  const constraintByKey = new Map<string, Constraint>();
-  const constraintsToProcess = new Set(constraints);
-  while (true) {
-    const constraint = removeOne(constraintsToProcess);
-    if (!constraint) {
-      break;
-    }
-
-    const key = constraint.getKeyWithDedupedHandlesAndVars();
-    const matchingConstraint = constraintByKey.get(key);
-    if (matchingConstraint) {
-      captureNewConstraints(constraintsToProcess, () =>
-        matchingConstraint.onClash(constraint)
-      );
-    } else {
-      constraintByKey.set(key, constraint);
-    }
-  }
-  return Array.from(constraintByKey.values());
-}
-
-function dedupVariables(constraints: Constraint[]) {
-  // Dedup variables based on Equals
-  let idx = 0;
-  while (idx < constraints.length) {
-    const constraint = constraints[idx];
-    if (!(constraint instanceof Equals)) {
-      idx++;
-      continue;
-    }
-
-    const { a, b } = constraint;
-    a.absorb(b);
-    constraints.splice(idx, 1);
-  }
-
-  idx = 0;
-  while (idx < constraints.length) {
-    const constraint = constraints[idx];
-    if (!(constraint instanceof LinearRelationship)) {
-      idx++;
-      continue;
-    }
-
-    const { y, m, x, b } = constraint;
-    y.absorb(x, { m, b });
-    constraints.splice(idx, 1);
-  }
-
-  // Here's another kind of deduping that we can do for variables: when
-  // we have Sum(a, b, c) and Constant(c), variable a can absorb b w/ an
-  // "offset" of { m: 1, b: c }. (There's a lot more that we could do
-  // here, this is just an initial experiment.)
-  // TODO: handle all possible cases.
-  idx = 0;
-  while (idx < constraints.length) {
-    const constraint = constraints[idx];
-    if (!(constraint instanceof Sum)) {
-      idx++;
-      continue;
-    }
-
-    const { a, b, c: k } = constraint;
-    const constant = constraints.find(
-      c =>
-        c instanceof Constant &&
-        c.variable.canonicalInstance === k.canonicalInstance
-    ) as Constant;
-    a.absorb(b, { m: 1, b: constant.value });
-    constraints.splice(idx, 1);
-  }
-
-  // Gather all deduped variables.
-  const variables = new Set<Variable>();
-  for (const constraint of constraints) {
-    for (const variable of constraint.variables) {
-      variables.add(variable.canonicalInstance);
-    }
-  }
-
-  return { variables: Array.from(variables), constraints };
-}
-
-function forgetClustersForSolver() {
-  _clustersForSolver = null;
-}
-
-// #endregion constraint and thing clusters for solver
-
-/**
- * Calls `fn`, and if that results in the creation of new constraints,
- * they will be added to `dest`, in addition to `Constraint.all`.
- */
-function captureNewConstraints<T>(dest: Set<Constraint>, fn: () => T): T {
-  newConstraintAccumulator = dest;
-  try {
-    return fn();
-  } finally {
-    newConstraintAccumulator = undefined;
-  }
-}
-
-// #region solving
-
-export function solve(root: GameObject) {
-  const clusters = getClustersForSolver(root);
-  for (const cluster of clusters) {
-    solveCluster(cluster);
-  }
-}
-
-function solveCluster({
-  constraints,
-  variables,
-  freeVariables,
-}: ClusterForSolver) {
-  if (constraints.length === 0) {
-    // nothing to solve!
-    return;
-  }
-
-  const knowns = computeKnowns(constraints);
-
-  // The state that goes into `inputs` is the stuff that can be modified by the solver.
-  // It excludes any value that we've already computed from known values like pin and
-  // constant constraints.
-  const inputs: number[] = [];
-  const varIdx = new Map<Variable, number>();
-  for (const variable of variables) {
-    if (!knowns.has(variable) && !freeVariables.has(variable)) {
-      varIdx.set(variable, inputs.length);
-      inputs.push(variable.value);
-    }
-  }
-
-  // This is where we actually run the solver.
-
-  function computeTotalError(currState: number[]) {
-    let error = 0;
-    for (const constraint of constraints) {
-      if (constraint instanceof Constant || constraint instanceof Pin) {
-        // Ignore -- these guys already did their job in propagateKnowns().
-        continue;
-      }
-      const values = constraint.variables.map(variable => {
-        const { m, b } = variable.offset;
-        variable = variable.canonicalInstance;
-        const vi = varIdx.get(variable);
-        return ((vi === undefined ? variable.value : currState[vi]) - b) / m;
-      });
-      error += Math.pow(constraint.getError(values, knowns, freeVariables), 2);
-    }
-    return error;
-  }
-
-  let result: ReturnType<typeof minimize>;
-  try {
-    result = minimize(computeTotalError, inputs, 1_000, 1e-3);
-  } catch (e) {
-    console.log(
-      'minimizeError threw',
-      e,
-      'while working on cluster with',
-      constraints,
-      variables,
-      'with inputs',
-      inputs,
-      'knowns',
-      knowns,
-      'and free variables',
-      freeVariables
-    );
-    SVG.showStatus('' + e);
-    throw e;
-  }
-
-  // SVG.showStatus(`${result.iterations} iterations`);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (window as any).solverResult = result;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ((window as any).solverResultMessages ||= new Set<string>()).add(
-    result.message
-  );
-  if (!result || result.message?.includes('maxit')) {
-    console.error('solveCluster is giving up!', result);
-    return;
-  }
-
-  // Now we write the solution from the solver back into our variables and handles.
-  const outputs = result.solution;
-  for (const variable of variables) {
-    if (!knowns.has(variable) && !freeVariables.has(variable)) {
-      variable.value = outputs.shift()!;
-    }
-  }
-}
-
-function computeKnowns(constraints: Constraint[]) {
-  const knownVariables = new Set<Variable>();
-  while (true) {
-    let didSomething = false;
-    for (const constraint of constraints) {
-      if (constraint.propagateKnowns(knownVariables)) {
-        didSomething = true;
-      }
-    }
-    if (!didSomething) {
-      break;
-    }
-  }
-  return knownVariables;
-}
-
-// #endregion solving
-
-// #region adding constraints
-
-class ConstraintKeyGenerator {
-  public readonly key: string;
-
-  constructor(
-    private readonly type: string,
-    private readonly variableGroups: Variable[][]
-  ) {
-    this.key = this.generateKey();
-  }
-
-  getKeyWithDedupedHandlesAndVars() {
-    return this.generateKey(true);
-  }
-
-  private generateKey(dedupHandlesAndVars = false) {
-    const variableIdGroups = this.variableGroups
-      .map(variableGroup =>
-        variableGroup
-          .map(variable =>
-            dedupHandlesAndVars ? variable.canonicalInstance.id : variable.id
-          )
-          .sort()
-          .join(',')
-      )
-      .map(variableIdGroup => `[${variableIdGroup}]`);
-    return `${this.type}([${variableIdGroups}])`;
-  }
-}
-
-export type OwnedVariables<OwnedVariableNames extends string> = {
-  [Key in OwnedVariableNames]: Variable;
-};
-
-export interface AddConstraintResult<
-  OwnedVariableNames extends string = never,
-> {
-  constraints: Constraint[];
-  variables: OwnedVariables<OwnedVariableNames>;
-  remove(): void;
-}
-
-function addConstraint<
-  OwnedVariableNames extends string,
-  C extends Constraint<OwnedVariableNames>,
->(
-  keyGenerator: ConstraintKeyGenerator,
-  createNew: (keyGenerator: ConstraintKeyGenerator) => C,
-  onClash: (existingConstraint: C) => AddConstraintResult<OwnedVariableNames>
-): AddConstraintResult<OwnedVariableNames> {
-  const constraint = Constraint.find(
-    constraint => constraint.key === keyGenerator.key
-  ) as C | undefined;
-  return constraint
-    ? onClash(constraint)
-    : createNew(keyGenerator).toAddConstraintResult();
-}
-
-// #endregion adding constraints
+export const variable = Variable.create;
 
 class ManipulationSet {
   readonly variables: Set<Variable>;
 
-  constructor(vars: Variable[]) {
-    this.variables = new Set(vars.map(variable => variable.canonicalInstance));
+  constructor(variables: Variable[]) {
+    this.variables = new Set(variables);
+    this.ensureCanonicalVarsOnly();
   }
 
   overlapsWith(that: ManipulationSet) {
@@ -598,436 +220,96 @@ class ManipulationSet {
     for (const v of that.variables) {
       this.variables.add(v);
     }
+    this.ensureCanonicalVarsOnly();
+  }
+
+  ensureCanonicalVarsOnly() {
+    for (const v of this.variables) {
+      if (v !== v.canonicalInstance) {
+        this.variables.delete(v);
+        this.variables.add(v.canonicalInstance);
+      }
+    }
   }
 }
 
-let newConstraintAccumulator: Set<Constraint> | undefined;
+// #endregion variables
 
-abstract class Constraint<OwnedVariableNames extends string = never> {
-  static readonly all = new Set<Constraint>();
+// #region low-level constraints
 
-  static find(
-    pred: (constraint: Constraint) => boolean
-  ): Constraint | undefined {
-    for (const constraint of Constraint.all) {
-      if (pred(constraint)) {
-        return constraint;
-      }
-    }
-    return undefined;
-  }
+abstract class LowLevelConstraint {
+  readonly variables = [] as Variable[];
+  readonly ownVariables = new Set<Variable>();
 
-  wasRemoved = false;
-
-  constructor(
-    public readonly variables: Variable[],
-    private readonly keyGenerator: ConstraintKeyGenerator
-  ) {
-    Constraint.all.add(this);
-    newConstraintAccumulator?.add(this);
-    forgetClustersForSolver();
-  }
-
-  abstract get ownedVariables(): {
-    [Key in OwnedVariableNames]: Variable;
-  };
-
-  /** Removes this constraint, any variables that it owns, and any constraint that references one of those variables. */
-  remove() {
-    if (this.wasRemoved) {
-      return;
-    }
-
-    // Remove me.
-    if (Constraint.all.delete(this)) {
-      forgetClustersForSolver();
-    }
-    this.wasRemoved = true;
-
-    // Remove the variables that I own and any constraint that references them.
-    for (const variable of Object.values(this.ownedVariables) as Variable[]) {
-      variable.remove();
-    }
-  }
-
-  get key() {
-    return this.keyGenerator.key;
-  }
-
-  getKeyWithDedupedHandlesAndVars() {
-    return this.keyGenerator.getKeyWithDedupedHandlesAndVars();
-  }
+  /**
+   * Add this constraint to the list of constraints. In case of clashes,
+   * implementations of this method should not add this constraint. They should
+   * instead create linear relationships between variables so that the behavior
+   * of this constraint is maintained w/o duplication, which results in poorly-
+   * behaved gradients.
+   */
+  abstract addTo(constraints: LowLevelConstraint[]): void;
 
   /**
    * If this constraint can determine the values of any variables based on
    * other state that is already known, it should set the values of those
-   * variables, add them to `knowns`, and return `true`. Otherwise, it
-   * should return `false`.
+   * variables and add them to `knowns`.
    */
-  propagateKnowns(_knowns: Set<Variable>): boolean {
-    return false;
-  }
+  propagateKnowns(_knowns: Set<Variable>) {}
 
   /**
    * Returns the current error for this constraint. (OK if it's negative.)
    * If this constraint owns a "free" variable, i.e., one  whose value can be
-   * determined locally, ignore the corresponding value in `variableValues`
-   * and instead set the value of that variable to make the error equal to
-   * zero.
+   * determined locally, ignore the corresponding value in `variableValues` and
+   * instead set the value of that variable to make the error equal to zero.
    */
   abstract getError(
     variableValues: number[],
     knowns: Set<Variable>,
     freeVariables: Set<Variable>
   ): number;
-
-  abstract onClash(constraint: this): AddConstraintResult<OwnedVariableNames>;
-
-  toAddConstraintResult(): AddConstraintResult<OwnedVariableNames> {
-    return {
-      constraints: [this],
-      variables: this.ownedVariables,
-      remove: () => this.remove(),
-    };
-  }
-
-  getManipulationSet(): ManipulationSet {
-    return new ManipulationSet(this.variables);
-  }
 }
 
-export function variable(value = 0): Variable {
-  return new Variable(value);
-}
-
-export function constant(
-  variable: Variable,
-  value: number = variable.value
-): AddConstraintResult {
-  return addConstraint(
-    new ConstraintKeyGenerator('constant', [[variable]]),
-    keyGenerator => new Constant(variable, value, keyGenerator),
-    existingConstraint => existingConstraint.onClash(value)
-  );
-}
-
-class Constant extends Constraint {
+class Distance extends LowLevelConstraint {
   constructor(
-    public readonly variable: Variable,
-    public value: number,
-    keyGenerator: ConstraintKeyGenerator
-  ) {
-    super([variable], keyGenerator);
-  }
-
-  readonly ownedVariables = {};
-
-  propagateKnowns(knowns: Set<Variable>): boolean {
-    if (!knowns.has(this.variable)) {
-      this.variable.value = this.value;
-      knowns.add(this.variable);
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  getError(): number {
-    throw new Error('Constant.getError() should never be called!');
-  }
-
-  onClash(constraint: this): AddConstraintResult;
-  onClash(value: number): AddConstraintResult;
-  onClash(constraintOrValue: this | number): AddConstraintResult {
-    this.value =
-      constraintOrValue instanceof Constant
-        ? constraintOrValue.value
-        : constraintOrValue;
-    return this.toAddConstraintResult();
-  }
-}
-
-const isConstantConstraint = (c: Constraint): c is Constant =>
-  c instanceof Constant;
-
-export function equals(a: Variable, b: Variable): AddConstraintResult {
-  return addConstraint(
-    new ConstraintKeyGenerator('equals', [[a, b]]),
-    keyGenerator => new Equals(a, b, keyGenerator),
-    existingConstraint => existingConstraint.onClash()
-  );
-}
-
-class Equals extends Constraint {
-  constructor(
-    readonly a: Variable,
-    readonly b: Variable,
-    keyGenerator: ConstraintKeyGenerator
-  ) {
-    super([a, b], keyGenerator);
-  }
-
-  readonly ownedVariables = {};
-
-  propagateKnowns(knowns: Set<Variable>): boolean {
-    if (!knowns.has(this.a) && knowns.has(this.b)) {
-      this.a.value = this.b.value;
-      knowns.add(this.a);
-      return true;
-    } else if (knowns.has(this.a) && !knowns.has(this.b)) {
-      this.b.value = this.a.value;
-      knowns.add(this.b);
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  getError(): number {
-    throw new Error('Equals.getError() should never be called!');
-  }
-
-  onClash(): AddConstraintResult {
-    return this.toAddConstraintResult();
-  }
-}
-
-/** y = m * x + b */
-export function linearRelationship(
-  m: number,
-  x: Variable,
-  b: number
-): AddConstraintResult<'y'> {
-  const y = new Variable(m * x.value + b);
-  return addConstraint(
-    new ConstraintKeyGenerator('linear', [[y], [x]]),
-    keyGenerator => new LinearRelationship(y, m, x, b, keyGenerator),
-    existingConstraint => existingConstraint.onClash(y, m, x, b)
-  );
-}
-
-class LinearRelationship extends Constraint<'y'> {
-  constructor(
-    readonly y: Variable,
-    public m: number,
-    readonly x: Variable,
-    public b: number,
-    keyGenerator: ConstraintKeyGenerator
-  ) {
-    super([y, x], keyGenerator);
-    y.represents = { object: this, property: 'linear-relationship-y' };
-  }
-
-  readonly ownedVariables = { y: this.y };
-
-  propagateKnowns(): boolean {
-    throw new Error(
-      'LinearRelationship.propagateKnowns() should never be called!'
-    );
-  }
-
-  getError(): number {
-    throw new Error('LinearRelationship.getError() should never be called!');
-  }
-
-  onClash(
-    y: Variable,
-    m: number,
-    x: Variable,
-    b: number
-  ): AddConstraintResult<'y'>;
-  onClash(newerConstraint: this): AddConstraintResult<'y'>;
-  onClash(
-    newerConstraintOrY: this | Variable,
-    m?: number,
-    _x?: Variable,
-    b?: number
-  ): AddConstraintResult<'y'> {
-    if (newerConstraintOrY instanceof Variable) {
-      this.m = m!;
-      this.b = b!;
-    } else {
-      this.m = newerConstraintOrY.m;
-      this.b = newerConstraintOrY.b;
-    }
-    return this.toAddConstraintResult();
-  }
-}
-
-/** a = b + c */
-export function sum(
-  a: Variable,
-  b: Variable,
-  c: Variable
-): AddConstraintResult {
-  return addConstraint(
-    new ConstraintKeyGenerator('sum', [[a, b, c]]),
-    keyGenerator => new Sum(a, b, c, keyGenerator),
-    existingConstraint => existingConstraint.onClash(a, b, c)
-  );
-}
-
-class Sum extends Constraint {
-  constructor(
-    readonly a: Variable,
-    readonly b: Variable,
-    readonly c: Variable,
-    keyGenerator: ConstraintKeyGenerator
-  ) {
-    super([a, b, c], keyGenerator);
-  }
-
-  readonly ownedVariables = {};
-
-  propagateKnowns(knowns: Set<Variable>): boolean {
-    if (!knowns.has(this.a) && knowns.has(this.b) && knowns.has(this.c)) {
-      this.a.value = this.b.value + this.c.value;
-      knowns.add(this.a);
-      return true;
-    } else if (
-      knowns.has(this.a) &&
-      !knowns.has(this.b) &&
-      knowns.has(this.c)
-    ) {
-      this.b.value = this.a.value - this.c.value;
-      knowns.add(this.b);
-      return true;
-    } else if (
-      knowns.has(this.a) &&
-      knowns.has(this.b) &&
-      !knowns.has(this.c)
-    ) {
-      this.c.value = this.a.value - this.b.value;
-      knowns.add(this.c);
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  getError([aValue, bValue, cValue]: number[]) {
-    return aValue - (bValue + cValue);
-  }
-
-  onClash(a: Variable, b: Variable, c: Variable): AddConstraintResult;
-  onClash(newerConstraint: this): AddConstraintResult;
-  onClash(
-    _newerConstraintOrA: this | Variable,
-    _b?: Variable,
-    _c?: Variable
-  ): AddConstraintResult {
-    // TODO: implement this
-    throw new Error('TODO');
-  }
-}
-
-export function pin(
-  handle: Handle,
-  pos: Position = handle.position
-): AddConstraintResult {
-  return addConstraint(
-    new ConstraintKeyGenerator('pin', [[handle.xVariable], [handle.yVariable]]),
-    keyGenerator => new Pin(handle, pos, keyGenerator),
-    existingConstraint => existingConstraint.onClash(pos)
-  );
-}
-
-class Pin extends Constraint {
-  constructor(
-    private readonly handle: Handle,
-    public position: Position,
-    keyGenerator: ConstraintKeyGenerator
-  ) {
-    super([handle.xVariable, handle.yVariable], keyGenerator);
-  }
-
-  readonly ownedVariables = {};
-
-  propagateKnowns(knowns: Set<Variable>): boolean {
-    if (
-      !knowns.has(this.handle.xVariable) ||
-      !knowns.has(this.handle.yVariable)
-    ) {
-      this.handle.position = this.position;
-      knowns.add(this.handle.xVariable);
-      knowns.add(this.handle.yVariable);
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  getError(): number {
-    throw new Error('Pin.getError() should never be called!');
-  }
-
-  onClash(constraint: this): AddConstraintResult;
-  onClash(position: Position): AddConstraintResult;
-  onClash(constraintOrPosition: this | Position): AddConstraintResult {
-    this.position =
-      constraintOrPosition instanceof Pin
-        ? constraintOrPosition.position
-        : constraintOrPosition;
-    return this.toAddConstraintResult();
-  }
-}
-
-export function horizontal(a: Handle, b: Handle): AddConstraintResult {
-  return equals(a.yVariable, b.yVariable);
-}
-
-export function vertical(a: Handle, b: Handle): AddConstraintResult {
-  return equals(a.xVariable, b.xVariable);
-}
-
-export function distance(
-  a: Handle,
-  b: Handle
-): AddConstraintResult<'distance'> {
-  return addConstraint(
-    new ConstraintKeyGenerator('distance', [
-      [a.xVariable, b.xVariable],
-      [a.yVariable, b.yVariable],
-    ]),
-    keyGenerator => new Distance(a, b, keyGenerator),
-    existingConstraint => existingConstraint.onClash()
-  );
-}
-
-export function equalDistance(
-  a1: Handle,
-  a2: Handle,
-  b1: Handle,
-  b2: Handle
-): AddConstraintResult {
-  const { distance: distanceA } = distance(a1, a2).variables;
-  const { distance: distanceB } = distance(b1, b2).variables;
-  return equals(distanceA, distanceB);
-}
-
-class Distance extends Constraint<'distance'> {
-  constructor(
+    constraint: Constraint,
     public readonly a: Handle,
-    public readonly b: Handle,
-    keyGenerator: ConstraintKeyGenerator
+    public readonly b: Handle
   ) {
-    super(
-      [
-        new Variable(Vec.dist(a.position, b.position)),
-        a.xVariable,
-        a.yVariable,
-        b.xVariable,
-        b.yVariable,
-      ],
-      keyGenerator
+    super();
+    this.variables.push(
+      variable(Vec.dist(a.position, b.position), {
+        object: constraint,
+        property: 'distance',
+      }),
+      a.xVariable,
+      a.yVariable,
+      b.xVariable,
+      b.yVariable
     );
-    this.distance.represents = { object: this, property: 'distance' };
+    this.ownVariables.add(this.distance);
   }
-
-  readonly ownedVariables = { distance: this.distance };
 
   get distance() {
     return this.variables[0];
+  }
+
+  addTo(constraints: LowLevelConstraint[]) {
+    for (const that of constraints) {
+      if (!(that instanceof Distance)) {
+        continue;
+      }
+
+      if (
+        (handlesAreEqual(this.a, that.a) && handlesAreEqual(this.b, that.b)) ||
+        (handlesAreEqual(this.a, that.b) && handlesAreEqual(this.b, that.a))
+      ) {
+        that.distance.makeEqualTo(this.distance);
+        return;
+      }
+    }
+
+    constraints.push(this);
   }
 
   getError(
@@ -1043,93 +325,49 @@ class Distance extends Constraint<'distance'> {
     }
     return currDist - dist;
   }
-
-  onClash(that: this): AddConstraintResult<'distance'>;
-  onClash(): AddConstraintResult<'distance'>;
-  onClash(that?: this): AddConstraintResult<'distance'> {
-    if (that) {
-      const eq = equals(this.distance, that.distance);
-      return {
-        constraints: [that, ...eq.constraints],
-        variables: that.ownedVariables,
-        remove() {
-          that.remove();
-          eq.remove();
-        },
-      };
-    } else {
-      return this.toAddConstraintResult();
-    }
-  }
 }
 
-export function angle(a: Handle, b: Handle): AddConstraintResult<'angle'> {
-  return addConstraint(
-    new ConstraintKeyGenerator('angle', [
-      [a.xVariable, b.xVariable],
-      [a.yVariable, b.yVariable],
-    ]),
-    keyGenerator => new Angle(a, b, keyGenerator),
-    existingConstraint => existingConstraint.onClash(a, b)
-  );
-}
-
-export function fixedAngle(
-  a1: Handle,
-  a2: Handle,
-  b1: Handle,
-  b2: Handle,
-  angleValue: number
-): AddConstraintResult<'diff'> {
-  const {
-    constraints: [angleAConstraint],
-    variables: { angle: angleA },
-  } = angle(a1, a2);
-  const {
-    constraints: [angleBConstraint],
-    variables: { angle: angleB },
-  } = angle(b1, b2);
-  const diff = variable(angleValue);
-  const s = sum(angleA, angleB, diff);
-  const k = constant(diff);
-  return {
-    constraints: [
-      angleAConstraint,
-      angleBConstraint,
-      ...s.constraints,
-      ...k.constraints,
-    ],
-    variables: { diff },
-    remove() {
-      s.remove();
-      k.remove();
-    },
-  };
-}
-
-class Angle extends Constraint<'angle'> {
+class Angle extends LowLevelConstraint {
   constructor(
+    constraint: Constraint,
     public readonly a: Handle,
-    public readonly b: Handle,
-    keyGenerator: ConstraintKeyGenerator
+    public readonly b: Handle
   ) {
-    super(
-      [
-        new Variable(Vec.angle(Vec.sub(b.position, a.position))),
-        a.xVariable,
-        a.yVariable,
-        b.xVariable,
-        b.yVariable,
-      ],
-      keyGenerator
+    super();
+    this.variables.push(
+      variable(Vec.angle(Vec.sub(b.position, a.position)), {
+        object: constraint,
+        property: 'distance',
+      }),
+      a.xVariable,
+      a.yVariable,
+      b.xVariable,
+      b.yVariable
     );
-    this.angle.represents = { object: this, property: 'angle' };
+    this.ownVariables.add(this.angle);
   }
-
-  readonly ownedVariables = { angle: this.angle };
 
   get angle() {
     return this.variables[0];
+  }
+
+  addTo(constraints: LowLevelConstraint[]) {
+    for (const that of constraints) {
+      if (!(that instanceof Angle)) {
+        continue;
+      }
+
+      if (handlesAreEqual(this.a, that.a) && handlesAreEqual(this.b, that.b)) {
+        that.angle.makeEqualTo(this.angle);
+        return;
+      }
+
+      if (handlesAreEqual(this.a, that.b) && handlesAreEqual(this.b, that.a)) {
+        that.angle.makeEqualTo(this.angle, { m: 1, b: Math.PI });
+      }
+    }
+
+    constraints.push(this);
   }
 
   getError(
@@ -1138,8 +376,10 @@ class Angle extends Constraint<'angle'> {
     freeVariables: Set<Variable>
   ): number {
     // The old way, which has problems b/c errors are in terms of angles.
-    // const currentAngle = Vec.angle(Vec.sub(bPos, aPos));
-    // return (currentAngle - angle) * 100;
+    // const aPos = { x: ax, y: ay };
+    // const bPos = { x: bx, y: by };
+    // const currAngle = Vec.angle(Vec.sub(bPos, aPos));
+    // return (currAngle - angle) * 100;
 
     // The new way, implemented in terms of the minimum amount of displacement
     // required to satisfy the constraint.
@@ -1198,130 +438,36 @@ class Angle extends Constraint<'angle'> {
 
     return error;
   }
-
-  onClash(that: this): AddConstraintResult<'angle'>;
-  onClash(a: Handle, b: Handle): AddConstraintResult<'angle'>;
-  onClash(thatOrA: this | Handle, b?: Handle): AddConstraintResult<'angle'> {
-    if (thatOrA instanceof Angle) {
-      const that = thatOrA;
-      if (this.a === that.a && this.b === that.b) {
-        // exactly the same thing!
-        const eq = equals(this.angle, that.angle);
-        return {
-          constraints: [that, ...eq.constraints],
-          variables: that.ownedVariables,
-          remove() {
-            that!.remove();
-            eq.remove();
-          },
-        };
-      } else {
-        // same points but different order
-        const diff = new Variable(this.angle.value - that.angle.value);
-        const k = constant(diff);
-        const s = sum(this.angle, that.angle, diff);
-        const ans = {
-          constraints: [that, ...k.constraints, ...s.constraints],
-          variables: that.ownedVariables,
-          remove() {
-            that.remove();
-            k.remove();
-            s.remove();
-          },
-        };
-        diff.represents = {
-          object: ans,
-          property: 'angle-offset',
-        };
-        return ans;
-      }
-    } else {
-      const a = thatOrA;
-      b = b!; // help the type checker understand that this is not undefined
-      const angle = new Variable(Vec.angle(Vec.sub(b.position, a.position)));
-      if (this.a === a && this.b === b) {
-        // exactly the same thing!
-        const eq = equals(this.angle, angle);
-        return {
-          constraints: eq.constraints,
-          variables: { angle },
-          remove() {
-            eq.remove();
-          },
-        };
-      } else {
-        // same points but different order
-        const diff = new Variable(this.angle.value - angle.value);
-        const k = constant(diff);
-        const s = sum(this.angle, angle, diff);
-        return {
-          constraints: [...k.constraints, ...s.constraints],
-          variables: { angle },
-          remove() {
-            k.remove();
-            s.remove();
-          },
-        };
-      }
-    }
-  }
 }
 
-// This is a quick hack to get ivan going!
-export function polarVector(
-  a: Handle,
-  b: Handle
-): AddConstraintResult<'angle' | 'distance'> {
-  const {
-    constraints: [angleConstraint],
-    variables: { angle: angleVariable },
-  } = angle(a, b);
-  const {
-    constraints: [lengthConstraint],
-    variables: { distance: distanceVariable },
-  } = distance(a, b);
-  return {
-    constraints: [angleConstraint, lengthConstraint],
-    variables: { angle: angleVariable, distance: distanceVariable },
-    remove() {
-      angleConstraint.remove();
-      lengthConstraint.remove();
-    },
-  };
-}
+class LLFormula extends LowLevelConstraint {
+  readonly result: Variable;
 
-export function formula(
-  args: Variable[],
-  fn: (xs: number[]) => number
-): AddConstraintResult<'result'> {
-  const result = new Variable(fn(args.map(arg => arg.value)));
-  return addConstraint(
-    new ConstraintKeyGenerator('formula#' + generateId(), []),
-    keyGenerator => new Formula(args, result, fn, keyGenerator),
-    existingConstraint => existingConstraint.onClash()
-  );
-}
-
-class Formula extends Constraint<'result'> {
   constructor(
-    public readonly args: Variable[],
-    public readonly result: Variable,
-    private readonly fn: (xs: number[]) => number,
-    keyGenerator: ConstraintKeyGenerator
+    constraint: Constraint,
+    readonly args: Variable[],
+    private readonly fn: (xs: number[]) => number
   ) {
-    super([...args, result], keyGenerator);
-    this.result.represents = { object: this, property: 'result' };
+    super();
+    this.result = variable(this.computeResult(), {
+      object: constraint,
+      property: 'result',
+    });
+    this.variables.push(...args, this.result);
+    this.ownVariables.add(this.result);
   }
 
-  readonly ownedVariables = { result: this.result };
+  addTo(constraints: LowLevelConstraint[]) {
+    constraints.push(this);
+  }
 
-  propagateKnowns(knowns: Set<Variable>): boolean {
-    if (!knowns.has(this.result) && this.args.every(arg => knowns.has(arg))) {
+  propagateKnowns(knowns: Set<Variable>) {
+    if (
+      !knowns.has(this.result.canonicalInstance) &&
+      this.args.every(arg => knowns.has(arg.canonicalInstance))
+    ) {
       this.result.value = this.computeResult();
       knowns.add(this.result);
-      return true;
-    } else {
-      return false;
     }
   }
 
@@ -1337,12 +483,6 @@ class Formula extends Constraint<'result'> {
     return currValue - this.result.value;
   }
 
-  onClash(): AddConstraintResult<'result'>;
-  onClash(that: this): AddConstraintResult<'result'>;
-  onClash(_that?: this): AddConstraintResult<'result'> {
-    throw new Error('Formula.onClash() should never be called!');
-  }
-
   private computeResult(
     xs: number[] = this.args.map(arg => arg.value)
   ): number {
@@ -1350,83 +490,587 @@ class Formula extends Constraint<'result'> {
   }
 }
 
-// #region temporary constraints
+// #endregion low-level constraints
 
-const tempConstraints = new Set<Constraint>();
+// #region high-level constraints
 
-export const now = {
-  clear() {
-    for (const constraint of tempConstraints) {
-      tempConstraints.delete(constraint);
-      constraint.remove();
+export abstract class Constraint {
+  static readonly all = new Set<Constraint>();
+
+  readonly variables = [] as Variable[];
+  readonly lowLevelConstraints = [] as LowLevelConstraint[];
+
+  constructor() {
+    Constraint.all.add(this);
+    forgetClustersForSolver();
+  }
+
+  // TODO: write a comment for this method
+  setUpVariableRelationships() {}
+
+  /**
+   * If this constraint can determine the values of any variables based on
+   * other state that is already known, it should set the values of those
+   * variables and add them to `knowns`.
+   *
+   * Subclasses may override this method, but should always call
+   * super.addKnowns(knowns) at the end!
+   */
+  propagateKnowns(knowns: Set<Variable>) {
+    for (const llc of this.lowLevelConstraints) {
+      llc.propagateKnowns(knowns);
     }
-  },
+  }
 
-  constant(variable: Variable, value: number = variable.value) {
-    return captureNewConstraints(tempConstraints, () =>
-      constant(variable, value)
-    );
-  },
+  getManipulationSet(): ManipulationSet {
+    return new ManipulationSet(this.variables);
+  }
 
-  equals(a: Variable, b: Variable) {
-    return captureNewConstraints(tempConstraints, () => equals(a, b));
-  },
+  public remove() {
+    if (!Constraint.all.has(this)) {
+      // needed to break cycles
+      return;
+    }
 
-  linearRelationship(m: number, x: Variable, b: number) {
-    return captureNewConstraints(tempConstraints, () =>
-      linearRelationship(m, x, b)
-    );
-  },
+    Constraint.all.delete(this);
+    for (const llc of this.lowLevelConstraints) {
+      for (const v of llc.ownVariables) {
+        // this will result in other constraints that involve this variable
+        // being removed as well
+        v.remove();
+      }
+    }
+    forgetClustersForSolver();
+  }
+}
 
-  sum(a: Variable, b: Variable, c: Variable) {
-    return captureNewConstraints(tempConstraints, () => sum(a, b, c));
-  },
+class Constant extends Constraint {
+  private static readonly memo = new Map<Variable, Constant>();
 
-  pin(handle: Handle, pos: Position = handle.position) {
-    return captureNewConstraints(tempConstraints, () => pin(handle, pos));
-  },
+  static create(variable: Variable, value: number = variable.value) {
+    let constant = Constant.memo.get(variable);
+    if (constant) {
+      constant.value = value;
+    } else {
+      constant = new Constant(variable, value);
+      Constant.memo.set(variable, constant);
+    }
+    return constant;
+  }
 
-  horizontal(a: Handle, b: Handle) {
-    return captureNewConstraints(tempConstraints, () => horizontal(a, b));
-  },
-
-  vertical(a: Handle, b: Handle) {
-    return captureNewConstraints(tempConstraints, () => vertical(a, b));
-  },
-
-  distance(a: Handle, b: Handle) {
-    return captureNewConstraints(tempConstraints, () => distance(a, b));
-  },
-
-  equalDistance(a1: Handle, a2: Handle, b1: Handle, b2: Handle) {
-    return captureNewConstraints(tempConstraints, () =>
-      equalDistance(a1, a2, b1, b2)
-    );
-  },
-
-  angle(a: Handle, b: Handle) {
-    return captureNewConstraints(tempConstraints, () => angle(a, b));
-  },
-
-  fixedAngle(
-    a1: Handle,
-    a2: Handle,
-    b1: Handle,
-    b2: Handle,
-    angleValue: number
+  private constructor(
+    public readonly variable: Variable,
+    public value: number
   ) {
-    return captureNewConstraints(tempConstraints, () =>
-      fixedAngle(a1, a2, b1, b2, angleValue)
+    super();
+    this.variables.push(variable);
+  }
+
+  propagateKnowns(knowns: Set<Variable>): void {
+    if (!knowns.has(this.variable.canonicalInstance)) {
+      this.variable.value = this.value;
+      knowns.add(this.variable.canonicalInstance);
+    }
+    super.propagateKnowns(knowns);
+  }
+
+  public remove() {
+    Constant.memo.delete(this.variable);
+    super.remove();
+  }
+}
+
+export const constant = Constant.create;
+
+class Pin extends Constraint {
+  private static readonly memo = new Map<Handle, Pin>();
+
+  static create(handle: Handle, position: Position = handle.position) {
+    let pin = Pin.memo.get(handle);
+    if (pin) {
+      pin.position = position;
+    } else {
+      pin = new Pin(handle, position);
+      Pin.memo.set(handle, pin);
+    }
+    return pin;
+  }
+
+  private constructor(
+    public readonly handle: Handle,
+    public position: Position
+  ) {
+    super();
+    this.variables.push(handle.xVariable, handle.yVariable);
+  }
+
+  propagateKnowns(knowns: Set<Variable>): void {
+    const { xVariable: x, yVariable: y } = this.handle;
+    if (!knowns.has(x.canonicalInstance) || !knowns.has(y.canonicalInstance)) {
+      ({ x: x.value, y: y.value } = this.position);
+      knowns.add(x.canonicalInstance);
+      knowns.add(y.canonicalInstance);
+    }
+    super.propagateKnowns(knowns);
+  }
+
+  public remove() {
+    Pin.memo.delete(this.handle);
+    super.remove();
+  }
+}
+
+export const pin = Pin.create;
+
+class LinearRelationship extends Constraint {
+  private static readonly memo = new Map<
+    Variable,
+    Map<Variable, LinearRelationship>
+  >();
+
+  static create(y: Variable, m: number, x: Variable, b: number) {
+    if (m === 0) {
+      throw new Error('tried to create a linear relationship w/ m = 0');
+    }
+
+    let lr = LinearRelationship.memo.get(y)?.get(x);
+    if (lr) {
+      lr.m = m;
+      lr.b = b;
+      return lr;
+    }
+
+    lr = LinearRelationship.memo.get(x)?.get(y);
+    if (lr) {
+      lr.m = 1 / m;
+      lr.b = -b / m;
+      return lr;
+    }
+
+    lr = new LinearRelationship(y, m, x, b);
+    if (!LinearRelationship.memo.has(y)) {
+      LinearRelationship.memo.set(y, new Map());
+    }
+    LinearRelationship.memo.get(y)!.set(x, lr);
+    return lr;
+  }
+
+  private constructor(
+    readonly y: Variable,
+    private m: number,
+    readonly x: Variable,
+    private b: number
+  ) {
+    super();
+    this.variables.push(y, x);
+  }
+
+  setUpVariableRelationships() {
+    this.y.makeEqualTo(this.x, { m: this.m, b: this.b });
+  }
+
+  public remove() {
+    const yDict = LinearRelationship.memo.get(this.y);
+    if (yDict) {
+      yDict.delete(this.x);
+      if (yDict.size === 0) {
+        LinearRelationship.memo.delete(this.y);
+      }
+    }
+
+    const xDict = LinearRelationship.memo.get(this.x);
+    if (xDict) {
+      xDict.delete(this.y);
+      if (xDict.size === 0) {
+        LinearRelationship.memo.delete(this.x);
+      }
+    }
+
+    super.remove();
+  }
+}
+
+export const linearRelationship = LinearRelationship.create;
+
+export const equals = (x: Variable, y: Variable) =>
+  linearRelationship(y, 1, x, 0);
+
+class Absorb extends Constraint {
+  // child handle -> Absorb constraint
+  private static readonly memo = new Map<Handle, Absorb>();
+
+  static create(parent: Handle, child: Handle) {
+    if (Absorb.memo.has(child)) {
+      Absorb.memo.get(child)!.remove();
+    }
+
+    const a = new Absorb(parent, child);
+    Absorb.memo.set(child, a);
+    return a;
+  }
+
+  private constructor(
+    readonly parent: Handle,
+    readonly child: Handle
+  ) {
+    super();
+    this.variables.push(
+      parent.xVariable,
+      parent.yVariable,
+      child.xVariable,
+      child.yVariable
     );
-  },
+  }
 
-  polarVector(a: Handle, b: Handle) {
-    return captureNewConstraints(tempConstraints, () => polarVector(a, b));
-  },
+  setUpVariableRelationships(): void {
+    this.parent.xVariable.makeEqualTo(this.child.xVariable);
+    this.parent.yVariable.makeEqualTo(this.child.yVariable);
+    this.parent._absorb(this.child);
+  }
 
-  formula(args: Variable[], fn: (xs: number[]) => number) {
-    return captureNewConstraints(tempConstraints, () => formula(args, fn));
-  },
-};
+  public remove() {
+    Absorb.memo.delete(this.child);
+    super.remove();
+  }
+}
 
-// #endregion temporary constraints
+export const absorb = Absorb.create;
+
+class PolarVector extends Constraint {
+  private static readonly memo = new Map<Handle, Map<Handle, PolarVector>>();
+
+  static create(a: Handle, b: Handle) {
+    let pv = PolarVector.memo.get(a)?.get(b);
+    if (pv) {
+      return pv;
+    }
+
+    pv = new PolarVector(a, b);
+    if (!PolarVector.memo.get(a)) {
+      PolarVector.memo.set(a, new Map());
+    }
+    PolarVector.memo.get(a)!.set(b, pv);
+    return pv;
+  }
+
+  readonly distance: Variable;
+  readonly angle: Variable;
+
+  private constructor(
+    readonly a: Handle,
+    readonly b: Handle
+  ) {
+    super();
+
+    const dc = new Distance(this, a, b);
+    this.lowLevelConstraints.push(dc);
+    this.distance = dc.distance;
+
+    const ac = new Angle(this, a, b);
+    this.lowLevelConstraints.push(ac);
+    this.angle = ac.angle;
+
+    this.variables.push(
+      a.xVariable,
+      a.yVariable,
+      b.xVariable,
+      b.yVariable,
+      this.distance,
+      this.angle
+    );
+  }
+
+  public remove() {
+    const aDict = PolarVector.memo.get(this.a)!;
+    aDict.delete(this.b);
+    if (aDict.size === 0) {
+      PolarVector.memo.delete(this.a);
+    }
+    super.remove();
+  }
+}
+
+export const polarVector = PolarVector.create;
+
+class Formula extends Constraint {
+  static create(args: Variable[], fn: (xs: number[]) => number) {
+    return new Formula(args, fn);
+  }
+
+  readonly result: Variable;
+
+  private constructor(args: Variable[], fn: (xs: number[]) => number) {
+    super();
+    const fc = new LLFormula(this, args, fn);
+    this.lowLevelConstraints.push(fc);
+    this.result = fc.result;
+    this.variables.push(...args, this.result);
+  }
+}
+
+export const formula = Formula.create;
+
+// #endregion high-level constraints
+
+// #region solver
+
+/**
+ * A group of constraints and variables that they operate on that should be solved together.
+ */
+interface ClusterForSolver {
+  constraints: Constraint[];
+  lowLevelConstraints: LowLevelConstraint[];
+  variables: Variable[];
+  // Set of variables that are "free". The value of each of these variables can be set by
+  // their owning low-level constraint's `getError` method in order to make the error due
+  // to that constraint equal to zero.
+  freeVariables: Set<Variable>;
+}
+
+let _clustersForSolver: Set<ClusterForSolver> | null = null;
+
+function getClustersForSolver(root: GameObject): Set<ClusterForSolver> {
+  if (_clustersForSolver) {
+    return _clustersForSolver;
+  }
+
+  // break up all relationships between handles ...
+  root.forEach({
+    what: aHandle,
+    recursive: true,
+    do: handle => handle._forgetAbsorbedHandles(),
+  });
+  // ... and variables
+  for (const variable of Variable.all) {
+    variable.info = { isCanonical: true, absorbedVariables: new Set() };
+  }
+
+  // set up updated relationships among handles and variables
+  for (const constraint of Constraint.all) {
+    constraint.setUpVariableRelationships();
+  }
+
+  interface Cluster {
+    constraints: Constraint[];
+    lowLevelConstraints: LowLevelConstraint[];
+    manipulationSet: ManipulationSet;
+  }
+
+  const clusters = new Set<Cluster>();
+  for (const constraint of Constraint.all) {
+    const constraints = [constraint];
+    const lowLevelConstraints = [...constraint.lowLevelConstraints];
+    const manipulationSet = constraint.getManipulationSet();
+    for (const cluster of clusters) {
+      if (!cluster.manipulationSet.overlapsWith(manipulationSet)) {
+        continue;
+      }
+
+      constraints.push(...cluster.constraints);
+      for (const llc of cluster.lowLevelConstraints) {
+        llc.addTo(lowLevelConstraints);
+      }
+
+      // this step must be done *after* adding the LLCs b/c that operation creates new
+      // linear relationships among variables (i.e., variables are absorbed as a result)
+      manipulationSet.absorb(cluster.manipulationSet);
+
+      clusters.delete(cluster);
+    }
+    clusters.add({ constraints, lowLevelConstraints, manipulationSet });
+  }
+
+  _clustersForSolver = new Set(
+    Array.from(clusters).map(({ constraints, lowLevelConstraints }) => {
+      const variables = new Set<Variable>();
+      for (const constraint of constraints) {
+        for (const variable of constraint.variables) {
+          variables.add(variable.canonicalInstance);
+        }
+      }
+
+      const ownedVariables = new Set<Variable>();
+      for (const llc of lowLevelConstraints) {
+        for (const variable of llc.ownVariables) {
+          ownedVariables.add(variable.canonicalInstance);
+        }
+      }
+
+      const variableCounts = new Map<Variable, number>();
+      for (const constraint of constraints) {
+        for (const variable of constraint.variables) {
+          if (!ownedVariables.has(variable.canonicalInstance)) {
+            continue;
+          }
+
+          const n = variableCounts.get(variable.canonicalInstance) ?? 0;
+          variableCounts.set(variable.canonicalInstance, n + 1);
+        }
+      }
+
+      const freeVariables = new Set<Variable>();
+      for (const [variable, count] of variableCounts.entries()) {
+        if (count === 1) {
+          freeVariables.add(variable.canonicalInstance);
+        }
+      }
+
+      return {
+        constraints,
+        lowLevelConstraints,
+        variables: Array.from(variables),
+        freeVariables,
+      };
+    })
+  );
+
+  // for debugging
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (window as any).clusters = _clustersForSolver;
+
+  // console.log('clusters', _clustersForSolver);
+  SVG.showStatus(`${clusters.size} clusters`);
+
+  return _clustersForSolver;
+}
+
+function forgetClustersForSolver() {
+  _clustersForSolver = null;
+}
+
+export function solve(root: GameObject) {
+  const clusters = getClustersForSolver(root);
+  for (const cluster of clusters) {
+    solveCluster(cluster);
+  }
+}
+
+function solveCluster({
+  constraints,
+  lowLevelConstraints,
+  variables,
+  freeVariables,
+}: ClusterForSolver) {
+  if (constraints.length === 0) {
+    // nothing to solve!
+    return;
+  }
+
+  const knowns = computeKnowns(constraints, lowLevelConstraints);
+
+  // The state that goes into `inputs` is the stuff that can be modified by the solver.
+  // It excludes any value that we've already computed from known values like pin and
+  // constant constraints.
+  const inputs: number[] = [];
+  const varIdx = new Map<Variable, number>();
+  for (const variable of variables) {
+    if (!knowns.has(variable) && !freeVariables.has(variable)) {
+      varIdx.set(variable, inputs.length);
+      inputs.push(variable.value);
+    }
+  }
+
+  // This is where we actually run the solver.
+
+  function computeTotalError(currState: number[]) {
+    let error = 0;
+    for (const llc of lowLevelConstraints) {
+      const values = llc.variables.map(variable => {
+        const { m, b } = variable.offset;
+        variable = variable.canonicalInstance;
+        const vi = varIdx.get(variable);
+        return ((vi === undefined ? variable.value : currState[vi]) - b) / m;
+      });
+      error += Math.pow(llc.getError(values, knowns, freeVariables), 2);
+    }
+    return error;
+  }
+
+  let result: ReturnType<typeof minimize>;
+  try {
+    result = minimize(computeTotalError, inputs, 1_000, 1e-3);
+  } catch (e) {
+    console.log(
+      'minimizeError threw',
+      e,
+      'while working on cluster with constraints',
+      constraints,
+      'low-level constraints',
+      lowLevelConstraints,
+      'variables',
+      variables,
+      'inputs',
+      inputs,
+      'knowns',
+      knowns,
+      'free variables',
+      freeVariables
+    );
+    SVG.showStatus('' + e);
+    throw e;
+  }
+
+  // SVG.showStatus(`${result.iterations} iterations`);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (window as any).solverResult = result;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ((window as any).solverResultMessages ||= new Set<string>()).add(
+    result.message
+  );
+  if (!result || result.message?.includes('maxit')) {
+    console.error('solveCluster is giving up!', result);
+    return;
+  }
+
+  // Now we write the solution from the solver back into our variables and handles.
+  const outputs = result.solution;
+  for (const variable of variables) {
+    if (!knowns.has(variable) && !freeVariables.has(variable)) {
+      variable.value = outputs.shift()!;
+    }
+  }
+}
+
+function computeKnowns(
+  constraints: Constraint[],
+  lowLevelConstraints: LowLevelConstraint[]
+) {
+  const knowns = new Set<Variable>();
+  for (const constraint of constraints) {
+    constraint.propagateKnowns(knowns);
+  }
+
+  while (true) {
+    const oldNumKnowns = knowns.size;
+    for (const llc of lowLevelConstraints) {
+      llc.propagateKnowns(knowns);
+    }
+    if (knowns.size === oldNumKnowns) {
+      break;
+    }
+  }
+  return knowns;
+}
+
+// #endregion solver
+
+// #region helpers
+
+function variablesAreEqual(x: Variable, y: Variable) {
+  return (
+    (x.canonicalInstance === y && x.offset.m === 1 && x.offset.b === 0) ||
+    (y.canonicalInstance === x && y.offset.m === 1 && y.offset.b === 0) ||
+    (x.canonicalInstance === y.canonicalInstance &&
+      x.offset.m === y.offset.m &&
+      x.offset.b === y.offset.b)
+  );
+}
+
+function handlesAreEqual(a: Handle, b: Handle) {
+  return (
+    variablesAreEqual(a.xVariable, b.xVariable) &&
+    variablesAreEqual(a.yVariable, b.yVariable)
+  );
+}
+
+// #endregion helpers

@@ -35,7 +35,7 @@ export class MetaNumber implements MetaValue {
 }
 
 export class MetaNumberConnection implements MetaConnection {
-  constraint: constraints.AddConstraintResult<never>;
+  constraint: constraints.Constraint;
 
   constructor(a: MetaNumber | MetaLabel, b: MetaNumber | MetaLabel) {
     this.constraint = constraints.equals(a.variable, b.variable);

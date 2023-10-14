@@ -46,7 +46,6 @@ root.adopt(metaToggle);
 
 onEveryFrame((dt, t) => {
   SVG.clearNow(t);
-  constraints.now.clear();
 
   events.update();
   constraints.solve(root);
