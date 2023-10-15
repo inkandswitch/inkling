@@ -4,9 +4,8 @@ TODO
 Bugs
 ----
 
-* There are things that are still not working b/c of my big constraint system rewrite:
-  * "free variables" not quite right yet
-    (we have some "inertia" w/ angles b/c of the LR between radians and degrees)
+* when you snap two gizmos together, all handles collapse to a single position
+  (this was working before, but started happening again when I fixed the free variable computation) 
 
 Formulas / Wires / Meta
 -----------------------

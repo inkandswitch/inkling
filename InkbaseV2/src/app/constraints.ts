@@ -882,34 +882,40 @@ function getClustersForSolver(root: GameObject): Set<ClusterForSolver> {
 
   _clustersForSolver = new Set(
     Array.from(clusters).map(({ constraints, lowLevelConstraints }) => {
+      const knowns = computeKnowns(constraints, lowLevelConstraints);
+
       const variables = new Set<Variable>();
       for (const constraint of constraints) {
         for (const variable of constraint.variables) {
-          variables.add(variable.canonicalInstance);
+          if (!knowns.has(variable.canonicalInstance)) {
+            variables.add(variable.canonicalInstance);
+          }
         }
       }
 
-      const ownedVariables = new Set<Variable>();
+      const freeVariableCandidates = new Set<Variable>();
       for (const llc of lowLevelConstraints) {
         for (const variable of llc.ownVariables) {
-          ownedVariables.add(variable.canonicalInstance);
+          if (!knowns.has(variable.canonicalInstance)) {
+            freeVariableCandidates.add(variable.canonicalInstance);
+          }
         }
       }
 
-      const variableCounts = new Map<Variable, number>();
-      for (const constraint of constraints) {
-        for (const variable of constraint.variables) {
-          if (!ownedVariables.has(variable.canonicalInstance)) {
+      const freeVarCandidateCounts = new Map<Variable, number>();
+      for (const llc of lowLevelConstraints) {
+        for (const variable of llc.variables) {
+          if (!freeVariableCandidates.has(variable.canonicalInstance)) {
             continue;
           }
 
-          const n = variableCounts.get(variable.canonicalInstance) ?? 0;
-          variableCounts.set(variable.canonicalInstance, n + 1);
+          const n = freeVarCandidateCounts.get(variable.canonicalInstance) ?? 0;
+          freeVarCandidateCounts.set(variable.canonicalInstance, n + 1);
         }
       }
 
       const freeVariables = new Set<Variable>();
-      for (const [variable, count] of variableCounts.entries()) {
+      for (const [variable, count] of freeVarCandidateCounts.entries()) {
         if (count === 1) {
           freeVariables.add(variable.canonicalInstance);
         }
