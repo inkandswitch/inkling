@@ -13,6 +13,10 @@ Bugs
 Formulas / Wires / Meta
 -----------------------
 
+* P0: some gesture to break connections / remove wires
+
+* P0: some gesture to remove a formula
+
 * wire number tokens directly into formula editor's squares
 
 * toggle formula "equals" <==> "arrow" (spreadsheet/diode mode)
