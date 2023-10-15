@@ -1,9 +1,10 @@
 import Token from './Token';
-import SVG from '../Svg';
-import { Variable } from '../constraints';
-import * as ohm from 'ohm-js';
 import { WirePort } from './Wire';
 import { MetaNumber } from './MetaSemantics';
+import SVG from '../Svg';
+import { Variable } from '../constraints';
+import * as constraints from '../constraints';
+import * as ohm from 'ohm-js';
 
 export default class NumberToken extends Token {
   protected readonly boxElement = SVG.add('rect', SVG.metaElm, {
@@ -42,7 +43,7 @@ export default class NumberToken extends Token {
     if (arg instanceof Variable) {
       this.variable = arg;
     } else {
-      this.variable = new Variable(arg, {
+      this.variable = constraints.variable(arg, {
         object: this,
         property: 'number-token-value',
       });

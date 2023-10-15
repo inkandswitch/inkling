@@ -1,5 +1,5 @@
 import * as constraints from '../constraints';
-import { Variable } from '../constraints';
+import { Constraint, Variable } from '../constraints';
 import { Position } from '../../lib/types';
 import { generateId } from '../../lib/helpers';
 
@@ -22,7 +22,7 @@ export interface MetaConnection {
 
 // NUMBERS
 export class MetaNumber implements MetaValue {
-  constructor(public variable: constraints.Variable) {}
+  constructor(public variable: Variable) {}
 
   wireTo(other: MetaValue): MetaNumberConnection | null {
     if (other instanceof MetaNumber || other instanceof MetaNumber) {
@@ -35,7 +35,7 @@ export class MetaNumber implements MetaValue {
 }
 
 export class MetaNumberConnection implements MetaConnection {
-  constraint: constraints.Constraint;
+  constraint: Constraint;
 
   constructor(a: MetaNumber | MetaLabel, b: MetaNumber | MetaLabel) {
     this.constraint = constraints.equals(a.variable, b.variable);
@@ -51,7 +51,7 @@ export class MetaLabel implements MetaValue {
 
   constructor(
     public readonly display: string | Position[][],
-    public variable: constraints.Variable
+    public variable: Variable
   ) {}
 
   wireTo(other: MetaValue): MetaConnection | null {
@@ -76,7 +76,7 @@ export class MetaStruct implements MetaValue {
   }
 
   createLabel(strokeData: string | Position[][]) {
-    const label = new MetaLabel(strokeData, new Variable(0));
+    const label = new MetaLabel(strokeData, constraints.variable(0));
     label.variable.represents = { object: label, property: 'label-value' };
     this.labelsById.set(label.id, label);
     if (typeof strokeData === 'string') {
