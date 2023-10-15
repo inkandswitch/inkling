@@ -70,6 +70,11 @@ b = page.adopt(Handle.create({ x: 500, y: 500 }));
 giz = new Gizmo(a, b);
 a.adopt(giz);
 
+a = page.adopt(Handle.create({ x: 600, y: 600 }));
+b = page.adopt(Handle.create({ x: 700, y: 700 }));
+giz = new Gizmo(a, b);
+a.adopt(giz);
+
 const component = new Component();
 page.adopt(component);
 
