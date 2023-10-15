@@ -1,5 +1,5 @@
 import { EventContext, Gesture } from './Gesture';
-import { aCanonicalHandle } from '../ink/Handle';
+import Handle, { aCanonicalHandle } from '../ink/Handle';
 import * as constraints from '../constraints';
 
 export function touchHandle(ctx: EventContext): Gesture | void {
@@ -10,15 +10,26 @@ export function touchHandle(ctx: EventContext): Gesture | void {
   });
 
   if (handle) {
-    return new Gesture('Touch Handle', {
-      began: _ctx => constraints.pin(handle),
-      moved: ctx =>
-        // TODO: replace this with the correct gestures (eg: 2 finger)
-        ctx.root.page.moveHandle(handle, ctx.event.position),
-      ended: _ctx => {
-        handle.absorbNearbyHandles();
-        constraints.pin(handle).remove();
-      },
-    });
+    return touchHandleHelper(handle);
   }
+}
+
+function touchHandleHelper(handle: Handle): Gesture {
+  return new Gesture('Touch Handle', {
+    began(_ctx) {
+      constraints.pin(handle);
+    },
+    moved(ctx) {
+      const newHandle = ctx.root.page.moveHandle(handle, ctx.event.position);
+      if (newHandle !== handle) {
+        constraints.pin(handle).remove();
+        handle = newHandle;
+        constraints.pin(handle);
+      }
+    },
+    ended(_ctx) {
+      handle.absorbNearbyHandles();
+      constraints.pin(handle).remove();
+    },
+  });
 }

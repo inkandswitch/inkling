@@ -5,8 +5,6 @@ Bugs
 ----
 
 * There are things that are still not working b/c of my big constraint system rewrite:
-  * Handle break off is not quite right yet
-    (can't do it directionally w/ intent, you get what you get)
   * "free variables" not quite right yet
     (we have some "inertia" w/ angles b/c of the LR between radians and degrees)
 
