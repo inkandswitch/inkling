@@ -8,9 +8,6 @@ Bugs
   * "free variables" not quite right yet
     (we have some "inertia" w/ angles b/c of the LR between radians and degrees)
 
-* 2 gizmos (a1, a2) and (b1, b2) that get snapped together (a1+b1, a2+b2)
-  collapse to have distance = 0. why???
-
 Formulas / Wires / Meta
 -----------------------
 
