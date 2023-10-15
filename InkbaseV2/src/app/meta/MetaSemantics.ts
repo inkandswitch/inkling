@@ -9,14 +9,13 @@ import { generateId } from '../../lib/helpers';
 // Meta Value
 // A meta value can be a Number, Struct(Component?) or Collection
 export interface MetaValue {
-  // Convenience method that returns a connection
-  wireTo(other: MetaValue): MetaConnection | null;
+  /** Connects `this` MetaValue to `that` MetaValue. */
+  wireTo(that: MetaValue): MetaConnection | null;
 }
 
-// Meta Connection
-// An abstract "wire" between two values
+/** An abstract "wire" between two values. */
 export interface MetaConnection {
-  // Cleanup this connection
+  /** Clean up this connection. */
   remove(): void;
 }
 
@@ -24,9 +23,9 @@ export interface MetaConnection {
 export class MetaNumber implements MetaValue {
   constructor(public variable: Variable) {}
 
-  wireTo(other: MetaValue): MetaNumberConnection | null {
-    if (other instanceof MetaNumber || other instanceof MetaNumber) {
-      return new MetaNumberConnection(this, other);
+  wireTo(that: MetaValue): MetaNumberConnection | null {
+    if (that instanceof MetaNumber || that instanceof MetaNumber) {
+      return new MetaNumberConnection(this, that);
     } else {
       console.error("You can't wire those things together silly billy!");
       return null;
@@ -38,7 +37,12 @@ export class MetaNumberConnection implements MetaConnection {
   constraint: Constraint;
 
   constructor(a: MetaNumber | MetaLabel, b: MetaNumber | MetaLabel) {
-    this.constraint = constraints.equals(a.variable, b.variable);
+    // The order of arguments to `equals` matters b/c the 1st one's
+    // associated value will flow into the second.
+    // The order in the call below used to be `a.variable, b.variable`
+    // but that caused jumps in the property picker's values.
+    // TODO: talk to Marcel about this
+    this.constraint = constraints.equals(b.variable, a.variable);
   }
 
   remove() {
@@ -54,9 +58,9 @@ export class MetaLabel implements MetaValue {
     public variable: Variable
   ) {}
 
-  wireTo(other: MetaValue): MetaConnection | null {
-    if (other instanceof MetaNumber || other instanceof MetaNumber) {
-      return new MetaNumberConnection(this, other);
+  wireTo(that: MetaValue): MetaConnection | null {
+    if (that instanceof MetaNumber || that instanceof MetaNumber) {
+      return new MetaNumberConnection(this, that);
     } else {
       console.error("You can't wire those things together silly billy!");
       return null;
@@ -64,7 +68,9 @@ export class MetaLabel implements MetaValue {
   }
 }
 
-// STRUCTS (Collection of labels (Names))
+/**
+ * A collection of labels / names.
+ */
 export class MetaStruct implements MetaValue {
   labelsById = new Map<number, MetaLabel>();
   labelsByString = new Map<string, MetaLabel>();
@@ -101,9 +107,9 @@ export class MetaStruct implements MetaValue {
     return Array.from(this.labelsById.values());
   }
 
-  wireTo(other: MetaValue): MetaStructConnection | null {
-    if (other instanceof MetaStruct) {
-      return new MetaStructConnection(this, other);
+  wireTo(that: MetaValue): MetaStructConnection | null {
+    if (that instanceof MetaStruct) {
+      return new MetaStructConnection(this, that);
     } else {
       console.error("You can't wire those things together silly billy!");
       return null;
@@ -133,7 +139,7 @@ export class MetaStructConnection implements MetaConnection {
 
 // COLLECTION (TBD)
 export class MetaCollection implements MetaValue {
-  wireTo(_other: MetaValue) {
+  wireTo(_that: MetaValue) {
     return null;
   }
 }
