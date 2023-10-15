@@ -13,6 +13,12 @@ Bugs
 Formulas / Wires / Meta
 -----------------------
 
+* P0: gesture to add handles to a stroke / stroke group
+
+* P0: gesture to add/remove gizmo between two handles
+
+* P0: make sure that stroke group's rendering actually updates when its handles move
+
 * P0: some gesture to break connections / remove wires
 
 * P0: some gesture to remove a formula
