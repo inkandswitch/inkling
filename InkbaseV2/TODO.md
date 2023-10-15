@@ -7,6 +7,9 @@ Bugs
 * when you snap two gizmos together, all handles collapse to a single position
   (this was working before, but started happening again when I fixed the free variable computation) 
 
+* sometimes connecting two number tokens w/ a wire doesn't work -- the wire is there, but their
+  values aren't the same. seems to be dependent on direction / connection order.
+
 Formulas / Wires / Meta
 -----------------------
 
