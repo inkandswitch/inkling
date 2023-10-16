@@ -1,49 +1,132 @@
+/* THEME LIGHTNESS VALUES *************************************************************************
+ * 0 is lowest contrast and 5 is highest contrast against the background.
+ * Do tweak these, or add new themes in index.html
+ */
+:root[theme*='light'] {
+  --L0: 90%;
+  --L1: 80%;
+  --L2: 70%;
+  --L3: 50%;
+  --L4: 30%;
+  --L5: 0%;
+}
+
+:root[theme*='dark'] {
+  --L0: 10%;
+  --L1: 30%;
+  --L2: 50%;
+  --L3: 70%;
+  --L4: 80%;
+  --L5: 90%;
+}
+
+/* Generate a range of greyscale colors based on the above lightness values */
 :root {
-  --bg-color: color(display-p3 0.9 0.9 0.9);
-  --ink-color: #000a;
+  --grey0: lch(var(--L0) 0 0);
+  --grey1: lch(var(--L1) 0 0);
+  --grey2: lch(var(--L2) 0 0);
+  --grey3: lch(var(--L3) 0 0);
+  --grey4: lch(var(--L4) 0 0);
+  --grey5: lch(var(--L5) 0 0);
+}
 
-  --meta-black: transparent;
-  --meta-dark-grey: transparent;
-  --meta-grey: transparent;
-  --meta-light-grey: transparent;
-  --meta-white: transparent;
+/* SEMANTIC VARIABLES *****************************************************************************
+ * Here we assign the greyscale colors established above onto meaningful names for our elements.
+ * We'll use these names throughout the rest of the stylesheet, and not refer to specific colors.
+ */
 
-  --meta-green: transparent;
-  --meta-yellow: transparent;
-  --meta-light-blue: transparent;
-
-  --meta-toggle: var(--ink-color);
-
-  --handle-fill: var(--ink-color);
-  --handle-stroke: transparent;
-
-  /* --pseudo-touch: color(display-p3 0 1 0.8); */
+:root {
+  /* These colors are the same in concrete and meta mode */
+  --bg-color: var(--grey0);
+  --handle-fill: var(--grey5);
+  --status-text: var(--grey3);
   --pseudo-touch: transparent;
 
+  /* These colors are different in concrete and meta mode */
+  --component: transparent;
+  --constrained: transparent;
+  --formula-editor-cell-embedded: transparent;
+  --formula-editor-cell-text: transparent;
+  --formula-editor-cell: transparent;
+  --formula-editor: transparent;
+  --formula-ink: transparent;
+  --gizmo-line: transparent;
+  --gizmo-arcs: transparent;
+  --handle-stroke: transparent;
+  --ink-color: lch(var(--L5) 0 0 / 0.65);
+  --label-box: transparent;
+  --label-text: transparent;
+  --meta-toggle: var(--grey5);
+  --meta-wire: transparent;
+  --op-token: transparent;
+  --parsed-formula: transparent;
+  --property-picker-box: transparent;
+  --property-picker-editor-box: transparent;
+  --property-picker-editor-text: transparent;
+  --property-picker-text: transparent;
+  --token-embedded-fill: transparent;
+  --token-fill: transparent;
+  --token-frac-text: transparent;
+  --token-locked-fill: transparent;
+  --token-stroke: transparent;
+  --token-text: transparent;
+
+  &[meta-mode] {
+    --component: var(--grey5);
+    --constrained: var(--grey5);
+    --formula-editor-cell-embedded: var(--grey3);
+    --formula-editor-cell-text: var(--grey4);
+    --formula-editor-cell: var(--grey1);
+    --formula-editor: var(--grey2);
+    --formula-ink: var(--grey5);
+    --gizmo-line: var(--grey5);
+    --gizmo-arcs: lch(var(--L5) 0 0 / 0.1);
+    --handle-stroke: var(--grey5);
+    --ink-color: lch(var(--L5) 0 0 / 0.1);
+    --label-box: var(--grey3);
+    --label-text: var(--grey1);
+    --meta-toggle: var(--grey5);
+    --meta-wire: var(--grey5);
+    --op-token: var(--grey4);
+    --parsed-formula: var(--grey5);
+    --property-picker-box: var(--grey5);
+    --property-picker-editor-box: var(--grey5);
+    --property-picker-editor-text: var(--grey0);
+    --property-picker-text: var(--grey5);
+    --token-embedded-fill: var(--grey1);
+    --token-fill: var(--bg-color);
+    --token-frac-text: var(--grey4);
+    --token-locked-fill: var(--grey1);
+    --token-stroke: var(--grey5);
+    --token-text: var(--grey5);
+  }
+}
+
+/* THEME-SPECIFIC OVERRIDES ***********************************************************************
+ * The above assignments are the default used regardless of theme, but you can override them here.
+ */
+
+:root[theme*='color'] {
+  --blue: color(display-p3 0.8 0.9 1);
+  --green: color(display-p3 0 1 0.8);
+  --yellow: color(display-p3 1 0.7 0);
+
+  &[meta-mode] {
+    --constrained: var(--green);
+    --formula-editor-cell-embedded: var(--blue);
+    --label-box: var(--blue);
+    --meta-toggle: var(--yellow);
+  }
+}
+
+/* MISC CONFIG ***********************************************************************************/
+
+:root {
   --transition-fill: fill 1.4s cubic-bezier(0, 1.4, 0, 1);
   --transition-stroke: stroke 1.4s cubic-bezier(0, 1.4, 0, 1);
 }
 
-:root[meta-mode] {
-  --bg-color: color(display-p3 0.85 0.85 0.85);
-  --ink-color: #0002;
-
-  --meta-black: #000;
-  --meta-dark-grey: color(display-p3 0.3 0.3 0.3);
-  --meta-grey: color(display-p3 0.5 0.5 0.5);
-  --meta-light-grey: color(display-p3 0.7 0.7 0.7);
-  --meta-superlight-grey: color(display-p3 0.8 0.8 0.8);
-  --meta-white: color(display-p3 0.9 0.9 0.9);
-
-  --meta-green: color(display-p3 0 1 0.8);
-  --meta-yellow: color(display-p3 1 0.7 0);
-  --meta-light-blue: color(display-p3 0.8 0.9 1);
-
-  --meta-toggle: var(--meta-black);
-
-  --handle-fill: var(--meta-black);
-  --handle-stroke: var(--meta-black);
-}
+/* RESETS & BASICS *******************************************************************************/
 
 *,
 *::before,
@@ -59,9 +142,13 @@
 }
 
 html,
-body {
+body,
+svg {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
-  height: 100%;
+  height: 100vh;
   overflow: hidden;
 }
 
@@ -69,19 +156,22 @@ body {
   font-family: system-ui;
   stroke-linecap: round;
   background-color: var(--bg-color);
-  transition: background-color 0.6s cubic-bezier(0.3, 1.4, 0.3, 1);
-}
-
-svg {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100vh;
+  transition: background-color 0.8s cubic-bezier(0.5, 1, 0.5, 1);
 }
 
 svg * {
   transition: var(--transition-fill), var(--transition-stroke);
+}
+
+/* ALL THE THINGS ********************************************************************************/
+
+.status-text {
+  fill: transparent;
+  text-anchor: middle;
+  translate: 50vw calc(100vh - 15px);
+  &[is-visible] {
+    fill: var(--status-text);
+  }
 }
 
 #meta-toggle {
@@ -136,7 +226,7 @@ svg * {
 }
 
 .formula.stroke {
-  stroke: var(--meta-black);
+  stroke: var(--formula-ink);
 }
 
 .handle {
@@ -147,102 +237,115 @@ svg * {
 
 .gizmo {
   fill: none;
-  stroke: var(--meta-black);
   stroke-width: 2;
 
-  & path {
-    transition: transform 0.4s cubic-bezier(0, 1.2, 0, 1);
+  & polyline {
+    stroke: var(--gizmo-line);
+    stroke-width: 2;
   }
 
-  & polyline {
-    stroke-width: 2;
+  & path {
+    stroke: var(--gizmo-arcs);
+    transition:
+      transform 0.4s cubic-bezier(0, 1.2, 0, 1),
+      var(--transition-stroke);
+  }
+
+  & [is-constrained] path {
+    stroke: var(--constrained);
   }
 }
 
 .component {
   fill: none;
-  stroke: var(--meta-black);
+  stroke: var(--component);
   stroke-width: 2;
 }
 
 .formula-editor {
-  fill: var(--meta-light-grey);
+  fill: var(--formula-editor);
 }
 
 .formula-editor-cell {
-  fill: var(--meta-white);
+  fill: var(--formula-editor-cell);
 
   &[is-default-type='false'] {
-    fill: var(--meta-light-blue);
+    fill: var(--formula-editor-cell-embedded);
   }
 }
 
 .formula-editor-cell-text {
-  fill: var(--meta-dark-grey);
+  fill: var(--formula-editor-cell-text);
 }
 
 .label-box {
-  fill: var(--meta-light-blue);
+  fill: var(--label-box);
 }
 
 .label-text {
-  fill: var(--meta-white);
+  fill: var(--label-text);
 }
 
 .token-box {
-  fill: var(--bg-color);
-  stroke: var(--meta-black);
+  fill: var(--token-fill);
+  stroke: var(--token-stroke);
   stroke-width: 0.5;
 
-  &[is-embedded='true'] {
+  [is-embedded='true'] > & {
     stroke: none;
-    fill: var(--meta-superlight-grey);
+    fill: var(--token-embedded-fill);
   }
 
-  &[is-locked='true'] {
-    fill: var(--meta-grey);
+  [is-locked='true'] > & {
+    fill: var(--token-locked-fill);
   }
 }
 
 .token-text {
-  fill: var(--meta-black);
+  fill: var(--token-text);
+  translate: 5px 24px;
+  font-size: 24px;
+  font-family: monospace;
 }
 
 .token-frac-text {
-  fill: var(--meta-dark-greygrey);
+  fill: var(--token-frac-text);
+  translate: 5px 24px;
+  font-size: 10px;
+  font-family: monospace;
 }
 
 .op.token {
-  fill: var(--meta-dark-grey);
+  fill: var(--op-token);
 }
 
 .parsed-formula {
-  fill: var(--bg-color);
-  stroke: var(--meta-black);
+  fill: var(--token-fill);
+  stroke: var(--parsed-formula);
   stroke-width: 0.5;
 }
 
 .property-picker-box {
-  stroke: var(--meta-black);
-  fill: var(--bg-color);
+  stroke: var(--property-picker-box);
+  fill: var(--token-fill);
   stroke-width: 0.5;
 }
 
 .property-picker-text {
-  fill: var(--meta-black);
+  fill: var(--property-picker-text);
 }
 
 .property-picker-editor-box {
-  fill: var(--meta-black);
+  fill: var(--property-picker-editor-box);
 }
 
 .property-picker-editor-text {
-  fill: var(--meta-white);
+  fill: var(--property-picker-editor-text);
 }
 
 .wire {
   fill: none;
-  stroke: var(--meta-black);
+  stroke: var(--meta-wire);
   stroke-width: 0.5;
 }
 

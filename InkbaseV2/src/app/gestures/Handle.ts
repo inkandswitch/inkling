@@ -14,7 +14,7 @@ export function touchHandle(ctx: EventContext): Gesture | void {
   }
 }
 
-function touchHandleHelper(handle: Handle): Gesture {
+export function touchHandleHelper(handle: Handle): Gesture {
   return new Gesture('Touch Handle', {
     began(_ctx) {
       constraints.pin(handle);

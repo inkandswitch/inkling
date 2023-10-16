@@ -1,6 +1,10 @@
 import { EventContext, Gesture } from './Gesture';
 import { aMetaToggle } from '../gui/MetaToggle';
 
+declare global {
+  function cycleTheme(): void;
+}
+
 export function touchMetaToggle(ctx: EventContext): Gesture | void {
   const metaToggle = ctx.root.find({
     what: aMetaToggle,
@@ -20,7 +24,9 @@ export function touchMetaToggle(ctx: EventContext): Gesture | void {
       },
       ended: ctx => {
         metaToggle.snapToCorner();
-        if (ctx.state.dragDist <= dragThreshold) {
+        if (ctx.pseudo) {
+          cycleTheme();
+        } else if (ctx.state.dragDist <= dragThreshold) {
           metaToggle.toggle();
         }
       },

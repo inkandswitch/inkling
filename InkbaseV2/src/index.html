@@ -11,10 +11,29 @@
 <body>
   <svg>
     <g id="ink"></g>
+    <g id="wires"></g>
     <g id="meta"></g>
     <g id="gui"></g>
     <g id="now"></g>
   </svg>
+
+  <script>
+    // Inlining this script to avoid flicker on page load
+    const themes = ['light grey', 'dark grey', 'light color', 'dark color'];
+    let themeIndex = +(localStorage.getItem('themeIndex') || 0);
+
+    function cycleTheme() {
+      themeIndex = ++themeIndex % themes.length;
+      updateTheme();
+    }
+
+    function updateTheme() {
+      document.documentElement.setAttribute('theme', themes[themeIndex]);
+      localStorage.setItem('themeIndex', '' + themeIndex);
+    }
+
+    updateTheme();
+  </script>
 </body>
 
 </html>

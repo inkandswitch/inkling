@@ -7,29 +7,21 @@ import * as constraints from '../constraints';
 import * as ohm from 'ohm-js';
 
 export default class NumberToken extends Token {
-  protected readonly boxElement = SVG.add('rect', SVG.metaElm, {
-    x: this.position.x,
-    y: this.position.y,
-    width: this.width,
-    height: this.height,
-    //rx: 3,
+  private lastRenderedValue = 0;
+
+  protected readonly elm = SVG.add('g', SVG.metaElm, { class: 'number-token' });
+
+  protected readonly boxElm = SVG.add('rect', this.elm, {
     class: 'token-box',
+    height: this.height,
   });
 
-  protected readonly wholeTextElement = SVG.add('text', SVG.metaElm, {
-    x: this.position.x + 5,
-    y: this.position.y + 10,
+  protected readonly wholeElm = SVG.add('text', this.elm, {
     class: 'token-text',
-    'font-size': '24px',
-    'font-family': 'monospace',
   });
 
-  protected readonly fracTextElement = SVG.add('text', SVG.metaElm, {
-    x: this.position.x + 5,
-    y: this.position.y + 10,
+  protected readonly fracElm = SVG.add('text', this.elm, {
     class: 'token-frac-text',
-    'font-size': '10px',
-    'font-family': 'monospace',
   });
 
   readonly variable: Variable;
@@ -63,32 +55,33 @@ export default class NumberToken extends Token {
   }
 
   render(): void {
-    [this.wholeTextElement.textContent, this.fracTextElement.textContent] =
-      this.variable.value.toFixed(2).split('.');
-
-    const wholeWidth = this.wholeTextElement.getComputedTextLength();
-    const fracWidth = this.fracTextElement.getComputedTextLength();
-    this.width = 5 + wholeWidth + 2 + fracWidth + 5;
-
-    SVG.update(this.boxElement, {
-      x: this.position.x,
-      y: this.position.y,
-      width: this.width,
+    SVG.update(this.elm, {
+      transform: `translate(${this.position.x} ${this.position.y})`,
       'is-locked': this.getVariable().isLocked.toString(),
       'is-embedded': this.embedded.toString(),
     });
 
-    SVG.update(this.wholeTextElement, {
-      x: this.position.x + 5,
-      y: this.position.y + 24,
-    });
-
-    SVG.update(this.fracTextElement, {
-      x: this.position.x + 5 + wholeWidth + 2,
-      y: this.position.y + 24,
-    });
-
     this.wirePort.position = this.midPoint();
+
+    // getComputedTextLength() is slow, so we're gonna do some dirty checking here
+    if (this.variable.value != this.lastRenderedValue) {
+      this.lastRenderedValue = this.variable.value;
+
+      [this.wholeElm.textContent, this.fracElm.textContent] =
+        this.variable.value.toFixed(2).split('.');
+
+      const wholeWidth = this.wholeElm.getComputedTextLength();
+      const fracWidth = this.fracElm.getComputedTextLength();
+      this.width = 5 + wholeWidth + 2 + fracWidth + 5;
+
+      SVG.update(this.boxElm, {
+        width: this.width,
+      });
+
+      SVG.update(this.fracElm, {
+        dx: wholeWidth + 2,
+      });
+    }
   }
 
   getVariable() {

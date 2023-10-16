@@ -12,6 +12,7 @@ import { drawInk } from './gestures/DrawInk';
 import { createWire } from './gestures/CreateWire';
 import { tapPropertyPicker } from './gestures/PropertyPicker';
 import SVG from './Svg';
+import { createGizmo } from './gestures/CreateGizmo';
 
 const gestureCreators = {
   finger: [
@@ -22,6 +23,7 @@ const gestureCreators = {
     touchMetaToggle,
   ],
   pencil: [
+    createGizmo,
     tapPropertyPicker,
     tapFormulaLabel,
     pencilFormulaEditor,

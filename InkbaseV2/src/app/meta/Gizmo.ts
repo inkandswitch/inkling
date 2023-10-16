@@ -14,9 +14,9 @@ export default class Gizmo extends GameObject {
   center: Position;
 
   private g = SVG.add('g', SVG.metaElm, { class: 'gizmo' });
-  private paths = SVG.add('g', this.g);
-  private arc1 = SVG.add('path', this.paths);
-  private arc2 = SVG.add('path', this.paths);
+  private arcs = SVG.add('g', this.g);
+  private arc1 = SVG.add('path', this.arcs);
+  private arc2 = SVG.add('path', this.arcs);
   private polyline = SVG.add('polyline', this.g);
 
   readonly distance: Variable;
@@ -120,7 +120,8 @@ export default class Gizmo extends GameObject {
     const yOffset = dLock ? -3.5 : 0;
     const arcPath = SVG.arcPath(Vec.zero, 10, TAU / 4, Math.PI / 3);
 
-    SVG.update(this.paths, {
+    SVG.update(this.arcs, {
+      'is-constrained': aLock || dLock,
       style: `transform: translate(${this.center.x}px, ${this.center.y}px) rotate(${angle}deg)`,
     });
     SVG.update(this.arc1, {

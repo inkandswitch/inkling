@@ -24,6 +24,8 @@ function PropertyPickerPath(pos: Position, w: number, h: number) {
 }
 
 export default class PropertyPicker extends Token {
+  private lastRenderedValue = '';
+
   protected readonly boxElement = SVG.add('path', SVG.metaElm, {
     d: PropertyPickerPath(this.position, this.width, this.height),
     class: 'property-picker-box',
@@ -57,8 +59,21 @@ export default class PropertyPicker extends Token {
   }
 
   render(): void {
+    // getComputedTextLength() is slow, so we're gonna do some dirty checking here
+    const text = this.property?.display as string;
+    if (text != this.lastRenderedValue) {
+      this.lastRenderedValue = text;
+      this.textElement.textContent = text;
+      this.width = this.textElement.getComputedTextLength() + 10;
+    }
+
     SVG.update(this.boxElement, {
       d: PropertyPickerPath(this.position, this.width, this.height),
+    });
+
+    SVG.update(this.textElement, {
+      x: this.position.x + 5,
+      y: this.position.y + 21,
     });
 
     this.inputPort.position = Vec.add(this.position, Vec(-20, this.height / 2));
@@ -66,14 +81,6 @@ export default class PropertyPicker extends Token {
       this.position,
       Vec(this.width, this.height / 2)
     );
-
-    SVG.update(this.textElement, {
-      x: this.position.x + 5,
-      y: this.position.y + 21,
-    });
-
-    this.textElement.textContent = this.property?.display as string;
-    this.width = this.textElement.getComputedTextLength() + 10;
   }
 
   setProperty(newValue: MetaLabel) {

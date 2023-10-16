@@ -2,11 +2,12 @@ import { clip } from '../lib/math';
 import { Position, PositionWithPressure } from '../lib/types';
 import Vec from '../lib/vec';
 
-type Attributes = Record<string, string | number>;
+type Attributes = Record<string, string | number | boolean>;
 
 const NS = 'http://www.w3.org/2000/svg';
 
 const inkElm = document.querySelector('#ink') as SVGSVGElement;
+const wiresElm = document.querySelector('#wires') as SVGSVGElement;
 const metaElm = document.querySelector('#meta') as SVGSVGElement;
 const guiElm = document.querySelector('#gui') as SVGSVGElement;
 const nowElm = document.querySelector('#now') as SVGGElement;
@@ -50,6 +51,8 @@ function update<T extends SVGElement>(elm: T, attributes: Attributes) {
 
     if (key === 'content') {
       elm.innerHTML = '' + value;
+    } else if (typeof value === 'boolean') {
+      value ? elm.setAttribute(key, '') : elm.removeAttribute(key);
     } else {
       elm.setAttribute(key, '' + value);
     }
@@ -104,10 +107,12 @@ function clearNow(currentTime = Infinity) {
  * E.g.: SVG.now('polyline', { points: SVG.points(pos1, pos2, posArr), stroke: '#F00' });
  */
 function points(...positions: Array<Position | Position[]>) {
-  return positions
-    .flat()
-    .map(p => p.x + ' ' + p.y)
-    .join(' ');
+  return positions.flat().map(positionToPointsString).join(' ');
+}
+
+// TODO: This function is probably the #1 perf hotspot in the codebase.
+function positionToPointsString(p: Position) {
+  return p.x + ' ' + p.y;
 }
 
 /**
@@ -147,24 +152,16 @@ function path(points: Position[] | PositionWithPressure[]) {
     .join(' ');
 }
 
-const statusElement = add('text', guiElm, {
-  x: 60,
-  content: '',
-  stroke: '#bbb',
-});
+const statusElement = add('text', guiElm, { class: 'status-text' });
 
 let statusHideTimeMillis = 0;
 
 function showStatus(text: string, time = 3_000) {
-  update(statusElement, {
-    content: text,
-    visibility: 'visible',
-    y: window.innerHeight - 12,
-  });
+  update(statusElement, { content: text, 'is-visible': true });
   statusHideTimeMillis = Date.now() + time;
   setTimeout(() => {
     if (Date.now() >= statusHideTimeMillis) {
-      update(statusElement, { visibility: 'hidden' });
+      update(statusElement, { 'is-visible': false });
     }
   }, time);
 }
@@ -180,6 +177,7 @@ export default {
   path,
   showStatus,
   inkElm,
+  wiresElm,
   metaElm,
   guiElm,
 };

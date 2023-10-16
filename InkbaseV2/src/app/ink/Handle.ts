@@ -12,13 +12,16 @@ export interface HandleListener {
 export default class Handle extends GameObject {
   static create(
     position: Position,
-    listener: HandleListener | null = null
+    listener: HandleListener | null = null,
+    doAbsorb = true
   ): Handle {
     const handle = new Handle(position);
     if (listener) {
       handle.addListener(listener);
     }
-    handle.absorbNearbyHandles();
+    if (doAbsorb) {
+      handle.absorbNearbyHandles();
+    }
     return handle;
   }
 
