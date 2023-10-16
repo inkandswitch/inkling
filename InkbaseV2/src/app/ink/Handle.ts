@@ -76,7 +76,6 @@ export default class Handle extends GameObject {
 
   absorb(that: Handle) {
     constraints.absorb(this, that);
-    console.log(this.id, 'absorbed', that.id);
   }
 
   absorbNearbyHandles() {
@@ -127,7 +126,6 @@ export default class Handle extends GameObject {
   }
 
   breakOff(handle: Handle) {
-    console.log(this.id, 'break off', handle.id);
     if (this.absorbedHandles.has(handle)) {
       constraints.absorb(this, handle).remove();
       return;
