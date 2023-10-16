@@ -5,8 +5,8 @@
 - P0: sometimes connecting two number tokens w/ a wire doesn't work -- the wire is there, but their
   values aren't the same. seems to be dependent on direction / connection order.
 
-- P1: when you snap two gizmos together, all handles collapse to a single position
-  (this was working before, but started happening again when I fixed the free variable computation)
+- P1: when you snap two gizmos together, all handles collapse to a single position -- this only
+  happens in one direction, and it's fine if you do it in the other direction
 
 - P2: when writing a label in the formula editor, sometimes the label.display in LabelToken is undefined and errors.
 
