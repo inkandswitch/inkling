@@ -312,6 +312,22 @@ class Distance extends LowLevelConstraint {
     constraints.push(this);
   }
 
+  propagateKnowns(knowns: Set<Variable>): void {
+    if (
+      !(
+        knowns.has(this.a.xVariable) &&
+        knowns.has(this.a.yVariable) &&
+        knowns.has(this.b.xVariable) &&
+        knowns.has(this.b.yVariable)
+      )
+    ) {
+      return;
+    }
+
+    this.distance.value = Vec.dist(this.a, this.b);
+    knowns.add(this.distance);
+  }
+
   getError(
     [dist, ax, ay, bx, by]: number[],
     _knowns: Set<Variable>,
@@ -368,6 +384,22 @@ class Angle extends LowLevelConstraint {
     }
 
     constraints.push(this);
+  }
+
+  propagateKnowns(knowns: Set<Variable>): void {
+    if (
+      !(
+        knowns.has(this.a.xVariable) &&
+        knowns.has(this.a.yVariable) &&
+        knowns.has(this.b.xVariable) &&
+        knowns.has(this.b.yVariable)
+      )
+    ) {
+      return;
+    }
+
+    this.angle.value = Vec.angle(Vec.sub(this.b, this.a));
+    knowns.add(this.angle);
   }
 
   getError(
@@ -963,6 +995,14 @@ function solveCluster({
   }
 
   const knowns = computeKnowns(constraints, lowLevelConstraints);
+
+  // Update any constant constraints whose values were overridden by propagation of knowns.
+  // (See `Distance` and `Angle` `propagateKnowns()` for examples of why this is necessary.)
+  for (const constraint of constraints) {
+    if (constraint instanceof Constant) {
+      constraint.value = constraint.variable.value;
+    }
+  }
 
   // The state that goes into `inputs` is the stuff that can be modified by the solver.
   // It excludes any value that we've already computed from known values like pin and

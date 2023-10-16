@@ -68,10 +68,6 @@
 - P0: pin constraint: gesture to add/remove + rendering
   (Ivan)
 
-- P0: propagation of known values for Angle and Distance
-  if we know both handle positions, we should know angle and distance, even if those are already know (should override)
-  (Alex)
-
 - P2: When snapping handles, only the handle being dragged should move. The other handle should stay where it was.
   (Alex)
 
