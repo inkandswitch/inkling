@@ -2,8 +2,6 @@
 
 ## Bugs
 
-- P0: Fix the ='true' and ='false' in the stylesheet
-
 - P0: make handles big and translucent
   (Ivan)
 
@@ -29,12 +27,6 @@
 - P3/4: merging stroke groups (lasso?)
 
 ## Formulas / Wires / Meta
-
-- P0: locked formula cells aren't rendering as locked
-  (Ivan)
-
-- P0: 1st cell in formula has wrong width and shows up as blank
-  (Ivan)
 
 - P0: some gesture to break connections / remove wires, and formulas
   (Ivan -> Alex + Marcel)

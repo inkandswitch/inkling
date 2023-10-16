@@ -240,7 +240,7 @@ class FormulaEditorCell extends GameObject {
       x: this.position.x,
       y: this.position.y,
       width: this.width,
-      'is-default-type': (this.type === 'default').toString(),
+      'is-default-type': this.type === 'default',
     });
 
     if (this.type === 'default') {

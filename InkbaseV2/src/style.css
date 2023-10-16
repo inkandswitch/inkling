@@ -45,7 +45,7 @@
   /* These colors are different in concrete and meta mode */
   --component: transparent;
   --constrained: transparent;
-  --formula-editor-cell-embedded: transparent;
+  --formula-editor-cell-non-default: transparent;
   --formula-editor-cell-text: transparent;
   --formula-editor-cell: transparent;
   --formula-editor: transparent;
@@ -75,7 +75,7 @@
   &[meta-mode] {
     --component: var(--grey5);
     --constrained: var(--grey5);
-    --formula-editor-cell-embedded: var(--grey3);
+    --formula-editor-cell-non-default: var(--grey3);
     --formula-editor-cell-text: var(--grey4);
     --formula-editor-cell: var(--grey1);
     --formula-editor: var(--grey2);
@@ -95,7 +95,7 @@
     --property-picker-editor-box: var(--grey5);
     --property-picker-editor-text: var(--grey0);
     --property-picker-text: var(--grey5);
-    --token-embedded-fill: var(--grey1);
+    --token-embedded-fill: var(--grey0);
     --token-fill: var(--bg-color);
     --token-frac-text: var(--grey4);
     --token-locked-fill: var(--grey1);
@@ -115,7 +115,7 @@
 
   &[meta-mode] {
     --constrained: var(--green);
-    --formula-editor-cell-embedded: var(--blue);
+    --formula-editor-cell-non-default: var(--blue);
     --label-box: var(--blue);
     --meta-toggle: var(--yellow);
   }
@@ -271,8 +271,8 @@ svg * {
 .formula-editor-cell {
   fill: var(--formula-editor-cell);
 
-  &[is-default-type='false'] {
-    fill: var(--formula-editor-cell-embedded);
+  &:not([is-default-type]) {
+    fill: var(--formula-editor-cell-non-default);
   }
 }
 
@@ -299,12 +299,12 @@ svg * {
   stroke: var(--token-stroke);
   stroke-width: 0.5;
 
-  [is-embedded='true'] > & {
+  [is-embedded] > & {
     stroke: none;
     fill: var(--token-embedded-fill);
   }
 
-  [is-locked='true'] > & {
+  [is-locked] > & {
     fill: var(--token-locked-fill);
   }
 }

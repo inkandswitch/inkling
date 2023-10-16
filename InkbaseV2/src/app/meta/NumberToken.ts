@@ -7,7 +7,7 @@ import * as constraints from '../constraints';
 import * as ohm from 'ohm-js';
 
 export default class NumberToken extends Token {
-  private lastRenderedValue = 0;
+  private lastRenderedValue = -Infinity;
 
   protected readonly elm = SVG.add('g', SVG.metaElm, { class: 'number-token' });
 
@@ -57,8 +57,8 @@ export default class NumberToken extends Token {
   render(): void {
     SVG.update(this.elm, {
       transform: `translate(${this.position.x} ${this.position.y})`,
-      'is-locked': this.getVariable().isLocked.toString(),
-      'is-embedded': this.embedded.toString(),
+      'is-locked': this.getVariable().isLocked,
+      'is-embedded': this.embedded,
     });
 
     this.wirePort.position = this.midPoint();
