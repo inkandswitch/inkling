@@ -11,6 +11,9 @@
 
 - P2/3: when you snap two gizmos together, all handles collapse to a single position -- this only
   happens in one direction, and it's fine if you do it in the other direction
+  Update: this happens b/c we try to make the angles equal, but they may be 180 degrees apart!
+  I ran into the same problem when I tried to make the parallelogram demo (which works great
+  when we avoid this problem).
   (Alex)
 
 - P2: when writing a label in the formula editor, sometimes the label.display in LabelToken is undefined and errors.
