@@ -16,9 +16,6 @@
   happens in one direction, and it's fine if you do it in the other direction
   (Alex)
 
-- P1: when you drop a handle "on top" of another, the other handle shouldn't move
-  (Alex)
-
 - P2: when writing a label in the formula editor, sometimes the label.display in LabelToken is undefined and errors.
   (Marcel)
 

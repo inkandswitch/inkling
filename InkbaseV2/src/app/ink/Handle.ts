@@ -6,10 +6,10 @@ import { Position } from '../../lib/types';
 import Vec from '../../lib/vec';
 
 export default class Handle extends GameObject {
-  static create(position: Position, doAbsorb = true): Handle {
+  static create(position: Position, getAbsorbed = true): Handle {
     const handle = new Handle(position);
-    if (doAbsorb) {
-      handle.absorbNearbyHandles();
+    if (getAbsorbed) {
+      handle.getAbsorbedByNearestHandle();
     }
     return handle;
   }
@@ -60,16 +60,15 @@ export default class Handle extends GameObject {
     constraints.absorb(this, that);
   }
 
-  absorbNearbyHandles() {
-    this.page.forEach({
+  getAbsorbedByNearestHandle() {
+    const nearestHandle = this.page.find({
       what: aCanonicalHandle,
       near: this.position,
-      do: that => {
-        if (that !== this) {
-          this.absorb(that);
-        }
-      },
+      that: handle => handle !== this,
     });
+    if (nearestHandle) {
+      nearestHandle.absorb(this);
+    }
   }
 
   private _canonicalHandle: Handle = this;

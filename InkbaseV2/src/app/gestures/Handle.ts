@@ -28,7 +28,7 @@ export function touchHandleHelper(handle: Handle): Gesture {
       }
     },
     ended(_ctx) {
-      handle.absorbNearbyHandles();
+      handle.getAbsorbedByNearestHandle();
       constraints.pin(handle).remove();
     },
   });
