@@ -55,6 +55,7 @@
   --handle-stroke: transparent;
   --ink-color: lch(var(--L5) 0 0 / 0.65);
   --label-box: transparent;
+  --label-stroke: transparent;
   --label-text: transparent;
   --meta-toggle: var(--grey5);
   --meta-wire: transparent;
@@ -84,6 +85,7 @@
     --handle-stroke: var(--grey5);
     --ink-color: lch(var(--L5) 0 0 / 0.1);
     --label-box: var(--grey3);
+    --label-stroke: var(--grey1);
     --label-text: var(--grey1);
     --meta-toggle: var(--grey5);
     --meta-wire: var(--grey5);
@@ -284,6 +286,12 @@ svg * {
 
 .label-text {
   fill: var(--label-text);
+}
+
+.label-stroke {
+  fill: none;
+  stroke: var(--label-stroke);
+  stroke-width: 2;
 }
 
 .token-box {

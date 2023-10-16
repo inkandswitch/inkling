@@ -9,6 +9,7 @@ const NS = 'http://www.w3.org/2000/svg';
 const inkElm = document.querySelector('#ink') as SVGSVGElement;
 const wiresElm = document.querySelector('#wires') as SVGSVGElement;
 const metaElm = document.querySelector('#meta') as SVGSVGElement;
+const labelElm = document.querySelector('#label') as SVGSVGElement;
 const guiElm = document.querySelector('#gui') as SVGSVGElement;
 const nowElm = document.querySelector('#now') as SVGGElement;
 
@@ -179,5 +180,6 @@ export default {
   inkElm,
   wiresElm,
   metaElm,
+  labelElm,
   guiElm,
 };
