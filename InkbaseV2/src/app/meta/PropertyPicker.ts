@@ -61,7 +61,7 @@ export default class PropertyPicker extends Token {
   render(): void {
     // getComputedTextLength() is slow, so we're gonna do some dirty checking here
     const text = this.property?.display as string;
-    if (text != this.lastRenderedValue) {
+    if (text !== this.lastRenderedValue) {
       this.lastRenderedValue = text;
       this.textElement.textContent = text;
       this.width = this.textElement.getComputedTextLength() + 10;

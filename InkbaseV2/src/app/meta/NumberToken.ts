@@ -64,7 +64,7 @@ export default class NumberToken extends Token {
     this.wirePort.position = this.midPoint();
 
     // getComputedTextLength() is slow, so we're gonna do some dirty checking here
-    if (this.variable.value != this.lastRenderedValue) {
+    if (this.variable.value !== this.lastRenderedValue) {
       this.lastRenderedValue = this.variable.value;
 
       [this.wholeElm.textContent, this.fracElm.textContent] =
