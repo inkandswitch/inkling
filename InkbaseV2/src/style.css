@@ -87,7 +87,7 @@
     --label-stroke: var(--grey1);
     --label-text: var(--grey1);
     --meta-toggle: var(--grey5);
-    --meta-wire: var(--grey5);
+    --meta-wire: var(--grey4);
     --op-token: var(--grey4);
     --parsed-formula: var(--grey5);
     --property-picker-box: var(--grey5);
@@ -354,6 +354,7 @@ svg * {
   fill: none;
   stroke: var(--meta-wire);
   stroke-width: 0.5;
+  stroke-dasharray: 10;
 }
 
 @keyframes zoom-in {
