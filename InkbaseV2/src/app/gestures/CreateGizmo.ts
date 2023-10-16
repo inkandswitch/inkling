@@ -5,12 +5,13 @@ import { touchHandleHelper } from './Handle';
 
 export function createGizmo(ctx: EventContext): Gesture | void {
   if (ctx.metaToggle.active) {
-    const a = ctx.page.find({
+    const handle = ctx.page.find({
       what: aCanonicalHandle,
       near: ctx.event.position,
     });
 
-    if (a) {
+    if (handle) {
+      const a = ctx.page.adopt(Handle.create({ ...ctx.event.position }, true));
       const b = ctx.page.adopt(Handle.create({ ...ctx.event.position }, false));
       ctx.page.adopt(new Gizmo(a, b));
       return touchHandleHelper(b);

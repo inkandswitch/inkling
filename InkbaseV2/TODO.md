@@ -2,11 +2,10 @@
 
 ## Bugs
 
+- P0: Fix the ='true' and ='false' in the stylesheet
+
 - P0: make handles big and translucent
   (Ivan)
-
-- P0: drawing new gizmo out from a handle makes connection to canonical handle... can't be broken
-  (Alex + Ivan)
 
 - P0: sometimes connecting two number tokens w/ a wire doesn't work -- the wire is there, but their
   values aren't the same. seems to be dependent on direction / connection order.
@@ -41,7 +40,7 @@
   (Ivan -> Alex + Marcel)
 
 - P1: wire anything into anything, silly billy!
-  need a way to make it clear that you're *not* wiring
+  need a way to make it clear that you're _not_ wiring
   (related to seed creation)
   (Marcel)
 
