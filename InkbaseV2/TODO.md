@@ -68,9 +68,6 @@
 - P0: pin constraint: gesture to add/remove + rendering
   (Ivan)
 
-- P2: When snapping handles, only the handle being dragged should move. The other handle should stay where it was.
-  (Alex)
-
 - P4: constraints should only have weak refs to handles
 
 ## Clean-up
