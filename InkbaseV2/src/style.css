@@ -39,6 +39,7 @@
   /* These colors are the same in concrete and meta mode */
   --bg-color: var(--grey0);
   --handle-fill: var(--grey5);
+  --handle-stroke: lch(var(--L5) 0 0 / 0.03);
   --status-text: var(--grey3);
   --pseudo-touch: transparent;
 
@@ -52,7 +53,6 @@
   --formula-ink: transparent;
   --gizmo-line: transparent;
   --gizmo-arcs: transparent;
-  --handle-stroke: transparent;
   --ink-color: lch(var(--L5) 0 0 / 0.65);
   --label-box: transparent;
   --label-stroke: transparent;
@@ -82,7 +82,6 @@
     --formula-ink: var(--grey5);
     --gizmo-line: var(--grey5);
     --gizmo-arcs: lch(var(--L5) 0 0 / 0.1);
-    --handle-stroke: var(--grey5);
     --ink-color: lch(var(--L5) 0 0 / 0.1);
     --label-box: var(--grey3);
     --label-stroke: var(--grey1);
@@ -234,7 +233,7 @@ svg * {
 .handle {
   fill: var(--handle-fill);
   stroke: var(--handle-stroke);
-  stroke-width: 3;
+  stroke-width: 30;
 }
 
 .gizmo {

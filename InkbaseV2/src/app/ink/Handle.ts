@@ -18,7 +18,7 @@ export default class Handle extends GameObject {
 
   private readonly element = SVG.add('circle', SVG.inkElm, {
     class: 'handle',
-    r: 3,
+    r: 1.5,
   });
 
   public readonly xVariable = constraints.variable(0, {

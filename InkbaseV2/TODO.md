@@ -2,9 +2,6 @@
 
 ## Bugs
 
-- P0: make handles big and translucent
-  (Ivan)
-
 - P0: Wires to formula cells render behind the formula box. This is bad.
   (Ivan)
 
