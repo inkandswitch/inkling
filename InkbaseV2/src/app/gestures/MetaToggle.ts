@@ -17,12 +17,12 @@ export function touchMetaToggle(ctx: EventContext): Gesture | void {
 
   if (metaToggle) {
     return new Gesture('Touch Meta Toggle', {
-      moved: ctx => {
+      moved(ctx) {
         if (ctx.state.dragDist > dragThreshold) {
           metaToggle.dragTo(ctx.event.position);
         }
       },
-      ended: ctx => {
+      ended(ctx) {
         metaToggle.snapToCorner();
         if (ctx.pseudo) {
           cycleTheme();

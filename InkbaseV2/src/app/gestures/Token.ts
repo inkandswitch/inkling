@@ -13,8 +13,14 @@ export function touchToken(ctx: EventContext): Gesture | void {
     const offset = Vec.sub(token.position, ctx.event.position);
 
     return new Gesture('Touch Token', {
-      dragged: ctx => (token.position = Vec.add(ctx.event.position, offset)),
-      ended: ctx => !ctx.state.drag && isNumberToken(token) && token.onTap(),
+      dragged(ctx) {
+        token.position = Vec.add(ctx.event.position, offset);
+      },
+      ended(ctx) {
+        if (!ctx.state.drag && isNumberToken(token)) {
+          token.onTap();
+        }
+      },
     });
   }
 }
@@ -34,7 +40,7 @@ export function scrubNumberToken(ctx: EventContext): Gesture | void {
       let fingers = 0;
 
       return new Gesture('Scrub Number Token', {
-        moved: ctx => {
+        moved(ctx) {
           if (fingers !== ctx.pseudoCount) {
             fingers = ctx.pseudoCount;
             initialValue = v.value;
@@ -45,7 +51,11 @@ export function scrubNumberToken(ctx: EventContext): Gesture | void {
           const value = Math.round((initialValue + delta * m) / m) * m;
           token.getVariable().lock(value);
         },
-        ended: () => !wasLocked && token.getVariable().unlock(),
+        ended(_ctx) {
+          if (!wasLocked) {
+            token.getVariable().unlock();
+          }
+        },
       });
     }
   }

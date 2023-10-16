@@ -36,8 +36,10 @@ export function createWire(ctx: EventContext): Gesture | void {
     }
 
     return new Gesture('Create Wire', {
-      moved: ctx => (wire.points[1] = ctx.event.position),
-      ended: ctx => {
+      moved(ctx) {
+        wire.points[1] = ctx.event.position;
+      },
+      ended(ctx) {
         const near = ctx.event.position;
         const primaryToken = find({ what: aPrimaryToken, near });
         const gizmo = find({ what: aGizmo, near });

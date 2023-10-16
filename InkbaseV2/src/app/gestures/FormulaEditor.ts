@@ -33,12 +33,18 @@ export function pencilFormulaEditor(ctx: EventContext): Gesture | void {
     if (formulaEditor) {
       if (ctx.pseudo) {
         return new Gesture('Pseudo Tap Formula Editor', {
-          began: ctx => formulaEditor.switchCellMode(ctx.event.position),
+          began(ctx) {
+            formulaEditor.switchCellMode(ctx.event.position);
+          },
         });
       } else {
         return new Gesture('Writing In Formula Editor', {
-          moved: ctx => stroke.points.push(ctx.event.position),
-          ended: _ctx => formulaEditor.captureStroke(stroke),
+          moved(ctx) {
+            stroke.points.push(ctx.event.position);
+          },
+          ended(_ctx) {
+            formulaEditor.captureStroke(stroke);
+          },
         });
       }
     }

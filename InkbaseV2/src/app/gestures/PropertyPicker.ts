@@ -11,7 +11,9 @@ export function tapPropertyPicker(ctx: EventContext): Gesture | void {
 
     if (propertyPicker) {
       return new Gesture('Tap Property Picker', {
-        began: () => propertyPicker.onTapInside(ctx.event.position),
+        began(_ctx) {
+          propertyPicker.onTapInside(ctx.event.position);
+        },
       });
     }
   }

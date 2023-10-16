@@ -6,7 +6,9 @@ export function drawInk(ctx: EventContext): Gesture | void {
     const stroke = ctx.page.addStroke(new Stroke());
 
     return new Gesture('Draw Ink', {
-      moved: ctx => stroke.points.push(ctx.event.position),
+      moved(ctx) {
+        stroke.points.push(ctx.event.position);
+      },
     });
   }
 }
