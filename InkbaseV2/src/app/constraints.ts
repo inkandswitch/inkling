@@ -315,17 +315,17 @@ class Distance extends LowLevelConstraint {
   propagateKnowns(knowns: Set<Variable>): void {
     if (
       !(
-        knowns.has(this.a.xVariable) &&
-        knowns.has(this.a.yVariable) &&
-        knowns.has(this.b.xVariable) &&
-        knowns.has(this.b.yVariable)
+        knowns.has(this.a.xVariable.canonicalInstance) &&
+        knowns.has(this.a.yVariable.canonicalInstance) &&
+        knowns.has(this.b.xVariable.canonicalInstance) &&
+        knowns.has(this.b.yVariable.canonicalInstance)
       )
     ) {
       return;
     }
 
     this.distance.value = Vec.dist(this.a, this.b);
-    knowns.add(this.distance);
+    knowns.add(this.distance.canonicalInstance);
   }
 
   getError(
@@ -389,17 +389,17 @@ class Angle extends LowLevelConstraint {
   propagateKnowns(knowns: Set<Variable>): void {
     if (
       !(
-        knowns.has(this.a.xVariable) &&
-        knowns.has(this.a.yVariable) &&
-        knowns.has(this.b.xVariable) &&
-        knowns.has(this.b.yVariable)
+        knowns.has(this.a.xVariable.canonicalInstance) &&
+        knowns.has(this.a.yVariable.canonicalInstance) &&
+        knowns.has(this.b.xVariable.canonicalInstance) &&
+        knowns.has(this.b.yVariable.canonicalInstance)
       )
     ) {
       return;
     }
 
     this.angle.value = Vec.angle(Vec.sub(this.b, this.a));
-    knowns.add(this.angle);
+    knowns.add(this.angle.canonicalInstance);
   }
 
   getError(
@@ -426,26 +426,32 @@ class Angle extends LowLevelConstraint {
     const r = Vec.dist(bPos, aPos);
     let error = Infinity;
 
-    if (!knowns.has(this.b.xVariable) && !knowns.has(this.b.yVariable)) {
+    if (
+      !knowns.has(this.b.xVariable.canonicalInstance) &&
+      !knowns.has(this.b.yVariable.canonicalInstance)
+    ) {
       const x = ax + r * Math.cos(angle);
       const y = ay + r * Math.sin(angle);
       error = Math.min(error, Vec.dist(bPos, { x, y }));
-    } else if (!knowns.has(this.b.xVariable)) {
+    } else if (!knowns.has(this.b.xVariable.canonicalInstance)) {
       const x = ax + (by - ay) / Math.tan(angle);
       error = Math.min(error, Math.abs(x - bx));
-    } else if (!knowns.has(this.b.yVariable)) {
+    } else if (!knowns.has(this.b.yVariable.canonicalInstance)) {
       const y = ay + (bx - ax) * Math.tan(angle);
       error = Math.min(error, Math.abs(y - by));
     }
 
-    if (!knowns.has(this.a.xVariable) && !knowns.has(this.a.yVariable)) {
+    if (
+      !knowns.has(this.a.xVariable.canonicalInstance) &&
+      !knowns.has(this.a.yVariable.canonicalInstance)
+    ) {
       const x = bx + r * Math.cos(angle + Math.PI);
       const y = by + r * Math.sin(angle + Math.PI);
       error = Math.min(error, Vec.dist(aPos, { x, y }));
-    } else if (!knowns.has(this.a.xVariable)) {
+    } else if (!knowns.has(this.a.xVariable.canonicalInstance)) {
       const x = bx + (ay - by) / Math.tan(angle + Math.PI);
       error = Math.min(error, Math.abs(x - ax));
-    } else if (!knowns.has(this.a.yVariable)) {
+    } else if (!knowns.has(this.a.yVariable.canonicalInstance)) {
       const y = by + (ax - bx) * Math.tan(angle + Math.PI);
       error = Math.min(error, Math.abs(y - ay));
     }
@@ -499,7 +505,7 @@ class LLFormula extends LowLevelConstraint {
       this.args.every(arg => knowns.has(arg.canonicalInstance))
     ) {
       this.result.value = this.computeResult();
-      knowns.add(this.result);
+      knowns.add(this.result.canonicalInstance);
     }
   }
 
@@ -999,7 +1005,10 @@ function solveCluster({
   // Update any constant constraints whose values were overridden by propagation of knowns.
   // (See `Distance` and `Angle` `propagateKnowns()` for examples of why this is necessary.)
   for (const constraint of constraints) {
-    if (constraint instanceof Constant) {
+    if (
+      constraint instanceof Constant &&
+      knowns.has(constraint.variable.canonicalInstance)
+    ) {
       constraint.value = constraint.variable.value;
     }
   }
@@ -1010,7 +1019,10 @@ function solveCluster({
   const inputs: number[] = [];
   const varIdx = new Map<Variable, number>();
   for (const variable of variables) {
-    if (!knowns.has(variable) && !freeVariables.has(variable)) {
+    if (
+      !knowns.has(variable.canonicalInstance) &&
+      !freeVariables.has(variable.canonicalInstance)
+    ) {
       varIdx.set(variable, inputs.length);
       inputs.push(variable.value);
     }
@@ -1071,7 +1083,10 @@ function solveCluster({
   // Now we write the solution from the solver back into our variables and handles.
   const outputs = result.solution;
   for (const variable of variables) {
-    if (!knowns.has(variable) && !freeVariables.has(variable)) {
+    if (
+      !knowns.has(variable.canonicalInstance) &&
+      !freeVariables.has(variable.canonicalInstance)
+    ) {
       variable.value = outputs.shift()!;
     }
   }
