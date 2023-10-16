@@ -30,7 +30,7 @@ export default class StrokeGroup extends GameObject {
     // Generate Handles
     const points = this.strokes.flatMap(stroke => stroke.points);
     [this.a, this.b] = farthestPair(points).map(pos =>
-      this.adopt(Handle.create(pos, this))
+      this.adopt(Handle.create(pos))
     );
 
     // Generate transform data
@@ -46,10 +46,6 @@ export default class StrokeGroup extends GameObject {
 
   get strokes(): Stroke[] {
     return this.findAll({ what: aStroke, recursive: false });
-  }
-
-  onHandleMoved() {
-    this.updatePaths();
   }
 
   private updatePaths() {
@@ -80,6 +76,9 @@ export default class StrokeGroup extends GameObject {
   }
 
   render(dt: number, t: number) {
+    // TODO: Ivan to speed this up if necessary
+    this.updatePaths();
+
     for (const child of this.children) {
       child.render(dt, t);
     }

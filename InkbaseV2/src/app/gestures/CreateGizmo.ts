@@ -11,9 +11,7 @@ export function createGizmo(ctx: EventContext): Gesture | void {
     });
 
     if (a) {
-      const b = ctx.page.adopt(
-        Handle.create({ ...ctx.event.position }, null, false)
-      );
+      const b = ctx.page.adopt(Handle.create({ ...ctx.event.position }, false));
       ctx.page.adopt(new Gizmo(a, b));
       return touchHandleHelper(b);
     }

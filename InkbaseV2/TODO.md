@@ -78,6 +78,3 @@
 - P4: constraints should only have weak refs to handles
 
 ## Clean-up
-
-- P3: remove handle listeners
-  (Alex)

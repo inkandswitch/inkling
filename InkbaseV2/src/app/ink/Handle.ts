@@ -5,20 +5,9 @@ import { generateId } from '../../lib/helpers';
 import { Position } from '../../lib/types';
 import Vec from '../../lib/vec';
 
-export interface HandleListener {
-  onHandleMoved(moved: Handle): void;
-}
-
 export default class Handle extends GameObject {
-  static create(
-    position: Position,
-    listener: HandleListener | null = null,
-    doAbsorb = true
-  ): Handle {
+  static create(position: Position, doAbsorb = true): Handle {
     const handle = new Handle(position);
-    if (listener) {
-      handle.addListener(listener);
-    }
     if (doAbsorb) {
       handle.absorbNearbyHandles();
     }
@@ -41,8 +30,6 @@ export default class Handle extends GameObject {
     property: 'y',
   });
 
-  private readonly listeners = new Set<HandleListener>();
-
   private constructor(position: Position) {
     super(root);
     this.position = position;
@@ -60,13 +47,8 @@ export default class Handle extends GameObject {
     return this;
   }
 
-  // TODO: notify listeners (but only once per frame)
   set position(pos: Position) {
     ({ x: this.xVariable.value, y: this.yVariable.value } = pos);
-  }
-
-  addListener(listener: HandleListener) {
-    this.listeners.add(listener);
   }
 
   remove() {
@@ -150,12 +132,6 @@ export default class Handle extends GameObject {
 
   private removeFromDOM() {
     this.element.remove();
-  }
-
-  notifyListeners(fn: (listener: HandleListener) => void) {
-    for (const listener of this.listeners) {
-      fn(listener);
-    }
   }
 
   distanceToPoint(point: Position) {
