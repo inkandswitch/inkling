@@ -384,13 +384,13 @@ class Angle extends LowLevelConstraint {
     // The new way, implemented in terms of the minimum amount of displacement
     // required to satisfy the constraint.
 
+    const aPos = { x: ax, y: ay };
+    const bPos = { x: bx, y: by };
     if (freeVariables.has(this.angle.canonicalInstance)) {
-      this.angle.value = Vec.angle(Vec.sub(this.b.position, this.a.position));
+      this.angle.value = Vec.angle(Vec.sub(bPos, aPos));
       return 0;
     }
 
-    const aPos = { x: ax, y: ay };
-    const bPos = { x: bx, y: by };
     const r = Vec.dist(bPos, aPos);
     let error = Infinity;
 
