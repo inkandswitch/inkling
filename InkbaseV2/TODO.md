@@ -5,6 +5,9 @@
 - P0: make handles big and translucent
   (Ivan)
 
+- P0: Wires to formula cells render behind the formula box. This is bad.
+  (Ivan)
+
 - P0: sometimes connecting two number tokens w/ a wire doesn't work -- the wire is there, but their
   values aren't the same. seems to be dependent on direction / connection order.
   (Ivan)
