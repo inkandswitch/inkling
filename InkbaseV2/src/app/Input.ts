@@ -13,6 +13,7 @@ import { createWire } from './gestures/CreateWire';
 import { tapPropertyPicker } from './gestures/PropertyPicker';
 import SVG from './Svg';
 import { createGizmo } from './gestures/CreateGizmo';
+import { touchGizmo } from './gestures/Gizmo';
 
 const gestureCreators = {
   finger: [
@@ -21,6 +22,7 @@ const gestureCreators = {
     touchToken,
     touchHandle,
     touchMetaToggle,
+    touchGizmo,
   ],
   pencil: [
     createGizmo,

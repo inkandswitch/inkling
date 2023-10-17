@@ -92,6 +92,23 @@ export default class Gizmo extends GameObject {
     return this.center;
   }
 
+  cycleConstraints() {
+    const aLock = this.angleInRadians.isLocked;
+    const dLock = this.distance.isLocked;
+
+    // There's probably some smarter way to do this with a bitmask or something
+    // but this is just a temporary hack so don't bother
+    if (!aLock && !dLock) {
+      this.toggleDistance();
+    } else if (dLock && !aLock) {
+      this.toggleAngle();
+    } else if (dLock && aLock) {
+      this.toggleDistance();
+    } else if (!dLock && aLock) {
+      this.toggleAngle();
+    }
+  }
+
   toggleDistance() {
     this.distance.toggleLock();
   }

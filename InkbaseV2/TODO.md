@@ -20,9 +20,6 @@
 - P0: gestures to show/hide handles to a stroke
   (Ivan)
 
-- P0: make sure that stroke group's rendering actually updates when its handles move
-  (Ivan)
-
 - P3/4: merging stroke groups (lasso?)
 
 ## Formulas / Wires / Meta
@@ -48,9 +45,6 @@
   (Alex)
 
 ## Constraints
-
-- P0: gesture to cycle through gizmo locks
-  (Ivan)
 
 - P0: pin constraint: gesture to add/remove + rendering
   (Ivan)
