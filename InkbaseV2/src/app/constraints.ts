@@ -1,7 +1,7 @@
 import { GameObject } from './GameObject';
 import SVG from './Svg';
 import Handle, { aHandle } from './ink/Handle';
-import { generateId } from '../lib/helpers';
+import { generateId, sets } from '../lib/helpers';
 import { Position } from '../lib/types';
 import Vec from '../lib/vec';
 import { minimize } from '../lib/g9';
@@ -213,40 +213,6 @@ export class Variable {
 }
 
 export const variable = Variable.create;
-
-class ManipulationSet {
-  readonly variables: Set<Variable>;
-
-  constructor(variables: Variable[]) {
-    this.variables = new Set(variables);
-    this.ensureCanonicalVarsOnly();
-  }
-
-  overlapsWith(that: ManipulationSet) {
-    for (const v of that.variables) {
-      if (this.variables.has(v)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  absorb(that: ManipulationSet) {
-    for (const v of that.variables) {
-      this.variables.add(v);
-    }
-    this.ensureCanonicalVarsOnly();
-  }
-
-  ensureCanonicalVarsOnly() {
-    for (const v of this.variables) {
-      if (v !== v.canonicalInstance) {
-        this.variables.delete(v);
-        this.variables.add(v.canonicalInstance);
-      }
-    }
-  }
-}
 
 // #endregion variables
 
@@ -584,8 +550,9 @@ export abstract class Constraint {
     }
   }
 
-  getManipulationSet(): ManipulationSet {
-    return new ManipulationSet(this.variables);
+  /** Returns the set of (canonical) variables that are referenced by this constraint. */
+  getManipulationSet(): Set<Variable> {
+    return new Set(this.variables.map(v => v.canonicalInstance));
   }
 
   public remove() {
@@ -915,16 +882,16 @@ function getClustersForSolver(root: GameObject): Set<ClusterForSolver> {
   interface Cluster {
     constraints: Constraint[];
     lowLevelConstraints: LowLevelConstraint[];
-    manipulationSet: ManipulationSet;
+    manipulationSet: Set<Variable>;
   }
 
   const clusters = new Set<Cluster>();
   for (const constraint of Constraint.all) {
     const constraints = [constraint];
     const lowLevelConstraints = [...constraint.lowLevelConstraints];
-    const manipulationSet = constraint.getManipulationSet();
+    let manipulationSet = constraint.getManipulationSet();
     for (const cluster of clusters) {
-      if (!cluster.manipulationSet.overlapsWith(manipulationSet)) {
+      if (!sets.overlap(cluster.manipulationSet, manipulationSet)) {
         continue;
       }
 
@@ -935,7 +902,11 @@ function getClustersForSolver(root: GameObject): Set<ClusterForSolver> {
 
       // this step must be done *after* adding the LLCs b/c that operation creates new
       // linear relationships among variables (i.e., variables are absorbed as a result)
-      manipulationSet.absorb(cluster.manipulationSet);
+      manipulationSet = new Set(
+        [...manipulationSet, ...cluster.manipulationSet].map(
+          v => v.canonicalInstance
+        )
+      );
 
       clusters.delete(cluster);
     }
