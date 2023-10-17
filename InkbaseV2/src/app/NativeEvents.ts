@@ -1,5 +1,6 @@
 import { Position, PositionWithPressure } from '../lib/types';
 import Vec from '../lib/vec';
+import { Gesture } from './gestures/Gesture';
 
 // TODO: Do we want to add some way to fake pencil input with a finger?
 // That might be a useful thing to add HERE, so that other parts of the system
@@ -13,6 +14,9 @@ import Vec from '../lib/vec';
 // How far does the input need to move before we count it as a drag?
 const fingerMinDragDist = 10;
 const pencilMinDragDist = 10;
+
+// How long (milliseconds) can a touch go without being updated before we consider it "dead"?
+const touchMaxAge = 15000;
 
 export type Event = PencilEvent | FingerEvent;
 export type InputState = PencilState | FingerState;
@@ -28,6 +32,7 @@ interface SharedEventProperties {
   position: Position;
   timestamp: number;
   radius: number;
+  lastUpdated: number;
 }
 
 export interface PencilEvent extends SharedEventProperties {
@@ -43,6 +48,14 @@ export function getPositionWithPressure(
   return { ...event.position, pressure: event.pressure };
 }
 
+export function wasRecentlyUpdated(thing: InputState | Gesture | Event) {
+  let recentlyUpdated = thing.lastUpdated + touchMaxAge > performance.now();
+  if (!recentlyUpdated) {
+    console.log('TELL IVAN YOU SAW THIS');
+  }
+  return recentlyUpdated;
+}
+
 export interface FingerEvent extends SharedEventProperties {
   type: 'finger';
 }
@@ -54,6 +67,7 @@ interface SharedStateProperties {
   // TODO — do we want to store the original & current *event* instead of cherry-picking their properties?
   position: Position | null; // Where is the touch now?
   originalPosition: Position | null; // Where was the touch initially put down?
+  lastUpdated: number;
 }
 
 export interface PencilState extends SharedStateProperties {
@@ -80,7 +94,6 @@ export default class Events {
   events: Event[] = [];
   pencilState: PencilState | null = null;
   fingerStates: FingerState[] = [];
-  fingerStatesById: Record<TouchId, FingerState> = {};
 
   constructor(private applyEvent: ApplyEvent) {
     this.setupNativeEventHandler();
@@ -106,17 +119,23 @@ export default class Events {
         }
       }
 
+      state.lastUpdated = performance.now();
+
       this.applyEvent(event, state);
 
       // Remove states that are no longer down
       if (this.pencilState?.down === false) { this.pencilState = null }
-      this.fingerStates = this.fingerStates.filter((state) => {
-        if (!state.down) { delete this.fingerStatesById[state.id]; }
-        return state.down;
-      });
+      this.fingerStates = this.fingerStates.filter((state) => state.down);
     }
 
     this.events = [];
+
+    // We need to reap any eventStates that haven't been touched in a while,
+    // because we don't always receive the "ended".
+    this.fingerStates = this.fingerStates.filter(wasRecentlyUpdated);
+    if (this.pencilState && !wasRecentlyUpdated(this.pencilState)) {
+      this.pencilState = null;
+    }
   }
 
   // prettier-ignore
@@ -128,6 +147,8 @@ export default class Events {
         state = 'ended'
       }
 
+      const lastUpdated = performance.now();
+
       // Okay, so this is weird. Swift gives us a single EventState, but multiple "touches"?
       // And then we loop through the touches and make… an Event for each one?
       // Why are we thinking of these as "touches"? What does that word mean here?
@@ -137,7 +158,7 @@ export default class Events {
       for (const id in touches) {
         for (const point of touches[id]) {
           const { type, timestamp, position, radius, pressure, altitude, azimuth } = point;
-          const sharedProperties = { id, state, type, timestamp, position, radius };
+          const sharedProperties = { id, state, type, timestamp, position, radius, lastUpdated };
           const event: Event = type === 'finger'
             ? { ...sharedProperties, type }
             : { ...sharedProperties, type, pressure, altitude, azimuth };
@@ -159,9 +180,9 @@ export default class Events {
       position: event.position,
       originalPosition: event.position,
       event,
+      lastUpdated: 0,
     };
     this.fingerStates.push(state);
-    this.fingerStatesById[event.id] = state;
     return state;
   }
 
@@ -173,12 +194,13 @@ export default class Events {
       position: event.position,
       originalPosition: event.position,
       event,
+      lastUpdated: 0,
     };
     return this.pencilState;
   }
 
   fingerMoved(event: FingerEvent) {
-    const state = this.fingerStatesById[event.id];
+    const state = this.fingerStates.find(state => state.id === event.id);
     if (!state) {
       throw new Error('Received finger move event with no matching began.');
     }
@@ -202,7 +224,7 @@ export default class Events {
   }
 
   fingerEnded(event: FingerEvent) {
-    const state = this.fingerStatesById[event.id];
+    const state = this.fingerStates.find(state => state.id === event.id);
     if (!state) {
       throw new Error('Received finger ended event with no matching began.');
     }

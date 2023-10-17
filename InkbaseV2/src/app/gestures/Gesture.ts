@@ -41,6 +41,8 @@ type EventHandlerResult = Gesture | any;
 type EventHandlerName = EventState | 'dragged';
 
 export class Gesture {
+  public lastUpdated = 0;
+
   private touchCount = 0;
 
   constructor(
@@ -79,6 +81,8 @@ export class Gesture {
   }
 
   applyEvent(ctx: EventContext) {
+    this.lastUpdated = performance.now();
+
     let eventHandlerName: EventHandlerName = ctx.event.state;
 
     // Synthetic "dragged" event

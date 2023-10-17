@@ -3,7 +3,7 @@ import {
   pencilFormulaEditor,
   tapFormulaLabel,
 } from './gestures/FormulaEditor';
-import { Event, TouchId } from './NativeEvents';
+import { Event, TouchId, wasRecentlyUpdated } from './NativeEvents';
 import { EventContext, Gesture } from './gestures/Gesture';
 import { touchHandle } from './gestures/Handle';
 import { touchMetaToggle } from './gestures/MetaToggle';
@@ -37,6 +37,19 @@ const gesturesByTouchId: Record<TouchId, Gesture> = {};
 
 // This function is called by NativeEvent (via App) once for every event sent from Swift.
 export function applyEvent(ctx: EventContext) {
+  // Before we begin, we need to reap any touches that haven't been updated in a while,
+  // because we don't always receive the "ended".
+  for (const id in pseudoTouches) {
+    if (!wasRecentlyUpdated(pseudoTouches[id])) {
+      delete pseudoTouches[id];
+    }
+  }
+  for (const id in gesturesByTouchId) {
+    if (!wasRecentlyUpdated(gesturesByTouchId[id])) {
+      delete gesturesByTouchId[id];
+    }
+  }
+
   // Terminology:
   // Event — a single finger or pencil event sent to us from Swift, either "began", "moved", or "ended".
   // Touch — a series of finger or pencil events (from "began" to "ended) with a consistent TouchId.
