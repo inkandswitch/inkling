@@ -2,14 +2,19 @@
 
 ## Bugs
 
-- P0: in concrete mode, the user can scrub number tokens even though they're invisible!
-  (Ivan)
+- P1: in concrete mode, you shouldn't be able to break apart gizmo handles.
+  (Alex)
+
+- P4: in meta mode, you shouldn't be able to break apart ink handles?
+  (decide if we want this)
 
 - P0: Wires to formula cells render behind the formula box. This is bad.
   (Ivan)
 
 - P0: sometimes connecting two number tokens w/ a wire doesn't work -- the wire is there, but their
   values aren't the same. seems to be dependent on direction / connection order.
+  (e.g., wiring from number token in formula to number token outside formula)
+  (solution may be to change recursive = false ==> recursive = true)
   (Ivan)
 
 - P2: when writing a label in the formula editor, sometimes the label.display in LabelToken is undefined and errors.
@@ -46,7 +51,16 @@
 
 ## Constraints
 
+- P0: add "paused" field to Constraint
+  (Alex)
+
+- P0: when over-constrained, automatically pause the last constraint added
+  (Alex)
+
 - P0: pin constraint: gesture to add/remove + rendering
+  (Ivan)
+
+- P1: when breaking apart handles, the non-dragged one rubber-bands
   (Ivan)
 
 - P4: constraints should only have weak refs to handles
