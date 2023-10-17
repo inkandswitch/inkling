@@ -2,6 +2,10 @@
 
 ## Bugs
 
+- P0: When you snap two gizmos together, you end up w/ one Distance and two Angle
+  constraints. This results in "floatyness".
+  (Alex)
+
 - P0: Wires to formula cells render behind the formula box. This is bad.
   (Ivan)
 
