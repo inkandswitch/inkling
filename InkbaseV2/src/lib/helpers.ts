@@ -1,6 +1,30 @@
 import { Position } from './types';
 import Vec from './vec';
 
+/**
+ * Assigns a value to one of the properties on `window` to make it available
+ * for debugging via the console. If `valueOrValueFn` is a function, it calls
+ * that function w/ the old value for the property and stores the result.
+ * Otherwise it stores the value.
+ */
+export function forDebugging<T>(
+  property: string,
+  valueOrValueFn: T | ((oldValue?: T) => T)
+) {
+  let value: T;
+  if (typeof valueOrValueFn === 'function') {
+    const valueFn = valueOrValueFn as (oldValue?: T) => T;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const oldValue = (window as any)[property] as T | undefined;
+    value = valueFn(oldValue);
+  } else {
+    value = valueOrValueFn;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (window as any)[property] = value;
+}
+
 let nextId = 0;
 export function generateId() {
   return nextId++;
