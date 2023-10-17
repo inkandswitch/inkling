@@ -9,13 +9,9 @@
 - P2: make handles "blobby"
   (Ivan)
 
+- P4: in meta mode, should you be able to break apart ink handles?
+
 ## Bugs
-
-- P1: in concrete mode, you shouldn't be able to break apart gizmo handles.
-  (Alex)
-
-- P4: in meta mode, you shouldn't be able to break apart ink handles?
-  (decide if we want this)
 
 - P0: Wires to formula cells render behind the formula box. This is bad.
   (Ivan)
