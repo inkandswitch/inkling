@@ -26,10 +26,6 @@ export default class Page extends GameObject {
     return this.findAll({ what: aStrokeGroup, recursive: false });
   }
 
-  addStrokeGroup(strokes: Set<Stroke>): StrokeGroup {
-    return this.adopt(new StrokeGroup(strokes));
-  }
-
   addStroke<S extends Stroke>(stroke: S) {
     return this.adopt(stroke);
   }
