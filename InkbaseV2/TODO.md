@@ -1,5 +1,10 @@
 # TODO
 
+## UX Improvements
+
+- P2: make handles "blobby"
+  (Ivan)
+
 ## Bugs
 
 - P1: in concrete mode, you shouldn't be able to break apart gizmo handles.
