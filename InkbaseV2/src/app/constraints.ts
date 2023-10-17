@@ -868,7 +868,9 @@ function getClustersForSolver(root: GameObject): Set<ClusterForSolver> {
   root.forEach({
     what: aHandle,
     recursive: true,
-    do: handle => handle._forgetAbsorbedHandles(),
+    do(handle) {
+      handle._forgetAbsorbedHandles();
+    },
   });
   // ... and variables
   for (const variable of Variable.all) {
