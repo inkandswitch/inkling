@@ -1051,12 +1051,10 @@ export function solve(root: GameObject) {
   }
 }
 
-function solveCluster({
-  constraints,
-  lowLevelConstraints,
-  variables,
-  freeVariables,
-}: ClusterForSolver) {
+function solveCluster(cluster: ClusterForSolver) {
+  const { constraints, lowLevelConstraints, variables, freeVariables } =
+    cluster;
+
   if (constraints.length === 0) {
     // nothing to solve!
     return;
@@ -1138,11 +1136,15 @@ function solveCluster({
     result.message
   );
   if (!result || result.message?.includes('maxit')) {
-    console.error('solveCluster is giving up!', result);
+    console.error(
+      'solveCluster gave up with result',
+      result,
+      'while working on',
+      cluster
+    );
     const lastConstraint = constraints[constraints.length - 1];
-    if (lastConstraint) {
-      lastConstraint.paused = true;
-    }
+    lastConstraint.paused = true;
+    console.log('paused', lastConstraint, 'to see if it helps');
     return;
   }
 
