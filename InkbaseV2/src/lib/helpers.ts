@@ -202,4 +202,7 @@ export const sets = {
   union<T>(s1: Set<T>, s2: Set<T>) {
     return new Set<T>([...s1, ...s2]);
   },
+  map<S, T>(s: Set<S>, fn: (x: S) => T) {
+    return new Set([...s].map(fn));
+  },
 };
