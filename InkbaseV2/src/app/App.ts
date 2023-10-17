@@ -2,7 +2,7 @@ import Events, { Event, InputState } from './NativeEvents';
 import Page from './Page';
 import SVG from './Svg';
 import * as constraints from './constraints';
-import { onEveryFrame } from '../lib/helpers';
+import { forDebugging, onEveryFrame } from '../lib/helpers';
 // import Gizmo from './meta/Gizmo';
 import * as Input from './Input';
 import { root } from './GameObject';
@@ -36,8 +36,7 @@ root.currentPage = page;
 
 // FORMULA STUFF
 const formulaEditor = new FormulaEditor();
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-(window as any).formulaEditor = formulaEditor;
+forDebugging('formulaEditor', formulaEditor);
 root.adopt(formulaEditor);
 formulaEditor.formulaParser = new FormulaParser(page);
 

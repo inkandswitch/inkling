@@ -1,7 +1,7 @@
 import { GameObject } from './GameObject';
 import SVG from './Svg';
 import Handle, { aHandle } from './ink/Handle';
-import { generateId, sets } from '../lib/helpers';
+import { forDebugging, generateId, sets } from '../lib/helpers';
 import { Position } from '../lib/types';
 import Vec from '../lib/vec';
 import { minimize } from '../lib/g9';
@@ -939,9 +939,7 @@ function getClustersForSolver(root: GameObject): Set<ClusterForSolver> {
     })
   );
 
-  // for debugging
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (window as any).clusters = _clustersForSolver;
+  forDebugging('clusters', _clustersForSolver);
 
   // console.log('clusters', _clustersForSolver);
   SVG.showStatus(`${clusters.size} clusters`);
@@ -1121,12 +1119,14 @@ function solveCluster(cluster: ClusterForSolver) {
   }
 
   // SVG.showStatus(`${result.iterations} iterations`);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (window as any).solverResult = result;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ((window as any).solverResultMessages ||= new Set<string>()).add(
-    result.message
-  );
+  forDebugging('solverResult', result);
+  forDebugging('solverResultMessages', (messages?: Set<string>) => {
+    if (!messages) {
+      messages = new Set();
+    }
+    messages.add(result.message);
+    return messages;
+  });
   if (!result || result.message?.includes('maxit')) {
     console.error(
       'solveCluster gave up with result',
