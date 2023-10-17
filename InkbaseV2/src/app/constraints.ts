@@ -559,7 +559,15 @@ export abstract class Constraint {
     forgetClustersForSolver();
   }
 
-  // TODO: write a comment for this method
+  /**
+   * In this constraint system, equality is not a constraint but rather a
+   * relationship between two variables that is maintained by unifying the two
+   * variables. This method should be overridden by constraints that need to
+   * set up equalities between variables and/or, more generally, linear
+   * relationships between variables. This is done by calling Variable's
+   * makeEqualTo() method. E.g., y.makeEqualTo(x, { m: 3, b: 1 }) sets up
+   * the linear relationship y = 3 * x + b.
+   */
   setUpVariableRelationships() {}
 
   /**
