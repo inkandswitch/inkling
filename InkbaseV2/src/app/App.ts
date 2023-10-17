@@ -3,16 +3,16 @@ import Page from './Page';
 import SVG from './Svg';
 import * as constraints from './constraints';
 import { onEveryFrame } from '../lib/helpers';
-import Gizmo from './meta/Gizmo';
+// import Gizmo from './meta/Gizmo';
 import * as Input from './Input';
 import { root } from './GameObject';
 import FormulaEditor from './meta/FormulaEditor';
 import FormulaParser from './meta/FormulaParser';
 import MetaToggle from './gui/MetaToggle';
-import Component from './meta/Component';
-import LabelToken from './meta/LabelToken';
-import Stroke from './ink/Stroke';
-import Handle from './ink/Handle';
+// import Component from './meta/Component';
+// import LabelToken from './meta/LabelToken';
+// import Stroke from './ink/Stroke';
+// import Handle from './ink/Handle';
 
 // This is a pretzel, because the interface between NativeEvents and Input is a work in progress.
 const events = new Events((event: Event, state: InputState) => {
@@ -59,37 +59,37 @@ onEveryFrame((dt, t) => {
  * KEEP IT DOWN BELOW
  */
 
-// gizmooo wiring testing for testing for testing
-let a = page.adopt(Handle.create({ x: 100, y: 100 }));
-let b = page.adopt(Handle.create({ x: 200, y: 200 }));
-let giz = new Gizmo(a, b);
-a.adopt(giz);
+// // gizmooo wiring testing for testing for testing
+// let a = page.adopt(Handle.create({ x: 100, y: 100 }));
+// let b = page.adopt(Handle.create({ x: 200, y: 200 }));
+// let giz = new Gizmo(a, b);
+// a.adopt(giz);
 
-a = page.adopt(Handle.create({ x: 400, y: 400 }));
-b = page.adopt(Handle.create({ x: 500, y: 500 }));
-giz = new Gizmo(a, b);
-a.adopt(giz);
+// a = page.adopt(Handle.create({ x: 400, y: 400 }));
+// b = page.adopt(Handle.create({ x: 500, y: 500 }));
+// giz = new Gizmo(a, b);
+// a.adopt(giz);
 
-a = page.adopt(Handle.create({ x: 600, y: 600 }));
-b = page.adopt(Handle.create({ x: 700, y: 700 }));
-giz = new Gizmo(a, b);
-a.adopt(giz);
+// a = page.adopt(Handle.create({ x: 600, y: 600 }));
+// b = page.adopt(Handle.create({ x: 700, y: 700 }));
+// giz = new Gizmo(a, b);
+// a.adopt(giz);
 
-const component = new Component();
-page.adopt(component);
+// const component = new Component();
+// page.adopt(component);
 
-// This API seems a bit messy, but maybe fine in practice. Tbd if there is a better way of doing this.
-const labelInsideComponent = new LabelToken(
-  component.scope.createLabel('test')
-);
-labelInsideComponent.position = { x: 410, y: 110 };
-component.adopt(labelInsideComponent);
+// // This API seems a bit messy, but maybe fine in practice. Tbd if there is a better way of doing this.
+// const labelInsideComponent = new LabelToken(
+//   component.scope.createLabel('test')
+// );
+// labelInsideComponent.position = { x: 410, y: 110 };
+// component.adopt(labelInsideComponent);
 
-const stroke = new Stroke();
-component.adopt(stroke);
-stroke.points = [
-  { x: 410, y: 110 },
-  { x: 420, y: 120 },
-  { x: 410, y: 170 },
-];
-component.updateOutline();
+// const stroke = new Stroke();
+// component.adopt(stroke);
+// stroke.points = [
+//   { x: 410, y: 110 },
+//   { x: 420, y: 120 },
+//   { x: 410, y: 170 },
+// ];
+// component.updateOutline();
