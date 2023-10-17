@@ -2,6 +2,9 @@
 
 ## Bugs
 
+- P0: in concrete mode, the user can scrub number tokens even though they're invisible!
+  (Ivan)
+
 - P0: Wires to formula cells render behind the formula box. This is bad.
   (Ivan)
 
