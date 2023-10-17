@@ -5,13 +5,6 @@
     "no-constant-condition": 0,
     "no-unused-vars": "off",
     "@typescript-eslint/no-this-alias": "off",
-    "@typescript-eslint/no-unused-vars": [
-      "warn", // or "error"
-      {
-        "argsIgnorePattern": "^_",
-        "varsIgnorePattern": "^_",
-        "caughtErrorsIgnorePattern": "^_"
-      }
-    ]
+    "@typescript-eslint/no-unused-vars": "off"
   }
 }
