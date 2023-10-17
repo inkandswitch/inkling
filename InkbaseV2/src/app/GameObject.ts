@@ -94,7 +94,7 @@ export abstract class GameObject {
       do(gameObj) {
         if (pos) {
           const dist = gameObj.distanceToPoint(pos);
-          if (dist !== null && dist < nearestDist) {
+          if (dist !== null && dist <= nearestDist) {
             ans = gameObj;
             nearestDist = dist;
           }
