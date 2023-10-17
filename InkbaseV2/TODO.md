@@ -6,6 +6,15 @@
   other game objects. (It should never look like you're dragging an object that
   is under another object.)
 
+- P1: tokens snap to each other, and can be moved together w/ a single finger
+  (e.g., two number tokens, or a number token right next to a property picker)
+  (Marcel)
+
+- P1: more fluid gesture to get a wire out of a property picker:
+  ATM you have to first pick a property (w/ tap) then drag out the wire.
+  We should be able to do this in a single gesture.
+  (Marcel)
+
 - P2: make handles "blobby"
   (Ivan)
 
