@@ -53,7 +53,7 @@ export function scrubNumberToken(ctx: EventContext): Gesture | void {
           const value = Math.round((initialValue + delta * m) / m) * m;
           token.getVariable().lock(value);
         },
-        ended(_ctx) {
+        ended(ctx) {
           if (!wasLocked) {
             token.getVariable().unlock();
           }

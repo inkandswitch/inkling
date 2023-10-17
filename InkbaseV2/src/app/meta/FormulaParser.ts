@@ -63,13 +63,13 @@ export default class FormulaParser {
           const n = parseFloat(this.sourceString);
           return new NumberToken(n, this.source);
         },
-        name(_first, _rest) {
+        name(first, rest) {
           return new LabelToken(
             page.scope.getLabelByString(this.sourceString)!,
             this.source
           );
         },
-        label(_hash, id) {
+        label(hash, id) {
           return new LabelToken(
             page.scope.getLabelById(parseInt(id.sourceString))!,
             this.source
@@ -104,10 +104,10 @@ export default class FormulaParser {
           e.collectTokens(this.args.tokens);
           cparen.collectTokens(this.args.tokens);
         },
-        name(_first, _rest) {
+        name(first, rest) {
           this.args.tokens.push(this.token);
         },
-        label(_hash, _id) {
+        label(hash, id) {
           this.args.tokens.push(this.token);
         },
         number(_) {
@@ -127,13 +127,13 @@ export default class FormulaParser {
         UnExp_neg(op, e) {
           return `(${op.sourceString}${e.compile()})`;
         },
-        PriExp_paren(_oparen, e, _cparen) {
+        PriExp_paren(oparen, e, cparen) {
           return `(${e.compile()})`;
         },
-        name(_first, _rest) {
+        name(first, rest) {
           return `v${this.token.getVariable().id}`;
         },
-        label(_hash, _id) {
+        label(hash, id) {
           return `v${this.token.getVariable().id}`;
         },
         number(_) {

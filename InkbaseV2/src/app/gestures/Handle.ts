@@ -16,7 +16,7 @@ export function touchHandle(ctx: EventContext): Gesture | void {
 
 export function touchHandleHelper(handle: Handle): Gesture {
   return new Gesture('Touch Handle', {
-    began(_ctx) {
+    began(ctx) {
       constraints.pin(handle);
     },
     moved(ctx) {
@@ -31,7 +31,7 @@ export function touchHandleHelper(handle: Handle): Gesture {
       }
       constraints.pin(handle); // if there's already a pin, this updates its position
     },
-    ended(_ctx) {
+    ended(ctx) {
       handle.getAbsorbedByNearestHandle();
       constraints.pin(handle).remove();
     },

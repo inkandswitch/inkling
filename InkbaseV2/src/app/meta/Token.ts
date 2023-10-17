@@ -35,7 +35,7 @@ export default abstract class Token extends GameObject {
     return Vec.add(this.position, Vec.mulS(Vec(this.width, this.height), 0.5));
   }
 
-  render(_dt: number, _t: number): void {
+  render(dt: number, t: number): void {
     // NO-OP
   }
 }

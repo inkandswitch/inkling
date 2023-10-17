@@ -42,7 +42,7 @@ export function pencilFormulaEditor(ctx: EventContext): Gesture | void {
           moved(ctx) {
             stroke.points.push(ctx.event.position);
           },
-          ended(_ctx) {
+          ended(ctx) {
             formulaEditor.captureStroke(stroke);
           },
         });

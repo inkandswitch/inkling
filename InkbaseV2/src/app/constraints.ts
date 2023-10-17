@@ -236,7 +236,7 @@ abstract class LowLevelConstraint {
    * other state that is already known, it should set the values of those
    * variables and add them to `knowns`.
    */
-  propagateKnowns(_knowns: Set<Variable>) {}
+  propagateKnowns(knowns: Set<Variable>) {}
 
   /**
    * Returns the current error for this constraint. (OK if it's negative.)
@@ -311,7 +311,7 @@ class Distance extends LowLevelConstraint {
 
   getError(
     [dist, ax, ay, bx, by]: number[],
-    _knowns: Set<Variable>,
+    knowns: Set<Variable>,
     freeVariables: Set<Variable>
   ): number {
     const aPos = { x: ax, y: ay };
@@ -493,7 +493,7 @@ class LLFormula extends LowLevelConstraint {
 
   getError(
     variableValues: number[],
-    _knowns: Set<Variable>,
+    knowns: Set<Variable>,
     freeVariables: Set<Variable>
   ): number {
     const currValue = this.computeResult(variableValues);
@@ -940,8 +940,6 @@ function getClustersForSolver(root: GameObject): Set<ClusterForSolver> {
   );
 
   forDebugging('clusters', _clustersForSolver);
-
-  // console.log('clusters', _clustersForSolver);
   SVG.showStatus(`${clusters.size} clusters`);
 
   return _clustersForSolver;

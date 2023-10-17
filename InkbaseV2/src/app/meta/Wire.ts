@@ -14,7 +14,7 @@ export class WirePort extends GameObject {
     this.value = value;
   }
 
-  render(_dt: number, _t: number): void {}
+  render(dt: number, t: number): void {}
 }
 
 export default class Wire extends GameObject {

@@ -40,11 +40,6 @@ export default class FormulaEditor extends GameObject {
     super();
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  isPositionNearToggle(_: any) {
-    return false;
-  }
-
   isActive() {
     return this.active;
   }
@@ -164,14 +159,14 @@ export default class FormulaEditor extends GameObject {
     });
   }
 
-  distanceToPoint(_point: Position): number | null {
+  distanceToPoint(point: Position): number | null {
     return signedDistanceToBox(
       this.position.x,
       this.position.y,
       this.width,
       this.height,
-      _point.x,
-      _point.y
+      point.x,
+      point.y
     );
   }
 
@@ -224,7 +219,7 @@ class FormulaEditorCell extends GameObject {
     'font-size': '30px',
   });
 
-  render(dt: number, _t: number) {
+  render(dt: number, t: number) {
     // Update timer
     if (this.timer) {
       this.timer -= dt;
@@ -327,14 +322,14 @@ class FormulaEditorCell extends GameObject {
     this.width = 100;
   }
 
-  distanceToPoint(_point: Position): number | null {
+  distanceToPoint(point: Position): number | null {
     return signedDistanceToBox(
       this.position.x,
       this.position.y,
       this.width,
       this.height,
-      _point.x,
-      _point.y
+      point.x,
+      point.y
     );
   }
 }

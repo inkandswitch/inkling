@@ -14,7 +14,7 @@ interface Options {
 export default class Page extends GameObject {
   readonly scope = new MetaStruct([]);
 
-  constructor(_options: Options) {
+  constructor(options: Options) {
     super();
   }
 
