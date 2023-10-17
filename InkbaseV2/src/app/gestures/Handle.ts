@@ -24,8 +24,8 @@ export function touchHandleHelper(handle: Handle): Gesture {
       if (newHandle !== handle) {
         constraints.pin(handle).remove();
         handle = newHandle;
-        constraints.pin(handle);
       }
+      constraints.pin(handle); // if there's already a pin, this updates its position
     },
     ended(_ctx) {
       handle.getAbsorbedByNearestHandle();
