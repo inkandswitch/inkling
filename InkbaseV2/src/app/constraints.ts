@@ -517,6 +517,7 @@ class LLFormula extends LowLevelConstraint {
 export abstract class Constraint {
   static readonly all = new Set<Constraint>();
 
+  paused = false;
   readonly variables = [] as Variable[];
   readonly lowLevelConstraints = [] as LowLevelConstraint[];
 
@@ -874,8 +875,13 @@ function getClustersForSolver(root: GameObject): Set<ClusterForSolver> {
     variable.info = { isCanonical: true, absorbedVariables: new Set() };
   }
 
+  // ignore constraints that are paused
+  const activeConstraints = [...Constraint.all].filter(
+    constraint => !constraint.paused
+  );
+
   // set up updated relationships among handles and variables
-  for (const constraint of Constraint.all) {
+  for (const constraint of activeConstraints) {
     constraint.setUpVariableRelationships();
   }
 
@@ -886,7 +892,7 @@ function getClustersForSolver(root: GameObject): Set<ClusterForSolver> {
   }
 
   const clusters = new Set<Cluster>();
-  for (const constraint of Constraint.all) {
+  for (const constraint of activeConstraints) {
     const constraints = [constraint];
     const lowLevelConstraints = [...constraint.lowLevelConstraints];
     let manipulationSet = constraint.getManipulationSet();

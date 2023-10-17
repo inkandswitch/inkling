@@ -56,9 +56,6 @@
 
 ## Constraints
 
-- P0: add "paused" field to Constraint
-  (Alex)
-
 - P0: when over-constrained, automatically pause the last constraint added
   (Alex)
 
