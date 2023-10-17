@@ -1111,18 +1111,10 @@ function solveCluster(cluster: ClusterForSolver) {
     console.log(
       'minimizeError threw',
       e,
-      'while working on cluster with constraints',
-      constraints,
-      'low-level constraints',
-      lowLevelConstraints,
-      'variables',
-      variables,
-      'inputs',
-      inputs,
-      'knowns',
-      knowns,
-      'free variables',
-      freeVariables
+      'while working on cluster',
+      cluster,
+      'with knowns',
+      knowns
     );
     SVG.showStatus('' + e);
     throw e;
