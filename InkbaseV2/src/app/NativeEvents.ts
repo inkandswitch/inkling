@@ -49,7 +49,7 @@ export function getPositionWithPressure(
 }
 
 export function wasRecentlyUpdated(thing: InputState | Gesture | Event) {
-  let recentlyUpdated = thing.lastUpdated + touchMaxAge > performance.now();
+  const recentlyUpdated = thing.lastUpdated + touchMaxAge > performance.now();
   if (!recentlyUpdated) {
     console.log('TELL IVAN YOU SAW THIS');
   }
