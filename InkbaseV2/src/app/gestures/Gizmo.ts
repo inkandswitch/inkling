@@ -2,18 +2,20 @@ import { EventContext, Gesture } from './Gesture';
 import { aGizmo } from '../meta/Gizmo';
 
 export function touchGizmo(ctx: EventContext): Gesture | void {
-  const gizmo = ctx.root.find({
-    what: aGizmo,
-    near: ctx.event.position,
-    tooFar: 50,
-  });
-
-  if (gizmo) {
-    return new Gesture('Touch Gizmo', {
-      ended(ctx) {
-        gizmo.cycleConstraints();
-      },
+  if (ctx.metaToggle.active) {
+    const gizmo = ctx.root.find({
+      what: aGizmo,
+      near: ctx.event.position,
+      tooFar: 50,
     });
+
+    if (gizmo) {
+      return new Gesture('Touch Gizmo', {
+        ended(ctx) {
+          gizmo.cycleConstraints();
+        },
+      });
+    }
   }
 }
 

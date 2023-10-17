@@ -4,29 +4,31 @@ import { isNumberToken } from '../meta/token-helpers';
 import Vec from '../../lib/vec';
 
 export function touchToken(ctx: EventContext): Gesture | void {
-  const token = ctx.page.find({
-    what: aToken,
-    near: ctx.event.position,
-  });
-
-  if (token) {
-    const offset = Vec.sub(token.position, ctx.event.position);
-
-    return new Gesture('Touch Token', {
-      dragged(ctx) {
-        token.position = Vec.add(ctx.event.position, offset);
-      },
-      ended(ctx) {
-        if (!ctx.state.drag && isNumberToken(token)) {
-          token.onTap();
-        }
-      },
+  if (ctx.metaToggle.active) {
+    const token = ctx.page.find({
+      what: aToken,
+      near: ctx.event.position,
     });
+
+    if (token) {
+      const offset = Vec.sub(token.position, ctx.event.position);
+
+      return new Gesture('Touch Token', {
+        dragged(ctx) {
+          token.position = Vec.add(ctx.event.position, offset);
+        },
+        ended(ctx) {
+          if (!ctx.state.drag && isNumberToken(token)) {
+            token.onTap();
+          }
+        },
+      });
+    }
   }
 }
 
 export function scrubNumberToken(ctx: EventContext): Gesture | void {
-  if (ctx.pseudo) {
+  if (ctx.metaToggle.active && ctx.pseudo) {
     const token = ctx.page.find({
       what: aPrimaryToken,
       near: ctx.event.position,
