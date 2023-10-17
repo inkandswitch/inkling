@@ -6,8 +6,6 @@
   other game objects. (It should never look like you're dragging an object that
   is under another object.)
 
-- P0: only render canonical handles
-
 - P2: make handles "blobby"
   (Ivan)
 

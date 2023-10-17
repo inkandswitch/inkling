@@ -123,7 +123,11 @@ export default class Handle extends GameObject {
   }
 
   render(t: number, dt: number) {
-    SVG.update(this.element, { cx: this.x, cy: this.y });
+    SVG.update(this.element, {
+      cx: this.x,
+      cy: this.y,
+      visibility: this.isCanonical ? 'visible' : 'hidden',
+    });
     for (const child of this.children) {
       child.render(dt, t);
     }
