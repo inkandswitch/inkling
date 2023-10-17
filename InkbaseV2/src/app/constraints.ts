@@ -395,6 +395,7 @@ class Angle extends LowLevelConstraint {
 
       if (handlesAreEqual(this.a, that.b) && handlesAreEqual(this.b, that.a)) {
         that.angle.makeEqualTo(this.angle, { m: 1, b: Math.PI });
+        return;
       }
     }
 
