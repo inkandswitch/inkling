@@ -188,3 +188,18 @@ export class SortedSet<T> {
     };
   }
 }
+
+/** Helper functions for dealing with `Set`s. */
+export const sets = {
+  overlap<T>(s1: Set<T>, s2: Set<T>) {
+    for (const x of s1) {
+      if (s2.has(x)) {
+        return true;
+      }
+    }
+    return false;
+  },
+  union<T>(s1: Set<T>, s2: Set<T>) {
+    return new Set<T>([...s1, ...s2]);
+  },
+};
