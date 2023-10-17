@@ -1139,6 +1139,10 @@ function solveCluster({
   );
   if (!result || result.message?.includes('maxit')) {
     console.error('solveCluster is giving up!', result);
+    const lastConstraint = constraints[constraints.length - 1];
+    if (lastConstraint) {
+      lastConstraint.paused = true;
+    }
     return;
   }
 

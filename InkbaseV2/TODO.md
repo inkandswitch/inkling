@@ -60,9 +60,6 @@
 
 ## Constraints
 
-- P0: when over-constrained, automatically pause the last constraint added
-  (Alex)
-
 - P0: pin constraint: gesture to add/remove + rendering
   (Ivan)
 
