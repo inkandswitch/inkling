@@ -97,12 +97,27 @@ export class Variable {
   makeEqualTo(that: Variable, offset = { m: 1, b: 0 }) {
     if (this === that) {
       return;
-    } else if (!this.info.isCanonical || !that.info.isCanonical) {
-      // TODO: fix this!
-      // It is wrong because the relationship between `this` and its canonical variable
-      // and `that` and its canonical variable is not necessarily the same as the
-      // relationship between `this` and `that`!
-      this.canonicalInstance.makeEqualTo(that.canonicalInstance, offset);
+    } else if (!this.info.isCanonical) {
+      const { m: mThat, b: bThat } = offset;
+      const { m: mThis, b: bThis } = this.offset;
+      // this = mThat * that + bThat
+      // this.CI = mThis * (mThat * that + bThat) + bThis
+      // this.CI = mthis * mThat * that + mThis * bThat + bThis
+      this.canonicalInstance.makeEqualTo(that, {
+        m: mThis * mThat,
+        b: mThis * bThat + bThis,
+      });
+      return;
+    } else if (!that.info.isCanonical) {
+      const { m: mThat, b: bThat } = that.offset;
+      const { m, b } = offset;
+      // that.CI = mThat * that + bThat  ==>  that = (that.CI - bThat) / mThat
+      // this = m * that + b
+      // this = m * (that.CI - bThat) / mThat + b = m / mThat * that.CI + b - bThat / mThat
+      this.makeEqualTo(that.canonicalInstance, {
+        m: m / mThat,
+        b: b - bThat / mThat,
+      });
       return;
     }
 
