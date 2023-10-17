@@ -885,39 +885,7 @@ function getClustersForSolver(root: GameObject): Set<ClusterForSolver> {
     constraint.setUpVariableRelationships();
   }
 
-  interface Cluster {
-    constraints: Constraint[];
-    lowLevelConstraints: LowLevelConstraint[];
-    manipulationSet: Set<Variable>;
-  }
-
-  const clusters = new Set<Cluster>();
-  for (const constraint of activeConstraints) {
-    const constraints = [constraint];
-    const lowLevelConstraints = [...constraint.lowLevelConstraints];
-    let manipulationSet = constraint.getManipulationSet();
-    for (const cluster of clusters) {
-      if (!sets.overlap(cluster.manipulationSet, manipulationSet)) {
-        continue;
-      }
-
-      constraints.push(...cluster.constraints);
-      for (const llc of cluster.lowLevelConstraints) {
-        llc.addTo(lowLevelConstraints);
-      }
-
-      // this step must be done *after* adding the LLCs b/c that operation creates new
-      // linear relationships among variables (i.e., variables are absorbed as a result)
-      manipulationSet = new Set(
-        [...manipulationSet, ...cluster.manipulationSet].map(
-          v => v.canonicalInstance
-        )
-      );
-
-      clusters.delete(cluster);
-    }
-    clusters.add({ constraints, lowLevelConstraints, manipulationSet });
-  }
+  const clusters = computeClusters(activeConstraints);
 
   _clustersForSolver = new Set(
     Array.from(clusters).map(({ constraints, lowLevelConstraints }) => {
@@ -977,6 +945,97 @@ function getClustersForSolver(root: GameObject): Set<ClusterForSolver> {
   SVG.showStatus(`${clusters.size} clusters`);
 
   return _clustersForSolver;
+}
+
+function computeClusters(
+  activeConstraints: Constraint[]
+): Set<ClusterForSolver> {
+  interface Cluster {
+    constraints: Constraint[];
+    lowLevelConstraints: LowLevelConstraint[];
+    manipulationSet: Set<Variable>;
+  }
+  const clusters = new Set<Cluster>();
+  for (const constraint of activeConstraints) {
+    const constraints = [constraint];
+    const lowLevelConstraints = [...constraint.lowLevelConstraints];
+    let manipulationSet = constraint.getManipulationSet();
+    for (const cluster of clusters) {
+      if (!sets.overlap(cluster.manipulationSet, manipulationSet)) {
+        continue;
+      }
+
+      constraints.push(...cluster.constraints);
+      for (const llc of cluster.lowLevelConstraints) {
+        llc.addTo(lowLevelConstraints);
+      }
+
+      // this step must be done *after* adding the LLCs b/c that operation creates new
+      // linear relationships among variables (i.e., variables are absorbed as a result)
+      manipulationSet = new Set(
+        [...manipulationSet, ...cluster.manipulationSet].map(
+          v => v.canonicalInstance
+        )
+      );
+
+      clusters.delete(cluster);
+    }
+    clusters.add({ constraints, lowLevelConstraints, manipulationSet });
+  }
+  return sets.map(clusters, ({ constraints, lowLevelConstraints }) =>
+    createClusterForSolver(constraints, lowLevelConstraints)
+  );
+}
+
+function createClusterForSolver(
+  constraints: Constraint[],
+  lowLevelConstraints: LowLevelConstraint[]
+): ClusterForSolver {
+  const knowns = computeKnowns(constraints, lowLevelConstraints);
+
+  const variables = new Set<Variable>();
+  for (const constraint of constraints) {
+    for (const variable of constraint.variables) {
+      if (!knowns.has(variable.canonicalInstance)) {
+        variables.add(variable.canonicalInstance);
+      }
+    }
+  }
+
+  const freeVariableCandidates = new Set<Variable>();
+  for (const llc of lowLevelConstraints) {
+    for (const variable of llc.ownVariables) {
+      if (!knowns.has(variable.canonicalInstance)) {
+        freeVariableCandidates.add(variable.canonicalInstance);
+      }
+    }
+  }
+
+  const freeVarCandidateCounts = new Map<Variable, number>();
+  for (const llc of lowLevelConstraints) {
+    for (const variable of llc.variables) {
+      if (!freeVariableCandidates.has(variable.canonicalInstance)) {
+        continue;
+      }
+
+      const n = freeVarCandidateCounts.get(variable.canonicalInstance) ?? 0;
+      freeVarCandidateCounts.set(variable.canonicalInstance, n + 1);
+    }
+  }
+
+  const freeVariables = new Set<Variable>();
+  for (const [variable, count] of freeVarCandidateCounts.entries()) {
+    if (count === 1) {
+      freeVariables.add(variable.canonicalInstance);
+    }
+  }
+
+  return {
+    constraints,
+    lowLevelConstraints,
+    variables: Array.from(variables),
+    freeVariables,
+  };
 }
 
 function forgetClustersForSolver() {
