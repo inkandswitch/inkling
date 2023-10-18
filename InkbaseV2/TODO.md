@@ -39,10 +39,6 @@
 
 ## Formulas / Wires / Meta
 
-- P0: no number number literals in formula grammar, only token ids
-  formula parser returns a Formula constraint
-  (Alex)
-
 - P0: some gesture to break connections / remove wires, and formulas
   (Ivan -> Alex + Marcel)
 

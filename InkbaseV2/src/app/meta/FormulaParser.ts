@@ -1,15 +1,10 @@
+import { aLabelToken } from './LabelToken';
+import { aNumberToken } from './NumberToken';
 import Page from '../Page';
-import Formula from './Formula';
-import Token from './Token';
-import LabelToken from './LabelToken';
-import NumberToken from './NumberToken';
-import OpToken from './OpToken';
-import * as ohm from 'ohm-js';
-import * as constraints from '../constraints';
-import { isTokenWithVariable } from './token-helpers';
-import { Variable } from '../constraints';
-import { Position } from '../../lib/types';
 import SVG from '../Svg';
+import { Formula, Variable } from '../constraints';
+import * as constraints from '../constraints';
+import * as ohm from 'ohm-js';
 
 const formulaGrammar = ohm.grammar(String.raw`
 
@@ -31,90 +26,63 @@ Formula {
 
   PriExp
     = "(" Exp ")"  -- paren
-    | label
-    | name
-    | number
+    | numberRef
+    | labelRef
 
   // lexical rules
 
-  number  (a number literal)
-    = digit* "." digit+  -- fract
-    | digit+             -- whole
+  numberRef  (a number reference)
+    = "@" digit+
 
-  label (a label)
+  labelRef (a label reference)
     = "#" digit+
-
-  name  (a name)
-    = letter alnum*
-
-  tokens
-    = (number | name | any)*
 }
 `);
 
 export default class FormulaParser {
   private readonly semantics: ohm.Semantics;
 
-  constructor(private readonly page: Page) {
+  constructor(page: Page) {
     this.semantics = formulaGrammar
       .createSemantics()
-      .addAttribute<Token>('token', {
-        number(_) {
-          const n = parseFloat(this.sourceString);
-          return new NumberToken(n, this.source);
-        },
-        name(first, rest) {
-          return new LabelToken(
-            page.scope.getLabelByString(this.sourceString)!,
-            this.source
-          );
-        },
-        label(hash, id) {
-          return new LabelToken(
-            page.scope.getLabelById(parseInt(id.sourceString))!,
-            this.source
-          );
-        },
-        _terminal() {
-          return new OpToken(this.sourceString, this.source);
-        },
-      })
-      .addAttribute<Token[]>('tokens', {
-        tokens(ts) {
-          return ts.children.map(t => t.token);
-        },
-      })
-      .addOperation<void>('collectTokens(tokens)', {
+      .addOperation('collectVars(vars)', {
         AddExp_add(a, op, b) {
-          a.collectTokens(this.args.tokens);
-          op.collectTokens(this.args.tokens);
-          b.collectTokens(this.args.tokens);
+          a.collectVars(this.args.vars);
+          b.collectVars(this.args.vars);
         },
         MulExp_mul(a, op, b) {
-          a.collectTokens(this.args.tokens);
-          op.collectTokens(this.args.tokens);
-          b.collectTokens(this.args.tokens);
+          a.collectVars(this.args.vars);
+          b.collectVars(this.args.vars);
         },
         UnExp_neg(op, e) {
-          op.collectTokens(this.args.tokens);
-          e.collectTokens(this.args.tokens);
+          e.collectVars(this.args.vars);
         },
         PriExp_paren(oparen, e, cparen) {
-          oparen.collectTokens(this.args.tokens);
-          e.collectTokens(this.args.tokens);
-          cparen.collectTokens(this.args.tokens);
+          e.collectVars(this.args.vars);
         },
-        name(first, rest) {
-          this.args.tokens.push(this.token);
+        numberRef(at, idDigits) {
+          const id = parseInt(idDigits.sourceString);
+          const numberToken = page.root.find({
+            what: aNumberToken,
+            that: numberToken => numberToken.id === id,
+          });
+          if (!numberToken) {
+            console.error('invalid number token id', id);
+            throw ':(';
+          }
+          this.args.vars.add(numberToken.getVariable());
         },
-        label(hash, id) {
-          this.args.tokens.push(this.token);
-        },
-        number(_) {
-          this.args.tokens.push(this.token);
-        },
-        _terminal() {
-          this.args.tokens.push(this.token);
+        labelRef(hash, idDigits) {
+          const id = parseInt(idDigits.sourceString);
+          const labelToken = page.root.find({
+            what: aLabelToken,
+            that: labelToken => labelToken.id === id,
+          });
+          if (!labelToken) {
+            console.error('invalid label token id', id);
+            throw ':(';
+          }
+          this.args.vars.add(labelToken.getVariable());
         },
       })
       .addOperation('compile', {
@@ -122,7 +90,8 @@ export default class FormulaParser {
           return `(${a.compile()} ${op.sourceString} ${b.compile()})`;
         },
         MulExp_mul(a, op, b) {
-          return `(${a.compile()} ${op.sourceString} ${b.compile()})`;
+          const jsOp = op.sourceString === '×' ? '*' : op.sourceString;
+          return `(${a.compile()} ${jsOp} ${b.compile()})`;
         },
         UnExp_neg(op, e) {
           return `(${op.sourceString}${e.compile()})`;
@@ -130,62 +99,39 @@ export default class FormulaParser {
         PriExp_paren(oparen, e, cparen) {
           return `(${e.compile()})`;
         },
-        name(first, rest) {
+        numberRef(at, id) {
           return `v${this.token.getVariable().id}`;
         },
-        label(hash, id) {
-          return `v${this.token.getVariable().id}`;
-        },
-        number(_) {
+        labelRef(hash, id) {
           return `v${this.token.getVariable().id}`;
         },
       });
   }
 
-  parse(input: string, pos: Position = { x: 100, y: 250 }): boolean {
+  /** Returns a formula constraint for this formula, if it's valid, or null otherwise. */
+  parse(input: string): Formula | null {
     const m = formulaGrammar.match(input);
     if (m.failed()) {
       SVG.showStatus(m.shortMessage!);
       console.log(m.message);
-      return false;
+      return null;
     }
 
-    const tokens: Token[] = [];
-    this.semantics(m).collectTokens(tokens);
+    const varSet = new Set<Variable>();
+    try {
+      this.semantics(m).collectVars(varSet);
+    } catch {
+      // formula has one or more number/label token refs with invalid ids
+      return null;
+    }
 
-    const vars = tokens.filter(isTokenWithVariable).map(t => t.getVariable());
-    const resultVar = this.addConstraints(m, vars);
-    const resultToken = new NumberToken(resultVar);
-    // TODO: Marcel, Formula's constructor takes only one argument!
-    const formula = new Formula(tokens, resultToken);
-
-    formula.position = pos;
-    this.page.adopt(formula);
-    return true;
-  }
-
-  addConstraints(m: ohm.MatchResult, vars: Variable[]): Variable {
+    const vars = [...varSet];
     const argNames = vars.map(v => `v${v.id}`);
     const compiledExpr = this.semantics(m).compile();
-    const func = this.createFormulaFn(argNames, compiledExpr);
-    return constraints.formula(vars, func).result;
-  }
+    const func = new Function(`[${argNames}]`, `return ${compiledExpr}`) as (
+      xs: number[]
+    ) => number;
 
-  createFormulaFn(
-    argNames: string[],
-    compiledExpr: string
-  ): (xs: number[]) => number {
-    // console.log('argNames', argNames);
-    // console.log('compiledExpr', compiledExpr);
-    try {
-      // replace x with *
-      compiledExpr = compiledExpr.replaceAll('×', '*');
-      return new Function(`[${argNames}]`, `return ${compiledExpr}`) as (
-        xs: number[]
-      ) => number;
-    } catch (e) {
-      console.error('uh-oh, generated code is not ok', e);
-      throw new Error(':(');
-    }
+    return constraints.formula(vars, func);
   }
 }
