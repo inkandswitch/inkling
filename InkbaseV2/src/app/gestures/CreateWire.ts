@@ -10,6 +10,7 @@ import { MetaStruct } from '../meta/MetaSemantics';
 import PropertyPicker from '../meta/PropertyPicker';
 import Vec from '../../lib/vec';
 import Formula from '../meta/Formula';
+import EmptyToken from '../meta/EmptyToken';
 
 export function createWire(ctx: EventContext): Gesture | void {
   if (ctx.metaToggle.active) {
@@ -45,6 +46,7 @@ export function createWire(ctx: EventContext): Gesture | void {
         const primaryToken = find({ what: aPrimaryToken, near });
         const gizmo = find({ what: aGizmo, near });
 
+        // Instantiate a formula
         if (wire.isCollapsable()) {
           if (wire.a && wire.a.deref()) {
             let token = wire.a.deref()?.parent as Token;

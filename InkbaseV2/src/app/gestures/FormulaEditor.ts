@@ -1,25 +1,25 @@
 import FormulaStroke from '../ink/FormulaStroke';
 import { aFormula } from '../meta/Formula';
-import { aFormulaEditor } from '../meta/FormulaEditor';
 import { aPrimaryToken } from '../meta/Token';
 import { aWritingCell } from '../meta/WritingCell';
 import { isLabelToken } from '../meta/token-helpers';
 import { EventContext, Gesture } from './Gesture';
 
 export function tapFormulaLabel(ctx: EventContext): Gesture | void {
-  if (ctx.metaToggle.active && ctx.formulaEditor.isActive()) {
-    const primaryToken = ctx.page.find({
-      what: aPrimaryToken,
-      near: ctx.event.position,
-    });
+  // TODO: Rewrie
+  // if (ctx.metaToggle.active && ctx.formulaEditor.isActive()) {
+  //   const primaryToken = ctx.page.find({
+  //     what: aPrimaryToken,
+  //     near: ctx.event.position,
+  //   });
 
-    if (primaryToken && isLabelToken(primaryToken)) {
-      return new Gesture('Tap Formula Label', {
-        ended: () =>
-          ctx.formulaEditor.addLabelTokenFromExisting(primaryToken.label),
-      });
-    }
-  }
+  //   if (primaryToken && isLabelToken(primaryToken)) {
+  //     return new Gesture('Tap Formula Label', {
+  //       ended: () =>
+  //         ctx.formulaEditor.addLabelTokenFromExisting(primaryToken.label),
+  //     });
+  //   }
+  // }
 }
 
 export function pencilFormulaEditor(ctx: EventContext): Gesture | void {
@@ -42,6 +42,9 @@ export function pencilFormulaEditor(ctx: EventContext): Gesture | void {
       });
     }
   }
+
+  // TODO: Rewrite
+
   // if (ctx.metaToggle.active && ctx.formulaEditor.isActive()) {
   //   const formulaEditor = ctx.root.find({
   //     what: aFormulaEditor,

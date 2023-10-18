@@ -348,6 +348,11 @@ svg * {
   stroke: var(--property-picker-box);
   fill: var(--token-fill);
   stroke-width: 0.5;
+
+  [is-embedded]>& {
+    stroke: none;
+    fill: var(--token-embedded-fill);
+  }
 }
 
 .property-picker-text {

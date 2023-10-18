@@ -65,6 +65,7 @@ export default class Formula extends Token {
       cell.remove();
     }
 
+    // TODO: Do this in a better way so we don't loose state all over the place
     if (this.editing) {
       let cellCount = 0;
       for (const token of tokens) {
@@ -187,6 +188,7 @@ export default class Formula extends Token {
 
       token.embedded = true;
       token.editing = this.editing;
+
       nextTokenPosition = Vec.add(
         nextTokenPosition,
         Vec(token.width + PADDING, 0)
@@ -194,8 +196,6 @@ export default class Formula extends Token {
     }
 
     this.width = nextTokenPosition.x - this.position.x;
-
-
 
     // Update box wrapper
     if (this.children.size === 0) {

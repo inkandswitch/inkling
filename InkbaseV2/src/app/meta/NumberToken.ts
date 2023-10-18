@@ -57,7 +57,7 @@ export default class NumberToken extends Token {
 
   addChar(char: string) {
     const stringValue = this.variable.value.toString() + char;
-    this.variable.value = parseInt(stringValue);
+    this.variable.lock(parseInt(stringValue));
   }
 
   updateCharAt(index: number, char: string) {
@@ -70,7 +70,7 @@ export default class NumberToken extends Token {
 
     const stringValue = array.join('');
 
-    this.variable.value = parseInt(stringValue);
+    this.variable.lock(parseInt(stringValue));
   }
 
   render(dt: number, t: number): void {

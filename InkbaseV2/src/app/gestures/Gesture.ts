@@ -6,7 +6,6 @@ import Events, {
   TouchId,
 } from '../NativeEvents';
 import MetaToggle from '../gui/MetaToggle';
-import FormulaEditor from '../meta/FormulaEditor';
 import SVG from '../Svg';
 
 export type EventContext = {
@@ -15,7 +14,6 @@ export type EventContext = {
   events: Events; // The full NativeEvents instance, so we can look at other the pencils/fingers.
   root: typeof root; // The root of the scene graph
   page: typeof root.page; // The current page the user is interacting with
-  formulaEditor: FormulaEditor;
   metaToggle: MetaToggle;
   pseudo: boolean;
   pseudoCount: number;
@@ -49,7 +47,7 @@ export class Gesture {
   constructor(
     public label: string,
     public api: GestureAPI
-  ) {}
+  ) { }
 
   claimsTouch(ctx: EventContext): boolean {
     const typeIsPencil = ctx.event.type === 'pencil';

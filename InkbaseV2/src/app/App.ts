@@ -6,7 +6,6 @@ import { forDebugging, onEveryFrame } from '../lib/helpers';
 // import Gizmo from './meta/Gizmo';
 import * as Input from './Input';
 import { root } from './GameObject';
-import FormulaEditor from './meta/FormulaEditor';
 import FormulaParser from './meta/FormulaParser';
 import MetaToggle from './gui/MetaToggle';
 import Formula from './meta/Formula';
@@ -24,7 +23,6 @@ const events = new Events((event: Event, state: InputState) => {
     events,
     root,
     page,
-    formulaEditor,
     metaToggle,
     pseudo: false,
     pseudoCount: 0,
@@ -37,10 +35,7 @@ root.adopt(page);
 root.currentPage = page;
 
 // FORMULA STUFF
-const formulaEditor = new FormulaEditor();
-forDebugging('formulaEditor', formulaEditor);
-root.adopt(formulaEditor);
-formulaEditor.formulaParser = new FormulaParser(page);
+//formulaEditor.formulaParser = new FormulaParser(page);
 
 const metaToggle = new MetaToggle();
 root.adopt(metaToggle);
