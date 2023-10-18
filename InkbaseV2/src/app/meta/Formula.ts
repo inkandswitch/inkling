@@ -37,12 +37,24 @@ export default class Formula extends Token {
 
   close() {
     if (!this.editing) return;
+    // Cleanup
     const emptyTokens = this.findAll({ what: aEmptyToken });
+
     for (const token of emptyTokens) {
       token.remove();
     }
+
     this.editing = false;
     this.createCells();
+
+    // Detach single token formula's
+    const tokens = this.findAll({ what: aToken });
+    if (tokens.length == 1) {
+      tokens[0].embedded = false;
+      tokens[0].editing = false;
+      this.page.adopt(tokens[0]);
+      this.remove();
+    }
   }
 
   createCells() {
@@ -69,11 +81,9 @@ export default class Formula extends Token {
         this.adopt(cell);
       }
     }
-
   }
 
   updateWritingCells() {
-
     const tokens = this.findAll({ what: aToken });
     let tokenIndex = 0;
     let token = tokens[tokenIndex];

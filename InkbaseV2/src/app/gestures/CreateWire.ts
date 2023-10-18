@@ -1,6 +1,6 @@
 import { aGizmo } from '../meta/Gizmo';
 import NumberToken from '../meta/NumberToken';
-import { aPrimaryToken, aToken } from '../meta/Token';
+import Token, { aPrimaryToken, aToken } from '../meta/Token';
 import { EventContext, Gesture } from './Gesture';
 import PropertyPickerEditor from '../meta/PropertyPickerEditor';
 import { aComponent } from '../meta/Component';
@@ -17,7 +17,7 @@ export function createWire(ctx: EventContext): Gesture | void {
     const find = ctx.page.find.bind(ctx.page);
     const near = ctx.event.position;
 
-    const primaryToken = find({ what: aPrimaryToken, near, recursive: false });
+    const primaryToken = find({ what: aPrimaryToken, near, recursive: true });
     const component = find({ what: aComponent, near, recursive: false });
     const token = find({ what: aToken, near, recursive: false });
     const gizmo = find({ what: aGizmo, near });
@@ -46,11 +46,29 @@ export function createWire(ctx: EventContext): Gesture | void {
         const gizmo = find({ what: aGizmo, near });
 
         if (wire.isCollapsable()) {
+          if (wire.a && wire.a.deref()) {
+            let token = wire.a.deref()?.parent as Token;
+            if (token instanceof Formula) {
+              // TODO: not a reachable path
+              token.edit()
+            } else if (token.parent instanceof Formula) {
+              token.parent.edit();
+            } else {
+              let formula = new Formula();
+              formula.adopt(token);
+              ctx.page.adopt(formula);
+              formula.edit();
+              formula.position = Vec.sub(token.position, Vec(-3, -3));
+            }
+          } else {
+            let formula = new Formula();
+            formula.position = ctx.event.position;
+            ctx.page.adopt(formula);
+            formula.edit();
+          }
+
           wire.remove();
-          let formula = new Formula();
-          formula.position = ctx.event.position;
-          formula.edit();
-          ctx.page.adopt(formula);
+
         } else if (isTokenWithVariable(primaryToken)) {
           wire.attachEnd(primaryToken.wirePort);
         } else if (gizmo) {

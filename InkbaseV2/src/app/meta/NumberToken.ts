@@ -112,13 +112,15 @@ export default class NumberToken extends Token {
       }
       this.width = (chars.length * 27) - 3;
       SVG.update(this.boxElm, { width: this.width });
+      SVG.update(this.wholeElm, { visibility: 'hidden' });
+      SVG.update(this.fracElm, { visibility: 'hidden' });
     } else {
       this.lastRenderedValue = newValue;
 
       const [whole, frac] = newValue.split('.');
 
-      SVG.update(this.wholeElm, { content: whole });
-      SVG.update(this.fracElm, { content: frac });
+      SVG.update(this.wholeElm, { content: whole, visibility: 'visible' });
+      SVG.update(this.fracElm, { content: frac, visibility: 'visible' });
 
       const wholeWidth = this.wholeElm.getComputedTextLength();
       const fracWidth = this.fracElm.getComputedTextLength();
