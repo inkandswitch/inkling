@@ -5,6 +5,7 @@ import { WirePort } from './Wire';
 import { MetaLabel } from './MetaSemantics';
 import { boundingBoxFromStrokes } from '../../lib/bounding_box';
 import WritingCell from './WritingCell';
+import { GameObject } from '../GameObject';
 
 export default class EmptyToken extends Token {
   width = 24;
@@ -23,3 +24,6 @@ export default class EmptyToken extends Token {
     // NOOP
   }
 }
+
+export const aEmptyToken = (gameObj: GameObject) =>
+  gameObj instanceof EmptyToken ? gameObj : null;

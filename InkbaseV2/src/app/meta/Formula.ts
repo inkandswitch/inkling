@@ -4,7 +4,7 @@ import Vec from '../../lib/vec';
 import { isTokenWithVariable } from './token-helpers';
 import NumberToken from './NumberToken';
 import OpToken from './OpToken';
-import EmptyToken from './EmptyToken';
+import EmptyToken, { aEmptyToken } from './EmptyToken';
 import WritingCell, { aWritingCell } from './WritingCell';
 import { GameObject } from '../GameObject';
 
@@ -24,6 +24,25 @@ export default class Formula extends Token {
 
   isPrimary() {
     return false;
+  }
+
+  edit() {
+    this.adopt(new EmptyToken());
+    this.adopt(new EmptyToken());
+    this.adopt(new EmptyToken());
+    this.adopt(new EmptyToken());
+    this.editing = true;
+    this.createCells();
+  }
+
+  close() {
+    if (!this.editing) return;
+    const emptyTokens = this.findAll({ what: aEmptyToken });
+    for (const token of emptyTokens) {
+      token.remove();
+    }
+    this.editing = false;
+    this.createCells();
   }
 
   createCells() {
@@ -144,7 +163,7 @@ export default class Formula extends Token {
       token.position = nextTokenPosition;
 
       token.embedded = true;
-      token.editing = this.editing
+      token.editing = this.editing;
       nextTokenPosition = Vec.add(
         nextTokenPosition,
         Vec(token.width + PADDING, 0)

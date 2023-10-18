@@ -9,6 +9,7 @@ import Wire from '../meta/Wire';
 import { MetaStruct } from '../meta/MetaSemantics';
 import PropertyPicker from '../meta/PropertyPicker';
 import Vec from '../../lib/vec';
+import Formula from '../meta/Formula';
 
 export function createWire(ctx: EventContext): Gesture | void {
   if (ctx.metaToggle.active) {
@@ -46,7 +47,10 @@ export function createWire(ctx: EventContext): Gesture | void {
 
         if (wire.isCollapsable()) {
           wire.remove();
-          ctx.formulaEditor.activateFromPosition(ctx.event.position);
+          let formula = new Formula();
+          formula.position = ctx.event.position;
+          formula.edit();
+          ctx.page.adopt(formula);
         } else if (isTokenWithVariable(primaryToken)) {
           wire.attachEnd(primaryToken.wirePort);
         } else if (gizmo) {

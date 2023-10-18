@@ -10,7 +10,9 @@ import Vec from '../../lib/vec';
 
 export default class NumberToken extends Token {
   private lastRenderedValue = '';
+  private lastRenderedEditing = false;
 
+  // Rendering stuff
   protected readonly elm = SVG.add('g', SVG.metaElm, { class: 'number-token' });
 
   protected readonly boxElm = SVG.add('rect', this.elm, {
@@ -26,11 +28,10 @@ export default class NumberToken extends Token {
     class: 'token-frac-text',
   });
 
-  protected readonly digitElems: Array<SVGElement> = [];
+  protected digitElems: Array<SVGElement> = [];
 
-
+  // Meta stuff things
   readonly variable: Variable;
-
   wirePort: WirePort;
 
   constructor(value?: number, source?: ohm.Interval);
@@ -85,30 +86,33 @@ export default class NumberToken extends Token {
     // getComputedTextLength() is slow, so we're gonna do some dirty checking here
     const newValue = this.variable.value.toFixed(2);
 
+    if (newValue == this.lastRenderedValue && this.lastRenderedEditing == this.editing) return;
+
+    this.lastRenderedEditing = this.editing;
+    this.lastRenderedValue = newValue;
+
+    // Cleanup digitElems
+    for (const elem of this.digitElems) {
+      elem.remove();
+    }
+    this.digitElems = [];
+
     if (this.editing) {
       let chars = this.variable.value.toFixed(0).split('');
       this.variable.value = parseInt(chars.join(''));
 
       // Update visuals
-      if (newValue !== this.lastRenderedValue) {
-        this.lastRenderedValue = newValue;
-        for (const elem of this.digitElems) {
-          elem.remove();
-        }
+      for (const [i, char] of chars.entries()) {
+        this.digitElems.push(SVG.add('text', this.elm, {
+          class: 'token-text',
+          content: char,
+          style: `translate: ${5 + i * 27}px 24px;`
+        }))
 
-        for (const [i, char] of chars.entries()) {
-          let digit = SVG.add('text', this.elm, {
-            class: 'token-text',
-            content: char,
-            style: `translate: ${5 + i * 27}px 24px;`
-          });
-
-        }
-        this.width = (chars.length * 27) - 3;
-        SVG.update(this.boxElm, { width: this.width });
       }
-
-    } else if (newValue !== this.lastRenderedValue) {
+      this.width = (chars.length * 27) - 3;
+      SVG.update(this.boxElm, { width: this.width });
+    } else {
       this.lastRenderedValue = newValue;
 
       const [whole, frac] = newValue.split('.');

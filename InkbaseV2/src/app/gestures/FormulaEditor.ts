@@ -73,7 +73,7 @@ export function pencilFormulaEditor(ctx: EventContext): Gesture | void {
 }
 
 export function closeFormulaEditor(ctx: EventContext): Gesture | void {
-  const formulas = ctx.page.findAll({ what: aFormula })
+  const formulas = ctx.root.findAll({ what: aFormula })
   // This one is a bit weird.
   // We don't actually need to claim the 3rd finger, so we just perform the effect right away.
   if (
@@ -81,7 +81,7 @@ export function closeFormulaEditor(ctx: EventContext): Gesture | void {
     ctx.event.type === 'finger' // …one more finger.
   ) {
     for (const formula of formulas) {
-      formula.editing = false;
+      formula.close();
     }
   }
 }
