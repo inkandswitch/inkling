@@ -75,6 +75,10 @@ export function createWire(ctx: EventContext): Gesture | void {
           wire.attachEnd(primaryToken.wirePort);
         } else if (gizmo) {
           wire.attachEnd(gizmo.wirePort);
+        } else if (primaryToken instanceof EmptyToken) {
+          const n = new NumberToken();
+          (primaryToken.parent as Formula).insertInto(primaryToken, n);
+          wire.attachEnd(n.wirePort);
         } else if (wire.a?.deref()?.value instanceof MetaStruct) {
           const p = ctx.page.adopt(new PropertyPicker());
           p.position = ctx.event.position;

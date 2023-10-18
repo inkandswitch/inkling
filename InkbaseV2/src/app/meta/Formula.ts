@@ -94,12 +94,18 @@ export default class Formula extends Token {
           let size = token.variable.value.toFixed(0).split('').length;
           for (let i = 0; i < size; i++) {
             let cell = cells.shift();
-            cell!.position = Vec.add(token.position, Vec((24 + PADDING) * i, 0));
+            if (cell) {
+              cell.position = Vec.add(token.position, Vec((24 + PADDING) * i, 0));
+            }
+
           }
         } else {
           let cell = cells.shift();
-          cell!.position = token.position;
-          cell!.width = token.width;
+          if (cell) {
+            cell.position = token.position;
+            cell.width = token.width;
+          }
+
         }
       }
     }
@@ -172,7 +178,21 @@ export default class Formula extends Token {
     }
   }
 
+  insertInto(emptyToken: EmptyToken, newToken: Token) {
+    const tokens = this.findAll({ what: aToken });
+    for (const [i, token] of tokens.entries()) {
+      if (emptyToken == token) {
+        tokens.splice(i, 0, newToken);
+        break;
+      }
+    }
 
+    for (const t of tokens) {
+      this.adopt(t);
+    }
+
+    this.updateCells();
+  }
 
   render(dt: number, t: number): void {
     // Process input
