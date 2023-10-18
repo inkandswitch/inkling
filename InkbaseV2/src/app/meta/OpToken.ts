@@ -37,7 +37,7 @@ export default class OpToken extends Token {
     });
   }
 
-  remove(): void {
+  remove() {
     this.textElement.remove();
     super.remove();
   }

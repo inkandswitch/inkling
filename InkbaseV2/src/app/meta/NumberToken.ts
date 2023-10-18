@@ -151,6 +151,11 @@ export default class NumberToken extends Token {
   onTap() {
     this.getVariable().toggleLock();
   }
+
+  remove() {
+    this.elm.remove();
+    super.remove();
+  }
 }
 
 export const aNumberToken = (gameObj: GameObject) =>

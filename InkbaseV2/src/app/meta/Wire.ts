@@ -3,6 +3,7 @@ import SVG from '../Svg';
 import { Position } from '../../lib/types';
 import Vec from '../../lib/vec';
 import { MetaConnection, MetaValue } from './MetaSemantics';
+import Line from '../../lib/line';
 
 export class WirePort extends GameObject {
   position: Position;
@@ -27,6 +28,10 @@ export default class Wire extends GameObject {
     points: '',
     class: 'wire',
   });
+
+  distanceToPoint(point: Position): number | null {
+    return Line.distToPoint(Line(this.points[0], this.points[1]), point);
+  }
 
   render(): void {
     const a = this.a?.deref();

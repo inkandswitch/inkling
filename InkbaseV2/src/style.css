@@ -44,6 +44,7 @@
   --pseudo-touch: var(--grey2);
   --gesture-circle: var(--grey2);
   --gesture-text: var(--grey2);
+  --eraser: var(--grey1);
 
   /* These colors are different in concrete and meta mode */
   --component: transparent;
@@ -117,6 +118,7 @@
   --pseudo-touch: var(--yellow);
   --gesture-circle: var(--yellow);
   --gesture-text: var(--yellow);
+  --eraser: color(display-p3 1 0.4 0);
 
   &[meta-mode] {
     --constrained: var(--green);
@@ -409,6 +411,20 @@ svg * {
     fill: var(--gesture-text);
     transform: translate(0, -50px);
     text-anchor: middle;
+  }
+}
+
+.eraser {
+  stroke: var(--eraser);
+  & line {
+    animation: eraser 0.15s cubic-bezier(0.1, 0.4, 0.5, 0.8) both;
+  }
+}
+
+@keyframes eraser {
+  to {
+    translate: 0px 10px;
+    scale: 3 0;
   }
 }
 

@@ -20,8 +20,8 @@
 
   <script>
     // Inlining this script to avoid flicker on page load
-    const themes = ['light grey', 'dark grey', 'light color', 'dark color', 'not-terrible'];
-    let themeIndex = +(localStorage.getItem('themeIndex') || 0);
+    const themes = ['light grey', 'dark grey', 'light color', 'dark color'];
+    let themeIndex = +(localStorage.getItem('themeIndex') || 0) % themes.length;
 
     function cycleTheme() {
       themeIndex = ++themeIndex % themes.length;

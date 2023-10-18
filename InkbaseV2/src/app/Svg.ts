@@ -162,11 +162,11 @@ const statusElement = add('text', guiElm, { class: 'status-text' });
 
 let statusHideTimeMillis = 0;
 
-function showStatus(text: string, time = 3_000) {
-  update(statusElement, { content: text, 'is-visible': true });
-  statusHideTimeMillis = Date.now() + time;
+function showStatus(content: string, time = 3_000) {
+  update(statusElement, { content, 'is-visible': true });
+  statusHideTimeMillis = performance.now() + time;
   setTimeout(() => {
-    if (Date.now() >= statusHideTimeMillis) {
+    if (performance.now() >= statusHideTimeMillis) {
       update(statusElement, { 'is-visible': false });
     }
   }, time);

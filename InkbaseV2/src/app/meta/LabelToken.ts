@@ -67,7 +67,7 @@ export default class LabelToken extends Token {
     return true;
   }
 
-  render(): void {
+  render() {
     SVG.update(this.boxElement, {
       x: this.position.x,
       y: this.position.y,

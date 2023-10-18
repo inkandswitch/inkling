@@ -242,7 +242,7 @@ export default class Formula extends Token {
     }
   }
 
-  remove(): void {
+  remove() {
     this.boxElement.remove();
     for (const token of this.children as Set<Token>) {
       if (isTokenWithVariable(token)) {

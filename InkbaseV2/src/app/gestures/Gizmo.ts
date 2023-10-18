@@ -3,6 +3,10 @@ import { aGizmo } from '../meta/Gizmo';
 
 export function touchGizmo(ctx: EventContext): Gesture | void {
   if (ctx.metaToggle.active) {
+    // TODO: We only want to perform this gesture on a tap near the center of the gizmo.
+    // But for other gestures, we want to perform them when any part of the gizmo is touched.
+    // The current GameObject.find() method doesn't seemingly allow for this sort of distinction,
+    // where different find() calls need a different distanceToPoint() implementation.
     const gizmo = ctx.root.find({
       what: aGizmo,
       near: ctx.event.position,
@@ -18,28 +22,3 @@ export function touchGizmo(ctx: EventContext): Gesture | void {
     }
   }
 }
-
-// if (fingerDown) {
-//   const dist = Line.distToPoint(this.line, fingerDown.position);
-//   if (dist < 20) {
-//     return true;
-//   }
-// }
-// const fingerUp = events.find('finger', 'ended');
-// if (fingerUp) {
-//   if (Vec.dist(handles.a.position, fingerUp.position) < 20) {
-//     return true;
-//   }
-//   if (Vec.dist(handles.b.position, fingerUp.position) < 20) {
-//     return true;
-//   }
-//   const d = Vec.dist(this.center, fingerUp.position);
-//   if (Math.abs(d - this.radius) < 20) {
-//     this.toggleAngle();
-//     return true;
-//   }
-//   if (Line.distToPoint(this.line, fingerUp.position) < 20) {
-//     this.toggleDistance();
-//     return true;
-//   }
-// }

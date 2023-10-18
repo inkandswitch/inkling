@@ -16,7 +16,7 @@ export default class Stroke extends GameObject {
     this.points = newPoints;
   }
 
-  render(): void {
+  render() {
     SVG.update(this.element, {
       points: SVG.points(this.points),
     });
@@ -49,7 +49,7 @@ export default class Stroke extends GameObject {
     return false;
   }
 
-  remove(): void {
+  remove() {
     this.element.remove();
     super.remove();
   }

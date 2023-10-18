@@ -13,11 +13,11 @@ import { MetaLabel, MetaStruct } from './MetaSemantics';
 export default class Gizmo extends GameObject {
   center: Position;
 
-  private g = SVG.add('g', SVG.metaElm, { class: 'gizmo' });
-  private arcs = SVG.add('g', this.g);
+  private elm = SVG.add('g', SVG.metaElm, { class: 'gizmo' });
+  private arcs = SVG.add('g', this.elm);
   private arc1 = SVG.add('path', this.arcs);
   private arc2 = SVG.add('path', this.arcs);
-  private polyline = SVG.add('polyline', this.g);
+  private polyline = SVG.add('polyline', this.elm);
 
   readonly distance: Variable;
   readonly angleInRadians: Variable;
@@ -165,7 +165,7 @@ export default class Gizmo extends GameObject {
   }
 
   remove() {
-    // TODO: remove DOM stuff
+    this.elm.remove();
     super.remove();
   }
 }

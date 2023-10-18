@@ -21,7 +21,6 @@ export default abstract class Token extends GameObject {
   abstract isPrimary(): boolean;
 
   distanceToPoint(pos: Position): number | null {
-    // TODO: If two tokens are overlapping and you touch the overlap, they both return 0. We need a tie-breaker.
     return signedDistanceToBox(
       this.position.x,
       this.position.y,

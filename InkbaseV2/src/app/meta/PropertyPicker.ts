@@ -55,7 +55,7 @@ export default class PropertyPicker extends Token {
     return true;
   }
 
-  render(): void {
+  render() {
     // getComputedTextLength() is slow, so we're gonna do some dirty checking here
     const content = this.property?.display as string;
     if (content !== this.lastRenderedValue) {
@@ -95,5 +95,11 @@ export default class PropertyPicker extends Token {
       this.property,
       this.outputVariable
     );
+  }
+
+  remove() {
+    this.boxElement.remove();
+    this.textElement.remove();
+    super.remove();
   }
 }

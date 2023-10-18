@@ -15,6 +15,7 @@ import SVG from './Svg';
 import { createGizmo } from './gestures/CreateGizmo';
 import { touchGizmo } from './gestures/Gizmo';
 import Config from './Config';
+import { erase } from './gestures/Erase';
 
 const gestureCreators = {
   finger: [
@@ -26,6 +27,7 @@ const gestureCreators = {
     touchGizmo,
   ],
   pencil: [
+    erase,
     createGizmo,
     tapPropertyPicker,
     tapFormulaLabel,

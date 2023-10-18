@@ -17,9 +17,9 @@ export default class Handle extends GameObject {
 
   public readonly id = generateId();
 
-  private readonly element = SVG.add('g', SVG.inkElm, { class: 'handle' });
-  private readonly circle = SVG.add('circle', this.element, { r: 15 });
-  private readonly pin = SVG.add('path', this.element, {
+  private readonly elm = SVG.add('g', SVG.inkElm, { class: 'handle' });
+  private readonly circle = SVG.add('circle', this.elm, { r: 15 });
+  private readonly pin = SVG.add('path', this.elm, {
     d: 'M-5,-5 L5,5 M-5,5 L5,-5',
   });
 
@@ -54,7 +54,7 @@ export default class Handle extends GameObject {
   }
 
   remove() {
-    this.removeFromDOM();
+    this.elm.remove();
     super.remove();
   }
 
@@ -151,7 +151,7 @@ export default class Handle extends GameObject {
   }
 
   render(t: number, dt: number) {
-    SVG.update(this.element, {
+    SVG.update(this.elm, {
       transform: SVG.positionToTransform(this),
       'is-canonical': this.isCanonical,
       'has-pin': this.hasPin,
@@ -159,10 +159,6 @@ export default class Handle extends GameObject {
     for (const child of this.children) {
       child.render(dt, t);
     }
-  }
-
-  private removeFromDOM() {
-    this.element.remove();
   }
 
   distanceToPoint(point: Position) {
