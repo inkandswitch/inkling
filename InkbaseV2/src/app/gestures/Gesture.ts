@@ -47,7 +47,7 @@ export class Gesture {
   constructor(
     public label: string,
     public api: GestureAPI
-  ) { }
+  ) {}
 
   claimsTouch(ctx: EventContext): boolean {
     const typeIsPencil = ctx.event.type === 'pencil';

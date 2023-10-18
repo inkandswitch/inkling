@@ -7,7 +7,6 @@ import OpToken from './OpToken';
 import EmptyToken, { aEmptyToken } from './EmptyToken';
 import WritingCell, { aWritingCell } from './WritingCell';
 import { GameObject } from '../GameObject';
-import { Position } from '../../lib/types';
 
 const PADDING = 3;
 
@@ -37,7 +36,9 @@ export default class Formula extends Token {
   }
 
   close() {
-    if (!this.editing) return;
+    if (!this.editing) {
+      return;
+    }
     // Cleanup
     const emptyTokens = this.findAll({ what: aEmptyToken });
 
@@ -50,7 +51,7 @@ export default class Formula extends Token {
 
     // Detach single token formula's
     const tokens = this.findAll({ what: aToken });
-    if (tokens.length == 1) {
+    if (tokens.length === 1) {
       tokens[0].embedded = false;
       tokens[0].editing = false;
       this.page.adopt(tokens[0]);
@@ -67,16 +68,16 @@ export default class Formula extends Token {
 
     // TODO: Do this in a better way so we don't loose state all over the place
     if (this.editing) {
-      let cellCount = 0;
+      const cellCount = 0;
       for (const token of tokens) {
         if (token instanceof NumberToken) {
-          let size = token.variable.value.toFixed(0).split('').length;
+          const size = token.variable.value.toFixed(0).split('').length;
           for (let i = 0; i < size; i++) {
-            let cell = new WritingCell();
+            const cell = new WritingCell();
             this.adopt(cell);
           }
         } else {
-          let cell = new WritingCell();
+          const cell = new WritingCell();
           this.adopt(cell);
         }
       }
@@ -88,24 +89,25 @@ export default class Formula extends Token {
     const tokens = this.findAll({ what: aToken });
 
     if (this.editing) {
-      let cellCount = 0;
+      const cellCount = 0;
       for (const token of tokens) {
         if (token instanceof NumberToken) {
-          let size = token.variable.value.toFixed(0).split('').length;
+          const size = token.variable.value.toFixed(0).split('').length;
           for (let i = 0; i < size; i++) {
-            let cell = cells.shift();
+            const cell = cells.shift();
             if (cell) {
-              cell.position = Vec.add(token.position, Vec((24 + PADDING) * i, 0));
+              cell.position = Vec.add(
+                token.position,
+                Vec((24 + PADDING) * i, 0)
+              );
             }
-
           }
         } else {
-          let cell = cells.shift();
+          const cell = cells.shift();
           if (cell) {
             cell.position = token.position;
             cell.width = token.width;
           }
-
         }
       }
     }
@@ -120,7 +122,6 @@ export default class Formula extends Token {
     const cells = this.findAll({ what: aWritingCell });
 
     for (const [i, cell] of cells.entries()) {
-
       // Step forward through tokens
       offsetInsideToken += 1;
 
@@ -132,15 +133,15 @@ export default class Formula extends Token {
         tokenSize = 1;
       }
 
-      if (offsetInsideToken == tokenSize) {
+      if (offsetInsideToken === tokenSize) {
         offsetInsideToken = 0;
         tokenIndex += 1;
-        token = tokens[tokenIndex]
+        token = tokens[tokenIndex];
       }
 
-      if (cell.stringValue != '') {
+      if (cell.stringValue !== '') {
         // Handle all tokenizations
-        // If it's a number token and 
+        // If it's a number token and
         if (token instanceof NumberToken) {
           if (isNumeric(cell.stringValue)) {
             token.updateCharAt(offsetInsideToken, cell.stringValue);
@@ -149,18 +150,17 @@ export default class Formula extends Token {
           }
         } else if (token instanceof EmptyToken) {
           if (isNumeric(cell.stringValue)) {
-            let prev = tokens[tokenIndex - 1]
+            const prev = tokens[tokenIndex - 1];
             if (prev instanceof NumberToken) {
               prev.addChar(cell.stringValue);
             } else {
-              let numToken = new NumberToken();
-              numToken.addChar(cell.stringValue)
+              const numToken = new NumberToken();
+              numToken.addChar(cell.stringValue);
               tokens.push(tokens[tokenIndex]);
               tokens[tokenIndex] = numToken;
-
             }
           } else {
-            let opToken = new OpToken(cell.stringValue);
+            const opToken = new OpToken(cell.stringValue);
             tokens.push(tokens[tokenIndex]);
             tokens[tokenIndex] = opToken;
           }
@@ -181,7 +181,7 @@ export default class Formula extends Token {
   insertInto(emptyToken: EmptyToken, newToken: Token) {
     const tokens = this.findAll({ what: aToken });
     for (const [i, token] of tokens.entries()) {
-      if (emptyToken == token) {
+      if (emptyToken === token) {
         tokens.splice(i, 0, newToken);
         break;
       }
@@ -254,7 +254,7 @@ export default class Formula extends Token {
 }
 
 function isNumeric(v: string) {
-  return ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'].indexOf(v) > -1;
+  return '0' <= v && v <= '9';
 }
 
 export const aFormula = (gameObj: GameObject) =>

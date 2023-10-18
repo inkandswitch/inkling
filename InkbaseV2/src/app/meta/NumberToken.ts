@@ -62,11 +62,9 @@ export default class NumberToken extends Token {
   }
 
   updateCharAt(index: number, char: string) {
-    console.log("update char at", index, char, this.variable.value);
+    console.log('update char at', index, char, this.variable.value);
 
-    const array = this.variable.value
-      .toString()
-      .split('')
+    const array = this.variable.value.toString().split('');
     array.splice(index, 1, char);
 
     const stringValue = array.join('');
@@ -80,7 +78,7 @@ export default class NumberToken extends Token {
       transform: `translate(${this.position.x} ${this.position.y})`,
       'is-locked': this.getVariable().isLocked,
       'is-embedded': this.embedded,
-      'is-editing': this.editing
+      'is-editing': this.editing,
     });
 
     this.wirePort.position = this.midPoint();
@@ -88,7 +86,12 @@ export default class NumberToken extends Token {
     // getComputedTextLength() is slow, so we're gonna do some dirty checking here
     const newValue = this.variable.value.toFixed(2);
 
-    if (newValue == this.lastRenderedValue && this.lastRenderedEditing == this.editing) return;
+    if (
+      newValue === this.lastRenderedValue &&
+      this.lastRenderedEditing === this.editing
+    ) {
+      return;
+    }
 
     this.lastRenderedEditing = this.editing;
     this.lastRenderedValue = newValue;
@@ -100,19 +103,20 @@ export default class NumberToken extends Token {
     this.digitElems = [];
 
     if (this.editing) {
-      let chars = this.variable.value.toFixed(0).split('');
+      const chars = this.variable.value.toFixed(0).split('');
       this.variable.value = parseInt(chars.join(''));
 
       // Update visuals
       for (const [i, char] of chars.entries()) {
-        this.digitElems.push(SVG.add('text', this.elm, {
-          class: 'token-text',
-          content: char,
-          style: `translate: ${5 + i * 27}px 24px;`
-        }))
-
+        this.digitElems.push(
+          SVG.add('text', this.elm, {
+            class: 'token-text',
+            content: char,
+            style: `translate: ${5 + i * 27}px 24px;`,
+          })
+        );
       }
-      this.width = (chars.length * 27) - 3;
+      this.width = chars.length * 27 - 3;
       SVG.update(this.boxElm, { width: this.width });
       SVG.update(this.wholeElm, { visibility: 'hidden' });
       SVG.update(this.fracElm, { visibility: 'hidden' });

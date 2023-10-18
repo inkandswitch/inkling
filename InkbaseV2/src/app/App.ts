@@ -2,18 +2,17 @@ import Events, { Event, InputState } from './NativeEvents';
 import Page from './Page';
 import SVG from './Svg';
 import * as constraints from './constraints';
-import { forDebugging, onEveryFrame } from '../lib/helpers';
+import { onEveryFrame } from '../lib/helpers';
 // import Gizmo from './meta/Gizmo';
 import * as Input from './Input';
 import { root } from './GameObject';
-import FormulaParser from './meta/FormulaParser';
+// import FormulaParser from './meta/FormulaParser';
 import MetaToggle from './gui/MetaToggle';
 import Formula from './meta/Formula';
 // import Component from './meta/Component';
 // import LabelToken from './meta/LabelToken';
 // import Stroke from './ink/Stroke';
 // import Handle from './ink/Handle';
-
 
 // This is a pretzel, because the interface between NativeEvents and Input is a work in progress.
 const events = new Events((event: Event, state: InputState) => {
@@ -99,7 +98,7 @@ onEveryFrame((dt, t) => {
 // ];
 // component.updateOutline();
 
-let f = new Formula();
+const f = new Formula();
 f.position = { x: 400, y: 100 };
 //f.editing = true;
 page.adopt(f);

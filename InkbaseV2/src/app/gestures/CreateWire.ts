@@ -49,28 +49,27 @@ export function createWire(ctx: EventContext): Gesture | void {
         // Instantiate a formula
         if (wire.isCollapsable()) {
           if (wire.a && wire.a.deref()) {
-            let token = wire.a.deref()?.parent as Token;
+            const token = wire.a.deref()?.parent as Token;
             if (token instanceof Formula) {
               // TODO: not a reachable path
-              token.edit()
+              token.edit();
             } else if (token.parent instanceof Formula) {
               token.parent.edit();
             } else {
-              let formula = new Formula();
+              const formula = new Formula();
               formula.adopt(token);
               ctx.page.adopt(formula);
               formula.edit();
               formula.position = Vec.sub(token.position, Vec(-3, -3));
             }
           } else {
-            let formula = new Formula();
+            const formula = new Formula();
             formula.position = ctx.event.position;
             ctx.page.adopt(formula);
             formula.edit();
           }
 
           wire.remove();
-
         } else if (isTokenWithVariable(primaryToken)) {
           wire.attachEnd(primaryToken.wirePort);
         } else if (gizmo) {

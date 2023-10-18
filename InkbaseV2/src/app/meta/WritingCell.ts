@@ -13,7 +13,7 @@ export default class WritingCell extends GameObject {
   position: Position = { x: 100, y: 100 };
   timer: number | null = null;
 
-  stringValue = "";
+  stringValue = '';
 
   protected readonly svgCell = SVG.add('rect', SVG.metaElm, {
     x: this.position.x,

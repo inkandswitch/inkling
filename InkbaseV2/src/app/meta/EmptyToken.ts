@@ -1,16 +1,16 @@
 import Token from './Token';
-import SVG from '../Svg';
-import * as ohm from 'ohm-js';
-import { WirePort } from './Wire';
-import { MetaLabel } from './MetaSemantics';
-import { boundingBoxFromStrokes } from '../../lib/bounding_box';
-import WritingCell from './WritingCell';
+// import SVG from '../Svg';
+// import * as ohm from 'ohm-js';
+// import { WirePort } from './Wire';
+// import { MetaLabel } from './MetaSemantics';
+// import { boundingBoxFromStrokes } from '../../lib/bounding_box';
+// import WritingCell from './WritingCell';
 import { GameObject } from '../GameObject';
 
 export default class EmptyToken extends Token {
   width = 24;
   height = 30;
-  value = "";
+  value = '';
 
   constructor() {
     super();

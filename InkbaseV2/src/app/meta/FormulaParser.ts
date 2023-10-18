@@ -156,6 +156,7 @@ export default class FormulaParser {
     const vars = tokens.filter(isTokenWithVariable).map(t => t.getVariable());
     const resultVar = this.addConstraints(m, vars);
     const resultToken = new NumberToken(resultVar);
+    // TODO: Marcel, Formula's constructor takes only one argument!
     const formula = new Formula(tokens, resultToken);
 
     formula.position = pos;
