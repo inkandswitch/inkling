@@ -3,7 +3,6 @@ import Page from './Page';
 import SVG from './Svg';
 import * as constraints from './constraints';
 import { onEveryFrame } from '../lib/helpers';
-// import Gizmo from './meta/Gizmo';
 import * as Input from './Input';
 import { root } from './GameObject';
 // import FormulaParser from './meta/FormulaParser';
@@ -53,22 +52,6 @@ onEveryFrame((dt, t) => {
  * LIVES IN APP, FOR LACK OF HOME
  * KEEP IT DOWN BELOW
  */
-
-// // gizmooo wiring testing for testing for testing
-// let a = page.adopt(Handle.create({ x: 100, y: 100 }));
-// let b = page.adopt(Handle.create({ x: 200, y: 200 }));
-// let giz = new Gizmo(a, b);
-// a.adopt(giz);
-
-// a = page.adopt(Handle.create({ x: 400, y: 400 }));
-// b = page.adopt(Handle.create({ x: 500, y: 500 }));
-// giz = new Gizmo(a, b);
-// a.adopt(giz);
-
-// a = page.adopt(Handle.create({ x: 600, y: 600 }));
-// b = page.adopt(Handle.create({ x: 700, y: 700 }));
-// giz = new Gizmo(a, b);
-// a.adopt(giz);
 
 // const component = new Component();
 // page.adopt(component);
