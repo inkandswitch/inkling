@@ -7,6 +7,7 @@ import OpToken from './OpToken';
 import EmptyToken, { aEmptyToken } from './EmptyToken';
 import WritingCell, { aWritingCell } from './WritingCell';
 import { GameObject } from '../GameObject';
+import { Position } from '../../lib/types';
 
 const PADDING = 3;
 
@@ -32,7 +33,7 @@ export default class Formula extends Token {
     this.adopt(new EmptyToken());
     this.adopt(new EmptyToken());
     this.editing = true;
-    this.createCells();
+    this.updateCells();
   }
 
   close() {
@@ -45,7 +46,7 @@ export default class Formula extends Token {
     }
 
     this.editing = false;
-    this.createCells();
+    this.updateCells();
 
     // Detach single token formula's
     const tokens = this.findAll({ what: aToken });
@@ -57,7 +58,7 @@ export default class Formula extends Token {
     }
   }
 
-  createCells() {
+  updateCells() {
     const cells = this.findAll({ what: aWritingCell });
     const tokens = this.findAll({ what: aToken });
     for (const cell of cells) {
@@ -67,18 +68,38 @@ export default class Formula extends Token {
     if (this.editing) {
       let cellCount = 0;
       for (const token of tokens) {
-        if (token instanceof EmptyToken || token instanceof OpToken) {
-          cellCount += 1;
-        } else if (token instanceof NumberToken) {
-          cellCount += token.variable.value.toFixed(0).split('').length;
+        if (token instanceof NumberToken) {
+          let size = token.variable.value.toFixed(0).split('').length;
+          for (let i = 0; i < size; i++) {
+            let cell = new WritingCell();
+            this.adopt(cell);
+          }
+        } else {
+          let cell = new WritingCell();
+          this.adopt(cell);
         }
       }
+    }
+  }
 
-      // Re-instantiate cells
-      for (let i = 0; i < cellCount; i++) {
-        let cell = new WritingCell();
-        cell.position = { x: this.position.x + PADDING + (24 + PADDING) * i, y: this.position.y + PADDING };
-        this.adopt(cell);
+  layoutCells() {
+    const cells = this.findAll({ what: aWritingCell });
+    const tokens = this.findAll({ what: aToken });
+
+    if (this.editing) {
+      let cellCount = 0;
+      for (const token of tokens) {
+        if (token instanceof NumberToken) {
+          let size = token.variable.value.toFixed(0).split('').length;
+          for (let i = 0; i < size; i++) {
+            let cell = cells.shift();
+            cell!.position = Vec.add(token.position, Vec((24 + PADDING) * i, 0));
+          }
+        } else {
+          let cell = cells.shift();
+          cell!.position = token.position;
+          cell!.width = token.width;
+        }
       }
     }
   }
@@ -98,10 +119,10 @@ export default class Formula extends Token {
 
       // compute tokensize
       let tokenSize = 0;
-      if (token instanceof EmptyToken || token instanceof OpToken) {
-        tokenSize = 1;
-      } else if (token instanceof NumberToken) {
+      if (token instanceof NumberToken) {
         tokenSize = token.variable.value.toFixed(0).split('').length;
+      } else {
+        tokenSize = 1;
       }
 
       if (offsetInsideToken == tokenSize) {
@@ -110,11 +131,7 @@ export default class Formula extends Token {
         token = tokens[tokenIndex]
       }
 
-
-
       if (cell.stringValue != '') {
-
-
         // Handle all tokenizations
         // If it's a number token and 
         if (token instanceof NumberToken) {
@@ -122,7 +139,6 @@ export default class Formula extends Token {
             token.updateCharAt(offsetInsideToken, cell.stringValue);
           } else {
             // Split this number token
-
           }
         } else if (token instanceof EmptyToken) {
           if (isNumeric(cell.stringValue)) {
@@ -145,17 +161,14 @@ export default class Formula extends Token {
 
         cell.stringValue = '';
 
-        console.log(tokens);
+        // console.log(tokens);
         for (const t of tokens) {
           this.adopt(t);
         }
 
-        this.createCells();
-
-        break;
+        this.updateCells();
       }
     }
-
   }
 
 
@@ -182,6 +195,8 @@ export default class Formula extends Token {
 
     this.width = nextTokenPosition.x - this.position.x;
 
+
+
     // Update box wrapper
     if (this.children.size === 0) {
       SVG.update(this.boxElement, {
@@ -199,11 +214,7 @@ export default class Formula extends Token {
     }
 
     // Move cells
-    const cells = this.findAll({ what: aWritingCell });
-    for (let i = 0; i < cells.length; i++) {
-      let cell = cells[i];
-      cell.position = { x: this.position.x + PADDING + (24 + PADDING) * i, y: this.position.y + PADDING }
-    }
+    this.layoutCells();
 
     // render children
     for (const child of this.children) {

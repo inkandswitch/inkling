@@ -29,6 +29,7 @@ export default class PropertyPicker extends Token {
   protected readonly boxElement = SVG.add('path', SVG.metaElm, {
     d: PropertyPickerPath(this.position, this.width, this.height),
     class: 'property-picker-box',
+    'is-embedded': this.embedded,
   });
 
   protected readonly textElement = SVG.add('text', SVG.metaElm, {
