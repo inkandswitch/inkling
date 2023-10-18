@@ -45,6 +45,32 @@ export default class FormulaParser {
   constructor(page: Page) {
     this.semantics = formulaGrammar
       .createSemantics()
+      .addAttribute('variable', {
+        numberRef(at, idDigits) {
+          const id = parseInt(idDigits.sourceString);
+          const numberToken = page.root.find({
+            what: aNumberToken,
+            that: numberToken => numberToken.id === id,
+          });
+          if (!numberToken) {
+            console.error('invalid number token id', id);
+            throw ':(';
+          }
+          return numberToken.getVariable();
+        },
+        labelRef(hash, idDigits) {
+          const id = parseInt(idDigits.sourceString);
+          const labelToken = page.root.find({
+            what: aLabelToken,
+            that: labelToken => labelToken.id === id,
+          });
+          if (!labelToken) {
+            console.error('invalid label token id', id);
+            throw ':(';
+          }
+          return labelToken.getVariable();
+        },
+      })
       .addOperation('collectVars(vars)', {
         AddExp_add(a, op, b) {
           a.collectVars(this.args.vars);
@@ -61,28 +87,10 @@ export default class FormulaParser {
           e.collectVars(this.args.vars);
         },
         numberRef(at, idDigits) {
-          const id = parseInt(idDigits.sourceString);
-          const numberToken = page.root.find({
-            what: aNumberToken,
-            that: numberToken => numberToken.id === id,
-          });
-          if (!numberToken) {
-            console.error('invalid number token id', id);
-            throw ':(';
-          }
-          this.args.vars.add(numberToken.getVariable());
+          this.args.vars.add(this.variable);
         },
         labelRef(hash, idDigits) {
-          const id = parseInt(idDigits.sourceString);
-          const labelToken = page.root.find({
-            what: aLabelToken,
-            that: labelToken => labelToken.id === id,
-          });
-          if (!labelToken) {
-            console.error('invalid label token id', id);
-            throw ':(';
-          }
-          this.args.vars.add(labelToken.getVariable());
+          this.args.vars.add(this.variable);
         },
       })
       .addOperation('compile', {
@@ -100,10 +108,10 @@ export default class FormulaParser {
           return `(${e.compile()})`;
         },
         numberRef(at, id) {
-          return `v${this.token.getVariable().id}`;
+          return `v${this.variable.id}`;
         },
         labelRef(hash, id) {
-          return `v${this.token.getVariable().id}`;
+          return `v${this.variable.id}`;
         },
       });
   }
@@ -113,14 +121,14 @@ export default class FormulaParser {
     const m = formulaGrammar.match(input);
     if (m.failed()) {
       SVG.showStatus(m.shortMessage!);
-      console.log(m.message);
+      console.error(m.message);
       return null;
     }
 
     const varSet = new Set<Variable>();
     try {
       this.semantics(m).collectVars(varSet);
-    } catch {
+    } catch (e) {
       // formula has one or more number/label token refs with invalid ids
       return null;
     }
