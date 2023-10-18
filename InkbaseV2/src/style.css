@@ -97,7 +97,7 @@
     --property-picker-editor-box: var(--grey5);
     --property-picker-editor-text: var(--grey0);
     --property-picker-text: var(--grey5);
-    --token-embedded-fill: var(--grey1);
+    --token-embedded-fill: var(--bg-color);
     --token-fill: var(--bg-color);
     --token-frac-text: var(--grey4);
     --token-locked-fill: var(--grey1);
