@@ -112,7 +112,7 @@ export class Gesture {
       const event = this.touches[id];
       const elm = SVG.now('g', {
         class: 'gesture',
-        transform: `translate(${event.position.x} ${event.position.y})`,
+        transform: SVG.positionToTransform(event.position),
       });
       SVG.add('circle', elm, { r: event.type === 'pencil' ? 2 : 8 });
       SVG.add('text', elm, { content: this.label });

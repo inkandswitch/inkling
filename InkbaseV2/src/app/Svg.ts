@@ -116,6 +116,11 @@ function positionToPointsString(p: Position) {
   return p.x + ' ' + p.y;
 }
 
+/** Returns a `translate(x y)` string that can be used for the 'transform' attribute. */
+function positionToTransform(p: Position) {
+  return `translate(${p.x} ${p.y})`;
+}
+
 /**
  * Helps you build the path for a semicircular arc, which is normally a huge pain.
  * NB: Can only draw up to a half circle when mirror is false.
@@ -174,6 +179,7 @@ export default {
   now,
   clearNow,
   points,
+  positionToTransform,
   arcPath,
   path,
   showStatus,

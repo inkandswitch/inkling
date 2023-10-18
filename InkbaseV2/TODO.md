@@ -11,9 +11,6 @@
   We should be able to do this in a single gesture.
   (Marcel)
 
-- P2: make handles "blobby"
-  (Ivan)
-
 - P4: in meta mode, should you be able to break apart ink handles?
 
 ## Bugs
@@ -72,9 +69,6 @@
 
 - P0: change 'paused' to togglePaused(newValue?: boolean) -- if no arg, toggle
   (Alex)
-
-- P0: pin constraint: gesture to add/remove + rendering
-  (Ivan)
 
 - P1: hack to avoid shrinking gizmo when scrubbing angle
   (Alex)

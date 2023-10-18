@@ -49,7 +49,7 @@ export default class LabelToken extends Token {
         const strokeElement = SVG.add('polyline', SVG.labelElm, {
           class: 'label-stroke',
           points: SVG.points(stroke),
-          transform: `translate(${this.position.x}, ${this.position.y})`,
+          transform: SVG.positionToTransform(this.position),
         });
         this.strokeElements.push(strokeElement);
       }
@@ -71,19 +71,19 @@ export default class LabelToken extends Token {
     SVG.update(this.boxElement, {
       x: this.position.x,
       y: this.position.y,
-      visibility: this.hidden ? 'hidden' : 'visible',
+      'is-hidden': this.hidden,
     });
 
     SVG.update(this.textElement, {
       x: this.position.x + 5,
       y: this.position.y + 24,
-      visibility: this.hidden ? 'hidden' : 'visible',
+      'is-hidden': this.hidden,
     });
 
     for (const strokeElement of this.strokeElements) {
       SVG.update(strokeElement, {
-        transform: `translate(${this.position.x}, ${this.position.y})`,
-        visibility: this.hidden ? 'hidden' : 'visible',
+        transform: SVG.positionToTransform(this.position),
+        'is-hidden': this.hidden,
       });
     }
 

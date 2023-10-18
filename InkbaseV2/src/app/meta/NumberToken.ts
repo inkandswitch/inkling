@@ -77,7 +77,7 @@ export default class NumberToken extends Token {
 
   render(dt: number, t: number): void {
     SVG.update(this.elm, {
-      transform: `translate(${this.position.x} ${this.position.y})`,
+      transform: SVG.positionToTransform(this.position),
       'is-locked': this.getVariable().isLocked,
       'is-embedded': this.embedded,
       'is-editing': this.editing,

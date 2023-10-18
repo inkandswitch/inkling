@@ -15,6 +15,8 @@ export function touchHandle(ctx: EventContext): Gesture | void {
 }
 
 export function touchHandleHelper(handle: Handle): Gesture {
+  const hadPin = handle.hasPin;
+
   return new Gesture('Touch Handle', {
     began(ctx) {
       constraints.pin(handle);
@@ -26,14 +28,21 @@ export function touchHandleHelper(handle: Handle): Gesture {
         ctx.metaToggle.active // whether gizmo handles can break off
       );
       if (newHandle !== handle) {
-        constraints.pin(handle).remove();
+        if (!hadPin) {
+          constraints.pin(handle).remove();
+        }
         handle = newHandle;
       }
-      constraints.pin(handle); // if there's already a pin, this updates its position
+      constraints.pin(handle);
     },
     ended(ctx) {
       handle.getAbsorbedByNearestHandle();
-      constraints.pin(handle).remove();
+      if (!hadPin) {
+        constraints.pin(handle).remove();
+      }
+      if (!ctx.state.drag) {
+        handle.togglePin();
+      }
     },
   });
 }

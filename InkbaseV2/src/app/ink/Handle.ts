@@ -17,9 +17,10 @@ export default class Handle extends GameObject {
 
   public readonly id = generateId();
 
-  private readonly element = SVG.add('circle', SVG.inkElm, {
-    class: 'handle',
-    r: 1.5,
+  private readonly element = SVG.add('g', SVG.inkElm, { class: 'handle' });
+  private readonly circle = SVG.add('circle', this.element, { r: 15 });
+  private readonly pin = SVG.add('path', this.element, {
+    d: 'M-5,-5 L5,5 M-5,5 L5,-5',
   });
 
   public readonly xVariable = constraints.variable(0, {
@@ -135,12 +136,11 @@ export default class Handle extends GameObject {
     return false;
   }
 
-  togglePin(doPin?: boolean): void {
+  togglePin(doPin: boolean = !this.hasPin): void {
     if (!this.isCanonical) {
       return this.canonicalInstance.togglePin(doPin);
     }
 
-    doPin ??= !this.hasPin;
     for (const h of [this, ...this.absorbedHandles]) {
       if (doPin) {
         constraints.pin(h);
@@ -152,9 +152,9 @@ export default class Handle extends GameObject {
 
   render(t: number, dt: number) {
     SVG.update(this.element, {
-      cx: this.x,
-      cy: this.y,
-      visibility: this.isCanonical ? 'visible' : 'hidden',
+      transform: SVG.positionToTransform(this),
+      'is-canonical': this.isCanonical,
+      'has-pin': this.hasPin,
     });
     for (const child of this.children) {
       child.render(dt, t);
