@@ -1,5 +1,5 @@
 import Page from '../Page';
-import ParsedFormula from './ParsedFormula';
+import Formula from './Formula';
 import Token from './Token';
 import LabelToken from './LabelToken';
 import NumberToken from './NumberToken';
@@ -156,7 +156,7 @@ export default class FormulaParser {
     const vars = tokens.filter(isTokenWithVariable).map(t => t.getVariable());
     const resultVar = this.addConstraints(m, vars);
     const resultToken = new NumberToken(resultVar);
-    const formula = new ParsedFormula(tokens, resultToken);
+    const formula = new Formula(tokens, resultToken);
 
     formula.position = pos;
     this.page.adopt(formula);

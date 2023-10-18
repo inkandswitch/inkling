@@ -5,6 +5,8 @@ import SVG from '../Svg';
 import { Variable } from '../constraints';
 import * as constraints from '../constraints';
 import * as ohm from 'ohm-js';
+import WritingCell, { aWritingCell } from './WritingCell';
+import Vec from '../../lib/vec';
 
 export default class NumberToken extends Token {
   private lastRenderedValue = '';
@@ -23,6 +25,9 @@ export default class NumberToken extends Token {
   protected readonly fracElm = SVG.add('text', this.elm, {
     class: 'token-frac-text',
   });
+
+  protected readonly digitElems: Array<SVGElement> = [];
+
 
   readonly variable: Variable;
 
@@ -49,26 +54,64 @@ export default class NumberToken extends Token {
     return true;
   }
 
-  addChar(char: number) {
+  addChar(char: string) {
     const stringValue = this.variable.value.toString() + char;
     this.variable.value = parseInt(stringValue);
   }
 
-  render(): void {
+  updateCharAt(index: number, char: string) {
+    console.log("update char at", index, char, this.variable.value);
+
+    const array = this.variable.value
+      .toString()
+      .split('')
+    array.splice(index, 1, char);
+
+    const stringValue = array.join('');
+
+    this.variable.value = parseInt(stringValue);
+  }
+
+  render(dt: number, t: number): void {
     SVG.update(this.elm, {
       transform: `translate(${this.position.x} ${this.position.y})`,
       'is-locked': this.getVariable().isLocked,
       'is-embedded': this.embedded,
+      'is-editing': this.editing
     });
 
     this.wirePort.position = this.midPoint();
 
     // getComputedTextLength() is slow, so we're gonna do some dirty checking here
-    const newVal = this.variable.value.toFixed(2);
-    if (newVal !== this.lastRenderedValue) {
-      this.lastRenderedValue = newVal;
+    const newValue = this.variable.value.toFixed(2);
 
-      const [whole, frac] = newVal.split('.');
+    if (this.editing) {
+      let chars = this.variable.value.toFixed(0).split('');
+      this.variable.value = parseInt(chars.join(''));
+
+      // Update visuals
+      if (newValue !== this.lastRenderedValue) {
+        this.lastRenderedValue = newValue;
+        for (const elem of this.digitElems) {
+          elem.remove();
+        }
+
+        for (const [i, char] of chars.entries()) {
+          let digit = SVG.add('text', this.elm, {
+            class: 'token-text',
+            content: char,
+            style: `translate: ${5 + i * 27}px 24px;`
+          });
+
+        }
+        this.width = (chars.length * 27) - 3;
+        SVG.update(this.boxElm, { width: this.width });
+      }
+
+    } else if (newValue !== this.lastRenderedValue) {
+      this.lastRenderedValue = newValue;
+
+      const [whole, frac] = newValue.split('.');
 
       SVG.update(this.wholeElm, { content: whole });
       SVG.update(this.fracElm, { content: frac });
@@ -80,6 +123,10 @@ export default class NumberToken extends Token {
 
       SVG.update(this.boxElm, { width: this.width });
       SVG.update(this.fracElm, { dx: wholeWidth + 2 });
+    }
+
+    for (const child of this.children) {
+      child.render(dt, t);
     }
   }
 

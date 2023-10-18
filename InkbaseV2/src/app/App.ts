@@ -9,10 +9,12 @@ import { root } from './GameObject';
 import FormulaEditor from './meta/FormulaEditor';
 import FormulaParser from './meta/FormulaParser';
 import MetaToggle from './gui/MetaToggle';
+import Formula from './meta/Formula';
 // import Component from './meta/Component';
 // import LabelToken from './meta/LabelToken';
 // import Stroke from './ink/Stroke';
 // import Handle from './ink/Handle';
+
 
 // This is a pretzel, because the interface between NativeEvents and Input is a work in progress.
 const events = new Events((event: Event, state: InputState) => {
@@ -92,3 +94,17 @@ onEveryFrame((dt, t) => {
 //   { x: 410, y: 170 },
 // ];
 // component.updateOutline();
+
+// const stroke = new Stroke();
+// component.adopt(stroke);
+// stroke.points = [
+//   { x: 410, y: 110 },
+//   { x: 420, y: 120 },
+//   { x: 410, y: 170 },
+// ];
+// component.updateOutline();
+
+let f = new Formula();
+f.position = { x: 400, y: 100 };
+//f.editing = true;
+page.adopt(f);

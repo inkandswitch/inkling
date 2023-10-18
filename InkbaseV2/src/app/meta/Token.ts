@@ -12,6 +12,7 @@ export default abstract class Token extends GameObject {
 
   public embedded = false;
   public hidden = false;
+  public editing = false;
 
   constructor(public source?: ohm.Interval) {
     super();

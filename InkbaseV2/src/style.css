@@ -2,6 +2,7 @@
  * 0 is lowest contrast and 5 is highest contrast against the background.
  * Do tweak these, or add new themes in index.html
  */
+
 :root[theme*='light'] {
   --L0: 90%;
   --L1: 80%;
@@ -96,7 +97,7 @@
     --property-picker-editor-box: var(--grey5);
     --property-picker-editor-text: var(--grey0);
     --property-picker-text: var(--grey5);
-    --token-embedded-fill: var(--grey0);
+    --token-embedded-fill: var(--grey2);
     --token-fill: var(--bg-color);
     --token-frac-text: var(--grey4);
     --token-locked-fill: var(--grey1);
@@ -176,6 +177,7 @@ svg * {
   fill: transparent;
   text-anchor: middle;
   translate: 50vw calc(100vh - 15px);
+
   &[is-visible] {
     fill: var(--status-text);
   }
@@ -274,10 +276,11 @@ svg * {
 }
 
 .formula-editor-cell {
-  fill: var(--formula-editor-cell);
+  stroke: var(--formula-editor-cell);
+  fill: none;
 
   &:not([is-default-type]) {
-    fill: var(--formula-editor-cell-non-default);
+    fill: none;
   }
 }
 
@@ -306,12 +309,12 @@ svg * {
   stroke: var(--token-stroke);
   stroke-width: 0.5;
 
-  [is-embedded] > & {
+  [is-embedded]>& {
     stroke: none;
     fill: var(--token-embedded-fill);
   }
 
-  [is-locked] > & {
+  [is-locked]>& {
     fill: var(--token-locked-fill);
   }
 }
@@ -336,7 +339,7 @@ svg * {
 }
 
 .parsed-formula {
-  fill: var(--token-fill);
+  fill: none;
   stroke: var(--parsed-formula);
   stroke-width: 0.5;
 }
@@ -374,6 +377,7 @@ svg * {
   & circle {
     fill: var(--gesture-circle);
   }
+
   & text {
     fill: var(--gesture-text);
     transform: translate(0, -50px);
