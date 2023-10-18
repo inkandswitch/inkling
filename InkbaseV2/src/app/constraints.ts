@@ -612,7 +612,7 @@ class Constant extends Constraint {
 
 export const constant = Constant.create;
 
-class Pin extends Constraint {
+export class Pin extends Constraint {
   private static readonly memo = new Map<Handle, Pin>();
 
   static create(handle: Handle, position: Position = handle.position) {

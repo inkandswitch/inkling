@@ -4,6 +4,7 @@ import * as constraints from '../constraints';
 import { generateId } from '../../lib/helpers';
 import { Position } from '../../lib/types';
 import Vec from '../../lib/vec';
+import { Constraint, Pin } from '../constraints';
 
 export default class Handle extends GameObject {
   static create(position: Position, getAbsorbed = true): Handle {
@@ -119,6 +120,33 @@ export default class Handle extends GameObject {
       }
     } else {
       throw new Error('tried to break off a handle that was not absorbed');
+    }
+  }
+
+  get hasPin() {
+    for (const constraint of Constraint.all) {
+      if (
+        constraint instanceof Pin &&
+        constraint.handle.canonicalInstance === this.canonicalInstance
+      ) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  togglePin(doPin?: boolean): void {
+    if (!this.isCanonical) {
+      return this.canonicalInstance.togglePin(doPin);
+    }
+
+    doPin ??= !this.hasPin;
+    for (const h of [this, ...this.absorbedHandles]) {
+      if (doPin) {
+        constraints.pin(h);
+      } else {
+        constraints.pin(h).remove();
+      }
     }
   }
 
