@@ -2,10 +2,6 @@
 
 ## UX Improvements
 
-- P0: GameObjects that are more likely to get touch events should render after
-  other game objects. (It should never look like you're dragging an object that
-  is under another object.)
-
 - P1: tokens snap to each other, and can be moved together w/ a single finger
   (e.g., two number tokens, or a number token right next to a property picker)
   (Marcel)
@@ -29,7 +25,7 @@
   values aren't the same. seems to be dependent on direction / connection order.
   (e.g., wiring from number token in formula to number token outside formula)
   (solution may be to change recursive = false ==> recursive = true)
-  (Ivan)
+  (Marcel)
 
 - P2: when writing a label in the formula editor, sometimes the label.display in LabelToken is undefined and errors.
   (Marcel)
@@ -43,8 +39,17 @@
 
 ## Formulas / Wires / Meta
 
+- P0: no number number literals in formula grammar, only token ids
+  (Alex)
+
 - P0: some gesture to break connections / remove wires, and formulas
   (Ivan -> Alex + Marcel)
+
+- P1: tweaks to property picker token design
+  (Ivan)
+
+- P1: number/formula editor must be "accepted" before change takes effect
+  (Marcel)
 
 - P1: wire anything into anything, silly billy!
   need a way to make it clear that you're _not_ wiring
@@ -54,22 +59,28 @@
 - P1: wire number tokens directly into formula editor's squares
   (Marcel)
 
+- P1.5: "orange" numbers for results of spreadsheet formulas
+  (opposite of locked number tokens: cannot be changed / scrubbed)
+  (Alex)
+
 - P2: pause / temporarily break a wire
 
 - P3/4: toggle formula "equals" <==> "arrow" (spreadsheet/diode mode)
   (Alex)
 
-- P1.5: "orange" numbers for results of spreadsheet formulas
-  (opposite of locked number tokens: cannot be changed / scrubbed)
+## Constraints
+
+- P0: Variable.setValue(v, time?: number, easeFn: (t: number between 0...1) => 0...1)
   (Alex)
 
-## Constraints
+- P0: change 'paused' to togglePaused(newValue?: boolean) -- if no arg, toggle
+  (Alex)
 
 - P0: pin constraint: gesture to add/remove + rendering
   (Ivan)
 
-- P1: when breaking apart handles, the non-dragged one rubber-bands
-  (Ivan)
+- P1: hack to avoid shrinking gizmo when scrubbing angle
+  (Alex)
 
 - P4: constraints should only have weak refs to handles
 
