@@ -128,7 +128,7 @@ export default class FormulaParser {
     const varSet = new Set<Variable>();
     try {
       this.semantics(m).collectVars(varSet);
-    } catch (e) {
+    } catch {
       // formula has one or more number/label token refs with invalid ids
       return null;
     }
