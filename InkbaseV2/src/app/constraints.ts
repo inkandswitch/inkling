@@ -574,7 +574,7 @@ export abstract class Constraint {
   }
 }
 
-class Constant extends Constraint {
+export class Constant extends Constraint {
   private static readonly memo = new Map<Variable, Constant>();
 
   static create(variable: Variable, value: number = variable.value) {
@@ -652,7 +652,7 @@ export class Pin extends Constraint {
 
 export const pin = Pin.create;
 
-class LinearRelationship extends Constraint {
+export class LinearRelationship extends Constraint {
   private static readonly memo = new Map<
     Variable,
     Map<Variable, LinearRelationship>
@@ -725,7 +725,7 @@ export const linearRelationship = LinearRelationship.create;
 export const equals = (x: Variable, y: Variable) =>
   linearRelationship(y, 1, x, 0);
 
-class Absorb extends Constraint {
+export class Absorb extends Constraint {
   // child handle -> Absorb constraint
   private static readonly memo = new Map<Handle, Absorb>();
 
@@ -766,7 +766,7 @@ class Absorb extends Constraint {
 
 export const absorb = Absorb.create;
 
-class PolarVector extends Constraint {
+export class PolarVector extends Constraint {
   private static readonly memo = new Map<Handle, Map<Handle, PolarVector>>();
 
   static create(a: Handle, b: Handle) {
@@ -822,7 +822,7 @@ class PolarVector extends Constraint {
 
 export const polarVector = PolarVector.create;
 
-class Formula extends Constraint {
+export class Formula extends Constraint {
   static create(args: Variable[], fn: (xs: number[]) => number) {
     return new Formula(args, fn);
   }
