@@ -5,10 +5,12 @@ import SVG from '../Svg';
 import { Variable } from '../constraints';
 import * as constraints from '../constraints';
 import * as ohm from 'ohm-js';
-import WritingCell, { aWritingCell } from './WritingCell';
-import Vec from '../../lib/vec';
+import { GameObject } from '../GameObject';
+import { generateId } from '../../lib/helpers';
 
 export default class NumberToken extends Token {
+  readonly id = generateId();
+
   private lastRenderedValue = '';
   private lastRenderedEditing = false;
 
@@ -150,3 +152,6 @@ export default class NumberToken extends Token {
     this.getVariable().toggleLock();
   }
 }
+
+export const aNumberToken = (gameObj: GameObject) =>
+  gameObj instanceof NumberToken ? gameObj : null;

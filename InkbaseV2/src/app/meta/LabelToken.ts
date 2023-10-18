@@ -4,8 +4,12 @@ import * as ohm from 'ohm-js';
 import { WirePort } from './Wire';
 import { MetaLabel } from './MetaSemantics';
 import { boundingBoxFromStrokes } from '../../lib/bounding_box';
+import { generateId } from '../../lib/helpers';
+import { GameObject } from '../GameObject';
 
 export default class LabelToken extends Token {
+  readonly id = generateId();
+
   private lastRenderedValue = '';
 
   protected readonly boxElement = SVG.add('rect', SVG.metaElm, {
@@ -90,3 +94,6 @@ export default class LabelToken extends Token {
     return this.label.variable;
   }
 }
+
+export const aLabelToken = (gameObj: GameObject) =>
+  gameObj instanceof LabelToken ? gameObj : null;
