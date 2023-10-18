@@ -1,6 +1,7 @@
 import Events, { Event, InputState } from './NativeEvents';
 import Page from './Page';
 import SVG from './Svg';
+import * as varMover from './VarMover';
 import * as constraints from './constraints';
 import { onEveryFrame } from '../lib/helpers';
 import * as Input from './Input';
@@ -42,6 +43,7 @@ onEveryFrame((dt, t) => {
   SVG.clearNow(t);
 
   events.update();
+  varMover.update(dt, t);
   constraints.solve(root);
   root.render(dt, t);
   Input.render();
