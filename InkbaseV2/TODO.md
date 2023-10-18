@@ -67,8 +67,8 @@
 - P0: Variable.setValue(v, time?: number, easeFn: (t: number between 0...1) => 0...1)
   (Alex)
 
-- P0: change 'paused' to togglePaused(newValue?: boolean) -- if no arg, toggle
-  (Alex)
+- P0: pin constraint: gesture to add/remove + rendering
+  (Ivan)
 
 - P1: hack to avoid shrinking gizmo when scrubbing angle
   (Alex)

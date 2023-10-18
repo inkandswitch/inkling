@@ -517,7 +517,19 @@ class LLFormula extends LowLevelConstraint {
 export abstract class Constraint {
   static readonly all = new Set<Constraint>();
 
-  paused = false;
+  private _paused = false;
+
+  get paused() {
+    return this._paused;
+  }
+
+  set paused(newValue: boolean) {
+    if (newValue !== this._paused) {
+      this._paused = newValue;
+      forgetClustersForSolver();
+    }
+  }
+
   readonly variables = [] as Variable[];
   readonly lowLevelConstraints = [] as LowLevelConstraint[];
 
