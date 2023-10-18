@@ -112,7 +112,7 @@ export class Gesture {
 
     for (const id in this.touches) {
       const event = this.touches[id];
-      let elm = SVG.now('g', {
+      const elm = SVG.now('g', {
         class: 'gesture',
         transform: `translate(${event.position.x} ${event.position.y})`,
       });
