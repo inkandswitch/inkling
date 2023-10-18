@@ -6,6 +6,8 @@ import { MetaLabel } from './MetaSemantics';
 import { boundingBoxFromStrokes } from '../../lib/bounding_box';
 
 export default class LabelToken extends Token {
+  private lastRenderedValue = '';
+
   protected readonly boxElement = SVG.add('rect', SVG.metaElm, {
     x: this.position.x,
     y: this.position.y,
@@ -19,7 +21,6 @@ export default class LabelToken extends Token {
     x: this.position.x + 5,
     y: this.position.y + 24,
     class: 'label-text',
-    'font-size': '24px',
   });
 
   readonly strokeElements: SVGElement[] = [];
@@ -32,8 +33,13 @@ export default class LabelToken extends Token {
   ) {
     super(source);
     if (typeof label.display === 'string') {
-      this.textElement.textContent = label.display;
-      this.width = this.textElement.getComputedTextLength() + 10;
+      // getComputedTextLength() is slow, so we're gonna do some dirty checking here
+      const content = label.display;
+      if (content !== this.lastRenderedValue) {
+        this.lastRenderedValue = content;
+        SVG.update(this.textElement, { content });
+        this.width = this.textElement.getComputedTextLength() + 10;
+      }
     } else {
       for (const stroke of label.display) {
         const strokeElement = SVG.add('polyline', SVG.labelElm, {

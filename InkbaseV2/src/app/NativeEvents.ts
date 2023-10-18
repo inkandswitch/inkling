@@ -1,5 +1,6 @@
 import { Position, PositionWithPressure } from '../lib/types';
 import Vec from '../lib/vec';
+import Config from './Config';
 import { Gesture } from './gestures/Gesture';
 
 // TODO: Do we want to add some way to fake pencil input with a finger?
@@ -132,9 +133,11 @@ export default class Events {
 
     // We need to reap any eventStates that haven't been touched in a while,
     // because we don't always receive the "ended".
-    this.fingerStates = this.fingerStates.filter(wasRecentlyUpdated);
-    if (this.pencilState && !wasRecentlyUpdated(this.pencilState)) {
-      this.pencilState = null;
+    if (Config.gesture.reapTouches) {
+      this.fingerStates = this.fingerStates.filter(wasRecentlyUpdated);
+      if (this.pencilState && !wasRecentlyUpdated(this.pencilState)) {
+        this.pencilState = null;
+      }
     }
   }
 

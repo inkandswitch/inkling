@@ -42,10 +42,8 @@ export default class PropertyPickerEditor extends GameObject {
         x: this.position.x + 5,
         y: this.position.y + 24 + index * LINEHEIGHT,
         class: 'property-picker-editor-text',
-        'font-size': '24px',
-        'font-family': 'monospace',
+        content: label.display as string,
       });
-      text.textContent = label.display as string;
       return text;
     });
   }

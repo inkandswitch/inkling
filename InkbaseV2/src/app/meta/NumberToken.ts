@@ -7,7 +7,7 @@ import * as constraints from '../constraints';
 import * as ohm from 'ohm-js';
 
 export default class NumberToken extends Token {
-  private lastRenderedValue = -Infinity;
+  private lastRenderedValue = '';
 
   protected readonly elm = SVG.add('g', SVG.metaElm, { class: 'number-token' });
 
@@ -64,23 +64,22 @@ export default class NumberToken extends Token {
     this.wirePort.position = this.midPoint();
 
     // getComputedTextLength() is slow, so we're gonna do some dirty checking here
-    if (this.variable.value !== this.lastRenderedValue) {
-      this.lastRenderedValue = this.variable.value;
+    const newVal = this.variable.value.toFixed(2);
+    if (newVal !== this.lastRenderedValue) {
+      this.lastRenderedValue = newVal;
 
-      [this.wholeElm.textContent, this.fracElm.textContent] =
-        this.variable.value.toFixed(2).split('.');
+      const [whole, frac] = newVal.split('.');
+
+      SVG.update(this.wholeElm, { content: whole });
+      SVG.update(this.fracElm, { content: frac });
 
       const wholeWidth = this.wholeElm.getComputedTextLength();
       const fracWidth = this.fracElm.getComputedTextLength();
+
       this.width = 5 + wholeWidth + 2 + fracWidth + 5;
 
-      SVG.update(this.boxElm, {
-        width: this.width,
-      });
-
-      SVG.update(this.fracElm, {
-        dx: wholeWidth + 2,
-      });
+      SVG.update(this.boxElm, { width: this.width });
+      SVG.update(this.fracElm, { dx: wholeWidth + 2 });
     }
   }
 

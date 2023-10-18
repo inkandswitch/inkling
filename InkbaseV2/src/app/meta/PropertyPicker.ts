@@ -35,9 +35,6 @@ export default class PropertyPicker extends Token {
     x: this.position.x + 5,
     y: this.position.y + 21,
     class: 'property-picker-text',
-    'font-size': '18px',
-    'font-family': 'monospace',
-    // 'font-weight': 'light'
   });
 
   readonly inputVariable = new MetaStruct([]);
@@ -60,10 +57,10 @@ export default class PropertyPicker extends Token {
 
   render(): void {
     // getComputedTextLength() is slow, so we're gonna do some dirty checking here
-    const text = this.property?.display as string;
-    if (text !== this.lastRenderedValue) {
-      this.lastRenderedValue = text;
-      this.textElement.textContent = text;
+    const content = this.property?.display as string;
+    if (content !== this.lastRenderedValue) {
+      this.lastRenderedValue = content;
+      SVG.update(this.textElement, { content });
       this.width = this.textElement.getComputedTextLength() + 10;
     }
 

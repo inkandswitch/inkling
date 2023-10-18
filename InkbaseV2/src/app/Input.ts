@@ -14,6 +14,7 @@ import { tapPropertyPicker } from './gestures/PropertyPicker';
 import SVG from './Svg';
 import { createGizmo } from './gestures/CreateGizmo';
 import { touchGizmo } from './gestures/Gizmo';
+import Config from './Config';
 
 const gestureCreators = {
   finger: [
@@ -41,14 +42,16 @@ const gesturesByTouchId: Record<TouchId, Gesture> = {};
 export function applyEvent(ctx: EventContext) {
   // Before we begin, we need to reap any touches that haven't been updated in a while,
   // because we don't always receive the "ended".
-  for (const id in pseudoTouches) {
-    if (!wasRecentlyUpdated(pseudoTouches[id])) {
-      delete pseudoTouches[id];
+  if (Config.gesture.reapTouches) {
+    for (const id in pseudoTouches) {
+      if (!wasRecentlyUpdated(pseudoTouches[id])) {
+        delete pseudoTouches[id];
+      }
     }
-  }
-  for (const id in gesturesByTouchId) {
-    if (!wasRecentlyUpdated(gesturesByTouchId[id])) {
-      delete gesturesByTouchId[id];
+    for (const id in gesturesByTouchId) {
+      if (!wasRecentlyUpdated(gesturesByTouchId[id])) {
+        delete gesturesByTouchId[id];
+      }
     }
   }
 
@@ -139,17 +142,19 @@ function runGesture(gesture: Gesture, ctx: EventContext) {
 }
 
 export function render() {
-  for (const id in gesturesByTouchId) {
-    gesturesByTouchId[id].render();
-  }
+  if (Config.gesture.debugVisualization) {
+    for (const id in gesturesByTouchId) {
+      gesturesByTouchId[id].render();
+    }
 
-  for (const id in pseudoTouches) {
-    const event = pseudoTouches[id];
-    SVG.now('circle', {
-      class: 'pseudo-touch',
-      cx: event.position.x,
-      cy: event.position.y,
-      r: 4,
-    });
+    for (const id in pseudoTouches) {
+      const event = pseudoTouches[id];
+      SVG.now('circle', {
+        class: 'pseudo-touch',
+        cx: event.position.x,
+        cy: event.position.y,
+        r: 8,
+      });
+    }
   }
 }

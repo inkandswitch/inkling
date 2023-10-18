@@ -41,7 +41,9 @@
   --handle-fill: var(--grey5);
   --handle-stroke: lch(var(--L5) 0 0 / 0.03);
   --status-text: var(--grey3);
-  --pseudo-touch: transparent;
+  --pseudo-touch: var(--grey2);
+  --gesture-circle: var(--grey2);
+  --gesture-text: var(--grey2);
 
   /* These colors are different in concrete and meta mode */
   --component: transparent;
@@ -111,6 +113,10 @@
   --blue: color(display-p3 0.8 0.9 1);
   --green: color(display-p3 0 1 0.8);
   --yellow: color(display-p3 1 0.7 0);
+
+  --pseudo-touch: var(--yellow);
+  --gesture-circle: var(--yellow);
+  --gesture-text: var(--yellow);
 
   &[meta-mode] {
     --constrained: var(--green);
@@ -277,6 +283,7 @@ svg * {
 
 .formula-editor-cell-text {
   fill: var(--formula-editor-cell-text);
+  font-size: 30px;
 }
 
 .label-box {
@@ -285,6 +292,7 @@ svg * {
 
 .label-text {
   fill: var(--label-text);
+  font-size: 24px;
 }
 
 .label-stroke {
@@ -324,6 +332,7 @@ svg * {
 
 .op.token {
   fill: var(--op-token);
+  font-size: 24px;
 }
 
 .parsed-formula {
@@ -340,6 +349,8 @@ svg * {
 
 .property-picker-text {
   fill: var(--property-picker-text);
+  font-size: 18px;
+  font-family: monospace;
 }
 
 .property-picker-editor-box {
@@ -348,6 +359,8 @@ svg * {
 
 .property-picker-editor-text {
   fill: var(--property-picker-editor-text);
+  font-size: 24px;
+  font-family: monospace;
 }
 
 .wire {
@@ -355,6 +368,17 @@ svg * {
   stroke: var(--meta-wire);
   stroke-width: 0.5;
   stroke-dasharray: 10;
+}
+
+.gesture {
+  & circle {
+    fill: var(--gesture-circle);
+  }
+  & text {
+    fill: var(--gesture-text);
+    transform: translate(0, -50px);
+    text-anchor: middle;
+  }
 }
 
 @keyframes zoom-in {

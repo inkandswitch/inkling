@@ -18,8 +18,14 @@ export function touchToken(ctx: EventContext): Gesture | void {
           token.position = Vec.add(ctx.event.position, offset);
         },
         ended(ctx) {
-          if (!ctx.state.drag && isNumberToken(token)) {
-            token.onTap();
+          if (!ctx.state.drag) {
+            const primaryToken = ctx.page.find({
+              what: aPrimaryToken,
+              near: ctx.event.position,
+            });
+            if (isNumberToken(primaryToken)) {
+              primaryToken.onTap();
+            }
           }
         },
       });

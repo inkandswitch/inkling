@@ -216,7 +216,6 @@ class FormulaEditorCell extends GameObject {
     x: this.position.x + 5,
     y: this.position.y + 30,
     class: 'formula-editor-cell-text',
-    'font-size': '30px',
   });
 
   render(dt: number, t: number) {
@@ -242,9 +241,8 @@ class FormulaEditorCell extends GameObject {
       SVG.update(this.textElement, {
         x: this.position.x + 5,
         y: this.position.y + 30,
+        content: this.stringValue,
       });
-
-      this.textElement.textContent = this.stringValue;
     }
   }
 

@@ -7,6 +7,7 @@ import Events, {
 } from '../NativeEvents';
 import MetaToggle from '../gui/MetaToggle';
 import FormulaEditor from '../meta/FormulaEditor';
+import SVG from '../Svg';
 
 export type EventContext = {
   event: Event; // The current event we're processing.
@@ -43,7 +44,7 @@ type EventHandlerName = EventState | 'dragged';
 export class Gesture {
   public lastUpdated = 0;
 
-  private touchCount = 0;
+  private touches: Record<TouchId, Event> = {};
 
   constructor(
     public label: string,
@@ -93,12 +94,12 @@ export class Gesture {
     // Run the event handler
     const result = this.api[eventHandlerName]?.call(this, ctx);
 
-    // Track how many touches we've claimed, and run the `done` handler when they're all released
-    if (ctx.event.state === 'began') {
-      this.touchCount++;
-    } else if (ctx.event.state === 'ended') {
-      this.touchCount--;
-      if (this.touchCount === 0) {
+    // Track which touches we've claimed, and run the `done` handler when they're all released
+    if (ctx.event.state !== 'ended') {
+      this.touches[ctx.event.id] = ctx.event;
+    } else {
+      delete this.touches[ctx.event.id];
+      if (Object.keys(this.touches).length === 0) {
         this.api.done?.call(this);
       }
     }
@@ -108,5 +109,15 @@ export class Gesture {
 
   render() {
     this.api.render?.call(this);
+
+    for (const id in this.touches) {
+      const event = this.touches[id];
+      let elm = SVG.now('g', {
+        class: 'gesture',
+        transform: `translate(${event.position.x} ${event.position.y})`,
+      });
+      SVG.add('circle', elm, { r: event.type === 'pencil' ? 2 : 8 });
+      SVG.add('text', elm, { content: this.label });
+    }
   }
 }
