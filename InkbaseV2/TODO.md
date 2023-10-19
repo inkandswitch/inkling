@@ -2,6 +2,9 @@
 
 ## UX Improvements
 
+- P1: pin constraint knows whether it is a finger or a pin
+  (Alex)
+
 - P1: debug visual for scene graph
 
 - P1: tokens snap to each other, and can be moved together w/ a single finger
