@@ -16,9 +16,11 @@ import { createGizmo } from './gestures/CreateGizmo';
 import { touchGizmo } from './gestures/Gizmo';
 import Config from './Config';
 import { erase } from './gestures/Erase';
+import { toggleHandles } from './gestures/ToggleHandles';
 
 const gestureCreators = {
   finger: [
+    toggleHandles,
     closeFormulaEditor,
     scrubNumberToken,
     touchToken,

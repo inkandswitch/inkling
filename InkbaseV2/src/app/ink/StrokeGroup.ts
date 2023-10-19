@@ -78,6 +78,17 @@ export default class StrokeGroup extends GameObject {
     }
   }
 
+  breakApart() {
+    if (!this.parent) {
+      throw new Error("You can't break apart a parent-less StrokeGroup");
+    }
+    let stroke: Stroke | undefined;
+    while ((stroke = this.strokes.pop())) {
+      this.parent.adopt(stroke);
+    }
+    this.remove();
+  }
+
   remove() {
     this.a.remove();
     this.b.remove();

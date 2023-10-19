@@ -24,9 +24,7 @@ export function drawInk(ctx: EventContext): Gesture | void {
         stroke.points.push(ctx.event.position);
       },
       ended(ctx) {
-        if (ctx.state.dragDist > 20) {
-          ctx.page.adopt(new StrokeGroup(new Set([stroke])));
-        } else {
+        if (ctx.state.dragDist < 20) {
           stroke.remove();
         }
       },
