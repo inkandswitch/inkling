@@ -20,13 +20,13 @@ import { toggleHandles } from './gestures/ToggleHandles';
 
 const gestureCreators = {
   finger: [
-    toggleHandles,
     closeFormulaEditor,
     scrubNumberToken,
     touchToken,
     touchHandle,
     touchMetaToggle,
     touchGizmo,
+    toggleHandles,
   ],
   pencil: [
     erase,
