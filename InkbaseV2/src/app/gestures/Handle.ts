@@ -22,7 +22,7 @@ export function touchHandleHelper(handle: Handle): Gesture {
       constraints.pin(handle);
     },
     moved(ctx) {
-      const newHandle = ctx.root.page.moveHandle(
+      const newHandle = ctx.page.moveHandle(
         handle,
         ctx.event.position,
         ctx.metaToggle.active // whether gizmo handles can break off
