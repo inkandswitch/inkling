@@ -33,26 +33,28 @@ function move(
 
 function update(dt: number, t: number) {
   for (const move of moves) {
-    if (move.done) {
-      moves.splice(moves.indexOf(move, 1));
-      if (move.unlockWhenDone) {
-        move.variable.unlock();
-      }
-      continue;
-    }
-
-    if (move.initialTime === 0) {
-      move.initialTime = t;
-    }
-
     const {
       variable,
+      unlockWhenDone,
       initialValue,
       finalValue,
       durationSeconds,
       easeFn,
       initialTime,
+      done,
     } = move;
+
+    if (done) {
+      if (unlockWhenDone) {
+        variable.unlock();
+      }
+      moves.splice(moves.indexOf(move), 1);
+      continue;
+    }
+
+    if (initialTime === 0) {
+      move.initialTime = t;
+    }
 
     const pct = Math.min((t - initialTime) / durationSeconds, 1);
     variable.lock(initialValue + (finalValue - initialValue) * easeFn(pct));

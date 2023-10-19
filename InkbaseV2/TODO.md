@@ -68,9 +68,6 @@
 
 ## Constraints
 
-- P1: VarMover causes gradient error on '1+2' (result turns into NaN, hilarity ensues)
-  (Alex)
-
 - P1: locking a canonical variable should create locks on its absorbed variables
   same for unlocking
   (Alex)
