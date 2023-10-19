@@ -1,7 +1,8 @@
-import { Position } from '../../lib/types';
+import { Position, isPosition } from '../../lib/types';
 import SVG from '../Svg';
 import { GameObject } from '../GameObject';
 import Vec from '../../lib/vec';
+import Store, { Serializable } from '../Store';
 
 const padding = 30;
 const radius = 20;
@@ -19,10 +20,11 @@ export default class MetaToggle extends GameObject {
   constructor() {
     super();
 
-    this.position = {
-      x: padding,
-      y: padding,
-    };
+    this.position = Store.init({
+      name: 'Meta Toggle Position',
+      isValid: isPosition,
+      def: { x: padding, y: padding },
+    });
 
     this.element = SVG.add('g', SVG.guiElm, {
       id: 'meta-toggle',
@@ -64,6 +66,8 @@ export default class MetaToggle extends GameObject {
 
     // Inset from the corner
     this.position = Vec.add(cornerPosition, Vec.mulS(sign, padding));
+
+    Store.set('Meta Toggle Position', this.position as unknown as Serializable);
   }
 
   private getAttrs() {
