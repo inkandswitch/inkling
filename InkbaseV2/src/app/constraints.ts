@@ -1031,7 +1031,7 @@ function solveCluster(cluster: ClusterForSolver) {
   const knowns = computeKnowns(constraints, lowLevelConstraints);
 
   // Update any constant constraints whose values were overridden by propagation of knowns.
-  // (See `Distance` and `Angle` `propagateKnowns()` for examples of why this is necessary.)
+  // (See `Distance` and `Angle`'s `propagateKnowns()` for examples of why this is necessary.)
   for (const constraint of constraints) {
     if (
       constraint instanceof Constant &&
@@ -1073,11 +1073,12 @@ function solveCluster(cluster: ClusterForSolver) {
     return error;
   }
 
-  // if (inputs.length === 0) {
-  //   // TODO: add a comment here!
-  //   computeTotalError(inputs);
-  //   return;
-  // }
+  if (inputs.length === 0) {
+    // No variables to solve for, but we still need to assign the correct values
+    // to free variables. We do this by calling computeTotalError() below.
+    computeTotalError(inputs);
+    return;
+  }
 
   let result: ReturnType<typeof minimize>;
   try {
