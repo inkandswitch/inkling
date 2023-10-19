@@ -60,6 +60,10 @@ export class Variable {
     }
   }
 
+  get isCanonicalInstance() {
+    return this.info.isCanonical;
+  }
+
   get canonicalInstance(): Variable {
     return this.info.isCanonical ? this : this.info.canonicalInstance;
   }
@@ -1044,8 +1048,9 @@ function solveCluster(cluster: ClusterForSolver) {
   const varIdx = new Map<Variable, number>();
   for (const variable of variables) {
     if (
-      !knowns.has(variable.canonicalInstance) &&
-      !freeVariables.has(variable.canonicalInstance)
+      variable.isCanonicalInstance &&
+      !knowns.has(variable) &&
+      !freeVariables.has(variable)
     ) {
       varIdx.set(variable, inputs.length);
       inputs.push(variable.value);
@@ -1116,8 +1121,9 @@ function solveCluster(cluster: ClusterForSolver) {
   const outputs = result.solution;
   for (const variable of variables) {
     if (
-      !knowns.has(variable.canonicalInstance) &&
-      !freeVariables.has(variable.canonicalInstance)
+      variable.isCanonicalInstance &&
+      !knowns.has(variable) &&
+      !freeVariables.has(variable)
     ) {
       variable.value = outputs.shift()!;
     }
