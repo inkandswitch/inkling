@@ -74,6 +74,10 @@ export default class NumberToken extends Token {
   }
 
   close() {
+    // This works
+    // this.variable.value = parseInt(this.editValue);
+
+    // This doesn't
     VarMover.move(this.variable, parseInt(this.editValue), 0.2);
   }
 
@@ -88,7 +92,9 @@ export default class NumberToken extends Token {
     this.wirePort.position = this.midPoint();
 
     // getComputedTextLength() is slow, so we're gonna do some dirty checking here
-    const newValue = this.editing ? this.editValue : this.variable.value.toFixed(2);
+    const newValue = this.editing
+      ? this.editValue
+      : this.variable.value.toFixed(2);
 
     if (
       newValue === this.lastRenderedValue &&

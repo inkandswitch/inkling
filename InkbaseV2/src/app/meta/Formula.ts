@@ -33,28 +33,27 @@ export default class Formula extends Token {
 
   edit() {
     // remove existing constraint
-    if (this.constraint != null) {
+    if (this.constraint !== null) {
       this.constraint.remove();
     }
 
-    // remove anything after the '=' sign 
-    // TODO: I don't really like this, but okay for now 
-    let tokens = this.findAll({ what: aToken })
-    let equalsTokenIndex = tokens.findIndex(t => (t instanceof OpToken && t.stringValue == '='));
+    // remove anything after the '=' sign
+    // TODO: I don't really like this, but okay for now
+    const tokens = this.findAll({ what: aToken });
+    const equalsTokenIndex = tokens.findIndex(
+      t => t instanceof OpToken && t.stringValue === '='
+    );
     if (equalsTokenIndex > -1) {
       for (let i = equalsTokenIndex; i < tokens.length; i++) {
         tokens[i].remove();
       }
     }
 
-
-
     //create new empty spaces
     this.adopt(new EmptyToken());
     this.adopt(new EmptyToken());
     this.adopt(new EmptyToken());
     this.adopt(new EmptyToken());
-
 
     // Toggle embedded numbers
     const numberTokens = this.findAll({ what: aNumberToken });
@@ -65,7 +64,6 @@ export default class Formula extends Token {
     // Toggle mode
     this.editing = true;
     this.updateCells();
-
   }
 
   close() {
@@ -93,17 +91,18 @@ export default class Formula extends Token {
         firstToken.close();
       }
       this.remove();
-    } else { // Parse the formula if we can
+    } else {
+      // Parse the formula if we can
       // Generate string
       const tokens = this.findAll({ what: aToken });
-      let formula = [];
+      const formula = [];
       for (const token of tokens) {
         if (token instanceof OpToken) {
           formula.push(token.stringValue);
         } else if (token instanceof NumberToken) {
-          formula.push("@" + token.id)
+          formula.push('@' + token.id);
         } else if (token instanceof LabelToken) {
-          formula.push("#" + token.id)
+          formula.push('#' + token.id);
         }
       }
 
@@ -112,7 +111,7 @@ export default class Formula extends Token {
 
       if (result) {
         this.constraint = result;
-        this.adopt(new OpToken("="));
+        this.adopt(new OpToken('='));
         this.adopt(new NumberToken(result.result));
       }
     }
@@ -211,11 +210,11 @@ export default class Formula extends Token {
             token.updateCharAt(offsetInsideToken, cell.stringValue);
           } else {
             // Split this number token
-            let start = token.editValue.slice(0, offsetInsideToken);
-            let end = token.editValue.slice(offsetInsideToken + 1);
+            const start = token.editValue.slice(0, offsetInsideToken);
+            const end = token.editValue.slice(offsetInsideToken + 1);
             token.editValue = start;
             tokens.splice(tokenIndex + 1, 0, new OpToken(cell.stringValue));
-            if (end != '') {
+            if (end !== '') {
               const numToken = new NumberToken();
               numToken.editValue = end;
               tokens.splice(tokenIndex + 2, 0, numToken);

@@ -1068,6 +1068,12 @@ function solveCluster(cluster: ClusterForSolver) {
     return error;
   }
 
+  // if (inputs.length === 0) {
+  //   // TODO: add a comment here!
+  //   computeTotalError(inputs);
+  //   return;
+  // }
+
   let result: ReturnType<typeof minimize>;
   try {
     result = minimize(computeTotalError, inputs, 1_000, 1e-3);
