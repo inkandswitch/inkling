@@ -2,14 +2,6 @@ import { EventContext, Gesture } from './Gesture';
 import { rand } from '../../lib/math';
 import SVG from '../Svg';
 import { Position } from '../../lib/types';
-import Handle from '../ink/Handle';
-import Wire from '../meta/Wire';
-import Token from '../meta/Token';
-import StrokeGroup from '../ink/StrokeGroup';
-import Stroke from '../ink/Stroke';
-import Component from '../meta/Component';
-import Gizmo from '../meta/Gizmo';
-import PropertyPickerEditor from '../meta/PropertyPickerEditor';
 import { aGameObject } from '../GameObject';
 
 export function erase(ctx: EventContext): Gesture | void {
