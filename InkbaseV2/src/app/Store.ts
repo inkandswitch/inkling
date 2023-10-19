@@ -14,7 +14,7 @@ type InitArgs<T extends Serializable> = {
 
 export default {
   init<T extends Serializable>({ name, isValid, def }: InitArgs<T>) {
-    let result = this.get(name);
+    const result = this.get(name);
     return isValid(result) ? result : def;
   },
 
