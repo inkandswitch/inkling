@@ -2,7 +2,7 @@ import { clip } from '../lib/math';
 import { Position, PositionWithPressure } from '../lib/types';
 import Vec from '../lib/vec';
 
-type Attributes = Record<string, string | number | boolean>;
+type Attributes = Record<string, string | number | boolean | null | undefined>;
 
 const NS = 'http://www.w3.org/2000/svg';
 
@@ -50,9 +50,12 @@ function update<T extends SVGElement>(elm: T, attributes: Attributes) {
     }
     cache[key] = value;
 
+    const boolish =
+      typeof value === 'boolean' || value === null || value === undefined;
+
     if (key === 'content') {
       elm.innerHTML = '' + value;
-    } else if (typeof value === 'boolean') {
+    } else if (boolish) {
       value ? elm.setAttribute(key, '') : elm.removeAttribute(key);
     } else {
       elm.setAttribute(key, '' + value);
@@ -72,7 +75,7 @@ let lastTime = 0;
  * Include a `life` attribute to specify a minimum duration until the element is removed.
  */
 function now(type: string, attributes: Attributes) {
-  const life = +attributes.life || 0;
+  const life = +(attributes.life || 0);
   delete attributes.life;
 
   const elm = add(type, nowElm, attributes);
