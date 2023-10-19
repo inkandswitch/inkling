@@ -869,11 +869,11 @@ interface ClusterForSolver {
   freeVariables: Set<Variable>;
 }
 
-let _clustersForSolver: Set<ClusterForSolver> | null = null;
+let clustersForSolver: Set<ClusterForSolver> | null = null;
 
 function getClustersForSolver(root: GameObject): Set<ClusterForSolver> {
-  if (_clustersForSolver) {
-    return _clustersForSolver;
+  if (clustersForSolver) {
+    return clustersForSolver;
   }
 
   // break up all relationships between handles ...
@@ -901,7 +901,7 @@ function getClustersForSolver(root: GameObject): Set<ClusterForSolver> {
 
   const clusters = computeClusters(activeConstraints);
 
-  _clustersForSolver = new Set(
+  clustersForSolver = new Set(
     Array.from(clusters).map(({ constraints, lowLevelConstraints }) => {
       const knowns = computeKnowns(constraints, lowLevelConstraints);
 
@@ -951,10 +951,10 @@ function getClustersForSolver(root: GameObject): Set<ClusterForSolver> {
     })
   );
 
-  forDebugging('clusters', _clustersForSolver);
+  forDebugging('clusters', clustersForSolver);
   SVG.showStatus(`${clusters.size} clusters`);
 
-  return _clustersForSolver;
+  return clustersForSolver;
 }
 
 function computeClusters(
@@ -1049,7 +1049,7 @@ function createClusterForSolver(
 }
 
 function forgetClustersForSolver() {
-  _clustersForSolver = null;
+  clustersForSolver = null;
 }
 
 export function solve(root: GameObject) {
