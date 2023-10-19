@@ -1094,15 +1094,15 @@ function solveCluster(cluster: ClusterForSolver) {
     return messages;
   });
   if (!result || result.message?.includes('maxit')) {
-    console.error(
-      'solveCluster gave up with result',
-      result,
-      'while working on',
-      cluster
-    );
-    const lastConstraint = constraints[constraints.length - 1];
-    lastConstraint.paused = true;
-    console.log('paused', lastConstraint, 'to see if it helps');
+    // console.error(
+    //   'solveCluster gave up with result',
+    //   result,
+    //   'while working on',
+    //   cluster
+    // );
+    // const lastConstraint = constraints[constraints.length - 1];
+    // lastConstraint.paused = true;
+    // console.log('paused', lastConstraint, 'to see if it helps');
     return;
   }
 
