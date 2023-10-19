@@ -208,6 +208,15 @@ export default class Formula extends Token {
             token.updateCharAt(offsetInsideToken, cell.stringValue);
           } else {
             // Split this number token
+            let start = token.editValue.slice(0, offsetInsideToken);
+            let end = token.editValue.slice(offsetInsideToken + 1);
+            token.editValue = start;
+            tokens.splice(tokenIndex + 1, 0, new OpToken(cell.stringValue));
+            if (end != '') {
+              const numToken = new NumberToken();
+              numToken.editValue = end;
+              tokens.splice(tokenIndex + 2, 0, numToken);
+            }
           }
         } else if (token instanceof EmptyToken) {
           if (isNumeric(cell.stringValue)) {
