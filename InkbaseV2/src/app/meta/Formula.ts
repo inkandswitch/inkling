@@ -7,6 +7,9 @@ import OpToken from './OpToken';
 import EmptyToken, { aEmptyToken } from './EmptyToken';
 import WritingCell, { aWritingCell } from './WritingCell';
 import { GameObject } from '../GameObject';
+import FormulaParser from './FormulaParser';
+import LabelToken from './LabelToken';
+import * as constraints from '../constraints';
 
 const PADDING = 3;
 
@@ -22,15 +25,25 @@ export default class Formula extends Token {
     class: 'parsed-formula',
   });
 
+  private constraint: constraints.Formula | null = null;
+
   isPrimary() {
     return false;
   }
 
   edit() {
+    // remove existing constraint
+    if (this.constraint != null) {
+      this.constraint.remove();
+    }
+
+    //create new empty spaces
     this.adopt(new EmptyToken());
     this.adopt(new EmptyToken());
     this.adopt(new EmptyToken());
     this.adopt(new EmptyToken());
+
+    // Toggle mode
     this.editing = true;
     this.updateCells();
   }
@@ -39,6 +52,7 @@ export default class Formula extends Token {
     if (!this.editing) {
       return;
     }
+
     // Cleanup
     const emptyTokens = this.findAll({ what: aEmptyToken });
 
@@ -56,6 +70,28 @@ export default class Formula extends Token {
       tokens[0].editing = false;
       this.page.adopt(tokens[0]);
       this.remove();
+    } else { // Parse the formula if we can
+      // Generate string
+      const tokens = this.findAll({ what: aToken });
+      let formula = [];
+      for (const token of tokens) {
+        if (token instanceof OpToken) {
+          formula.push(token.stringValue);
+        } else if (token instanceof NumberToken) {
+          formula.push("@" + token.id)
+        } else if (token instanceof LabelToken) {
+          formula.push("#" + token.id)
+        }
+      }
+
+      const parser = new FormulaParser(this.page);
+      const result = parser.parse(formula.join(' '));
+
+      if (result) {
+        this.constraint = result;
+        this.adopt(new OpToken("="));
+        this.adopt(new NumberToken(result.result));
+      }
     }
   }
 
