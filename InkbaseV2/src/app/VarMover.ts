@@ -40,7 +40,6 @@ function update(dt: number, t: number) {
       finalValue,
       durationSeconds,
       easeFn,
-      initialTime,
       done,
     } = move;
 
@@ -52,11 +51,12 @@ function update(dt: number, t: number) {
       continue;
     }
 
-    if (initialTime === 0) {
+    if (move.initialTime === 0) {
       move.initialTime = t;
     }
+    const t0 = move.initialTime;
 
-    const pct = Math.min((t - initialTime) / durationSeconds, 1);
+    const pct = Math.min((t - t0) / durationSeconds, 1);
     variable.lock(initialValue + (finalValue - initialValue) * easeFn(pct));
 
     if (pct === 1) {
