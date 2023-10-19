@@ -1116,12 +1116,11 @@ function computeKnowns(
   lowLevelConstraints: LowLevelConstraint[]
 ) {
   const knowns = new Set<Variable>();
-  for (const constraint of constraints) {
-    constraint.propagateKnowns(knowns);
-  }
-
   while (true) {
     const oldNumKnowns = knowns.size;
+    for (const constraint of constraints) {
+      constraint.propagateKnowns(knowns);
+    }
     for (const llc of lowLevelConstraints) {
       llc.propagateKnowns(knowns);
     }
