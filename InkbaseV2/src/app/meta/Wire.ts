@@ -3,7 +3,7 @@ import SVG from '../Svg';
 import { Position } from '../../lib/types';
 import Vec from '../../lib/vec';
 import { MetaConnection, MetaValue } from './MetaSemantics';
-import Line from '../../lib/line';
+import { distanceToPath } from '../../lib/helpers';
 
 // TODO: maybe this shouldn't be a GameObject
 export class WirePort extends GameObject {
@@ -35,7 +35,7 @@ export default class Wire extends GameObject {
   });
 
   distanceToPoint(point: Position) {
-    return Line.distToPoint(Line(this.points[0], this.points[1]), point);
+    return distanceToPath(point, this.points);
   }
 
   render(): void {

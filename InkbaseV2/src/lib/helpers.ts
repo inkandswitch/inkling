@@ -1,3 +1,4 @@
+import Line from './line';
 import { Position } from './types';
 import Vec from './vec';
 
@@ -230,3 +231,22 @@ export const sets = {
     return new Set([...s].map(fn));
   },
 };
+
+export function distanceToPath(pos: Position, points: Position[]) {
+  switch (points.length) {
+    case 0:
+      return null;
+    case 1:
+      return Vec.dist(pos, points[0]);
+    default: {
+      // This is probably *very* slow
+      let minDist = Infinity;
+      for (let idx = 0; idx < points.length - 1; idx++) {
+        const p1 = points[idx];
+        const p2 = points[idx + 1];
+        minDist = Math.min(minDist, Line.distToPoint(Line(p1, p2), pos));
+      }
+      return minDist;
+    }
+  }
+}
