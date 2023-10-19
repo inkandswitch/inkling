@@ -2,6 +2,10 @@
 
 ## UX Improvements
 
+- P1: gesture to erase a character in the formula editor
+  ... just the strokes, not the space
+  (Marcel)
+
 - P0: pesudo-grag handle to reposition it wrt stroke
   (Ivan)
 
