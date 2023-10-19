@@ -203,9 +203,10 @@ export default class Events {
   }
 
   fingerMoved(event: FingerEvent) {
-    const state = this.fingerStates.find(state => state.id === event.id);
+    let state = this.fingerStates.find(state => state.id === event.id);
     if (!state) {
-      throw new Error('Received finger move event with no matching began.');
+      console.warn('Received finger move event with no matching began.');
+      state = this.fingerBegan(event);
     }
     state.dragDist = Vec.dist(event.position, state.originalPosition!);
     state.drag ||= state.dragDist > fingerMinDragDist;
@@ -215,9 +216,10 @@ export default class Events {
   }
 
   pencilMoved(event: PencilEvent) {
-    const state = this.pencilState;
+    let state = this.pencilState;
     if (!state) {
-      throw new Error('Received pencil move event with no matching began.');
+      console.warn('Received pencil move event with no matching began.');
+      state = this.pencilBegan(event);
     }
     state.dragDist = Vec.dist(event.position, state.originalPosition!);
     state.drag ||= state.dragDist > pencilMinDragDist;
@@ -227,9 +229,10 @@ export default class Events {
   }
 
   fingerEnded(event: FingerEvent) {
-    const state = this.fingerStates.find(state => state.id === event.id);
+    let state = this.fingerStates.find(state => state.id === event.id);
     if (!state) {
-      throw new Error('Received finger ended event with no matching began.');
+      console.warn('Received finger ended event with no matching began.');
+      state = this.fingerBegan(event);
     }
     state.down = false;
     state.event = event;
@@ -237,9 +240,10 @@ export default class Events {
   }
 
   pencilEnded(event: PencilEvent) {
-    const state = this.pencilState;
+    let state = this.pencilState;
     if (!state) {
-      throw new Error('Received pencil ended event with no matching began.');
+      console.warn('Received pencil ended event with no matching began.');
+      state = this.pencilBegan(event);
     }
     state.down = false;
     state.event = event;
