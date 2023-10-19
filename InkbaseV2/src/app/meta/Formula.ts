@@ -75,7 +75,6 @@ export default class Formula extends Token {
 
     // Cleanup
     const emptyTokens = this.findAll({ what: aEmptyToken });
-
     for (const token of emptyTokens) {
       token.remove();
     }
@@ -86,9 +85,13 @@ export default class Formula extends Token {
     // Detach single token formula's
     const tokens = this.findAll({ what: aToken });
     if (tokens.length === 1) {
-      tokens[0].embedded = false;
-      tokens[0].editing = false;
-      this.page.adopt(tokens[0]);
+      const firstToken = tokens[0];
+      firstToken.embedded = false;
+      firstToken.editing = false;
+      this.page.adopt(firstToken);
+      if (firstToken instanceof NumberToken) {
+        firstToken.close();
+      }
       this.remove();
     } else { // Parse the formula if we can
       // Generate string
@@ -132,7 +135,7 @@ export default class Formula extends Token {
       const cellCount = 0;
       for (const token of tokens) {
         if (token instanceof NumberToken) {
-          const size = token.variable.value.toFixed(0).split('').length;
+          const size = token.editValue.length;
           for (let i = 0; i < size; i++) {
             const cell = new WritingCell();
             this.adopt(cell);
@@ -218,7 +221,7 @@ export default class Formula extends Token {
               tokens.splice(tokenIndex + 2, 0, numToken);
             }
           }
-        } else if (token instanceof EmptyToken) {
+        } else if (token instanceof EmptyToken || token instanceof OpToken) {
           if (isNumeric(cell.stringValue)) {
             const prev = tokens[tokenIndex - 1];
             if (prev instanceof NumberToken) {
@@ -313,10 +316,8 @@ export default class Formula extends Token {
 
   remove() {
     this.boxElement.remove();
-    for (const token of this.children as Set<Token>) {
-      if (isTokenWithVariable(token)) {
-        token.getVariable().remove();
-      }
+    for (const child of this.children) {
+      child.remove();
     }
     super.remove();
   }

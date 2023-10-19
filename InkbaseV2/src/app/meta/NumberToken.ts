@@ -74,11 +74,7 @@ export default class NumberToken extends Token {
   }
 
   close() {
-    // This works
-    this.variable.value = parseInt(this.editValue)
-
-    // This doesn't
-    // VarMover.move(this.variable, parseInt(this.editValue) , 0.2);
+    VarMover.move(this.variable, parseInt(this.editValue), 0.2);
   }
 
   render(dt: number, t: number): void {
