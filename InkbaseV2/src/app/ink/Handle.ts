@@ -164,6 +164,13 @@ export default class Handle extends GameObject {
   distanceToPoint(point: Position) {
     return Vec.dist(this.position, point);
   }
+
+  equals(that: Handle) {
+    return (
+      this.xVariable.equals(that.xVariable) &&
+      this.yVariable.equals(that.yVariable)
+    );
+  }
 }
 
 export const aHandle = (gameObj: GameObject) =>

@@ -210,6 +210,20 @@ export class Variable {
       this.lock();
     }
   }
+
+  equals(that: Variable) {
+    return (
+      (this.canonicalInstance === that &&
+        this.offset.m === 1 &&
+        this.offset.b === 0) ||
+      (that.canonicalInstance === this &&
+        that.offset.m === 1 &&
+        that.offset.b === 0) ||
+      (this.canonicalInstance === that.canonicalInstance &&
+        this.offset.m === that.offset.m &&
+        this.offset.b === that.offset.b)
+    );
+  }
 }
 
 export const variable = Variable.create;
@@ -277,13 +291,10 @@ class Distance extends LowLevelConstraint {
 
   addTo(constraints: LowLevelConstraint[]) {
     for (const that of constraints) {
-      if (!(that instanceof Distance)) {
-        continue;
-      }
-
       if (
-        (handlesAreEqual(this.a, that.a) && handlesAreEqual(this.b, that.b)) ||
-        (handlesAreEqual(this.a, that.b) && handlesAreEqual(this.b, that.a))
+        that instanceof Distance &&
+        ((this.a.equals(that.a) && this.b.equals(that.b)) ||
+          (this.a.equals(that.b) && this.b.equals(that.a)))
       ) {
         that.distance.makeEqualTo(this.distance);
         return;
@@ -352,14 +363,10 @@ class Angle extends LowLevelConstraint {
     for (const that of constraints) {
       if (!(that instanceof Angle)) {
         continue;
-      }
-
-      if (handlesAreEqual(this.a, that.a) && handlesAreEqual(this.b, that.b)) {
+      } else if (this.a.equals(that.a) && this.b.equals(that.b)) {
         that.angle.makeEqualTo(this.angle);
         return;
-      }
-
-      if (handlesAreEqual(this.a, that.b) && handlesAreEqual(this.b, that.a)) {
+      } else if (this.a.equals(that.b) && this.b.equals(that.a)) {
         that.angle.makeEqualTo(this.angle, { m: 1, b: Math.PI });
         return;
       }
@@ -1132,24 +1139,3 @@ function computeKnowns(
 }
 
 // #endregion solver
-
-// #region helpers
-
-function variablesAreEqual(x: Variable, y: Variable) {
-  return (
-    (x.canonicalInstance === y && x.offset.m === 1 && x.offset.b === 0) ||
-    (y.canonicalInstance === x && y.offset.m === 1 && y.offset.b === 0) ||
-    (x.canonicalInstance === y.canonicalInstance &&
-      x.offset.m === y.offset.m &&
-      x.offset.b === y.offset.b)
-  );
-}
-
-function handlesAreEqual(a: Handle, b: Handle) {
-  return (
-    variablesAreEqual(a.xVariable, b.xVariable) &&
-    variablesAreEqual(a.yVariable, b.yVariable)
-  );
-}
-
-// #endregion helpers
