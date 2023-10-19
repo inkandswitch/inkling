@@ -228,6 +228,10 @@ export class Variable {
         this.offset.b === that.offset.b)
     );
   }
+
+  hasLinearRelationshipWith(that: Variable) {
+    return this.canonicalInstance === that.canonicalInstance;
+  }
 }
 
 export const variable = Variable.create;
@@ -1075,7 +1079,7 @@ function solveCluster(cluster: ClusterForSolver) {
         if (
           k instanceof Constant &&
           (k.variable.equals(pv.distance) ||
-            k.variable.canonicalInstance === pv.angle.canonicalInstance)
+            k.variable.hasLinearRelationshipWith(pv.angle))
         ) {
           k.value = k.variable.value;
         }
