@@ -3,7 +3,7 @@ import Handle, { aCanonicalHandle } from '../ink/Handle';
 import * as constraints from '../constraints';
 
 export function touchHandle(ctx: EventContext): Gesture | void {
-  const handle = ctx.root.page.find({
+  const handle = ctx.page.find({
     what: aCanonicalHandle,
     near: ctx.event.position,
     tooFar: 40,
