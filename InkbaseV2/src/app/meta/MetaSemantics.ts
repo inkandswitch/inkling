@@ -142,6 +142,8 @@ export class MetaStructConnection implements MetaConnection {
     this.b = b;
   }
 
+  // TODO: figure out how to do pausing for this kind of connection
+
   get paused() {
     return false;
   }
