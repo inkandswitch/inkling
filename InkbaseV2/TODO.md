@@ -64,6 +64,13 @@
 
 ## Constraints
 
+- P1: consider unlocking a locked variable instead of pausing a constraint
+  when solver gives up -- this would be easier to understand since
+  the variables' locked/unlocked state is always shown on the canvas.
+  (As opposed to, say, pausing a PolarVector constraint which leaves
+  the Gizmo that owns it looking like a functional Gizmo when it isn't.)
+  (Alex)
+
 - P1: hack to avoid shrinking gizmo when scrubbing angle
   (Alex)
 
