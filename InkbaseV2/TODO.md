@@ -58,7 +58,7 @@
 - P1: wire number tokens directly into formula editor's squares
   (Marcel)
 
-- P1.5: "orange" numbers for results of spreadsheet formulas
+- P2: "orange" numbers for results of spreadsheet formulas
   (this info needs to be in Variable so Tokens can render...)
   (opposite of locked number tokens: cannot be changed / scrubbed)
   (Alex)
