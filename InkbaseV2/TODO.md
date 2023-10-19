@@ -2,6 +2,8 @@
 
 ## UX Improvements
 
+- P1: debug visual for scene graph
+
 - P1: tokens snap to each other, and can be moved together w/ a single finger
   (e.g., two number tokens, or a number token right next to a property picker)
   (Marcel)
@@ -15,6 +17,9 @@
 
 ## Bugs
 
+- P1: remove method for PropertyPickerEditor (should remove whole thing)
+  (Ivan)
+
 - P0: Wires to formula cells render behind the formula box. This is bad.
   (Ivan)
 
@@ -22,42 +27,33 @@
   values aren't the same. seems to be dependent on direction / connection order.
   (e.g., wiring from number token in formula to number token outside formula)
   (solution may be to change recursive = false ==> recursive = true)
+  (need a way to make it clear that you're _not_ wiring)
+  (related to seed creation)
   (Marcel)
+
 
 - P2: when writing a label in the formula editor, sometimes the label.display in LabelToken is undefined and errors.
   (Marcel)
 
 ## Hand-Drawn Strokes
 
-- P0: gestures to show/hide handles to a stroke
-  (Ivan)
-
 - P3/4: merging stroke groups (lasso?)
 
 ## Formulas / Wires / Meta
 
-- P1: improve Erase gesture to handle all types of objects
-  (Ivan + Alex + Marcel)
-
 - P1: tweaks to property picker token design
   (Ivan)
-
-- P1: number/formula editor must be "accepted" before change takes effect
-  (Marcel)
-
-- P1: wire anything into anything, silly billy!
-  need a way to make it clear that you're _not_ wiring
-  (related to seed creation)
-  (Marcel)
 
 - P1: wire number tokens directly into formula editor's squares
   (Marcel)
 
 - P1.5: "orange" numbers for results of spreadsheet formulas
+  (this info needs to be in Variable so Tokens can render...)
   (opposite of locked number tokens: cannot be changed / scrubbed)
   (Alex)
 
-- P2: pause / temporarily break a wire
+- P2: gesture to pause / temporarily break a wire + rendering
+  (Ivan)
 
 - P3/4: toggle formula "equals" <==> "arrow" (spreadsheet/diode mode)
   (Alex)
