@@ -681,6 +681,32 @@ export class Pin extends PinLikeConstraint {
 
 export const pin = Pin.create;
 
+export class Finger extends PinLikeConstraint {
+  private static readonly memo = new Map<Handle, Finger>();
+
+  static create(handle: Handle, position: Position = handle.position) {
+    let finger = Finger.memo.get(handle);
+    if (finger) {
+      finger.position = position;
+    } else {
+      finger = new Finger(handle, position);
+      Finger.memo.set(handle, finger);
+    }
+    return finger;
+  }
+
+  private constructor(handle: Handle, position: Position) {
+    super(handle, position);
+  }
+
+  public remove() {
+    Finger.memo.delete(this.handle);
+    super.remove();
+  }
+}
+
+export const finger = Finger.create;
+
 export class LinearRelationship extends Constraint {
   private static readonly memo = new Map<
     Variable,
