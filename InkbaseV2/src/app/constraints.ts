@@ -635,21 +635,8 @@ export class Constant extends Constraint {
 
 export const constant = Constant.create;
 
-export class Pin extends Constraint {
-  private static readonly memo = new Map<Handle, Pin>();
-
-  static create(handle: Handle, position: Position = handle.position) {
-    let pin = Pin.memo.get(handle);
-    if (pin) {
-      pin.position = position;
-    } else {
-      pin = new Pin(handle, position);
-      Pin.memo.set(handle, pin);
-    }
-    return pin;
-  }
-
-  private constructor(
+abstract class PinLikeConstraint extends Constraint {
+  constructor(
     public readonly handle: Handle,
     public position: Position
   ) {
@@ -665,6 +652,25 @@ export class Pin extends Constraint {
       knowns.add(y.canonicalInstance);
     }
     super.propagateKnowns(knowns);
+  }
+}
+
+export class Pin extends PinLikeConstraint {
+  private static readonly memo = new Map<Handle, Pin>();
+
+  static create(handle: Handle, position: Position = handle.position) {
+    let pin = Pin.memo.get(handle);
+    if (pin) {
+      pin.position = position;
+    } else {
+      pin = new Pin(handle, position);
+      Pin.memo.set(handle, pin);
+    }
+    return pin;
+  }
+
+  private constructor(handle: Handle, position: Position) {
+    super(handle, position);
   }
 
   public remove() {
