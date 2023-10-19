@@ -12,10 +12,6 @@
 - P1: don't let formula editor close if parse fails
   (Marcel)
 
-- P1: pin constraint knows whether it is a finger or a pin
-  only change gizmo distance and/or angle on finger
-  (Alex)
-
 - P1: debug visual for scene graph
   (Ivan)
 

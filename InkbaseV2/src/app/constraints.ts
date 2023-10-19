@@ -1062,14 +1062,24 @@ function solveCluster(cluster: ClusterForSolver) {
 
   const knowns = computeKnowns(constraints, lowLevelConstraints);
 
-  // Update any constant constraints whose values were overridden by propagation of knowns.
-  // (See `Distance` and `Angle`'s `propagateKnowns()` for examples of why this is necessary.)
-  for (const constraint of constraints) {
+  // Let the user to modify the locked distance or angle of a polar vector
+  // constraint by manipulating the handles with their fingers.
+  const handlesWithFingers = getHandlesWithFingers(constraints);
+  for (const pv of constraints) {
     if (
-      constraint instanceof Constant &&
-      knowns.has(constraint.variable.canonicalInstance)
+      pv instanceof PolarVector &&
+      handlesWithFingers.has(pv.a.canonicalInstance) &&
+      handlesWithFingers.has(pv.b.canonicalInstance)
     ) {
-      constraint.value = constraint.variable.value;
+      for (const k of constraints) {
+        if (
+          k instanceof Constant &&
+          (k.variable.equals(pv.distance) ||
+            k.variable.canonicalInstance === pv.angle.canonicalInstance)
+        ) {
+          k.value = k.variable.value;
+        }
+      }
     }
   }
 
@@ -1181,6 +1191,16 @@ function computeKnowns(
     }
   }
   return knowns;
+}
+
+function getHandlesWithFingers(constraints: Constraint[]) {
+  const handlesWithFingers = new Set<Handle>();
+  for (const constraint of constraints) {
+    if (constraint instanceof Finger) {
+      handlesWithFingers.add(constraint.handle.canonicalInstance);
+    }
+  }
+  return handlesWithFingers;
 }
 
 // #endregion solver
