@@ -11,7 +11,7 @@ interface Move {
   done: boolean;
 }
 
-const moves: Move[] = [];
+let moves: Move[] = [];
 
 function move(
   variable: Variable,
@@ -19,6 +19,11 @@ function move(
   durationSeconds: number,
   easeFn: (t: number) => number = t => t
 ) {
+  // cancel any moves that are already in progress and affect this variable
+  moves = moves.filter(
+    move => move.variable.canonicalInstance !== variable.canonicalInstance
+  );
+
   moves.push({
     variable,
     unlockWhenDone: !variable.isLocked,
