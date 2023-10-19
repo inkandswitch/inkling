@@ -68,6 +68,10 @@
 
 ## Constraints
 
+- P1: locking a canonical variable should create locks on its absorbed variables
+  same for unlocking
+  (Alex)
+
 - P1: wiring a locked var to an unlocked var creates lock on unlocked
   (Alex)
 

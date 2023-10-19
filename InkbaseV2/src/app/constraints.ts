@@ -192,26 +192,18 @@ export class Variable {
     return !!this.lockConstraint;
   }
 
-  lock(value = this.value) {
-    if (!this.info.isCanonical) {
-      this.canonicalInstance.lock(this.toCanonicalValue(value));
-      return;
-    }
-
-    this.value = value;
-    for (const variable of [this, ...this.info.absorbedVariables]) {
-      constant(variable);
-    }
+  lock(value?: number) {
+    constant(
+      this.canonicalInstance,
+      value !== undefined ? this.toCanonicalValue(value) : undefined
+    );
   }
 
   unlock() {
-    if (!this.info.isCanonical) {
-      this.canonicalInstance.unlock();
-      return;
-    }
-
-    for (const variable of [this, ...this.info.absorbedVariables]) {
-      constant(variable).remove();
+    for (const c of Constraint.all) {
+      if (c instanceof Constant && c.variable === this.canonicalInstance) {
+        c.remove();
+      }
     }
   }
 
