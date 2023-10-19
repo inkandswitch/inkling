@@ -1,10 +1,4 @@
 import Token from './Token';
-// import SVG from '../Svg';
-// import * as ohm from 'ohm-js';
-// import { WirePort } from './Wire';
-// import { MetaLabel } from './MetaSemantics';
-// import { boundingBoxFromStrokes } from '../../lib/bounding_box';
-// import WritingCell from './WritingCell';
 import { GameObject } from '../GameObject';
 
 export default class EmptyToken extends Token {
@@ -25,5 +19,5 @@ export default class EmptyToken extends Token {
   }
 }
 
-export const aEmptyToken = (gameObj: GameObject) =>
+export const anEmptyToken = (gameObj: GameObject) =>
   gameObj instanceof EmptyToken ? gameObj : null;

@@ -98,11 +98,11 @@ export default class Formula extends Token {
     }
 
     this.constraint = newFormulaConstraint;
-    this.adopt(new OpToken('='));
-    this.adopt(new NumberToken(newFormulaConstraint.result));
     for (const numberToken of this.findAll({ what: aNumberToken })) {
       numberToken.close();
     }
+    this.adopt(new OpToken('='));
+    this.adopt(new NumberToken(newFormulaConstraint.result));
     this.editing = false;
   }
 
