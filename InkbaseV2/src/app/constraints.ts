@@ -293,7 +293,7 @@ class Distance extends LowLevelConstraint {
     constraints.push(this);
   }
 
-  propagateKnowns(knowns: Set<Variable>): void {
+  propagateKnowns(knowns: Set<Variable>) {
     if (
       !(
         knowns.has(this.a.xVariable.canonicalInstance) &&
@@ -368,7 +368,7 @@ class Angle extends LowLevelConstraint {
     constraints.push(this);
   }
 
-  propagateKnowns(knowns: Set<Variable>): void {
+  propagateKnowns(knowns: Set<Variable>) {
     if (
       !(
         knowns.has(this.a.xVariable.canonicalInstance) &&
@@ -608,7 +608,7 @@ export class Constant extends Constraint {
     this.variables.push(variable);
   }
 
-  propagateKnowns(knowns: Set<Variable>): void {
+  propagateKnowns(knowns: Set<Variable>) {
     if (!knowns.has(this.variable.canonicalInstance)) {
       this.variable.value = this.value;
       knowns.add(this.variable.canonicalInstance);
@@ -646,7 +646,7 @@ export class Pin extends Constraint {
     this.variables.push(handle.xVariable, handle.yVariable);
   }
 
-  propagateKnowns(knowns: Set<Variable>): void {
+  propagateKnowns(knowns: Set<Variable>) {
     const { xVariable: x, yVariable: y } = this.handle;
     if (!knowns.has(x.canonicalInstance) || !knowns.has(y.canonicalInstance)) {
       ({ x: x.value, y: y.value } = this.position);
@@ -764,7 +764,7 @@ export class Absorb extends Constraint {
     );
   }
 
-  setUpVariableRelationships(): void {
+  setUpVariableRelationships() {
     this.parent.xVariable.makeEqualTo(this.child.xVariable);
     this.parent.yVariable.makeEqualTo(this.child.yVariable);
     this.parent._absorb(this.child);
