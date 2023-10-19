@@ -40,7 +40,7 @@ export function touchHandleHelper(handle: Handle): Gesture {
       if (!hadPin) {
         constraints.pin(handle).remove();
       }
-      if (!ctx.state.drag) {
+      if (!ctx.state.drag && ctx.metaToggle.active) {
         handle.togglePin();
       }
     },
