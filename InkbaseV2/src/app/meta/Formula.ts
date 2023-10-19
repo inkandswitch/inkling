@@ -2,7 +2,7 @@ import Token, { aToken } from './Token';
 import SVG from '../Svg';
 import Vec from '../../lib/vec';
 import { isTokenWithVariable } from './token-helpers';
-import NumberToken from './NumberToken';
+import NumberToken, { aNumberToken } from './NumberToken';
 import OpToken from './OpToken';
 import EmptyToken, { aEmptyToken } from './EmptyToken';
 import WritingCell, { aWritingCell } from './WritingCell';
@@ -37,15 +37,35 @@ export default class Formula extends Token {
       this.constraint.remove();
     }
 
+    // remove anything after the '=' sign 
+    // TODO: I don't really like this, but okay for now 
+    let tokens = this.findAll({ what: aToken })
+    let equalsTokenIndex = tokens.findIndex(t => (t instanceof OpToken && t.stringValue == '='));
+    if (equalsTokenIndex > -1) {
+      for (let i = equalsTokenIndex; i < tokens.length; i++) {
+        tokens[i].remove();
+      }
+    }
+
+
+
     //create new empty spaces
     this.adopt(new EmptyToken());
     this.adopt(new EmptyToken());
     this.adopt(new EmptyToken());
     this.adopt(new EmptyToken());
 
+
+    // Toggle embedded numbers
+    const numberTokens = this.findAll({ what: aNumberToken });
+    for (const token of numberTokens) {
+      token.edit();
+    }
+
     // Toggle mode
     this.editing = true;
     this.updateCells();
+
   }
 
   close() {
@@ -93,6 +113,11 @@ export default class Formula extends Token {
         this.adopt(new NumberToken(result.result));
       }
     }
+
+    const numberTokens = this.findAll({ what: aNumberToken });
+    for (const token of numberTokens) {
+      token.close();
+    }
   }
 
   updateCells() {
@@ -128,7 +153,7 @@ export default class Formula extends Token {
       const cellCount = 0;
       for (const token of tokens) {
         if (token instanceof NumberToken) {
-          const size = token.variable.value.toFixed(0).split('').length;
+          const size = token.editValue.length;
           for (let i = 0; i < size; i++) {
             const cell = cells.shift();
             if (cell) {
@@ -164,7 +189,7 @@ export default class Formula extends Token {
       // compute tokensize
       let tokenSize = 0;
       if (token instanceof NumberToken) {
-        tokenSize = token.variable.value.toFixed(0).split('').length;
+        tokenSize = token.editValue.length;
       } else {
         tokenSize = 1;
       }
@@ -204,7 +229,6 @@ export default class Formula extends Token {
 
         cell.stringValue = '';
 
-        // console.log(tokens);
         for (const t of tokens) {
           this.adopt(t);
         }

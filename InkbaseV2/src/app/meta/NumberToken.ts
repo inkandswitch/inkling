@@ -7,12 +7,14 @@ import * as constraints from '../constraints';
 import * as ohm from 'ohm-js';
 import { GameObject } from '../GameObject';
 import { generateId } from '../../lib/helpers';
+import VarMover from '../VarMover';
 
 export default class NumberToken extends Token {
   readonly id = generateId();
 
   private lastRenderedValue = '';
   private lastRenderedEditing = false;
+  editValue = '';
 
   // Rendering stuff
   protected readonly elm = SVG.add('g', SVG.metaElm, { class: 'number-token' });
@@ -58,21 +60,22 @@ export default class NumberToken extends Token {
   }
 
   addChar(char: string) {
-    const stringValue = this.variable.value.toString() + char;
-    this.variable.value = parseInt(stringValue);
-    this.variable.lock(parseInt(stringValue));
+    this.editValue += char;
   }
 
   updateCharAt(index: number, char: string) {
-    console.log('update char at', index, char, this.variable.value);
-
-    const array = this.variable.value.toString().split('');
+    const array = this.editValue.split('');
     array.splice(index, 1, char);
+    this.editValue = array.join('');
+  }
 
-    const stringValue = array.join('');
+  edit() {
+    this.editValue = this.variable.value.toFixed(0);
+  }
 
-    this.variable.value = parseInt(stringValue);
-    this.variable.lock(parseInt(stringValue));
+  close() {
+    this.variable.value = parseInt(this.editValue)
+    //VarMover.move(this.variable, parseInt(this.editValue) , 0.2);
   }
 
   render(dt: number, t: number): void {
@@ -86,7 +89,7 @@ export default class NumberToken extends Token {
     this.wirePort.position = this.midPoint();
 
     // getComputedTextLength() is slow, so we're gonna do some dirty checking here
-    const newValue = this.variable.value.toFixed(2);
+    const newValue = this.editing ? this.editValue : this.variable.value.toFixed(2);
 
     if (
       newValue === this.lastRenderedValue &&
@@ -104,9 +107,9 @@ export default class NumberToken extends Token {
     }
     this.digitElems = [];
 
+    // Render edit mode
     if (this.editing) {
-      const chars = this.variable.value.toFixed(0).split('');
-      this.variable.value = parseInt(chars.join(''));
+      const chars = this.editValue.split('');
 
       // Update visuals
       for (const [i, char] of chars.entries()) {
