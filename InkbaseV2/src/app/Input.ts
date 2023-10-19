@@ -92,9 +92,9 @@ export function applyEvent(ctx: EventContext) {
   }
 
   // Key Assumption #3: every touch is claimed by a gesture or pseudo right from the "began".
-  // So if we didn't match an existing gesture/pseudo above, and the event isn't a "began", that means we have a bug!
+  // So if we didn't match an existing gesture/pseudo above, and the event isn't a "began", we're done.
   if (ctx.event.state !== 'began') {
-    throw new Error('A non-began event failed to match any gesture/pseudo.');
+    return;
   }
 
   // STEP TWO — see if any existing gestures want to claim this new touch.
@@ -124,8 +124,7 @@ export function applyEvent(ctx: EventContext) {
     return;
   }
 
-  // Finally…
-  throw new Error('Touches are not allowed to fall through the cracks.');
+  // If we made it here and the touch hasn't been handled… so be it.
 }
 
 function runGesture(gesture: Gesture, ctx: EventContext) {

@@ -11,9 +11,22 @@ import PropertyPicker from '../meta/PropertyPicker';
 import Vec from '../../lib/vec';
 import Formula from '../meta/Formula';
 import EmptyToken from '../meta/EmptyToken';
+import { aMetaToggle } from '../gui/MetaToggle';
 
 export function createWire(ctx: EventContext): Gesture | void {
   if (ctx.metaToggle.active) {
+    // If the touch begins on the Meta Toggle, don't create a wire
+    if (
+      ctx.root.find({
+        what: aMetaToggle,
+        near: ctx.event.position,
+        recursive: false,
+        tooFar: 35,
+      })
+    ) {
+      return;
+    }
+
     // Rebind for concision
     const find = ctx.page.find.bind(ctx.page);
     const near = ctx.event.position;
