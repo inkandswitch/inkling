@@ -1,14 +1,12 @@
 import Events, { Event, InputState } from './NativeEvents';
 import Page from './Page';
 import SVG from './Svg';
-import * as varMover from './VarMover';
+import VarMover from './VarMover';
 import * as constraints from './constraints';
 import { onEveryFrame } from '../lib/helpers';
 import * as Input from './Input';
 import { root } from './GameObject';
-// import FormulaParser from './meta/FormulaParser';
 import MetaToggle from './gui/MetaToggle';
-import Formula from './meta/Formula';
 // import Component from './meta/Component';
 // import LabelToken from './meta/LabelToken';
 // import Stroke from './ink/Stroke';
@@ -33,9 +31,6 @@ const page = new Page({ strokeAnalyzer: false });
 root.adopt(page);
 root.currentPage = page;
 
-// FORMULA STUFF
-//formulaEditor.formulaParser = new FormulaParser(page);
-
 const metaToggle = new MetaToggle();
 root.adopt(metaToggle);
 
@@ -43,7 +38,7 @@ onEveryFrame((dt, t) => {
   SVG.clearNow(t);
 
   events.update();
-  varMover.update(dt, t);
+  VarMover.update(dt, t);
   constraints.solve(root);
   root.render(dt, t);
   Input.render();
@@ -82,8 +77,3 @@ onEveryFrame((dt, t) => {
 //   { x: 410, y: 170 },
 // ];
 // component.updateOutline();
-
-const f = new Formula();
-f.position = { x: 400, y: 100 };
-//f.editing = true;
-page.adopt(f);

@@ -12,7 +12,7 @@ interface Move {
 
 const moves: Move[] = [];
 
-export function move(
+function move(
   variable: Variable,
   finalValue: number,
   durationSeconds: number,
@@ -29,7 +29,7 @@ export function move(
   });
 }
 
-export function update(dt: number, t: number) {
+function update(dt: number, t: number) {
   for (const move of moves) {
     if (move.initialTime === 0) {
       move.initialTime = t;
@@ -57,3 +57,8 @@ export function update(dt: number, t: number) {
     }
   }
 }
+
+export default {
+  move,
+  update,
+};
