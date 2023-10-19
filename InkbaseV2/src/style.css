@@ -400,6 +400,10 @@ svg * {
   stroke: var(--meta-wire);
   stroke-width: 0.5;
   stroke-dasharray: 10;
+
+  &[is-paused] {
+    stroke-width: 5;
+  }
 }
 
 .gesture {

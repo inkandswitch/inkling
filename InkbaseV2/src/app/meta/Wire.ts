@@ -38,6 +38,10 @@ export default class Wire extends GameObject {
     return distanceToPath(point, this.points);
   }
 
+  togglePaused(isPaused = !this.connection?.paused) {
+    return this.connection?.togglePaused(isPaused);
+  }
+
   render(): void {
     const a = this.a?.deref();
     const b = this.b?.deref();
@@ -50,7 +54,10 @@ export default class Wire extends GameObject {
       this.points[1] = b.position;
     }
 
-    SVG.update(this.elm, { points: SVG.points(this.points) });
+    SVG.update(this.elm, {
+      points: SVG.points(this.points),
+      'is-paused': this.connection?.paused,
+    });
   }
 
   isCollapsable() {
@@ -81,3 +88,5 @@ export default class Wire extends GameObject {
     super.remove();
   }
 }
+
+export const aWire = (g: GameObject) => (g instanceof Wire ? g : null);

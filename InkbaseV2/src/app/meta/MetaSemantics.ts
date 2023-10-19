@@ -20,7 +20,7 @@ export interface MetaConnection {
 
   get paused(): boolean;
 
-  togglePaused(newValue: boolean): boolean;
+  togglePaused(newValue?: boolean): boolean;
 }
 
 // NUMBERS

@@ -17,6 +17,7 @@ import { touchGizmo } from './gestures/Gizmo';
 import Config from './Config';
 import { erase } from './gestures/Erase';
 import { toggleHandles } from './gestures/ToggleHandles';
+import { toggleWire } from './gestures/ToggleWire';
 
 const gestureCreators = {
   finger: [
@@ -26,6 +27,7 @@ const gestureCreators = {
     touchHandle,
     touchMetaToggle,
     touchGizmo,
+    toggleWire,
     toggleHandles,
   ],
   pencil: [
