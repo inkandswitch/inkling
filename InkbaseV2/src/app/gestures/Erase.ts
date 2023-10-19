@@ -23,7 +23,7 @@ export function erase(ctx: EventContext): Gesture | void {
           what: g =>
             g instanceof Component ||
             g instanceof Gizmo ||
-            (g instanceof Handle && g.isCanonical) ||
+            g instanceof Handle ||
             g instanceof PropertyPickerEditor ||
             g instanceof Stroke ||
             g instanceof StrokeGroup ||

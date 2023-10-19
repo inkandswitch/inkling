@@ -14,12 +14,6 @@ export default class StrokeGroup extends GameObject {
   readonly a: Handle;
   readonly b: Handle;
 
-  // outlineShape: ClipperShape;
-  skeleton: Position[] = [];
-  dirty = false;
-
-  svgElements: SVGElement[] = [];
-
   constructor(strokes: Set<Stroke>) {
     super();
 
@@ -85,8 +79,10 @@ export default class StrokeGroup extends GameObject {
   }
 
   remove() {
-    for (const elem of this.svgElements) {
-      elem.remove();
+    this.a.remove();
+    this.b.remove();
+    for (const s of this.strokes) {
+      s.remove();
     }
     super.remove();
   }
