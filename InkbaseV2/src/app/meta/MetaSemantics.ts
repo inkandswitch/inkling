@@ -17,6 +17,10 @@ export interface MetaValue {
 export interface MetaConnection {
   /** Clean up this connection. */
   remove(): void;
+
+  get paused(): boolean;
+
+  togglePaused(newValue: boolean): boolean;
 }
 
 // NUMBERS
@@ -41,8 +45,15 @@ export class MetaNumberConnection implements MetaConnection {
     // associated value will flow into the second.
     // The order in the call below used to be `a.variable, b.variable`
     // but that caused jumps in the property picker's values.
-    // TODO: talk to Marcel about this
     this.constraint = constraints.equals(b.variable, a.variable);
+  }
+
+  get paused() {
+    return this.constraint.paused;
+  }
+
+  togglePaused(newValue = !this.constraint.paused) {
+    return (this.constraint.paused = newValue);
   }
 
   remove() {
@@ -129,6 +140,14 @@ export class MetaStructConnection implements MetaConnection {
     // Just point to the same Map in memory is fine here?
     b.labelsById = a.labelsById;
     this.b = b;
+  }
+
+  get paused() {
+    return false;
+  }
+
+  togglePaused(newValue: boolean): boolean {
+    return false;
   }
 
   remove() {
