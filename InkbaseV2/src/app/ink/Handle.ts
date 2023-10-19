@@ -136,7 +136,7 @@ export default class Handle extends GameObject {
     return false;
   }
 
-  togglePin(doPin: boolean = !this.hasPin): void {
+  togglePin(doPin = !this.hasPin): void {
     if (!this.isCanonical) {
       return this.canonicalInstance.togglePin(doPin);
     }
