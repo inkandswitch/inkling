@@ -22,7 +22,7 @@ export default class Stroke extends GameObject {
     });
   }
 
-  distanceToPoint(pos: Position): number | null {
+  distanceToPoint(pos: Position) {
     switch (this.points.length) {
       case 0:
         return null;

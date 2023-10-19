@@ -72,11 +72,8 @@ export abstract class GameObject {
 
   abstract render(dt: number, t: number): void;
 
-  distanceToPoint(point: Position): number | null {
-    throw new Error(
-      `class ${this.constructor.name} needs to implement distanceToPoint()`
-    );
-  }
+  // TODO: write comment for this method
+  abstract distanceToPoint(point: Position): number | null;
 
   find<T extends GameObject>(options: FindOptions<T>): T | null {
     const {
@@ -167,6 +164,10 @@ export const root = new (class extends GameObject {
 
   get page() {
     return this.currentPage!;
+  }
+
+  distanceToPoint(point: Position) {
+    return null;
   }
 
   render(dt: number, t: number) {

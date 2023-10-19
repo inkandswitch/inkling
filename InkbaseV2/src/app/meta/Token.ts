@@ -20,7 +20,7 @@ export default abstract class Token extends GameObject {
 
   abstract isPrimary(): boolean;
 
-  distanceToPoint(pos: Position): number | null {
+  distanceToPoint(pos: Position) {
     return signedDistanceToBox(
       this.position.x,
       this.position.y,

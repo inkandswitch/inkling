@@ -124,6 +124,10 @@ export default class Page extends GameObject {
     });
   }
 
+  distanceToPoint(point: Position) {
+    return null;
+  }
+
   render(dt: number, t: number) {
     for (const child of this.children) {
       child.render(dt, t);

@@ -64,14 +64,14 @@ export default class WritingCell extends GameObject {
     });
   }
 
-  distanceToPoint(_point: Position): number | null {
+  distanceToPoint(point: Position) {
     return signedDistanceToBox(
       this.position.x,
       this.position.y,
       this.width,
       this.height,
-      _point.x,
-      _point.y
+      point.x,
+      point.y
     );
   }
 

@@ -55,7 +55,7 @@ export default class PropertyPickerEditor extends GameObject {
     this.remove();
   }
 
-  distanceToPoint(pos: Position): number | null {
+  distanceToPoint(pos: Position) {
     return signedDistanceToBox(
       this.position.x,
       this.position.y,

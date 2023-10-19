@@ -5,6 +5,7 @@ import Vec from '../../lib/vec';
 import { MetaConnection, MetaValue } from './MetaSemantics';
 import Line from '../../lib/line';
 
+// TODO: maybe this shouldn't be a GameObject
 export class WirePort extends GameObject {
   position: Position;
   value: MetaValue;
@@ -13,6 +14,10 @@ export class WirePort extends GameObject {
     super();
     this.position = position;
     this.value = value;
+  }
+
+  distanceToPoint(point: Position) {
+    return null;
   }
 
   render(dt: number, t: number): void {}
@@ -29,7 +34,7 @@ export default class Wire extends GameObject {
     class: 'wire',
   });
 
-  distanceToPoint(point: Position): number | null {
+  distanceToPoint(point: Position) {
     return Line.distToPoint(Line(this.points[0], this.points[1]), point);
   }
 

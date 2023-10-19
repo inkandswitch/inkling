@@ -10,6 +10,7 @@ import Stroke from '../ink/Stroke';
 import Component from '../meta/Component';
 import Gizmo from '../meta/Gizmo';
 import PropertyPickerEditor from '../meta/PropertyPickerEditor';
+import { aGameObject } from '../GameObject';
 
 export function erase(ctx: EventContext): Gesture | void {
   if (ctx.pseudoCount === 2) {
@@ -17,24 +18,14 @@ export function erase(ctx: EventContext): Gesture | void {
       moved(ctx) {
         spawn(ctx.event.position);
 
-        const g = ctx.root.page.find({
-          what: g =>
-            g instanceof Component ||
-            g instanceof Gizmo ||
-            g instanceof Handle ||
-            g instanceof PropertyPickerEditor ||
-            g instanceof Stroke ||
-            g instanceof StrokeGroup ||
-            (g instanceof Token && g.isPrimary()) ||
-            g instanceof Wire
-              ? g
-              : null,
+        const gos = ctx.page.findAll({
+          what: aGameObject,
           near: ctx.event.position,
           tooFar: 10,
         });
 
-        if (g) {
-          g.remove();
+        for (const go of gos) {
+          go.remove();
         }
       },
     });
