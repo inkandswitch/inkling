@@ -899,60 +899,9 @@ function getClustersForSolver(root: GameObject): Set<ClusterForSolver> {
     constraint.setUpVariableRelationships();
   }
 
-  const clusters = computeClusters(activeConstraints);
-
-  clustersForSolver = new Set(
-    Array.from(clusters).map(({ constraints, lowLevelConstraints }) => {
-      const knowns = computeKnowns(constraints, lowLevelConstraints);
-
-      const variables = new Set<Variable>();
-      for (const constraint of constraints) {
-        for (const variable of constraint.variables) {
-          if (!knowns.has(variable.canonicalInstance)) {
-            variables.add(variable.canonicalInstance);
-          }
-        }
-      }
-
-      const freeVariableCandidates = new Set<Variable>();
-      for (const llc of lowLevelConstraints) {
-        for (const variable of llc.ownVariables) {
-          if (!knowns.has(variable.canonicalInstance)) {
-            freeVariableCandidates.add(variable.canonicalInstance);
-          }
-        }
-      }
-
-      const freeVarCandidateCounts = new Map<Variable, number>();
-      for (const llc of lowLevelConstraints) {
-        for (const variable of llc.variables) {
-          if (!freeVariableCandidates.has(variable.canonicalInstance)) {
-            continue;
-          }
-
-          const n = freeVarCandidateCounts.get(variable.canonicalInstance) ?? 0;
-          freeVarCandidateCounts.set(variable.canonicalInstance, n + 1);
-        }
-      }
-
-      const freeVariables = new Set<Variable>();
-      for (const [variable, count] of freeVarCandidateCounts.entries()) {
-        if (count === 1) {
-          freeVariables.add(variable.canonicalInstance);
-        }
-      }
-
-      return {
-        constraints,
-        lowLevelConstraints,
-        variables: Array.from(variables),
-        freeVariables,
-      };
-    })
-  );
-
+  clustersForSolver = computeClusters(activeConstraints);
   forDebugging('clusters', clustersForSolver);
-  SVG.showStatus(`${clusters.size} clusters`);
+  SVG.showStatus(`${clustersForSolver.size} clusters`);
 
   return clustersForSolver;
 }
