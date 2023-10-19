@@ -2,10 +2,18 @@
 
 ## UX Improvements
 
+- P0: pesudo-grag handle to reposition it wrt stroke
+  (Ivan)
+
+- P1: don't let formula editor close if parse fails
+  (Marcel)
+
 - P1: pin constraint knows whether it is a finger or a pin
+  only change gizmo distance and/or angle on finger
   (Alex)
 
 - P1: debug visual for scene graph
+  (Ivan)
 
 - P1: tokens snap to each other, and can be moved together w/ a single finger
   (e.g., two number tokens, or a number token right next to a property picker)
@@ -55,13 +63,25 @@
   (opposite of locked number tokens: cannot be changed / scrubbed)
   (Alex)
 
-- P2: gesture to pause / temporarily break a wire + rendering
-  (Ivan)
-
 - P3/4: toggle formula "equals" <==> "arrow" (spreadsheet/diode mode)
   (Alex)
 
 ## Constraints
+
+- P1: VarMover causes gradient error on '1+2' (result turns into NaN, hilarity ensues)
+  (Alex)
+
+- P1: locking a canonical variable should create locks on its absorbed variables
+  same for unlocking
+  (Alex)
+
+- P1: wiring a locked var to an unlocked var creates lock on unlocked
+  (Alex)
+
+- P2: whenever there is a unification (merging variables/handles) 
+  all of the things involved should have same constraint state
+  (locks, paused, ...)
+  (Alex)
 
 - P1: consider unlocking a locked variable instead of pausing a constraint
   when solver gives up -- this would be easier to understand since
