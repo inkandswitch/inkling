@@ -6,7 +6,7 @@ import { isLabelToken } from '../meta/token-helpers';
 import { EventContext, Gesture } from './Gesture';
 
 export function tapFormulaLabel(ctx: EventContext): Gesture | void {
-  // TODO: Rewrie
+  // TODO: Rewrite
   // if (ctx.metaToggle.active && ctx.formulaEditor.isActive()) {
   //   const primaryToken = ctx.page.find({
   //     what: aPrimaryToken,
@@ -22,24 +22,26 @@ export function tapFormulaLabel(ctx: EventContext): Gesture | void {
 }
 
 export function pencilFormulaEditor(ctx: EventContext): Gesture | void {
-  if (ctx.metaToggle.active) {
-    const writingCell = ctx.root.find({
-      what: aWritingCell,
-      near: ctx.event.position,
-      recursive: true,
-    });
+  if (!ctx.metaToggle.active) {
+    return;
+  }
 
-    if (writingCell) {
-      const stroke = ctx.page.addStroke(new FormulaStroke());
-      return new Gesture('Writing In Formula Editor', {
-        moved(ctx) {
-          stroke.points.push(ctx.event.position);
-        },
-        ended(_ctx) {
-          writingCell.captureStroke(stroke);
-        },
-      });
-    }
+  const writingCell = ctx.root.find({
+    what: aWritingCell,
+    near: ctx.event.position,
+    recursive: true,
+  });
+
+  if (writingCell) {
+    const stroke = ctx.page.addStroke(new FormulaStroke());
+    return new Gesture('Writing In Formula Editor', {
+      moved(ctx) {
+        stroke.points.push(ctx.event.position);
+      },
+      ended(_ctx) {
+        writingCell.captureStroke(stroke);
+      },
+    });
   }
 
   // TODO: Rewrite
@@ -75,14 +77,13 @@ export function pencilFormulaEditor(ctx: EventContext): Gesture | void {
 }
 
 export function closeFormulaEditor(ctx: EventContext): Gesture | void {
-  const formulas = ctx.root.findAll({ what: aFormula });
   // This one is a bit weird.
   // We don't actually need to claim the 3rd finger, so we just perform the effect right away.
   if (
     ctx.pseudoCount >= 2 && // two pseudo fingers plus…
     ctx.event.type === 'finger' // …one more finger.
   ) {
-    for (const formula of formulas) {
+    for (const formula of ctx.root.findAll({ what: aFormula })) {
       formula.close();
     }
   }
