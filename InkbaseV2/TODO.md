@@ -36,8 +36,8 @@
 
 ## Formulas / Wires / Meta
 
-- P0: some gesture to break connections / remove wires, and formulas
-  (Ivan -> Alex + Marcel)
+- P1: improve Erase gesture to handle all types of objects
+  (Ivan + Alex + Marcel)
 
 - P1: tweaks to property picker token design
   (Ivan)
@@ -63,9 +63,6 @@
   (Alex)
 
 ## Constraints
-
-- P0: pin constraint: gesture to add/remove + rendering
-  (Ivan)
 
 - P1: hack to avoid shrinking gizmo when scrubbing angle
   (Alex)
