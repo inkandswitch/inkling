@@ -50,9 +50,9 @@ export function createWire(ctx: EventContext): Gesture | void {
     } else if (gizmo) {
       wire.attachFront(gizmo.wirePort);
     } else {
-      // wire.points = [{ ...ctx.event.position }, { ...ctx.event.position }];
       // For now, we disallow wiring from empty space
       return;
+      // wire.points = [{ ...ctx.event.position }, { ...ctx.event.position }];
     }
 
     return new Gesture('Create Wire', {
@@ -74,17 +74,12 @@ export function createWire(ctx: EventContext): Gesture | void {
             } else if (token.parent instanceof Formula) {
               token.parent.edit();
             } else {
-              const formula = new Formula();
-              formula.adopt(token);
-              ctx.page.adopt(formula);
-              formula.edit();
+              const formula = Formula.createFromContext(ctx);
               formula.position = Vec.sub(token.position, Vec(-3, -3));
+              formula.adopt(token);
             }
           } else {
-            const formula = new Formula();
-            formula.position = ctx.event.position;
-            ctx.page.adopt(formula);
-            formula.edit();
+            Formula.createFromContext(ctx);
           }
           wire.remove();
         } else if (isTokenWithVariable(primaryToken)) {

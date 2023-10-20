@@ -39,6 +39,9 @@
 
 ## Formulas / Wires / Meta
 
+- P0: A divide by 0 in a formula throws a runtime error. This seems likely to happen because formula numbers tend to varmove to 0. One short-term fix might be to remove the division operator.
+  (Marcel or Alex)
+
 - P2: "orange" numbers for results of spreadsheet formulas
   (this info needs to be in Variable so Tokens can render...)
   (opposite of locked number tokens: cannot be changed / scrubbed)

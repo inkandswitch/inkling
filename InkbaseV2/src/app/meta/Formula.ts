@@ -11,6 +11,7 @@ import LabelToken from './LabelToken';
 import * as constraints from '../constraints';
 import PropertyPicker from './PropertyPicker';
 import { Position } from '../../lib/types';
+import { EventContext } from '../gestures/Gesture';
 
 const PADDING = 3;
 
@@ -19,6 +20,14 @@ const PADDING = 3;
 // Can be improved significiantly if we have a better interface
 
 export default class Formula extends Token {
+  static createFromContext(ctx: EventContext) {
+    const formula = new Formula();
+    ctx.page.adopt(formula);
+    formula.edit();
+    formula.position = ctx.event.position;
+    return formula;
+  }
+
   readonly height = 30 + PADDING * 2;
 
   protected readonly boxElement = SVG.add('rect', SVG.metaElm, {

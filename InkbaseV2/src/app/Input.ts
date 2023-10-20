@@ -18,6 +18,7 @@ import Config from './Config';
 import { erase } from './gestures/Erase';
 import { toggleHandles } from './gestures/ToggleHandles';
 import { toggleWire } from './gestures/ToggleWire';
+import { createFormula } from './gestures/CreateFormula';
 
 const gestureCreators = {
   finger: [
@@ -37,6 +38,7 @@ const gestureCreators = {
     tapFormulaLabel,
     pencilFormulaEditor,
     createWire,
+    createFormula,
     drawInk,
   ],
 };
