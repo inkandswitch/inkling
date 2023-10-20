@@ -43,7 +43,7 @@ export function createWire(ctx: EventContext): Gesture | void {
     } else if (component) {
       wire.attachFront(component.getWirePortNear(ctx.event.position));
     } else if (isPropertyPicker(token)) {
-      wire.attachFront(token.outputPort);
+      wire.attachFront(token.wirePort);
     } else if (gizmo) {
       wire.attachFront(gizmo.wirePort);
     } else {

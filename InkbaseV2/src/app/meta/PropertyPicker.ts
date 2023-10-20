@@ -47,9 +47,11 @@ export default class PropertyPicker extends Token {
   );
 
   readonly outputVariable = new MetaNumber(constraints.variable());
-  readonly outputPort = this.adopt(
+  readonly wirePort = this.adopt(
     new WirePort(this.position, this.outputVariable)
   );
+
+  // Alias this so we conform to TokenWithVariable
 
   private property: MetaLabel | null = null;
 
@@ -83,7 +85,7 @@ export default class PropertyPicker extends Token {
     });
 
     this.inputPort.position = Vec.add(this.position, Vec(-20, this.height / 2));
-    this.outputPort.position = Vec.add(
+    this.wirePort.position = Vec.add(
       this.position,
       Vec(this.width, this.height / 2)
     );
