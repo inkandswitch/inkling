@@ -85,18 +85,20 @@ export function createWire(ctx: EventContext): Gesture | void {
         } else if (isTokenWithVariable(primaryToken)) {
           wire.attachEnd(primaryToken.wirePort);
 
-          if (wire.a == null) {
+          if (wire.a === null) {
             const n = ctx.page.adopt(new NumberToken());
             n.variable.value = primaryToken.getVariable().value;
             wire.attachFront(n.wirePort);
             // Force a render, which computes the token width
             n.render(0, 0);
             // Position the token so that it's centered on the pencil
-            n.position = Vec.sub(wire.points[0], Vec(n.width / 2, n.height / 2));
+            n.position = Vec.sub(
+              wire.points[0],
+              Vec(n.width / 2, n.height / 2)
+            );
             // Re-add the wire, so it renders after the token (avoids a flicker)
             ctx.page.adopt(wire);
           }
-
         } else if (gizmo) {
           wire.attachEnd(gizmo.wirePort);
         } else if (primaryToken instanceof EmptyToken) {
