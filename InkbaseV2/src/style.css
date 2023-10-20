@@ -60,7 +60,6 @@
   --label-stroke: transparent;
   --label-text: transparent;
   --meta-toggle: var(--grey5);
-  --meta-wire: transparent;
   --op-token: transparent;
   --parsed-formula: transparent;
   --property-picker-box: transparent;
@@ -74,23 +73,23 @@
   --token-stroke: transparent;
   --token-text: transparent;
   --unconstrained: transparent;
+  --wire: transparent;
 
   &[meta-mode] {
     --component: var(--grey5);
-    --constrained: var(--grey3);
+    --constrained: var(--grey5);
     --formula-editor-cell-non-default: var(--grey3);
     --formula-editor-cell-text: var(--grey4);
     --formula-editor-cell: var(--grey1);
     --formula-editor: var(--grey2);
     --formula-ink: var(--grey5);
-    --gizmo-line: var(--grey3);
+    --gizmo-line: var(--grey5);
     --handle-fill: transparent;
     --ink-color: lch(var(--L5) 0 0 / 0.1);
     --label-box: var(--grey3);
     --label-stroke: var(--grey1);
     --label-text: var(--grey1);
     --meta-toggle: var(--grey5);
-    --meta-wire: var(--grey4);
     --op-token: var(--grey4);
     --parsed-formula: var(--grey5);
     --property-picker-box: var(--grey5);
@@ -103,7 +102,8 @@
     --token-locked-fill: var(--grey1);
     --token-stroke: var(--grey5);
     --token-text: var(--grey5);
-    --unconstrained: var(--grey1);
+    --unconstrained: var(--grey3);
+    --wire: var(--grey4);
   }
 }
 
@@ -113,8 +113,8 @@
 
 :root[theme*='color'] {
   --blue: color(display-p3 0.8 0.9 1);
-  --green: color(display-p3 0 1 0.8);
-  --yellow: color(display-p3 1 0.7 0);
+  --green: color(display-p3 0 0.8 0.4);
+  --yellow: color(display-p3 0.9 0.6 0);
 
   --pseudo-touch: var(--yellow);
   --gesture-circle: var(--yellow);
@@ -127,6 +127,11 @@
     --label-box: var(--blue);
     --meta-toggle: var(--yellow);
   }
+}
+
+:root[theme*='color'][theme*='dark'] {
+  --green: color(display-p3 0 1 0.5);
+  --yellow: color(display-p3 1 0.7 0);
 }
 
 /* MISC CONFIG ***********************************************************************************/
@@ -281,7 +286,7 @@ svg * {
 
   & polyline {
     stroke: var(--gizmo-line);
-    stroke-width: 0.5;
+    stroke-width: 1;
   }
 
   & path {
@@ -413,7 +418,7 @@ svg * {
 
 .wire {
   fill: none;
-  stroke: var(--meta-wire);
+  stroke: var(--wire);
   stroke-width: 0.5;
   stroke-dasharray: 14 2;
   stroke-dashoffset: -2;
