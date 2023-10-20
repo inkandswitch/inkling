@@ -25,10 +25,6 @@
 
 ## Bugs
 
-- P0: toggle gizmo a few times and you'll see that it spins a bit, then
-  collapses on itself.
-  (Alex)
-
 - P1: remove method for PropertyPickerEditor (should remove whole thing)
   (Ivan)
 

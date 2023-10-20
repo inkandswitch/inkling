@@ -119,7 +119,7 @@ export default class Gizmo extends GameObject {
 
   toggleAngle() {
     // doesn't matter which angle we lock, one is absorbed by the other
-    // so they share the same lock
+    // so they this results in locking/unlocking both
     this.angleInRadians.toggleLock();
   }
 

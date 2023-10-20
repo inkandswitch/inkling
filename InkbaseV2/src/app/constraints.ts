@@ -128,7 +128,6 @@ export class Variable {
     const thatLockConstraint = that.lockConstraint;
 
     for (const otherVariable of that.info.absorbedVariables) {
-      otherVariable.value = this.value;
       const otherVariableInfo = otherVariable.info as AbsorbedVariableInfo;
       otherVariableInfo.canonicalInstance = this;
       // m1 * (m2 * x + b2) + b1 = m1 * m2 * x + m1 * b2 + b1
@@ -139,13 +138,18 @@ export class Variable {
       this.info.absorbedVariables.add(otherVariable);
     }
 
-    that.value = this.value;
     that.info = {
       isCanonical: false,
       canonicalInstance: this,
       offset: offset,
     };
     this.info.absorbedVariables.add(that);
+
+    // Now that all of the relationships are set up, the following
+    // "self-assignment" updates the values of all of the absorbed
+    // variables, taking the linear relationships into account.
+    // eslint-disable-next-line no-self-assign
+    this.value = this.value;
 
     if (thatLockConstraint || this.isLocked) {
       this.lock(); // ensure that they're all locked
