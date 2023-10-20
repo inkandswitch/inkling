@@ -6,6 +6,9 @@
   they keep coming apart accidentally, and the more complex the model is,
   the more disruptive it is when that happens!
 
+- P1: formula parser can handle "= numberTokenRef"
+  (Alex)
+
 - P1: make it harder to erase formula editor
   (Ivan)
 
@@ -24,6 +27,10 @@
 - P4: in meta mode, should you be able to break apart ink handles?
 
 ## Bugs
+
+- P1: create a gizmo, pull out distance, lock it. pin one handle.
+  then move other handle, distance changes permanently. shouldn't!
+  (Alex)
 
 - P1: remove method for PropertyPickerEditor (should remove whole thing)
   (Ivan)
