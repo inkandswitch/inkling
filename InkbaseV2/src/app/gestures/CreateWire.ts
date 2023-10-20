@@ -106,7 +106,7 @@ export function createWire(ctx: EventContext): Gesture | void {
             Vec(n.width / 2, n.height / 2)
           );
           // Re-add the wire, so it renders after the token (avoids a flicker)
-          // ctx.page.adopt(wire);
+          ctx.page.adopt(wire);
         }
       },
     });
