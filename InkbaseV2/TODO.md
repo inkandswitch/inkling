@@ -70,11 +70,6 @@
 - P1: hack to avoid shrinking gizmo when scrubbing angle
   (Alex)
 
-- P2: whenever there is a unification (merging variables/handles) 
-  all of the things involved should have same constraint state
-  (locks, paused, ...)
-  (Alex)
-
 - P2: consider unlocking a locked variable instead of pausing a constraint
   when solver gives up -- this would be easier to understand since
   the variables' locked/unlocked state is always shown on the canvas.
