@@ -167,6 +167,8 @@ export default class Gizmo extends GameObject {
 
   remove() {
     this.elm.remove();
+    this.a?.remove();
+    this.b?.remove();
     super.remove();
   }
 }
