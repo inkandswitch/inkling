@@ -54,6 +54,7 @@
   --formula-editor: transparent;
   --formula-ink: transparent;
   --gizmo-line: transparent;
+  --gizmo-thinline: transparent;
   --handle-fill: lch(var(--L5) 0 0 / 0.03);
   --ink-color: lch(var(--L5) 0 0 / 0.65);
   --label-box: transparent;
@@ -84,8 +85,9 @@
     --formula-editor: var(--grey2);
     --formula-ink: var(--grey5);
     --gizmo-line: var(--grey5);
+    --gizmo-thinline: lch(var(--L5) 0 0 / 0.02);
     --handle-fill: transparent;
-    --ink-color: lch(var(--L5) 0 0 / 0.1);
+    --ink-color: lch(var(--L5) 0 0 / 0.2);
     --label-box: var(--grey3);
     --label-stroke: var(--grey1);
     --label-text: var(--grey1);
@@ -292,8 +294,9 @@ svg * {
     }
 
     &.thinLine {
-      stroke-width: 0.5;
-      stroke-dasharray: 1 5;
+      stroke-width: 30;
+      /* stroke-dasharray: 1 5; */
+      stroke: var(--gizmo-thinline);
     }
   }
 

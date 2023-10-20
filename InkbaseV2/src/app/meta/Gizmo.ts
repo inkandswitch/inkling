@@ -163,8 +163,8 @@ export default class Gizmo extends GameObject {
       points: SVG.points(_a, _b),
     });
 
-    _a = Vec.add(a, Vec.renormalize(ab, 16));
-    _b = Vec.sub(b, Vec.renormalize(ab, 16));
+    _a = Vec.add(a, Vec.renormalize(ab, 0));
+    _b = Vec.sub(b, Vec.renormalize(ab, 0));
 
     SVG.update(this.thinLine, {
       points: SVG.points(_a, _b),
