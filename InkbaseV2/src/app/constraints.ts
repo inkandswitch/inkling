@@ -147,9 +147,10 @@ export class Variable {
     };
     this.info.absorbedVariables.add(that);
 
-    if (thatLockConstraint) {
-      thatLockConstraint.remove();
-      this.lock();
+    if (thatLockConstraint || this.isLocked) {
+      this.lock(); // ensure that they're all locked
+    } else {
+      this.unlock(); // ensure that they're all unlocked
     }
   }
 
@@ -193,17 +194,29 @@ export class Variable {
   }
 
   lock(value?: number) {
-    constant(
-      this.canonicalInstance,
-      value !== undefined ? this.toCanonicalValue(value) : undefined
-    );
+    if (!this.info.isCanonical) {
+      this.canonicalInstance.lock(
+        value !== undefined ? this.toCanonicalValue(value) : undefined
+      );
+      return;
+    }
+
+    if (value !== undefined) {
+      this.value = value; // this also changes the values of the absorbed vars
+    }
+    for (const variable of [this, ...this.info.absorbedVariables]) {
+      constant(variable);
+    }
   }
 
   unlock() {
-    for (const c of Constraint.all) {
-      if (c instanceof Constant && c.variable === this.canonicalInstance) {
-        c.remove();
-      }
+    if (!this.info.isCanonical) {
+      this.canonicalInstance.unlock();
+      return;
+    }
+
+    for (const variable of [this, ...this.info.absorbedVariables]) {
+      constant(variable).remove();
     }
   }
 

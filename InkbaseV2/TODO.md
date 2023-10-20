@@ -2,12 +2,12 @@
 
 ## UX Improvements
 
+- P0: pesudo-grag handle to reposition it wrt stroke
+  (Ivan)
+
 - P1: gesture to erase a character in the formula editor
   ... just the strokes, not the space
   (Marcel)
-
-- P0: pesudo-grag handle to reposition it wrt stroke
-  (Ivan)
 
 - P1: don't let formula editor close if parse fails
   (Marcel)
@@ -28,9 +28,6 @@
 
 ## Bugs
 
-- P1: remove method for PropertyPickerEditor (should remove whole thing)
-  (Ivan)
-
 - P0: Wires to formula cells render behind the formula box. This is bad.
   (Ivan)
 
@@ -42,6 +39,8 @@
   (related to seed creation)
   (Marcel)
 
+- P1: remove method for PropertyPickerEditor (should remove whole thing)
+  (Ivan)
 
 - P2: when writing a label in the formula editor, sometimes the label.display in LabelToken is undefined and errors.
   (Marcel)
@@ -68,11 +67,7 @@
 
 ## Constraints
 
-- P1: locking a canonical variable should create locks on its absorbed variables
-  same for unlocking
-  (Alex)
-
-- P1: wiring a locked var to an unlocked var creates lock on unlocked
+- P1: hack to avoid shrinking gizmo when scrubbing angle
   (Alex)
 
 - P2: whenever there is a unification (merging variables/handles) 
@@ -80,14 +75,11 @@
   (locks, paused, ...)
   (Alex)
 
-- P1: consider unlocking a locked variable instead of pausing a constraint
+- P2: consider unlocking a locked variable instead of pausing a constraint
   when solver gives up -- this would be easier to understand since
   the variables' locked/unlocked state is always shown on the canvas.
   (As opposed to, say, pausing a PolarVector constraint which leaves
   the Gizmo that owns it looking like a functional Gizmo when it isn't.)
-  (Alex)
-
-- P1: hack to avoid shrinking gizmo when scrubbing angle
   (Alex)
 
 - P4: constraints should only have weak refs to handles
