@@ -5,6 +5,7 @@ import SVG from '../Svg';
 import { Formula, Variable } from '../constraints';
 import * as constraints from '../constraints';
 import * as ohm from 'ohm-js';
+import { aPropertyPicker } from './PropertyPicker';
 
 const formulaGrammar = ohm.grammar(String.raw`
 
@@ -28,6 +29,7 @@ Formula {
     = "(" Exp ")"  -- paren
     | numberRef
     | labelRef
+    | propRef
 
   // lexical rules
 
@@ -36,6 +38,9 @@ Formula {
 
   labelRef (a label reference)
     = "#" digit+
+
+  propRef (a property picker reference)
+    = "!" digit+
 }
 `);
 
@@ -70,6 +75,18 @@ export default class FormulaParser {
           }
           return labelToken.getVariable();
         },
+        propRef(bang, idDigits) {
+          const id = parseInt(idDigits.sourceString);
+          const propToken = page.root.find({
+            what: aPropertyPicker,
+            that: propToken => propToken.id === id,
+          });
+          if (!propToken) {
+            console.error('invalid property picker token id', id);
+            throw ':(';
+          }
+          return propToken.getVariable();
+        },
       })
       .addOperation('collectVars(vars)', {
         AddExp_add(a, op, b) {
@@ -92,6 +109,9 @@ export default class FormulaParser {
         labelRef(hash, idDigits) {
           this.args.vars.add(this.variable);
         },
+        propRef(bang, idDigits) {
+          this.args.vars.add(this.variable);
+        },
       })
       .addOperation('compile', {
         AddExp_add(a, op, b) {
@@ -111,6 +131,9 @@ export default class FormulaParser {
           return `v${this.variable.id}`;
         },
         labelRef(hash, id) {
+          return `v${this.variable.id}`;
+        },
+        propRef(bang, id) {
           return `v${this.variable.id}`;
         },
       });

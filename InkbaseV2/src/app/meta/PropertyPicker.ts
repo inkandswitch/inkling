@@ -12,6 +12,7 @@ import {
   MetaNumberConnection,
 } from './MetaSemantics';
 import { generateId } from '../../lib/helpers';
+import { GameObject } from '../GameObject';
 
 function PropertyPickerPath(pos: Position, w: number, h: number) {
   return `
@@ -56,6 +57,10 @@ export default class PropertyPicker extends Token {
 
   isPrimary(): boolean {
     return true;
+  }
+
+  getVariable(): constraints.Variable {
+    return this.outputVariable.variable;
   }
 
   render() {
@@ -106,3 +111,6 @@ export default class PropertyPicker extends Token {
     super.remove();
   }
 }
+
+export const aPropertyPicker = (gameObj: GameObject) =>
+  gameObj instanceof PropertyPicker ? gameObj : null;
