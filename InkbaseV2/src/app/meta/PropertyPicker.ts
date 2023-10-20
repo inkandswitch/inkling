@@ -14,14 +14,16 @@ import {
 import { generateId } from '../../lib/helpers';
 import { GameObject } from '../GameObject';
 
+const TAB_SIZE = 5;
+
 function PropertyPickerPath(pos: Position, w: number, h: number) {
   return `
-    M ${pos.x} ${pos.y}
+    M ${pos.x + TAB_SIZE} ${pos.y}
     L ${pos.x + w} ${pos.y}
     L ${pos.x + w} ${pos.y + h}
-    L ${pos.x} ${pos.y + h}
-    L ${pos.x - 20} ${pos.y + h / 2}
-    L ${pos.x} ${pos.y}
+    L ${pos.x + TAB_SIZE} ${pos.y + h}
+    L ${pos.x} ${pos.y + h / 2}
+    L ${pos.x + TAB_SIZE} ${pos.y}
   `;
 }
 
@@ -36,7 +38,7 @@ export default class PropertyPicker extends Token {
   });
 
   protected readonly textElement = SVG.add('text', SVG.metaElm, {
-    x: this.position.x + 5,
+    x: this.position.x + 5 + TAB_SIZE,
     y: this.position.y + 21,
     class: 'property-picker-text',
   });
@@ -71,7 +73,7 @@ export default class PropertyPicker extends Token {
     if (content !== this.lastRenderedValue) {
       this.lastRenderedValue = content;
       SVG.update(this.textElement, { content });
-      this.width = this.textElement.getComputedTextLength() + 10;
+      this.width = this.textElement.getComputedTextLength() + 10 + TAB_SIZE;
     }
 
     SVG.update(this.boxElement, {
@@ -80,15 +82,12 @@ export default class PropertyPicker extends Token {
     });
 
     SVG.update(this.textElement, {
-      x: this.position.x + 5,
+      x: this.position.x + 5 + TAB_SIZE,
       y: this.position.y + 21,
     });
 
-    this.inputPort.position = Vec.add(this.position, Vec(-20, this.height / 2));
-    this.wirePort.position = Vec.add(
-      this.position,
-      Vec(this.width, this.height / 2)
-    );
+    this.inputPort.position = Vec.add(this.position, Vec(0, this.height / 2));
+    this.wirePort.position = this.midPoint();
   }
 
   setProperty(newValue: MetaLabel) {
