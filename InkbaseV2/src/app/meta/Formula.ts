@@ -10,6 +10,7 @@ import FormulaParser from './FormulaParser';
 import LabelToken from './LabelToken';
 import * as constraints from '../constraints';
 import PropertyPicker from './PropertyPicker';
+import { Position } from '../../lib/types';
 
 const PADDING = 3;
 
@@ -347,6 +348,10 @@ export default class Formula extends Token {
     for (const child of this.children) {
       child.render(dt, t);
     }
+  }
+
+  erase(position: Position) {
+    // TODO: erase cell at position
   }
 
   remove() {
