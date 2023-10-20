@@ -223,20 +223,36 @@ export default class Formula extends Token {
         } else if (token instanceof EmptyToken || token instanceof OpToken) {
           if (isNumeric(cell.stringValue)) {
             const prev = tokens[tokenIndex - 1];
+            const next = tokens[tokenIndex + 1];
             if (prev instanceof NumberToken) {
               prev.addChar(cell.stringValue);
+              // Merge two number tokens
+              if (next instanceof NumberToken) {
+                prev.editValue += next.editValue;
+                tokens[tokenIndex].remove();
+                tokens[tokenIndex + 1].remove();
+                tokens.splice(tokenIndex, 2);
+              } else {
+                tokens[tokenIndex].remove();
+                tokens.splice(tokenIndex, 1);
+                tokens.push(new EmptyToken());
+              }
             } else {
               const numToken = new NumberToken();
               numToken.addChar(cell.stringValue);
-              tokens.push(tokens[tokenIndex]);
+              tokens[tokenIndex].remove();
               tokens[tokenIndex] = numToken;
+              tokens.push(new EmptyToken());
             }
           } else {
             const opToken = new OpToken(cell.stringValue);
-            tokens.push(tokens[tokenIndex]);
+            tokens[tokenIndex].remove();
             tokens[tokenIndex] = opToken;
+            tokens.push(new EmptyToken());
           }
         }
+
+        console.log(tokens);
 
         cell.stringValue = '';
 
