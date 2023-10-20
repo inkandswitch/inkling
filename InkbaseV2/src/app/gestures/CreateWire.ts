@@ -50,7 +50,9 @@ export function createWire(ctx: EventContext): Gesture | void {
     } else if (gizmo) {
       wire.attachFront(gizmo.wirePort);
     } else {
-      wire.points = [{ ...ctx.event.position }, { ...ctx.event.position }];
+      // wire.points = [{ ...ctx.event.position }, { ...ctx.event.position }];
+      // For now, we disallow wiring from empty space
+      return;
     }
 
     return new Gesture('Create Wire', {
