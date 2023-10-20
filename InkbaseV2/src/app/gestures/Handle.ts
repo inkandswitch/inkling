@@ -11,6 +11,13 @@ export function touchHandle(ctx: EventContext): Gesture | void {
   });
 
   if (handle) {
+    if (
+      ctx.pseudoCount >= 3 &&
+      handle.canonicalInstance.absorbedHandles.size > 0
+    ) {
+      handle.breakOff(handle);
+    }
+
     return touchHandleHelper(handle);
   }
 }
@@ -21,15 +28,8 @@ export function touchHandleHelper(handle: Handle): Gesture {
       constraints.finger(handle);
     },
     moved(ctx) {
-      const newHandle = ctx.page.moveHandle(
-        handle,
-        ctx.event.position,
-        ctx.metaToggle.active // whether gizmo handles can break off
-      );
-      if (newHandle !== handle) {
-        constraints.finger(handle).remove();
-        handle = newHandle;
-      }
+      handle.position = ctx.event.position;
+
       constraints.finger(handle);
 
       if (
