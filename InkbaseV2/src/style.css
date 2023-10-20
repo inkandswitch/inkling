@@ -115,7 +115,7 @@
 
 :root[theme*='color'] {
   --blue: color(display-p3 0.8 0.9 1);
-  --green: color(display-p3 0 0.8 0.4);
+  --green: color(display-p3 0 0.5 0.5);
   --yellow: color(display-p3 0.9 0.6 0);
 
   --pseudo-touch: var(--yellow);
@@ -132,7 +132,7 @@
 }
 
 :root[theme*='color'][theme*='dark'] {
-  --green: color(display-p3 0 1 0.5);
+  --green: color(display-p3 0 1 1);
   --yellow: color(display-p3 1 0.7 0);
 }
 
@@ -295,7 +295,7 @@ svg * {
     &.thinLine {
       stroke-width: 30;
       stroke: var(--gizmo-thinline);
-      opacity: 0.03;
+      opacity: 0.04;
     }
   }
 
@@ -312,6 +312,7 @@ svg * {
 
   &[is-constrained] polyline.thinLine {
     stroke: var(--constrained);
+    opacity: 0.07;
   }
 }
 
