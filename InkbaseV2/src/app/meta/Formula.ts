@@ -13,6 +13,11 @@ import PropertyPicker from './PropertyPicker';
 
 const PADDING = 3;
 
+// TODO:
+// We're computing the amount of writing cell super ad-hoc right now
+// Can be improved significiantly if we have a better interface
+
+
 export default class Formula extends Token {
   readonly height = 30 + PADDING * 2;
 
@@ -80,6 +85,7 @@ export default class Formula extends Token {
     }
 
     this.discardEmptyTokens();
+
     const tokens = this.findAll({ what: aToken });
 
     // Detach single token formulas
@@ -105,6 +111,7 @@ export default class Formula extends Token {
     this.adopt(new OpToken('='));
     this.adopt(new NumberToken(newFormulaConstraint.result));
     this.editing = false;
+    this.updateCells();
   }
 
   discardEmptyTokens() {
@@ -112,51 +119,38 @@ export default class Formula extends Token {
     for (const token of emptyTokens) {
       token.remove();
     }
-    this.updateCells();
   }
 
   updateCells() {
-    for (const cell of this.findAll({ what: aWritingCell })) {
-      cell.remove();
-    }
-
     if (!this.editing) {
+      for (const cell of this.findAll({ what: aWritingCell })) {
+        cell.remove();
+      }
       return;
     }
 
-    // TODO: Do this in a better way so we don't lose state all over the place
+    let totalCellCount = 0;
     for (const token of this.findAll({ what: aToken })) {
-      if (token instanceof NumberToken) {
-        const size = token.editValue.length;
-        for (let i = 0; i < size; i++) {
-          this.adopt(new WritingCell());
-        }
-      } else {
+      totalCellCount += token instanceof NumberToken ? token.editValue.length : 1;
+    }
+
+    const currentCells = this.findAll({ what: aWritingCell });
+
+    console.log(currentCells.length, totalCellCount);
+    console.log(currentCells);
+
+    if (currentCells.length < totalCellCount) {
+      let diff = totalCellCount - currentCells.length;
+      for (let i = 0; i < diff; i++) {
         this.adopt(new WritingCell());
       }
-    }
-  }
-
-  getFormulaAsText() {
-    const formula = [];
-    for (const token of this.findAll({ what: aToken })) {
-      if (token instanceof OpToken) {
-        formula.push(token.stringValue);
-      } else if (token instanceof NumberToken) {
-        formula.push('@' + token.id);
-      } else if (token instanceof LabelToken) {
-        formula.push('#' + token.id);
-      } else if (token instanceof PropertyPicker) {
-        formula.push('!' + token.id);
-      } else if (token instanceof EmptyToken) {
-        // NO-OP
-      } else {
-        throw new Error(
-          'unexpected token type in formula: ' + token.constructor.name
-        );
+    } else if (currentCells.length > totalCellCount) {
+      let diff = currentCells.length - totalCellCount;
+      for (let i = 0; i < diff; i++) {
+        const cell = currentCells.pop();
+        cell?.remove();
       }
     }
-    return formula.join(' ');
   }
 
   layoutCells() {
@@ -184,6 +178,28 @@ export default class Formula extends Token {
         }
       }
     }
+  }
+
+  getFormulaAsText() {
+    const formula = [];
+    for (const token of this.findAll({ what: aToken })) {
+      if (token instanceof OpToken) {
+        formula.push(token.stringValue);
+      } else if (token instanceof NumberToken) {
+        formula.push('@' + token.id);
+      } else if (token instanceof LabelToken) {
+        formula.push('#' + token.id);
+      } else if (token instanceof PropertyPicker) {
+        formula.push('!' + token.id);
+      } else if (token instanceof EmptyToken) {
+        // NO-OP
+      } else {
+        throw new Error(
+          'unexpected token type in formula: ' + token.constructor.name
+        );
+      }
+    }
+    return formula.join(' ');
   }
 
   updateWritingCells() {
