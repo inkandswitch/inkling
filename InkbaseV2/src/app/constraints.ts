@@ -331,18 +331,15 @@ class Distance extends LowLevelConstraint {
 
   propagateKnowns(knowns: Set<Variable>) {
     if (
-      !(
-        knowns.has(this.a.xVariable.canonicalInstance) &&
-        knowns.has(this.a.yVariable.canonicalInstance) &&
-        knowns.has(this.b.xVariable.canonicalInstance) &&
-        knowns.has(this.b.yVariable.canonicalInstance)
-      )
+      !knowns.has(this.distance.canonicalInstance) &&
+      knowns.has(this.a.xVariable.canonicalInstance) &&
+      knowns.has(this.a.yVariable.canonicalInstance) &&
+      knowns.has(this.b.xVariable.canonicalInstance) &&
+      knowns.has(this.b.yVariable.canonicalInstance)
     ) {
-      return;
+      this.distance.value = Vec.dist(this.a, this.b);
+      knowns.add(this.distance.canonicalInstance);
     }
-
-    this.distance.value = Vec.dist(this.a, this.b);
-    knowns.add(this.distance.canonicalInstance);
   }
 
   getError(
@@ -402,18 +399,15 @@ class Angle extends LowLevelConstraint {
 
   propagateKnowns(knowns: Set<Variable>) {
     if (
-      !(
-        knowns.has(this.a.xVariable.canonicalInstance) &&
-        knowns.has(this.a.yVariable.canonicalInstance) &&
-        knowns.has(this.b.xVariable.canonicalInstance) &&
-        knowns.has(this.b.yVariable.canonicalInstance)
-      )
+      !knowns.has(this.angle) &&
+      knowns.has(this.a.xVariable.canonicalInstance) &&
+      knowns.has(this.a.yVariable.canonicalInstance) &&
+      knowns.has(this.b.xVariable.canonicalInstance) &&
+      knowns.has(this.b.yVariable.canonicalInstance)
     ) {
-      return;
+      this.angle.value = Vec.angle(Vec.sub(this.b, this.a));
+      knowns.add(this.angle.canonicalInstance);
     }
-
-    this.angle.value = Vec.angle(Vec.sub(this.b, this.a));
-    knowns.add(this.angle.canonicalInstance);
   }
 
   getError(
@@ -1095,10 +1089,10 @@ function solveCluster(cluster: ClusterForSolver) {
       for (const k of constraints) {
         if (
           k instanceof Constant &&
-          (k.variable.equals(pv.distance) ||
+          (k.variable.hasLinearRelationshipWith(pv.distance) ||
             k.variable.hasLinearRelationshipWith(pv.angle))
         ) {
-          // TODO: do it to the siblings too? (to avoid getting out of step)
+          // TODO: do we need to do this to the siblings too? (to avoid getting out of step)
           k.value = k.variable.value;
         }
       }
@@ -1202,12 +1196,34 @@ function computeKnowns(
   const knowns = new Set<Variable>();
   while (true) {
     const oldNumKnowns = knowns.size;
+
+    // do finger and polar vector constraints first
+    // (that way the user can set gizmo distances and angles w/ fingers)
     for (const constraint of constraints) {
-      constraint.propagateKnowns(knowns);
+      if (constraint instanceof Finger) {
+        constraint.propagateKnowns(knowns);
+      }
     }
+    for (const constraint of constraints) {
+      if (constraint instanceof PolarVector) {
+        constraint.propagateKnowns(knowns);
+      }
+    }
+
+    // ... then do other constraints
+    for (const constraint of constraints) {
+      if (
+        !(constraint instanceof Finger || constraint instanceof PolarVector)
+      ) {
+        constraint.propagateKnowns(knowns);
+      }
+    }
+
+    // ... and the low-level constraints
     for (const llc of lowLevelConstraints) {
       llc.propagateKnowns(knowns);
     }
+
     if (knowns.size === oldNumKnowns) {
       break;
     }

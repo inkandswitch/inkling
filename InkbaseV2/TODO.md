@@ -29,10 +29,6 @@
 
 ## Bugs
 
-- P1: create a gizmo, pull out distance, lock it. pin one handle.
-  then move other handle, distance changes permanently. shouldn't!
-  (Alex)
-
 - P1/2: Wires to formula cells render behind the formula box. This is bad.
   (Ivan)
 
