@@ -50,6 +50,10 @@ export default class MetaToggle extends GameObject {
     this.position = position;
   }
 
+  remove() {
+    window.location.reload();
+  }
+
   snapToCorner() {
     this.dragging = false;
 

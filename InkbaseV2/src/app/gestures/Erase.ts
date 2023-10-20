@@ -10,7 +10,7 @@ export function erase(ctx: EventContext): Gesture | void {
       moved(ctx) {
         spawn(ctx.event.position);
 
-        const gos = ctx.page.findAll({
+        const gos = ctx.root.findAll({
           what: aGameObject,
           near: ctx.event.position,
           tooFar: 10,
