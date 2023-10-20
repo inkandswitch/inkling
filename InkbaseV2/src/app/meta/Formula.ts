@@ -9,6 +9,7 @@ import { GameObject } from '../GameObject';
 import FormulaParser from './FormulaParser';
 import LabelToken from './LabelToken';
 import * as constraints from '../constraints';
+import PropertyPicker from './PropertyPicker';
 
 const PADDING = 3;
 
@@ -70,6 +71,14 @@ export default class Formula extends Token {
       return;
     }
 
+    // Parse the formula
+    const parser = new FormulaParser(this.page);
+    const newFormulaConstraint = parser.parse(this.getFormulaAsText());
+    if (!newFormulaConstraint) {
+      // don't close the editor
+      return;
+    }
+
     this.discardEmptyTokens();
     const tokens = this.findAll({ what: aToken });
 
@@ -87,15 +96,7 @@ export default class Formula extends Token {
       return;
     }
 
-    // Parse the formula
-    const parser = new FormulaParser(this.page);
-    const newFormulaConstraint = parser.parse(this.getFormulaAsText());
-    if (!newFormulaConstraint) {
-      // don't close the editor
-      // TODO: we need to make the editor more usable at this point
-      // (the fact that empty spaces have been discarded, etc. makes it hard to fix the formula)
-      return;
-    }
+
 
     this.constraint = newFormulaConstraint;
     for (const numberToken of this.findAll({ what: aNumberToken })) {
@@ -145,6 +146,10 @@ export default class Formula extends Token {
         formula.push('@' + token.id);
       } else if (token instanceof LabelToken) {
         formula.push('#' + token.id);
+      } else if (token instanceof PropertyPicker) {
+        formula.push('!' + token.id);
+      } else if (token instanceof EmptyToken) {
+        // NO-OP
       } else {
         throw new Error(
           'unexpected token type in formula: ' + token.constructor.name
