@@ -52,7 +52,7 @@ export default class PropertyPickerEditor extends GameObject {
     const index = Math.floor((position.y - this.position.y) / LINEHEIGHT);
 
     this.propertyPicker.setProperty(this.props[index]);
-    this.remove();
+    this.remove(false);
   }
 
   distanceToPoint(pos: Position) {
@@ -70,7 +70,11 @@ export default class PropertyPickerEditor extends GameObject {
     // NOOP
   }
 
-  remove() {
+  remove(isErase = true) {
+    if (isErase) {
+      this.propertyPicker.remove();
+    }
+
     for (const element of this.svgTextElements) {
       element.remove();
     }
