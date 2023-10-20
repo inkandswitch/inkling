@@ -2,6 +2,9 @@
 
 ## UX Improvements
 
+- P1: make the gizmo's rendering indicate the direction of the gizmo
+  (Ivan)
+
 - P1: formula parser can handle "= numberTokenRef"
   (Alex)
 
@@ -23,6 +26,13 @@
 - P4: in meta mode, should you be able to break apart ink handles?
 
 ## Bugs
+
+- P1: removing a wire doesn't remove constraints right now!
+  (Alex)
+
+- P1.5: using / in formulas causes gradient errors
+  More generally, need to fix unsatisfiable formula constraints
+  (Alex)
 
 - P1/2: Wires to formula cells render behind the formula box. This is bad.
   (Ivan)
