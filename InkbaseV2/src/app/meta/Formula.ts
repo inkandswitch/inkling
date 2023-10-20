@@ -18,7 +18,6 @@ const PADDING = 3;
 // We're computing the amount of writing cell super ad-hoc right now
 // Can be improved significiantly if we have a better interface
 
-
 export default class Formula extends Token {
   readonly height = 30 + PADDING * 2;
 
@@ -103,8 +102,6 @@ export default class Formula extends Token {
       return;
     }
 
-
-
     this.constraint = newFormulaConstraint;
     for (const numberToken of this.findAll({ what: aNumberToken })) {
       numberToken.close();
@@ -132,7 +129,8 @@ export default class Formula extends Token {
 
     let totalCellCount = 0;
     for (const token of this.findAll({ what: aToken })) {
-      totalCellCount += token instanceof NumberToken ? token.editValue.length : 1;
+      totalCellCount +=
+        token instanceof NumberToken ? token.editValue.length : 1;
     }
 
     const currentCells = this.findAll({ what: aWritingCell });
@@ -141,12 +139,12 @@ export default class Formula extends Token {
     console.log(currentCells);
 
     if (currentCells.length < totalCellCount) {
-      let diff = totalCellCount - currentCells.length;
+      const diff = totalCellCount - currentCells.length;
       for (let i = 0; i < diff; i++) {
         this.adopt(new WritingCell());
       }
     } else if (currentCells.length > totalCellCount) {
-      let diff = currentCells.length - totalCellCount;
+      const diff = currentCells.length - totalCellCount;
       for (let i = 0; i < diff; i++) {
         const cell = currentCells.pop();
         cell?.remove();

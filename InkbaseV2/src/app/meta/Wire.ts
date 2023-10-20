@@ -21,7 +21,7 @@ export class WirePort extends GameObject {
     return null;
   }
 
-  render(dt: number, t: number): void { }
+  render(dt: number, t: number): void {}
 }
 
 export default class Wire extends GameObject {
@@ -81,7 +81,7 @@ export default class Wire extends GameObject {
     const b = this.b?.deref();
     if (a && b) {
       this.connection = a.value.wireTo(b.value);
-      if (this.connection == null) {
+      if (this.connection === null) {
         // Remove the wire if it's not a valid connection
         Svg.showStatus("You can't wire those things together silly billy");
         this.remove();

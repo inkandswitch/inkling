@@ -91,16 +91,13 @@ export function createWire(ctx: EventContext): Gesture | void {
           // Force a render, which computes the token width
           n.render(0, 0);
           // Position the token so that it's centered on the pencil
-          n.position = Vec.sub(
-            wire.points[0],
-            Vec(n.width / 2, n.height / 2)
-          );
+          n.position = Vec.sub(wire.points[0], Vec(n.width / 2, n.height / 2));
           // Re-add the wire, so it renders after the token (avoids a flicker)
           ctx.page.adopt(wire);
-
         } else if (gizmo) {
           wire.attachEnd(gizmo.wirePort);
-        } else if (primaryToken instanceof EmptyToken) { // Wire into a formula field
+        } else if (primaryToken instanceof EmptyToken) {
+          // Wire into a formula field
           if (wire.a?.deref()?.value instanceof MetaStruct) {
             const p = ctx.page.adopt(new PropertyPicker());
             p.position = ctx.event.position;

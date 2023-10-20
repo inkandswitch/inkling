@@ -25,7 +25,7 @@ export interface MetaConnection {
 
 // NUMBERS
 export class MetaNumber implements MetaValue {
-  constructor(public variable: Variable) { }
+  constructor(public variable: Variable) {}
 
   wireTo(that: MetaValue): MetaNumberConnection | null {
     if (that instanceof MetaNumber || that instanceof MetaNumber) {
@@ -67,7 +67,7 @@ export class MetaLabel implements MetaValue {
   constructor(
     public readonly display: string | Position[][],
     public variable: Variable
-  ) { }
+  ) {}
 
   wireTo(that: MetaValue): MetaConnection | null {
     if (that instanceof MetaNumber || that instanceof MetaNumber) {
@@ -131,7 +131,6 @@ export class MetaStruct implements MetaValue {
   }
 }
 
-
 // TODO: this class is implemented in an ad-hoc way and needs more thinking
 export class MetaStructConnection implements MetaConnection {
   b: MetaStruct;
@@ -145,7 +144,7 @@ export class MetaStructConnection implements MetaConnection {
     // Handle case when wiring two gizmos together
     if (!b.isEmpty()) {
       for (const [id, a_label] of a.labelsByString.entries()) {
-        let b_label = b.labelsByString.get(id);
+        const b_label = b.labelsByString.get(id);
         if (b_label) {
           constraints.equals(b_label.variable, a_label.variable);
         }

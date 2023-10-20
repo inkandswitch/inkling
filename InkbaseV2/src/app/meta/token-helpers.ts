@@ -8,7 +8,9 @@ export type TokenWithVariable = NumberToken | LabelToken | PropertyPicker;
 export const isTokenWithVariable = (
   token: Token | null
 ): token is TokenWithVariable =>
-  token instanceof NumberToken || token instanceof LabelToken || token instanceof PropertyPicker;
+  token instanceof NumberToken ||
+  token instanceof LabelToken ||
+  token instanceof PropertyPicker;
 
 export const isPropertyPicker = (
   token: Token | null
