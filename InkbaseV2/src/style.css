@@ -295,7 +295,10 @@ svg * {
     &.thinLine {
       stroke-width: 30;
       stroke: var(--gizmo-thinline);
-      opacity: 0.04;
+      opacity: 0.03;
+      transition:
+        opacity 1.4s cubic-bezier(0, 1.4, 0, 1),
+        var(--transition-stroke);
     }
   }
 
