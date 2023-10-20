@@ -28,22 +28,19 @@
 
 ## Bugs
 
+- P1: draw line, add handles, make a gizmo from one handle to open space,
+  then erase the line. after, one of the gizmo's handles is useless.
+  (Alex)
+
 - P1: create a gizmo, pull out distance, lock it. pin one handle.
   then move other handle, distance changes permanently. shouldn't!
   (Alex)
-
-- P1: remove method for PropertyPickerEditor (should remove whole thing)
-  (Ivan)
 
 - P1/2: Wires to formula cells render behind the formula box. This is bad.
   (Ivan)
 
 - P2: when writing a label in the formula editor, sometimes the label.display in LabelToken is undefined and errors.
   (Marcel)
-
-## Hand-Drawn Strokes
-
-- P3/4: merging stroke groups (lasso?)
 
 ## Formulas / Wires / Meta
 
@@ -61,6 +58,10 @@
 ## Constraints
 
 - P1: hack to avoid shrinking gizmo when scrubbing angle
+  (Alex)
+
+- P1/2: when back-solving the angle, pick nearest multiple of 360 that works.
+  ... enables clock example
   (Alex)
 
 - P2/3: consider unlocking a locked variable instead of pausing a constraint
