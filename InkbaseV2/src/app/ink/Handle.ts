@@ -69,6 +69,11 @@ export default class Handle extends GameObject {
   remove() {
     this.backElm.remove();
     this.frontElm.remove();
+    if (!this.isCanonical) {
+      this.canonicalInstance.breakOff(this);
+    }
+    this.xVariable.remove();
+    this.yVariable.remove();
     super.remove();
   }
 

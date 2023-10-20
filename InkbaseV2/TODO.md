@@ -28,10 +28,6 @@
 
 ## Bugs
 
-- P1: draw line, add handles, make a gizmo from one handle to open space,
-  then erase the line. after, one of the gizmo's handles is useless.
-  (Alex)
-
 - P1: create a gizmo, pull out distance, lock it. pin one handle.
   then move other handle, distance changes permanently. shouldn't!
   (Alex)
