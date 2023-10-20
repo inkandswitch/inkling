@@ -11,6 +11,7 @@ import {
   MetaConnection,
   MetaNumberConnection,
 } from './MetaSemantics';
+import { generateId } from '../../lib/helpers';
 
 function PropertyPickerPath(pos: Position, w: number, h: number) {
   return `
@@ -24,6 +25,8 @@ function PropertyPickerPath(pos: Position, w: number, h: number) {
 }
 
 export default class PropertyPicker extends Token {
+  readonly id = generateId();
+
   private lastRenderedValue = '';
 
   protected readonly boxElement = SVG.add('path', SVG.metaElm, {
