@@ -77,6 +77,11 @@ export default class WritingCell extends GameObject {
 
   remove() {
     this.svgCell.remove();
+
+    for (const child of this.children) {
+      child.remove();
+    }
+
     super.remove();
   }
 }
