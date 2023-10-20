@@ -1,15 +1,21 @@
 import { aLabelToken } from './LabelToken';
 import { aNumberToken } from './NumberToken';
+import { aPropertyPicker } from './PropertyPicker';
+import { TokenWithVariable } from './token-helpers';
 import Page from '../Page';
 import SVG from '../Svg';
 import { Formula, Variable } from '../constraints';
 import * as constraints from '../constraints';
+import { GameObject } from '../GameObject';
 import * as ohm from 'ohm-js';
-import { aPropertyPicker } from './PropertyPicker';
 
 const formulaGrammar = ohm.grammar(String.raw`
 
 Formula {
+  Formula
+    = Exp "=" ref  -- equation
+    | Exp
+
   Exp
     = AddExp
 
@@ -27,7 +33,10 @@ Formula {
 
   PriExp
     = "(" Exp ")"  -- paren
-    | numberRef
+    | ref
+
+  ref
+    = numberRef
     | labelRef
     | propRef
 
@@ -48,47 +57,51 @@ export default class FormulaParser {
   private readonly semantics: ohm.Semantics;
 
   constructor(page: Page) {
+    function getVariableByTokenId<T extends TokenWithVariable>(
+      id: number,
+      type: string,
+      aThing: (go: GameObject) => T | null
+    ): Variable {
+      const token = page.root.find({
+        what: aThing,
+        that: thing => thing.id === id,
+      });
+      if (!token) {
+        console.error('invalid', type, 'token id', id);
+        throw ':(';
+      }
+      return token.getVariable();
+    }
+
     this.semantics = formulaGrammar
       .createSemantics()
       .addAttribute('variable', {
         numberRef(at, idDigits) {
           const id = parseInt(idDigits.sourceString);
-          const numberToken = page.root.find({
-            what: aNumberToken,
-            that: numberToken => numberToken.id === id,
-          });
-          if (!numberToken) {
-            console.error('invalid number token id', id);
-            throw ':(';
-          }
-          return numberToken.getVariable();
+          return getVariableByTokenId(id, 'number', aNumberToken);
         },
         labelRef(hash, idDigits) {
           const id = parseInt(idDigits.sourceString);
-          const labelToken = page.root.find({
-            what: aLabelToken,
-            that: labelToken => labelToken.id === id,
-          });
-          if (!labelToken) {
-            console.error('invalid label token id', id);
-            throw ':(';
-          }
-          return labelToken.getVariable();
+          return getVariableByTokenId(id, 'label', aLabelToken);
         },
         propRef(bang, idDigits) {
           const id = parseInt(idDigits.sourceString);
-          const propToken = page.root.find({
-            what: aPropertyPicker,
-            that: propToken => propToken.id === id,
-          });
-          if (!propToken) {
-            console.error('invalid property picker token id', id);
-            throw ':(';
-          }
-          return propToken.getVariable();
+          return getVariableByTokenId(id, 'propertyPicker', aPropertyPicker);
+        },
+      })
+      .addAttribute<Variable | null>('varToUnifyWithResult', {
+        Formula_equation(e, eq, ref) {
+          return ref.variable;
+        },
+        Exp(e) {
+          return null;
         },
       })
       .addOperation('collectVars(vars)', {
+        Formula_equation(e, eq, ref) {
+          e.collectVars(this.args.vars);
+          // ref's var is not an argument to formula constraint's function!
+        },
         AddExp_add(a, op, b) {
           a.collectVars(this.args.vars);
           b.collectVars(this.args.vars);
@@ -114,6 +127,9 @@ export default class FormulaParser {
         },
       })
       .addOperation('compile', {
+        Formula_equation(e, eq, ref) {
+          return e.compile();
+        },
         AddExp_add(a, op, b) {
           return `(${a.compile()} ${op.sourceString} ${b.compile()})`;
         },
@@ -148,9 +164,11 @@ export default class FormulaParser {
       return null;
     }
 
+    const s = this.semantics(m);
+
     const varSet = new Set<Variable>();
     try {
-      this.semantics(m).collectVars(varSet);
+      s.collectVars(varSet);
     } catch {
       // formula has one or more number/label token refs with invalid ids
       return null;
@@ -158,11 +176,15 @@ export default class FormulaParser {
 
     const vars = [...varSet];
     const argNames = vars.map(v => `v${v.id}`);
-    const compiledExpr = this.semantics(m).compile();
+    const compiledExpr = s.compile();
     const func = new Function(`[${argNames}]`, `return ${compiledExpr}`) as (
       xs: number[]
     ) => number;
 
-    return constraints.formula(vars, func);
+    const formulaConstraint = constraints.formula(vars, func);
+    if (s.varToUnifyWithResult) {
+      formulaConstraint.result.makeEqualTo(s.varToUnifyWithResult);
+    }
+    return formulaConstraint;
   }
 }
