@@ -1,5 +1,6 @@
 import { EventContext, Gesture } from './Gesture';
 import { aGizmo } from '../meta/Gizmo';
+import Vec from '../../lib/vec';
 
 export function touchGizmo(ctx: EventContext): Gesture | void {
   if (ctx.metaToggle.active) {
@@ -9,8 +10,7 @@ export function touchGizmo(ctx: EventContext): Gesture | void {
     // where different find() calls need a different distanceToPoint() implementation.
     const gizmo = ctx.root.find({
       what: aGizmo,
-      near: ctx.event.position,
-      tooFar: 50,
+      that: g => Vec.dist(g.midPoint(), ctx.event.position) < 30,
     });
 
     if (gizmo) {
