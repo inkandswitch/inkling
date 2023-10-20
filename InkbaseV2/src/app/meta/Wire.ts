@@ -20,7 +20,7 @@ export class WirePort extends GameObject {
     return null;
   }
 
-  render(dt: number, t: number): void {}
+  render(dt: number, t: number): void { }
 }
 
 export default class Wire extends GameObject {
@@ -73,6 +73,11 @@ export default class Wire extends GameObject {
   attachEnd(element: WirePort) {
     this.b = new WeakRef(element);
     this.updateConstraint();
+
+    // Remove the wire if it's not a valid connection
+    if (!this.connection) {
+      this.remove();
+    }
   }
 
   private updateConstraint() {
