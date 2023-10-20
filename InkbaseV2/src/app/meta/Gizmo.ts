@@ -21,7 +21,8 @@ export default class Gizmo extends GameObject {
   private arc2 = SVG.add('path', this.arcs, {
     d: SVG.arcPath(Vec.zero, 10, TAU / 4, Math.PI / 3),
   });
-  private polyline = SVG.add('polyline', this.elm);
+  private thickLine = SVG.add('polyline', this.elm, { class: 'thickLine' });
+  private thinLine = SVG.add('polyline', this.elm, { class: 'thinLine' });
 
   readonly distance: Variable;
   readonly angleInRadians: Variable;
@@ -150,8 +151,23 @@ export default class Gizmo extends GameObject {
     SVG.update(this.arc2, {
       style: `transform: rotate(${180}deg) translate(${xOffset}px, ${yOffset}px)`,
     });
-    SVG.update(this.polyline, {
-      points: SVG.points(handles.a.position, handles.b.position),
+
+    const a = handles.a.position;
+    const b = handles.b.position;
+    let ab = Vec.sub(b, a);
+
+    let _a = Vec.sub(this.center, Vec.renormalize(ab, 22));
+    let _b = Vec.add(this.center, Vec.renormalize(ab, 22));
+
+    SVG.update(this.thickLine, {
+      points: SVG.points(_a, _b),
+    });
+
+    _a = Vec.add(a, Vec.renormalize(ab, 16));
+    _b = Vec.sub(b, Vec.renormalize(ab, 16));
+
+    SVG.update(this.thinLine, {
+      points: SVG.points(_a, _b),
     });
   }
 

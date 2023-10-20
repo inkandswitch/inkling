@@ -286,7 +286,15 @@ svg * {
 
   & polyline {
     stroke: var(--gizmo-line);
-    stroke-width: 1;
+
+    &.thickLine {
+      stroke-width: 2;
+    }
+
+    &.thinLine {
+      stroke-width: 0.5;
+      stroke-dasharray: 1 5;
+    }
   }
 
   & path {
