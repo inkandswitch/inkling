@@ -13,7 +13,7 @@ import { MetaLabel, MetaStruct } from './MetaSemantics';
 export default class Gizmo extends GameObject {
   center: Position;
 
-  private elm = SVG.add('g', SVG.metaElm, { class: 'gizmo' });
+  private elm = SVG.add('g', SVG.gizmoElm, { class: 'gizmo' });
   private arcs = SVG.add('g', this.elm);
   private arc1 = SVG.add('path', this.arcs, {
     d: SVG.arcPath(Vec.zero, 10, TAU / 4, Math.PI / 3),
@@ -141,8 +141,11 @@ export default class Gizmo extends GameObject {
     const xOffset = aLock ? 0 : dLock ? 9.4 : 12;
     const yOffset = dLock ? -3.5 : 0;
 
-    SVG.update(this.arcs, {
+    SVG.update(this.elm, {
       'is-constrained': aLock || dLock,
+    });
+
+    SVG.update(this.arcs, {
       style: `transform: translate(${this.center.x}px, ${this.center.y}px) rotate(${angle}deg)`,
     });
     SVG.update(this.arc1, {
