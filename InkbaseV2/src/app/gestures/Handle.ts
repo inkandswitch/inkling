@@ -33,7 +33,7 @@ export function touchHandleHelper(handle: Handle): Gesture {
       constraints.finger(handle);
 
       if (
-        ctx.pseudo &&
+        ctx.pseudoCount == 2 &&
         handle.parent instanceof StrokeGroup &&
         handle.canonicalInstance.absorbedHandles.size === 0
       ) {
