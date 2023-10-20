@@ -24,7 +24,7 @@
 
   <script>
     // Inlining this script to avoid flicker on page load
-    const themes = ['light mono', 'dark mono', 'light color', 'dark color'];
+    const themes = ['light color', 'dark color', 'light mono', 'dark mono'];
     let themeIndex = +(localStorage.getItem('themeIndex') || 0) % themes.length;
 
     function cycleTheme() {
