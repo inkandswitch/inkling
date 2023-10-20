@@ -10,9 +10,6 @@
   ... just the strokes, not the space
   (Marcel)
 
-- P1: don't let formula editor close if parse fails
-  (Marcel)
-
 - P1: debug visual for scene graph
   (Ivan)
 
@@ -58,9 +55,6 @@
 
 - P1: tweaks to property picker token design
   (Ivan)
-
-- P1: wire number tokens directly into formula editor's squares
-  (Marcel)
 
 - P2: "orange" numbers for results of spreadsheet formulas
   (this info needs to be in Variable so Tokens can render...)
