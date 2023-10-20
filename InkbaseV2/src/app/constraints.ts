@@ -54,7 +54,6 @@ export class Variable {
     Variable.all.delete(this);
     for (const constraint of Constraint.all) {
       if (constraint.variables.includes(this)) {
-        // TODO: consider replacing variable w/ a "tombstone"
         constraint.remove();
       }
     }
