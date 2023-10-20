@@ -1,9 +1,9 @@
-import FormulaStroke from '../ink/FormulaStroke';
 import { aFormula } from '../meta/Formula';
-import { aPrimaryToken } from '../meta/Token';
+import FormulaStroke from '../ink/FormulaStroke';
 import { aWritingCell } from '../meta/WritingCell';
-import { isLabelToken } from '../meta/token-helpers';
 import { EventContext, Gesture } from './Gesture';
+// import { aPrimaryToken } from '../meta/Token';
+// import { isLabelToken } from '../meta/token-helpers';
 
 export function tapFormulaLabel(ctx: EventContext): Gesture | void {
   // TODO: Rewrite
