@@ -34,7 +34,10 @@ export function createWire(ctx: EventContext): Gesture | void {
     const primaryToken = find({ what: aPrimaryToken, near, recursive: true });
     const component = find({ what: aComponent, near, recursive: false });
     const token = find({ what: aToken, near, recursive: false });
-    const gizmo = find({ what: aGizmo, near });
+    const gizmo = find({
+      what: aGizmo,
+      that: g => g.centerDistanceToPoint(ctx.event.position) < 30,
+    });
 
     const wire: Wire = ctx.page.adopt(new Wire());
 

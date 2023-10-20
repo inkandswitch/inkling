@@ -184,6 +184,10 @@ export default class Gizmo extends GameObject {
     return Math.min(l, a);
   }
 
+  centerDistanceToPoint(p: Position) {
+    return Vec.dist(this.midPoint(), p);
+  }
+
   remove() {
     this.elm.remove();
     this.a?.remove();
