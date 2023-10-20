@@ -32,6 +32,10 @@
 
 ## Bugs
 
+- P0: toggle gizmo a few times and you'll see that it spins a bit, then
+  collapses on itself.
+  (Alex)
+
 - P0: Wires to formula cells render behind the formula box. This is bad.
   (Ivan)
 
