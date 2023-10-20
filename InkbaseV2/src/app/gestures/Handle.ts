@@ -4,7 +4,7 @@ import * as constraints from '../constraints';
 import StrokeGroup from '../ink/StrokeGroup';
 
 export function touchHandle(ctx: EventContext): Gesture | void {
-  const handle = ctx.page.find({
+  let handle = ctx.page.find({
     what: aCanonicalHandle,
     near: ctx.event.position,
     tooFar: 40,
@@ -15,7 +15,8 @@ export function touchHandle(ctx: EventContext): Gesture | void {
       ctx.pseudoCount >= 3 &&
       handle.canonicalInstance.absorbedHandles.size > 0
     ) {
-      handle.breakOff(handle);
+      let handles = [...handle.canonicalInstance.absorbedHandles];
+      handle = handle.breakOff(handles[handles.length - 1]);
     }
 
     return touchHandleHelper(handle);

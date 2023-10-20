@@ -2,11 +2,6 @@
 
 ## UX Improvements
 
-- P0: a better gesture to break apart handles
-  they keep coming apart accidentally, and the more complex the model is,
-  the more disruptive it is when that happens!
-  (Ivan)
-
 - P1: formula parser can handle "= numberTokenRef"
   (Alex)
 

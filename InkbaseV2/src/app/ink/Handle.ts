@@ -130,7 +130,6 @@ export default class Handle extends GameObject {
   breakOff(handle: Handle) {
     if (this.absorbedHandles.has(handle)) {
       constraints.absorb(this, handle).remove();
-      return;
     } else if (handle === this) {
       const absorbedHandles = [...this.absorbedHandles];
       const newCanonicalHandle = absorbedHandles.shift()!;
@@ -141,6 +140,7 @@ export default class Handle extends GameObject {
     } else {
       throw new Error('tried to break off a handle that was not absorbed');
     }
+    return handle;
   }
 
   get hasPin() {
