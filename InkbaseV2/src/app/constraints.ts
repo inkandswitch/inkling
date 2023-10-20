@@ -1094,6 +1094,7 @@ function solveCluster(cluster: ClusterForSolver) {
           (k.variable.equals(pv.distance) ||
             k.variable.hasLinearRelationshipWith(pv.angle))
         ) {
+          // TODO: do it to the siblings too? (to avoid getting out of step)
           k.value = k.variable.value;
         }
       }
