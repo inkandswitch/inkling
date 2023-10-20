@@ -32,7 +32,11 @@ export function touchHandleHelper(handle: Handle): Gesture {
       }
       constraints.finger(handle);
 
-      if (ctx.pseudo && handle.parent instanceof StrokeGroup) {
+      if (
+        ctx.pseudo &&
+        handle.parent instanceof StrokeGroup &&
+        handle.canonicalInstance.absorbedHandles.size === 0
+      ) {
         handle.parent.generatePointData();
       }
     },
