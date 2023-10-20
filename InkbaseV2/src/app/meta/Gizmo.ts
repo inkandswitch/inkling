@@ -15,8 +15,12 @@ export default class Gizmo extends GameObject {
 
   private elm = SVG.add('g', SVG.metaElm, { class: 'gizmo' });
   private arcs = SVG.add('g', this.elm);
-  private arc1 = SVG.add('path', this.arcs);
-  private arc2 = SVG.add('path', this.arcs);
+  private arc1 = SVG.add('path', this.arcs, {
+    d: SVG.arcPath(Vec.zero, 10, TAU / 4, Math.PI / 3),
+  });
+  private arc2 = SVG.add('path', this.arcs, {
+    d: SVG.arcPath(Vec.zero, 10, TAU / 4, Math.PI / 3),
+  });
   private polyline = SVG.add('polyline', this.elm);
 
   readonly distance: Variable;
@@ -135,18 +139,15 @@ export default class Gizmo extends GameObject {
 
     const xOffset = aLock ? 0 : dLock ? 9.4 : 12;
     const yOffset = dLock ? -3.5 : 0;
-    const arcPath = SVG.arcPath(Vec.zero, 10, TAU / 4, Math.PI / 3);
 
     SVG.update(this.arcs, {
       'is-constrained': aLock || dLock,
       style: `transform: translate(${this.center.x}px, ${this.center.y}px) rotate(${angle}deg)`,
     });
     SVG.update(this.arc1, {
-      d: arcPath,
       style: `transform: translate(${xOffset}px, ${yOffset}px)`,
     });
     SVG.update(this.arc2, {
-      d: arcPath,
       style: `transform: rotate(${180}deg) translate(${xOffset}px, ${yOffset}px)`,
     });
     SVG.update(this.polyline, {

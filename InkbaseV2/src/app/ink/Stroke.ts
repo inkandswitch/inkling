@@ -3,6 +3,7 @@ import { Position } from '../../lib/types';
 import { GameObject } from '../GameObject';
 import Rect from '../../lib/rect';
 import { distanceToPath } from '../../lib/helpers';
+import StrokeGroup from './StrokeGroup';
 
 export default class Stroke extends GameObject {
   public points: Position[] = [];
@@ -19,6 +20,10 @@ export default class Stroke extends GameObject {
     SVG.update(this.element, {
       points: SVG.points(this.points),
     });
+  }
+
+  becomeGroup() {
+    return this.parent?.adopt(new StrokeGroup(new Set([this])));
   }
 
   distanceToPoint(point: Position) {

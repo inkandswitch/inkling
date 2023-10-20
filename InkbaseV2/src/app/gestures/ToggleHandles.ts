@@ -1,5 +1,5 @@
 import { aStroke } from '../ink/Stroke';
-import StrokeGroup, { aStrokeGroup } from '../ink/StrokeGroup';
+import { aStrokeGroup } from '../ink/StrokeGroup';
 import { EventContext, Gesture } from './Gesture';
 
 export function toggleHandles(ctx: EventContext): Gesture | void {
@@ -28,7 +28,7 @@ export function toggleHandles(ctx: EventContext): Gesture | void {
       return new Gesture('Add Handles', {
         ended(ctx) {
           if (!ctx.state.drag) {
-            ctx.page.adopt(new StrokeGroup(new Set([stroke])));
+            stroke.becomeGroup();
           }
         },
       });

@@ -39,7 +39,6 @@
 :root {
   /* These colors are the same in concrete and meta mode */
   --bg-color: var(--grey0);
-  --handle-fill: lch(var(--L5) 0 0 / 0.03);
   --status-text: var(--grey3);
   --pseudo-touch: var(--grey2);
   --gesture-circle: var(--grey2);
@@ -55,6 +54,7 @@
   --formula-editor: transparent;
   --formula-ink: transparent;
   --gizmo-line: transparent;
+  --handle-fill: lch(var(--L5) 0 0 / 0.03);
   --ink-color: lch(var(--L5) 0 0 / 0.65);
   --label-box: transparent;
   --label-stroke: transparent;
@@ -77,13 +77,14 @@
 
   &[meta-mode] {
     --component: var(--grey5);
-    --constrained: var(--grey5);
+    --constrained: var(--grey3);
     --formula-editor-cell-non-default: var(--grey3);
     --formula-editor-cell-text: var(--grey4);
     --formula-editor-cell: var(--grey1);
     --formula-editor: var(--grey2);
     --formula-ink: var(--grey5);
-    --gizmo-line: var(--grey5);
+    --gizmo-line: var(--grey3);
+    --handle-fill: transparent;
     --ink-color: lch(var(--L5) 0 0 / 0.1);
     --label-box: var(--grey3);
     --label-stroke: var(--grey1);
@@ -102,7 +103,7 @@
     --token-locked-fill: var(--grey1);
     --token-stroke: var(--grey5);
     --token-text: var(--grey5);
-    --unconstrained: lch(var(--L5) 0 0 / 0.05);
+    --unconstrained: var(--grey1);
   }
 }
 
@@ -254,8 +255,23 @@ svg * {
     stroke-width: 2;
   }
 
-  &[has-pin] path {
-    stroke: var(--constrained);
+  .arcs1,
+  .arcs2 {
+    transition: rotate 0.2s cubic-bezier(0.1, 0.4, 0.4, 0.9);
+  }
+
+  &[has-pin] {
+    & path {
+      stroke: var(--constrained);
+    }
+
+    & .arcs1 {
+      rotate: -18deg;
+    }
+
+    & .arcs2 {
+      rotate: 18deg;
+    }
   }
 }
 
@@ -265,7 +281,7 @@ svg * {
 
   & polyline {
     stroke: var(--gizmo-line);
-    stroke-width: 2;
+    stroke-width: 0.5;
   }
 
   & path {
@@ -399,10 +415,18 @@ svg * {
   fill: none;
   stroke: var(--meta-wire);
   stroke-width: 0.5;
-  stroke-dasharray: 10;
+  stroke-dasharray: 14 2;
+  stroke-dashoffset: -2;
+  transition:
+    stroke-dasharray 0.3s cubic-bezier(1, -0.5, 0, 1.3),
+    stroke-dashoffset 0.3s cubic-bezier(1, -0.5, 0, 1.3),
+    stroke-width 0.3s cubic-bezier(1, -0.5, 0, 1.3),
+    var(--transition-stroke);
 
   &[is-paused] {
-    stroke-width: 5;
+    stroke-dasharray: 2 14;
+    stroke-dashoffset: -7;
+    stroke-width: 1;
   }
 }
 

@@ -5,6 +5,7 @@ import { generateId } from '../../lib/helpers';
 import { Position } from '../../lib/types';
 import Vec from '../../lib/vec';
 import { Constraint, Pin } from '../constraints';
+import { TAU } from '../../lib/math';
 
 export default class Handle extends GameObject {
   static create(position: Position, getAbsorbed = true): Handle {
@@ -17,10 +18,9 @@ export default class Handle extends GameObject {
 
   public readonly id = generateId();
 
-  private readonly elm = SVG.add('g', SVG.inkElm, { class: 'handle' });
-  private readonly circle = SVG.add('circle', this.elm, { r: 15 });
-  private readonly pin = SVG.add('path', this.elm, {
-    d: 'M-5,-5 L5,5 M-5,5 L5,-5',
+  private readonly backElm = SVG.add('g', SVG.handleElm, { class: 'handle' });
+  private readonly frontElm = SVG.add('g', SVG.constraintElm, {
+    class: 'handle',
   });
 
   public readonly xVariable = constraints.variable(0, {
@@ -35,6 +35,19 @@ export default class Handle extends GameObject {
   private constructor(position: Position) {
     super(root);
     this.position = position;
+
+    SVG.add('circle', this.backElm, { r: 15 });
+    const arcs1 = SVG.add('g', this.frontElm, { class: 'arcs1' });
+    const arcs2 = SVG.add('g', this.frontElm, { class: 'arcs2' });
+    const arc = (angle = 0) => SVG.arcPath(Vec.zero, 14, angle, Math.PI / 10);
+    SVG.add('path', arcs1, { d: arc((0 * TAU) / 4) });
+    SVG.add('path', arcs1, { d: arc((1 * TAU) / 4) });
+    SVG.add('path', arcs1, { d: arc((2 * TAU) / 4) });
+    SVG.add('path', arcs1, { d: arc((3 * TAU) / 4) });
+    SVG.add('path', arcs2, { d: arc((0 * TAU) / 4) });
+    SVG.add('path', arcs2, { d: arc((1 * TAU) / 4) });
+    SVG.add('path', arcs2, { d: arc((2 * TAU) / 4) });
+    SVG.add('path', arcs2, { d: arc((3 * TAU) / 4) });
   }
 
   get x() {
@@ -54,7 +67,8 @@ export default class Handle extends GameObject {
   }
 
   remove() {
-    this.elm.remove();
+    this.backElm.remove();
+    this.frontElm.remove();
     super.remove();
   }
 
@@ -151,11 +165,14 @@ export default class Handle extends GameObject {
   }
 
   render(t: number, dt: number) {
-    SVG.update(this.elm, {
+    const attrs = {
       transform: SVG.positionToTransform(this),
       'is-canonical': this.isCanonical,
       'has-pin': this.hasPin,
-    });
+    };
+    SVG.update(this.backElm, attrs);
+    SVG.update(this.frontElm, attrs);
+
     for (const child of this.children) {
       child.render(dt, t);
     }

@@ -6,7 +6,10 @@ type Attributes = Record<string, string | number | boolean | null | undefined>;
 
 const NS = 'http://www.w3.org/2000/svg';
 
+const handleElm = document.querySelector('#handle') as SVGSVGElement;
 const inkElm = document.querySelector('#ink') as SVGSVGElement;
+const constraintElm = document.querySelector('#constraint') as SVGSVGElement;
+const boxElm = document.querySelector('#box') as SVGSVGElement;
 const wiresElm = document.querySelector('#wires') as SVGSVGElement;
 const metaElm = document.querySelector('#meta') as SVGSVGElement;
 const labelElm = document.querySelector('#label') as SVGSVGElement;
@@ -186,7 +189,10 @@ export default {
   arcPath,
   path,
   showStatus,
+  handleElm,
   inkElm,
+  constraintElm,
+  boxElm,
   wiresElm,
   metaElm,
   labelElm,
