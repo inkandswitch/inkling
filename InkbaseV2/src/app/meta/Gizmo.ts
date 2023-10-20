@@ -157,7 +157,7 @@ export default class Gizmo extends GameObject {
 
     const a = handles.a.position;
     const b = handles.b.position;
-    let ab = Vec.sub(b, a);
+    const ab = Vec.sub(b, a);
 
     let _a = Vec.sub(this.center, Vec.renormalize(ab, 22));
     let _b = Vec.add(this.center, Vec.renormalize(ab, 22));
