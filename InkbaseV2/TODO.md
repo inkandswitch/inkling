@@ -6,9 +6,6 @@
   they keep coming apart accidentally, and the more complex the model is,
   the more disruptive it is when that happens!
 
-- P0: pesudo-grag handle to reposition it wrt stroke
-  (Ivan)
-
 - P1: gesture to erase a character in the formula editor
   ... just the strokes, not the space
   (Marcel)

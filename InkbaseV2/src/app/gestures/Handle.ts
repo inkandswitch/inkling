@@ -1,6 +1,7 @@
 import { EventContext, Gesture } from './Gesture';
 import Handle, { aCanonicalHandle } from '../ink/Handle';
 import * as constraints from '../constraints';
+import StrokeGroup from '../ink/StrokeGroup';
 
 export function touchHandle(ctx: EventContext): Gesture | void {
   const handle = ctx.page.find({
@@ -30,6 +31,10 @@ export function touchHandleHelper(handle: Handle): Gesture {
         handle = newHandle;
       }
       constraints.finger(handle);
+
+      if (ctx.pseudo && handle.parent instanceof StrokeGroup) {
+        handle.parent.generatePointData();
+      }
     },
     ended(ctx) {
       handle.getAbsorbedByNearestHandle();

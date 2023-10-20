@@ -27,15 +27,18 @@ export default class StrokeGroup extends GameObject {
       this.adopt(Handle.create(pos))
     );
 
-    // Generate transform data
+    this.pointData = this.generatePointData();
+  }
+
+  generatePointData() {
     const transform = TransformationMatrix.fromLine(
       this.a.position,
       this.b.position
     ).inverse();
-
     this.pointData = this.strokes.map(stroke =>
       stroke.points.map(p => transform.transformPoint(p))
     );
+    return this.pointData;
   }
 
   get strokes(): Stroke[] {
