@@ -12,7 +12,11 @@ export function toggleHandles(ctx: EventContext): Gesture | void {
     if (strokeGroup) {
       return new Gesture('Remove Handles', {
         ended(ctx) {
-          if (!ctx.state.drag) {
+          if (
+            !ctx.state.drag &&
+            strokeGroup.a.canonicalInstance.absorbedHandles.size === 0 &&
+            strokeGroup.b.canonicalInstance.absorbedHandles.size === 0
+          ) {
             strokeGroup.breakApart();
           }
         },
