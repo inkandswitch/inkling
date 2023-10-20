@@ -1,6 +1,5 @@
 import { EventContext, Gesture } from './Gesture';
 import { aGizmo } from '../meta/Gizmo';
-import VarMover from '../VarMover';
 
 export function touchGizmo(ctx: EventContext): Gesture | void {
   if (ctx.metaToggle.active) {
@@ -17,16 +16,7 @@ export function touchGizmo(ctx: EventContext): Gesture | void {
     if (gizmo) {
       return new Gesture('Touch Gizmo', {
         ended(ctx) {
-          if (ctx.pseudoCount > 0) {
-            // TODO: remove this -- it's just something Alex added as a demo of VarMover.
-            VarMover.move(
-              gizmo.angleInDegrees,
-              gizmo.angleInDegrees.value + 180,
-              0.2
-            );
-          } else {
-            gizmo.cycleConstraints();
-          }
+          gizmo.cycleConstraints();
         },
       });
     }
