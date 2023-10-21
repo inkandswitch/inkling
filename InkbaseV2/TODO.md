@@ -35,9 +35,6 @@
 
 ## Formulas / Wires / Meta
 
-- P0: A divide by 0 in a formula throws a runtime error. This seems likely to happen because formula numbers tend to varmove to 0. One short-term fix might be to remove the division operator.
-  (Alex)
-
 - P1: using / in formulas causes gradient errors
   More generally, need to fix unsatisfiable formula constraints
   (Alex)
