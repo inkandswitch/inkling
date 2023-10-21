@@ -134,6 +134,7 @@ export class MetaStruct implements MetaValue {
 // TODO: this class is implemented in an ad-hoc way and needs more thinking
 export class MetaStructConnection implements MetaConnection {
   b: MetaStruct;
+  private readonly constraints: Constraint[] = [];
 
   constructor(a: MetaStruct, b: MetaStruct) {
     // Make sure 'b' is the empty one, so we always unify towards the empty struct
@@ -146,7 +147,9 @@ export class MetaStructConnection implements MetaConnection {
       for (const [id, a_label] of a.labelsByString.entries()) {
         const b_label = b.labelsByString.get(id);
         if (b_label) {
-          constraints.equals(b_label.variable, a_label.variable);
+          this.constraints.push(
+            constraints.equals(b_label.variable, a_label.variable)
+          );
         }
       }
     } else {
@@ -168,6 +171,9 @@ export class MetaStructConnection implements MetaConnection {
 
   remove() {
     this.b.labelsById = new Map();
+    for (const constraint of this.constraints) {
+      constraint.remove();
+    }
     return;
   }
 }

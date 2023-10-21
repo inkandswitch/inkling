@@ -91,6 +91,7 @@ export default class Wire extends GameObject {
 
   remove(): void {
     this.elm.remove();
+    this.connection?.remove();
     super.remove();
   }
 }

@@ -24,9 +24,6 @@
 
 ## Bugs
 
-- P1: removing a wire doesn't remove constraints right now!
-  (Alex)
-
 - P1/2: Wires to formula cells render behind the formula box. This is bad.
   (Ivan)
 
