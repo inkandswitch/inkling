@@ -36,9 +36,9 @@ export default class MetaToggle extends GameObject {
     SVG.add('circle', this.element, { class: 'outer', r: radius });
     SVG.add('circle', this.element, { class: 'inner', r: radius });
     const splatsElm = SVG.add('g', this.element, { class: 'splats' });
-    for (let i = 0; i < 24; i++) {
+    for (let i = 0; i < 50; i++) {
       const points: Position[] = [];
-      const steps = 6;
+      const steps = 5;
       for (let s = 0; s < steps; s++) {
         const a = (TAU * (rand(-0.1, 0.1) + s)) / steps;
         const d = rand(1, 3);
@@ -53,24 +53,35 @@ export default class MetaToggle extends GameObject {
     }
     SVG.add('circle', this.element, { class: 'secret', r: radius });
     this.resplat();
+
+    // setInterval(this.toggle.bind(this), 1500);
   }
 
   resplat() {
     if (!this.active) {
-      const angles = [rand(0, 360), rand(0, 360), rand(0, 360), rand(0, 360)];
+      let angles: number[] = [];
       this.splats.forEach(splat => {
-        const energy = rand(0, 1) ** 8;
+        angles = [];
+        for (let i = rand(2, 12); i > 0; i--) {
+          angles.push(rand(0, 360));
+        }
         const a = angles[rand(0, angles.length) | 0];
-        const t = lerpN(energy, 4, 8);
-        const s = rand(0.4, 1.3);
+        const curve = rand(0, 1) ** 8;
+        const mass = lerpN(curve, 1, 0.5);
+        const t = 10 / mass / mass;
+        const squish = rand(0, 0.7);
         SVG.update(splat, {
-          style: `scale: ${s + rand(-0.1, 0.1)} ${s + rand(-0.1, 0.1)}`,
-          transform: `rotate(${a}) translate(${t} 0)`,
+          style: `scale: .25; transition-delay: ${rand(0, 0.17)}s`,
+          transform: `
+            rotate(${a})
+            translate(${t})
+            scale(${1 + squish}, ${1 - squish})
+          `,
         });
       });
     } else {
       this.splats.forEach(splat => {
-        SVG.update(splat, { style: `scale: ${0.6}` });
+        SVG.update(splat, { style: `scale: 0.1` });
       });
     }
   }
