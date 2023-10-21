@@ -3,7 +3,7 @@ import {
   pencilFormulaEditor,
   tapFormulaLabel,
 } from './gestures/FormulaEditor';
-import { Event, TouchId, wasRecentlyUpdated } from './NativeEvents';
+import Events, { Event, TouchId, wasRecentlyUpdated } from './NativeEvents';
 import { EventContext, Gesture } from './gestures/Gesture';
 import { touchHandle } from './gestures/Handle';
 import { touchMetaToggle } from './gestures/MetaToggle';
@@ -84,7 +84,7 @@ export function applyEvent(ctx: EventContext) {
     return;
   }
   ctx.pseudoTouches = pseudoTouches;
-  ctx.pseudoCount = Object.keys(pseudoTouches).length;
+  ctx.pseudoCount = Object.keys(pseudoTouches).length + ctx.events.forcePseudo;
   ctx.pseudo = ctx.pseudoCount > 0;
 
   // STEP ONE — Try to match this event to a gesture that previously claimed this touch.

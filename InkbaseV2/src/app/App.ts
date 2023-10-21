@@ -12,8 +12,15 @@ import MetaToggle from './gui/MetaToggle';
 // import Stroke from './ink/Stroke';
 // import Handle from './ink/Handle';
 
+const page = new Page();
+root.adopt(page);
+root.currentPage = page;
+
+const metaToggle = new MetaToggle();
+root.adopt(metaToggle);
+
 // This is a pretzel, because the interface between NativeEvents and Input is a work in progress.
-const events = new Events((event: Event, state: InputState) => {
+const events = new Events(metaToggle, (event: Event, state: InputState) => {
   Input.applyEvent({
     event,
     state,
@@ -26,13 +33,6 @@ const events = new Events((event: Event, state: InputState) => {
     pseudoTouches: {},
   });
 });
-
-const page = new Page({ strokeAnalyzer: false });
-root.adopt(page);
-root.currentPage = page;
-
-const metaToggle = new MetaToggle();
-root.adopt(metaToggle);
 
 onEveryFrame((dt, t) => {
   SVG.clearNow(t);

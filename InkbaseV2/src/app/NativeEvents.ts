@@ -2,6 +2,7 @@ import { Position, PositionWithPressure } from '../lib/types';
 import Vec from '../lib/vec';
 import Config from './Config';
 import { Gesture } from './gestures/Gesture';
+import MetaToggle from './gui/MetaToggle';
 
 // TODO: Do we want to add some way to fake pencil input with a finger?
 // That might be a useful thing to add HERE, so that other parts of the system
@@ -43,20 +44,6 @@ export interface PencilEvent extends SharedEventProperties {
   azimuth: number;
 }
 
-export function getPositionWithPressure(
-  event: PencilEvent
-): PositionWithPressure {
-  return { ...event.position, pressure: event.pressure };
-}
-
-export function wasRecentlyUpdated(thing: InputState | Gesture | Event) {
-  const recentlyUpdated = thing.lastUpdated + touchMaxAge > performance.now();
-  if (!recentlyUpdated) {
-    console.log('TELL IVAN YOU SAW THIS');
-  }
-  return recentlyUpdated;
-}
-
 export interface FingerEvent extends SharedEventProperties {
   type: 'finger';
 }
@@ -95,8 +82,13 @@ export default class Events {
   events: Event[] = [];
   pencilState: PencilState | null = null;
   fingerStates: FingerState[] = [];
+  forcePseudo: number = 0;
 
-  constructor(private applyEvent: ApplyEvent) {
+  constructor(
+    private metaToggle: MetaToggle,
+    private applyEvent: ApplyEvent
+  ) {
+    this.setupFallbackEvents();
     this.setupNativeEventHandler();
   }
 
@@ -141,10 +133,78 @@ export default class Events {
     }
   }
 
+  private mouseEvent(e: MouseEvent, state: EventState) {
+    this.events.push({
+      position: { x: e.clientX, y: e.clientY },
+      id: '-1',
+      state,
+      type: this.keymap.space ? 'pencil' : 'finger',
+      timestamp: performance.now(),
+      radius: 1,
+      lastUpdated: performance.now(),
+      altitude: 0,
+      azimuth: 0,
+      pressure: 1,
+    });
+  }
+
+  keymap: Record<string, boolean> = {};
+
+  private keyboardEvent(e: KeyboardEvent, state: EventState) {
+    const k = keyName(e);
+
+    if (state === 'began' && this.keymap[k]) {
+      return;
+    } else if (state === 'began') {
+      this.keymap[k] = true;
+    } else {
+      delete this.keymap[k];
+    }
+
+    this.forcePseudo =
+      [
+        this.keymap['1'],
+        this.keymap['2'],
+        this.keymap['3'],
+        this.keymap['4'],
+      ].lastIndexOf(true) + 1;
+
+    if (state === 'began') {
+      if (this.shortcuts[k]) {
+        this.shortcuts[k]();
+        e.preventDefault();
+      }
+    }
+  }
+
+  private shortcuts: Record<string, Function> = {
+    Tab: () => {
+      this.metaToggle.toggle();
+    },
+  };
+
+  private setupFallbackEvents() {
+    window.onmousedown = (e: MouseEvent) => this.mouseEvent(e, 'began');
+    window.onmousemove = (e: MouseEvent) => this.mouseEvent(e, 'moved');
+    window.onmouseup = (e: MouseEvent) => this.mouseEvent(e, 'ended');
+    window.onkeydown = (e: KeyboardEvent) => this.keyboardEvent(e, 'began');
+    window.onkeyup = (e: KeyboardEvent) => this.keyboardEvent(e, 'ended');
+  }
+
+  private disableFallbackEvents() {
+    window.onmousedown = null;
+    window.onmousemove = null;
+    window.onmouseup = null;
+    window.onkeydown = null;
+    window.onkeyup = null;
+  }
+
   // prettier-ignore
   private setupNativeEventHandler() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (window as any).nativeEvent = (state: EventStateWithCancelled, touches: Record<TouchId, TouchPoint[]>) => {
+      this.disableFallbackEvents();
+
       // The swift wrapper passes us 'cancelled' events, but they're a pain to code around, so we treat them as 'ended'
       if (state === 'cancelled') {
         state = 'ended'
@@ -174,10 +234,10 @@ export default class Events {
   // TODO: I suspect the below functions could be made generic, to act on both pencils and fingers,
   // with no loss of clarity. I also suspect they could be made drastically smaller.
 
-  fingerBegan(event: FingerEvent) {
+  fingerBegan(event: FingerEvent, down = true) {
     const state: FingerState = {
       id: event.id,
-      down: true,
+      down,
       drag: false,
       dragDist: 0,
       position: event.position,
@@ -189,9 +249,9 @@ export default class Events {
     return state;
   }
 
-  pencilBegan(event: PencilEvent) {
+  pencilBegan(event: PencilEvent, down = true) {
     this.pencilState = {
-      down: true,
+      down,
       drag: false,
       dragDist: 0,
       position: event.position,
@@ -205,8 +265,7 @@ export default class Events {
   fingerMoved(event: FingerEvent) {
     let state = this.fingerStates.find(state => state.id === event.id);
     if (!state) {
-      console.warn('Received finger move event with no matching began.');
-      state = this.fingerBegan(event);
+      state = this.fingerBegan(event, false);
     }
     state.dragDist = Vec.dist(event.position, state.originalPosition!);
     state.drag ||= state.dragDist > fingerMinDragDist;
@@ -218,8 +277,7 @@ export default class Events {
   pencilMoved(event: PencilEvent) {
     let state = this.pencilState;
     if (!state) {
-      console.warn('Received pencil move event with no matching began.');
-      state = this.pencilBegan(event);
+      state = this.pencilBegan(event, false);
     }
     state.dragDist = Vec.dist(event.position, state.originalPosition!);
     state.drag ||= state.dragDist > pencilMinDragDist;
@@ -231,8 +289,7 @@ export default class Events {
   fingerEnded(event: FingerEvent) {
     let state = this.fingerStates.find(state => state.id === event.id);
     if (!state) {
-      console.warn('Received finger ended event with no matching began.');
-      state = this.fingerBegan(event);
+      state = this.fingerBegan(event, false);
     }
     state.down = false;
     state.event = event;
@@ -242,11 +299,28 @@ export default class Events {
   pencilEnded(event: PencilEvent) {
     let state = this.pencilState;
     if (!state) {
-      console.warn('Received pencil ended event with no matching began.');
-      state = this.pencilBegan(event);
+      (state = this.pencilBegan(event)), false;
     }
     state.down = false;
     state.event = event;
     return state;
   }
+}
+
+export function getPositionWithPressure(
+  event: PencilEvent
+): PositionWithPressure {
+  return { ...event.position, pressure: event.pressure };
+}
+
+export function wasRecentlyUpdated(thing: InputState | Gesture | Event) {
+  const recentlyUpdated = thing.lastUpdated + touchMaxAge > performance.now();
+  if (!recentlyUpdated) {
+    console.log('TELL IVAN YOU SAW THIS');
+  }
+  return recentlyUpdated;
+}
+
+function keyName(e: KeyboardEvent) {
+  return e.key.replace(' ', 'space');
 }
