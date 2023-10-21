@@ -36,7 +36,7 @@
   More generally, need to fix unsatisfiable formula constraints
   (Alex)
 
-- P2: "orange" numbers for results of spreadsheet formulas
+- P2/3: "orange" numbers for results of spreadsheet formulas
   (this info needs to be in Variable so Tokens can render...)
   (opposite of locked number tokens: cannot be changed / scrubbed)
   (Alex)
