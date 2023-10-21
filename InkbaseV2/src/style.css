@@ -195,7 +195,7 @@ svg * {
   }
 }
 
-#meta-toggle {
+.meta-toggle {
   animation: zoom-in 0.7s cubic-bezier(0, 1.2, 0, 1) backwards;
 
   transition:
@@ -223,6 +223,15 @@ svg * {
 
   .secret {
     scale: 0.15;
+  }
+
+  .splats {
+    stroke: var(--meta-toggle);
+    stroke-width: 4;
+    stroke-linejoin: round;
+    .splat {
+      transition: scale 1.2s cubic-bezier(0, 1, 0.7, 1);
+    }
   }
 
   &.active {

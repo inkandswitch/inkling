@@ -3,6 +3,7 @@ import SVG from '../Svg';
 import { GameObject } from '../GameObject';
 import Vec from '../../lib/vec';
 import Store, { Serializable } from '../Store';
+import { TAU, lerpN, rand } from '../../lib/math';
 
 const padding = 30;
 const radius = 20;
@@ -17,6 +18,8 @@ export default class MetaToggle extends GameObject {
 
   public active = false; // Temporary hack — this should be somewhere more global
 
+  private splats: SVGElement[] = [];
+
   constructor() {
     super();
 
@@ -27,18 +30,55 @@ export default class MetaToggle extends GameObject {
     });
 
     this.element = SVG.add('g', SVG.guiElm, {
-      id: 'meta-toggle',
       ...this.getAttrs(), // This avoids an unstyled flash on first load
     });
 
     SVG.add('circle', this.element, { class: 'outer', r: radius });
     SVG.add('circle', this.element, { class: 'inner', r: radius });
+    const splatsElm = SVG.add('g', this.element, { class: 'splats' });
+    for (let i = 0; i < 24; i++) {
+      const points: Position[] = [];
+      const steps = 6;
+      for (let s = 0; s < steps; s++) {
+        const a = (TAU * (rand(-0.1, 0.1) + s)) / steps;
+        const d = rand(1, 3);
+        points.push(Vec.polar(a, d));
+      }
+      this.splats.push(
+        SVG.add('polyline', splatsElm, {
+          points: SVG.points(points),
+          class: 'splat',
+        })
+      );
+    }
     SVG.add('circle', this.element, { class: 'secret', r: radius });
+    this.resplat();
+  }
+
+  resplat() {
+    if (!this.active) {
+      const angles = [rand(0, 360), rand(0, 360), rand(0, 360), rand(0, 360)];
+      this.splats.forEach(splat => {
+        const energy = rand(0, 1) ** 8;
+        const a = angles[rand(0, angles.length) | 0];
+        const t = lerpN(energy, 4, 8);
+        const s = rand(0.4, 1.3);
+        SVG.update(splat, {
+          style: `scale: ${s + rand(-0.1, 0.1)} ${s + rand(-0.1, 0.1)}`,
+          transform: `rotate(${a}) translate(${t} 0)`,
+        });
+      });
+    } else {
+      this.splats.forEach(splat => {
+        SVG.update(splat, { style: `scale: ${0.6}` });
+      });
+    }
   }
 
   toggle() {
     this.active = !this.active;
     document.documentElement.toggleAttribute('meta-mode', this.active);
+    this.resplat();
   }
 
   distanceToPoint(point: Position) {
@@ -75,10 +115,12 @@ export default class MetaToggle extends GameObject {
   }
 
   private getAttrs() {
-    const classes: string[] = [];
+    const classes: string[] = ['meta-toggle'];
+
     if (this.active) {
       classes.push('active');
     }
+
     if (this.dragging) {
       classes.push('dragging');
     }
