@@ -54,8 +54,8 @@
   --formula-editor-cell: transparent;
   --formula-editor: transparent;
   --formula-ink: transparent;
-  --gizmo-thickline: transparent;
-  --gizmo-thinline: transparent;
+  --gizmo-thin: transparent;
+  --gizmo-thick: transparent;
   --handle-fill: lch(var(--L5) 0 0 / 0.03);
   --ink-color: lch(var(--L5) 0 0 / 0.65);
   --label-box: transparent;
@@ -85,8 +85,8 @@
     --formula-editor-cell: var(--grey1);
     --formula-editor: var(--grey2);
     --formula-ink: var(--grey5);
-    --gizmo-thickline: var(--grey4);
-    --gizmo-thinline: var(--grey5);
+    --gizmo-thin: var(--grey4);
+    --gizmo-thick: var(--grey5);
     --handle-fill: transparent;
     --ink-color: lch(var(--L5) 0 0 / 0.12);
     --label-box: var(--grey3);
@@ -129,7 +129,7 @@
     --constrained: var(--green);
     --formula-editor-cell-non-default: var(--blue);
     --label-box: var(--blue);
-    --meta-toggle: var(--yellow);
+    --meta-toggle: color(display-p3 1 0.7 0);
   }
 }
 
@@ -142,8 +142,11 @@
 /* MISC CONFIG ***********************************************************************************/
 
 :root {
-  --transition-fill: fill 1.4s cubic-bezier(0, 1.4, 0, 1);
-  --transition-stroke: stroke 1.4s cubic-bezier(0, 1.4, 0, 1);
+  --haste: 1.4s;
+  --taste: 1.4;
+  --paste: var(--haste) cubic-bezier(0, var(--taste), 0, 1);
+  --transition-fill: fill var(--paste);
+  --transition-stroke: stroke var(--paste);
 }
 
 /* RESETS & BASICS *******************************************************************************/
@@ -280,9 +283,17 @@ svg * {
     stroke-width: 2;
   }
 
+  --arc-rotate: rotate 0.2s cubic-bezier(0.1, 0.4, 0.4, 0.9);
+
   .arcs1,
   .arcs2 {
-    transition: rotate 0.2s cubic-bezier(0.1, 0.4, 0.4, 0.9);
+    transition:
+      var(--arc-rotate),
+      opacity 0.2s step-end;
+  }
+
+  .arcs2 {
+    opacity: 0;
   }
 
   &[has-pin] {
@@ -296,6 +307,8 @@ svg * {
 
     & .arcs2 {
       rotate: 18deg;
+      opacity: 1;
+      transition: var(--arc-rotate);
     }
   }
 }
@@ -304,36 +317,43 @@ svg * {
   fill: none;
   stroke-width: 2;
 
-  & polyline {
-    &.thickLine {
-      stroke-width: 2;
-      stroke: var(--unconstrained);
-    }
-
-    &.thinLine {
-      stroke-width: 30;
-      stroke: var(--gizmo-thinline);
-      opacity: 0.03;
-      transition:
-        opacity 1.4s cubic-bezier(0, 1.4, 0, 1),
-        var(--transition-stroke);
-    }
+  .thick {
+    stroke-width: 30;
+    stroke: var(--gizmo-thick);
+    opacity: 0.03;
+    transition:
+      opacity var(--paste),
+      var(--transition-stroke);
   }
 
-  & path {
+  --fade: opacity 0.1s linear;
+
+  .thin {
+    stroke-width: 2;
+    stroke: var(--unconstrained);
+    transition: var(--fade), var(--transition-stroke);
+  }
+
+  .arcs {
+    transition: var(--fade);
+  }
+
+  .arcs path {
     stroke: var(--unconstrained);
     transition:
       transform 0.4s cubic-bezier(0, 1.2, 0, 1),
       var(--transition-stroke);
   }
 
-  &[is-constrained] path {
-    stroke: var(--constrained);
-  }
+  &[is-constrained] {
+    .arcs path {
+      stroke: var(--constrained);
+    }
 
-  &[is-constrained] polyline.thinLine {
-    stroke: var(--constrained);
-    opacity: 0.07;
+    .thick {
+      stroke: var(--constrained);
+      opacity: 0.07;
+    }
   }
 }
 

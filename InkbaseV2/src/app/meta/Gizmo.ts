@@ -1,4 +1,4 @@
-import { TAU } from '../../lib/math';
+import { TAU, lerp } from '../../lib/math';
 import SVG from '../Svg';
 import Handle from '../ink/Handle';
 import Vec from '../../lib/vec';
@@ -10,19 +10,17 @@ import { GameObject } from '../GameObject';
 import { WirePort } from './Wire';
 import { MetaLabel, MetaStruct } from './MetaSemantics';
 
+const arc = { d: SVG.arcPath(Vec.zero, 10, TAU / 4, Math.PI / 3) };
+
 export default class Gizmo extends GameObject {
   center: Position;
 
   private elm = SVG.add('g', SVG.gizmoElm, { class: 'gizmo' });
-  private arcs = SVG.add('g', this.elm);
-  private arc1 = SVG.add('path', this.arcs, {
-    d: SVG.arcPath(Vec.zero, 10, TAU / 4, Math.PI / 3),
-  });
-  private arc2 = SVG.add('path', this.arcs, {
-    d: SVG.arcPath(Vec.zero, 10, TAU / 4, Math.PI / 3),
-  });
-  private thickLine = SVG.add('polyline', this.elm, { class: 'thickLine' });
-  private thinLine = SVG.add('polyline', this.elm, { class: 'thinLine' });
+  private thick = SVG.add('polyline', this.elm, { class: 'thick' });
+  private thin = SVG.add('polyline', this.elm, { class: 'thin' });
+  private arcs = SVG.add('g', this.elm, { class: 'arcs' });
+  private arc1 = SVG.add('path', this.arcs, arc);
+  private arc2 = SVG.add('path', this.arcs, arc);
 
   readonly distance: Variable;
   readonly angleInRadians: Variable;
@@ -134,6 +132,15 @@ export default class Gizmo extends GameObject {
       return;
     }
 
+    const a = handles.a.position;
+    const b = handles.b.position;
+    const ab = Vec.sub(b, a);
+    const len = Vec.len(ab);
+
+    if (len === 0) {
+      return;
+    }
+
     const angle = this.angleInDegrees.value;
     const aLock = this.angleInRadians.isLocked;
     const dLock = this.distance.isLocked;
@@ -141,36 +148,32 @@ export default class Gizmo extends GameObject {
     const xOffset = aLock ? 0 : dLock ? 9.4 : 12;
     const yOffset = dLock ? -3.5 : 0;
 
-    SVG.update(this.elm, {
-      'is-constrained': aLock || dLock,
+    const fade = lerp(len, 80, 100, 0, 1);
+
+    SVG.update(this.elm, { 'is-constrained': aLock || dLock });
+
+    SVG.update(this.thick, { points: SVG.points(a, b) });
+
+    let _a = Vec.sub(this.center, Vec.renormalize(ab, 22));
+    let _b = Vec.add(this.center, Vec.renormalize(ab, 22));
+    SVG.update(this.thin, {
+      points: SVG.points(_a, _b),
+      style: `opacity: ${fade}`,
     });
 
     SVG.update(this.arcs, {
-      style: `transform: translate(${this.center.x}px, ${this.center.y}px) rotate(${angle}deg)`,
+      style: `
+      opacity: ${fade};
+      transform:
+        translate(${this.center.x}px, ${this.center.y}px)
+        rotate(${angle}deg)
+      `,
     });
     SVG.update(this.arc1, {
       style: `transform: translate(${xOffset}px, ${yOffset}px)`,
     });
     SVG.update(this.arc2, {
       style: `transform: rotate(${180}deg) translate(${xOffset}px, ${yOffset}px)`,
-    });
-
-    const a = handles.a.position;
-    const b = handles.b.position;
-    const ab = Vec.sub(b, a);
-
-    let _a = Vec.sub(this.center, Vec.renormalize(ab, 22));
-    let _b = Vec.add(this.center, Vec.renormalize(ab, 22));
-
-    SVG.update(this.thickLine, {
-      points: SVG.points(_a, _b),
-    });
-
-    _a = Vec.add(a, Vec.renormalize(ab, 0));
-    _b = Vec.sub(b, Vec.renormalize(ab, 0));
-
-    SVG.update(this.thinLine, {
-      points: SVG.points(_a, _b),
     });
   }
 
