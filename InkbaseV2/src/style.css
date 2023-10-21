@@ -39,11 +39,12 @@
 :root {
   /* These colors are the same in concrete and meta mode */
   --bg-color: var(--grey0);
-  --status-text: var(--grey3);
-  --pseudo-touch: var(--grey2);
+  --desire: var(--grey2);
+  --eraser: var(--grey1);
   --gesture-circle: var(--grey2);
   --gesture-text: var(--grey2);
-  --eraser: var(--grey1);
+  --pseudo-touch: var(--grey2);
+  --status-text: var(--grey3);
 
   /* These colors are different in concrete and meta mode */
   --component: transparent;
@@ -87,7 +88,7 @@
     --gizmo-thickline: var(--grey4);
     --gizmo-thinline: var(--grey5);
     --handle-fill: transparent;
-    --ink-color: lch(var(--L5) 0 0 / 0.2);
+    --ink-color: lch(var(--L5) 0 0 / 0.12);
     --label-box: var(--grey3);
     --label-stroke: var(--grey1);
     --label-text: var(--grey1);
@@ -114,14 +115,15 @@
  */
 
 :root[theme*='color'] {
-  --blue: color(display-p3 0.8 0.9 1);
+  --blue: color(display-p3 0.4 0.8 1);
   --green: color(display-p3 0 0.5 0.5);
   --yellow: color(display-p3 0.9 0.6 0);
 
-  --pseudo-touch: var(--yellow);
+  --desire: var(--blue);
+  --eraser: color(display-p3 1 0.4 0);
   --gesture-circle: var(--yellow);
   --gesture-text: var(--yellow);
-  --eraser: color(display-p3 1 0.4 0);
+  --pseudo-touch: var(--yellow);
 
   &[meta-mode] {
     --constrained: var(--green);
@@ -132,6 +134,7 @@
 }
 
 :root[theme*='color'][theme*='dark'] {
+  --blue: color(display-p3 0.3 0.6 1);
   --green: color(display-p3 0 1 1);
   --yellow: color(display-p3 1 0.7 0);
 }
@@ -230,6 +233,12 @@ svg * {
     .secret {
       scale: 0.7;
     }
+  }
+}
+
+@keyframes zoom-in {
+  from {
+    scale: 0;
   }
 }
 
@@ -479,8 +488,6 @@ svg * {
   }
 }
 
-@keyframes zoom-in {
-  from {
-    scale: 0;
-  }
+.desire {
+  fill: var(--desire);
 }

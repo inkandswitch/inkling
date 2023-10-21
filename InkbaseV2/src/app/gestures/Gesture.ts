@@ -107,7 +107,9 @@ export class Gesture {
 
   render() {
     this.api.render?.call(this);
+  }
 
+  debugRender() {
     for (const id in this.touches) {
       const event = this.touches[id];
       const elm = SVG.now('g', {

@@ -149,9 +149,13 @@ function runGesture(gesture: Gesture, ctx: EventContext) {
 }
 
 export function render() {
+  for (const id in gesturesByTouchId) {
+    gesturesByTouchId[id].render();
+  }
+
   if (Config.gesture.debugVisualization) {
     for (const id in gesturesByTouchId) {
-      gesturesByTouchId[id].render();
+      gesturesByTouchId[id].debugRender();
     }
 
     for (const id in pseudoTouches) {

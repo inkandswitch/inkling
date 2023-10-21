@@ -2,6 +2,9 @@ import { EventContext, Gesture } from './Gesture';
 import Handle, { aCanonicalHandle } from '../ink/Handle';
 import * as constraints from '../constraints';
 import StrokeGroup from '../ink/StrokeGroup';
+import Vec from '../../lib/vec';
+import SVG from '../Svg';
+import Config from '../Config';
 
 export function touchHandle(ctx: EventContext): Gesture | void {
   let handle = ctx.page.find({
@@ -24,14 +27,24 @@ export function touchHandle(ctx: EventContext): Gesture | void {
 }
 
 export function touchHandleHelper(handle: Handle): Gesture {
+  let lastPos = handle.position;
+
   return new Gesture('Touch Handle', {
     began(ctx) {
-      constraints.finger(handle);
+      if (Config.gesture.lookAt) {
+        lastPos = ctx.event.position;
+      } else {
+        constraints.finger(handle);
+      }
     },
     moved(ctx) {
       handle.position = ctx.event.position;
 
-      constraints.finger(handle);
+      if (Config.gesture.lookAt) {
+        lastPos = ctx.event.position;
+      } else {
+        constraints.finger(handle);
+      }
 
       if (
         ctx.pseudoCount === 2 &&
@@ -43,9 +56,27 @@ export function touchHandleHelper(handle: Handle): Gesture {
     },
     ended(ctx) {
       handle.getAbsorbedByNearestHandle();
-      constraints.finger(handle).remove();
+      if (!Config.gesture.lookAt) {
+        constraints.finger(handle).remove();
+      }
       if (!ctx.state.drag && ctx.metaToggle.active) {
         handle.togglePin();
+      }
+    },
+    render() {
+      if (Config.gesture.lookAt) {
+        const count = Math.pow(Vec.dist(handle.position, lastPos), 1 / 3);
+        let c = count;
+        while (--c > 0) {
+          let v = Vec.sub(handle.position, lastPos);
+          v = Vec.add(lastPos, Vec.mulS(v, c / count));
+          SVG.now('circle', {
+            cx: v.x,
+            cy: v.y,
+            r: 4,
+            class: 'desire',
+          });
+        }
       }
     },
   });
