@@ -6,7 +6,7 @@ import OpToken from './OpToken';
 import EmptyToken, { anEmptyToken } from './EmptyToken';
 import WritingCell, { aWritingCell } from './WritingCell';
 import { GameObject } from '../GameObject';
-import FormulaParser from './FormulaParser';
+import FormulaCompiler from './FormulaCompiler';
 import LabelToken from './LabelToken';
 import * as constraints from '../constraints';
 import PropertyPicker from './PropertyPicker';
@@ -85,9 +85,9 @@ export default class Formula extends Token {
       return;
     }
 
-    // Parse the formula
-    const parser = new FormulaParser(this.page);
-    const newFormulaConstraint = parser.parse(this.getFormulaAsText());
+    // Compile the formula
+    const compiler = new FormulaCompiler(this.page);
+    const newFormulaConstraint = compiler.compile(this.getFormulaAsText());
     if (!newFormulaConstraint) {
       // don't close the editor
       return;

@@ -53,7 +53,7 @@ Formula {
 }
 `);
 
-export default class FormulaParser {
+export default class FormulaCompiler {
   private readonly semantics: ohm.Semantics;
 
   constructor(page: Page) {
@@ -156,7 +156,7 @@ export default class FormulaParser {
   }
 
   /** Returns a formula constraint for this formula, if it's valid, or null otherwise. */
-  parse(input: string): Formula | null {
+  compile(input: string): Formula | null {
     const m = formulaGrammar.match(input);
     if (m.failed()) {
       SVG.showStatus(m.shortMessage!);
