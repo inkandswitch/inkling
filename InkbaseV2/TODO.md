@@ -27,10 +27,6 @@
 - P1: removing a wire doesn't remove constraints right now!
   (Alex)
 
-- P1.5: using / in formulas causes gradient errors
-  More generally, need to fix unsatisfiable formula constraints
-  (Alex)
-
 - P1/2: Wires to formula cells render behind the formula box. This is bad.
   (Ivan)
 
@@ -40,7 +36,11 @@
 ## Formulas / Wires / Meta
 
 - P0: A divide by 0 in a formula throws a runtime error. This seems likely to happen because formula numbers tend to varmove to 0. One short-term fix might be to remove the division operator.
-  (Marcel or Alex)
+  (Alex)
+
+- P1: using / in formulas causes gradient errors
+  More generally, need to fix unsatisfiable formula constraints
+  (Alex)
 
 - P2: "orange" numbers for results of spreadsheet formulas
   (this info needs to be in Variable so Tokens can render...)
