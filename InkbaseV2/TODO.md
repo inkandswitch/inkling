@@ -26,7 +26,7 @@
 
 ## Formulas / Wires / Meta
 
-- P1: using / in formulas causes gradient errors
+- P2/3: using / in formulas causes gradient errors
   More generally, need to fix unsatisfiable formula constraints
   (Alex)
 
