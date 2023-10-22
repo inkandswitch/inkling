@@ -25,8 +25,6 @@ Formula {
 
   MulExp
     = MulExp "×" UnExp  -- mul
-    | MulExp "/" UnExp  -- div
-    | MulExp "%" UnExp  -- mod
     | UnExp
 
   UnExp
@@ -112,14 +110,6 @@ export default class FormulaCompiler {
           a.collectVars(this.args.vars);
           b.collectVars(this.args.vars);
         },
-        MulExp_div(a, op, b) {
-          a.collectVars(this.args.vars);
-          b.collectVars(this.args.vars);
-        },
-        MulExp_mod(a, op, b) {
-          a.collectVars(this.args.vars);
-          b.collectVars(this.args.vars);
-        },
         UnExp_neg(op, e) {
           e.collectVars(this.args.vars);
         },
@@ -144,13 +134,7 @@ export default class FormulaCompiler {
           return `(${a.compile()} ${op.sourceString} ${b.compile()})`;
         },
         MulExp_mul(a, op, b) {
-          return `(${a.compile()} * ${notZero(b.compile())})`;
-        },
-        MulExp_div(a, op, b) {
-          return `(${a.compile()} / ${notZero(b.compile())})`;
-        },
-        MulExp_mod(a, op, b) {
-          return `(${a.compile()} % ${b.compile()})`;
+          return `(${a.compile()} * ${b.compile()})`;
         },
         UnExp_neg(op, e) {
           return `(${op.sourceString}${e.compile()})`;
@@ -202,8 +186,4 @@ export default class FormulaCompiler {
     }
     return formulaConstraint;
   }
-}
-
-function notZero(jsExp: number) {
-  return `(v => (v === 0 ? 0.000000001 : v))(${jsExp})`;
 }
