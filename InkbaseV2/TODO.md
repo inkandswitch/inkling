@@ -2,6 +2,13 @@
 
 ## UX Improvements
 
+- P0: erase gesture in concrete mode shouldn't erase (invisible!) meta stuff
+  ... like formulas, number tokens, etc.
+  (Ivan)
+
+- P1: erase gesture in meta mode *maybe* shouldn't erase concrete strokes
+  (Ivan)
+
 - P1: when erasing inside a formula, call a different method (not remove)
   (Marcel)
 
