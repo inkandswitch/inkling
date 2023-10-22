@@ -12,6 +12,7 @@ import * as constraints from '../constraints';
 import PropertyPicker from './PropertyPicker';
 import { Position } from '../../lib/types';
 import { EventContext } from '../gestures/Gesture';
+import { clip } from '../../lib/math';
 
 const PADDING = 3;
 
@@ -20,6 +21,9 @@ const PADDING = 3;
 // Can be improved significiantly if we have a better interface
 
 export default class Formula extends Token {
+  maxHp = 120;
+  hp = this.maxHp;
+
   static createFromContext(ctx: EventContext) {
     const formula = new Formula();
     ctx.page.adopt(formula);
@@ -311,6 +315,12 @@ export default class Formula extends Token {
   }
 
   render(dt: number, t: number): void {
+    // Heal
+    this.hp = clip(this.hp + 1, 0, this.maxHp);
+    SVG.update(this.boxElement, {
+      opacity: this.hp / this.maxHp,
+    });
+
     // Process input
     if (this.editing) {
       this.updateWritingCells();

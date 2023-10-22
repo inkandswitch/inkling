@@ -18,6 +18,9 @@ interface ForEachOptions<T extends GameObject> extends FindOptions<T> {
 }
 
 export abstract class GameObject {
+  maxHp = 0;
+  hp = this.maxHp;
+
   parent: GameObject | null = null;
   readonly children = new Set<GameObject>();
 

@@ -2,9 +2,6 @@
 
 ## UX Improvements
 
-- P1: make it harder to erase formula editor
-  (Ivan)
-
 - P1: when erasing inside a formula, call a different method (not remove)
   (Marcel)
 

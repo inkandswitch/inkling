@@ -17,7 +17,10 @@ export function erase(ctx: EventContext): Gesture | void {
         });
 
         for (const go of gos) {
-          go.remove();
+          go.hp--;
+          if (go.hp <= 0) {
+            go.remove();
+          }
         }
       },
     });
