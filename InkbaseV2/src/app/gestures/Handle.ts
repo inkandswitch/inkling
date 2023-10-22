@@ -5,6 +5,7 @@ import StrokeGroup from '../ink/StrokeGroup';
 import Vec from '../../lib/vec';
 import SVG from '../Svg';
 import Config from '../Config';
+import { Position } from '../../lib/types';
 
 export function touchHandle(ctx: EventContext): Gesture | void {
   let handle = ctx.page.find({
@@ -28,20 +29,22 @@ export function touchHandle(ctx: EventContext): Gesture | void {
 
 export function touchHandleHelper(handle: Handle): Gesture {
   let lastPos = handle.position;
+  let offset: Position;
 
   return new Gesture('Touch Handle', {
     began(ctx) {
+      offset = Vec.sub(handle.position, ctx.event.position);
       if (Config.gesture.lookAt) {
-        lastPos = ctx.event.position;
+        lastPos = handle.position;
       } else {
         constraints.finger(handle);
       }
     },
     moved(ctx) {
-      handle.position = ctx.event.position;
+      handle.position = Vec.add(ctx.event.position, offset);
 
       if (Config.gesture.lookAt) {
-        lastPos = ctx.event.position;
+        lastPos = handle.position;
       } else {
         constraints.finger(handle);
       }
