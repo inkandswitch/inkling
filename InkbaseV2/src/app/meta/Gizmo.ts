@@ -10,17 +10,17 @@ import { GameObject } from '../GameObject';
 import { WirePort } from './Wire';
 import { MetaLabel, MetaStruct } from './MetaSemantics';
 
-const arc = { d: SVG.arcPath(Vec.zero, 10, TAU / 4, Math.PI / 3) };
+const arc = SVG.arcPath(Vec.zero, 10, TAU / 4, Math.PI / 3);
 
 export default class Gizmo extends GameObject {
   center: Position;
 
   private elm = SVG.add('g', SVG.gizmoElm, { class: 'gizmo' });
   private thick = SVG.add('polyline', this.elm, { class: 'thick' });
-  private thin = SVG.add('polyline', this.elm, { class: 'thin' });
+  private arrow = SVG.add('polyline', this.elm, { class: 'arrow' });
   private arcs = SVG.add('g', this.elm, { class: 'arcs' });
-  private arc1 = SVG.add('path', this.arcs, arc);
-  private arc2 = SVG.add('path', this.arcs, arc);
+  private arc1 = SVG.add('path', this.arcs, { d: arc, class: 'arc1' });
+  private arc2 = SVG.add('path', this.arcs, { d: arc, class: 'arc2' });
 
   readonly distance: Variable;
   readonly angleInRadians: Variable;
@@ -134,9 +134,7 @@ export default class Gizmo extends GameObject {
 
     const a = handles.a.position;
     const b = handles.b.position;
-    const ab = Vec.sub(b, a);
-    const len = Vec.len(ab);
-
+    const len = Vec.dist(a, b);
     if (len === 0) {
       return;
     }
@@ -144,20 +142,20 @@ export default class Gizmo extends GameObject {
     const angle = this.angleInDegrees.value;
     const aLock = this.angleInRadians.isLocked;
     const dLock = this.distance.isLocked;
-
-    const xOffset = aLock ? 0 : dLock ? 9.4 : 12;
-    const yOffset = dLock ? -3.5 : 0;
-
     const fade = lerp(len, 80, 100, 0, 1);
 
     SVG.update(this.elm, { 'is-constrained': aLock || dLock });
-
     SVG.update(this.thick, { points: SVG.points(a, b) });
 
-    let _a = Vec.sub(this.center, Vec.renormalize(ab, 22));
-    let _b = Vec.add(this.center, Vec.renormalize(ab, 22));
-    SVG.update(this.thin, {
-      points: SVG.points(_a, _b),
+    const ab = Vec.sub(b, a);
+    const arrow = Vec.renormalize(ab, 4);
+    const tail = Vec.sub(this.center, Vec.renormalize(ab, 30));
+    const tip = Vec.add(this.center, Vec.renormalize(ab, 30));
+    const port = Vec.sub(tip, Vec.rotate(arrow, TAU / 12));
+    const starboard = Vec.sub(tip, Vec.rotate(arrow, -TAU / 12));
+
+    SVG.update(this.arrow, {
+      points: SVG.points(tail, tip, port, starboard, tip),
       style: `opacity: ${fade}`,
     });
 
@@ -169,12 +167,12 @@ export default class Gizmo extends GameObject {
         rotate(${angle}deg)
       `,
     });
-    SVG.update(this.arc1, {
-      style: `transform: translate(${xOffset}px, ${yOffset}px)`,
-    });
-    SVG.update(this.arc2, {
-      style: `transform: rotate(${180}deg) translate(${xOffset}px, ${yOffset}px)`,
-    });
+
+    const xOffset = aLock ? 0 : dLock ? 9.4 : 12;
+    const yOffset = dLock ? -3.5 : 0;
+    const arcTransform = `transform: translate(${xOffset}px, ${yOffset}px)`;
+    SVG.update(this.arc1, { style: arcTransform });
+    SVG.update(this.arc2, { style: arcTransform });
   }
 
   distanceToPoint(point: Position) {

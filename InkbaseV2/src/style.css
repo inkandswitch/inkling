@@ -54,7 +54,7 @@
   --formula-editor-cell: transparent;
   --formula-editor: transparent;
   --formula-ink: transparent;
-  --gizmo-thin: transparent;
+  --gizmo-arrow: transparent;
   --gizmo-thick: transparent;
   --handle-fill: lch(var(--L5) 0 0 / 0.03);
   --ink-color: lch(var(--L5) 0 0 / 0.65);
@@ -85,7 +85,7 @@
     --formula-editor-cell: var(--grey1);
     --formula-editor: var(--grey2);
     --formula-ink: var(--grey5);
-    --gizmo-thin: var(--grey4);
+    --gizmo-arrow: var(--grey4);
     --gizmo-thick: var(--grey5);
     --handle-fill: transparent;
     --ink-color: lch(var(--L5) 0 0 / 0.12);
@@ -178,6 +178,7 @@ svg {
 body {
   font-family: system-ui;
   stroke-linecap: round;
+  stroke-linejoin: round;
   background-color: var(--bg-color);
   transition: background-color 0.8s cubic-bezier(0.5, 1, 0.5, 1);
 }
@@ -231,7 +232,6 @@ svg * {
   .splats {
     stroke: var(--meta-toggle);
     stroke-width: 8;
-    stroke-linejoin: round;
     .splat {
       transition: scale 2s cubic-bezier(0, 1.5, 0, 1);
     }
@@ -328,7 +328,7 @@ svg * {
 
   --fade: opacity 0.1s linear;
 
-  .thin {
+  .arrow {
     stroke-width: 2;
     stroke: var(--unconstrained);
     transition: var(--fade), var(--transition-stroke);
@@ -343,6 +343,10 @@ svg * {
     transition:
       transform 0.4s cubic-bezier(0, 1.2, 0, 1),
       var(--transition-stroke);
+  }
+
+  .arc2 {
+    rotate: 180deg;
   }
 
   &[is-constrained] {

@@ -2,9 +2,6 @@
 
 ## UX Improvements
 
-- P1: make the gizmo's rendering indicate the direction of the gizmo
-  (Ivan)
-
 - P1: make it harder to erase formula editor
   (Ivan)
 
