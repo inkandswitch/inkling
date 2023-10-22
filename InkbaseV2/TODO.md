@@ -46,10 +46,6 @@
 - P1: hack to avoid shrinking gizmo when scrubbing angle
   (Alex)
 
-- P1/2: when back-solving the angle, pick nearest multiple of 360 that works.
-  ... enables clock example
-  (Alex)
-
 - P2/3: consider unlocking a locked variable instead of pausing a constraint
   when solver gives up -- this would be easier to understand since
   the variables' locked/unlocked state is always shown on the canvas.

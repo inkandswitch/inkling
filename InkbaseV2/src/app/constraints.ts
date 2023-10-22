@@ -2,9 +2,10 @@ import { GameObject } from './GameObject';
 import SVG from './Svg';
 import Handle, { aHandle } from './ink/Handle';
 import { forDebugging, generateId, sets } from '../lib/helpers';
+import { minimize } from '../lib/g9';
+import { TAU } from '../lib/math';
 import { Position } from '../lib/types';
 import Vec from '../lib/vec';
-import { minimize } from '../lib/g9';
 
 // #region variables
 
@@ -404,7 +405,7 @@ class Angle extends LowLevelConstraint {
       knowns.has(this.b.xVariable.canonicalInstance) &&
       knowns.has(this.b.yVariable.canonicalInstance)
     ) {
-      this.angle.value = Vec.angle(Vec.sub(this.b, this.a));
+      updateAngle(this.angle, this.a, this.b);
       knowns.add(this.angle.canonicalInstance);
     }
   }
@@ -426,7 +427,7 @@ class Angle extends LowLevelConstraint {
     const aPos = { x: ax, y: ay };
     const bPos = { x: bx, y: by };
     if (freeVariables.has(this.angle.canonicalInstance)) {
-      this.angle.value = Vec.angle(Vec.sub(bPos, aPos));
+      updateAngle(this.angle, aPos, bPos);
       return 0;
     }
 
@@ -483,6 +484,21 @@ class Angle extends LowLevelConstraint {
 
     return error;
   }
+}
+
+function updateAngle(angleVar: Variable, aPos: Position, bPos: Position) {
+  const currAngle = normalizeAngle(angleVar.value);
+  const newAngle = normalizeAngle(Vec.angle(Vec.sub(bPos, aPos)));
+  let diff = normalizeAngle(newAngle - currAngle);
+  if (diff > Math.PI) {
+    diff -= TAU;
+  }
+  angleVar.value += diff;
+}
+
+/** Returns the equivalent angle in the range [0, 2pi) */
+function normalizeAngle(angle: number) {
+  return ((angle % TAU) + TAU) % TAU;
 }
 
 class LLFormula extends LowLevelConstraint {
