@@ -135,9 +135,6 @@ export default class Gizmo extends GameObject {
     const a = handles.a.position;
     const b = handles.b.position;
     const len = Vec.dist(a, b);
-    if (len === 0) {
-      return;
-    }
 
     const angle = this.angleInDegrees.value;
     const aLock = this.angleInRadians.isLocked;
@@ -147,32 +144,34 @@ export default class Gizmo extends GameObject {
     SVG.update(this.elm, { 'is-constrained': aLock || dLock });
     SVG.update(this.thick, { points: SVG.points(a, b) });
 
-    const ab = Vec.sub(b, a);
-    const arrow = Vec.renormalize(ab, 4);
-    const tail = Vec.sub(this.center, Vec.renormalize(ab, 30));
-    const tip = Vec.add(this.center, Vec.renormalize(ab, 30));
-    const port = Vec.sub(tip, Vec.rotate(arrow, TAU / 12));
-    const starboard = Vec.sub(tip, Vec.rotate(arrow, -TAU / 12));
+    if (len > 0) {
+      const ab = Vec.sub(b, a);
+      const arrow = Vec.renormalize(ab, 4);
+      const tail = Vec.sub(this.center, Vec.renormalize(ab, 30));
+      const tip = Vec.add(this.center, Vec.renormalize(ab, 30));
+      const port = Vec.sub(tip, Vec.rotate(arrow, TAU / 12));
+      const starboard = Vec.sub(tip, Vec.rotate(arrow, -TAU / 12));
 
-    SVG.update(this.arrow, {
-      points: SVG.points(tail, tip, port, starboard, tip),
-      style: `opacity: ${fade}`,
-    });
+      SVG.update(this.arrow, {
+        points: SVG.points(tail, tip, port, starboard, tip),
+        style: `opacity: ${fade}`,
+      });
 
-    SVG.update(this.arcs, {
-      style: `
-      opacity: ${fade};
-      transform:
-        translate(${this.center.x}px, ${this.center.y}px)
-        rotate(${angle}deg)
-      `,
-    });
+      SVG.update(this.arcs, {
+        style: `
+        opacity: ${fade};
+        transform:
+          translate(${this.center.x}px, ${this.center.y}px)
+          rotate(${angle}deg)
+        `,
+      });
 
-    const xOffset = aLock ? 0 : dLock ? 9.4 : 12;
-    const yOffset = dLock ? -3.5 : 0;
-    const arcTransform = `transform: translate(${xOffset}px, ${yOffset}px)`;
-    SVG.update(this.arc1, { style: arcTransform });
-    SVG.update(this.arc2, { style: arcTransform });
+      const xOffset = aLock ? 0 : dLock ? 9.4 : 12;
+      const yOffset = dLock ? -3.5 : 0;
+      const arcTransform = `transform: translate(${xOffset}px, ${yOffset}px)`;
+      SVG.update(this.arc1, { style: arcTransform });
+      SVG.update(this.arc2, { style: arcTransform });
+    }
   }
 
   distanceToPoint(point: Position) {
