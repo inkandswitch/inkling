@@ -1082,8 +1082,8 @@ export function solve(root: GameObject) {
 }
 
 function solveCluster(cluster: ClusterForSolver) {
-  const { constraints, lowLevelConstraints, variables, freeVariables } =
-    cluster;
+  const { constraints, lowLevelConstraints, variables } = cluster;
+  let { freeVariables } = cluster;
 
   if (constraints.length === 0) {
     // nothing to solve!
@@ -1112,6 +1112,25 @@ function solveCluster(cluster: ClusterForSolver) {
         }
       }
     }
+  }
+
+  // Hack to avoid gizmos' handles converging as user scrubs the angle
+  // TODO: make sure this doesn't break anything!
+  let gizmoHack = false;
+  for (const pv of constraints) {
+    if (
+      pv instanceof PolarVector &&
+      pv.angle.isLocked &&
+      freeVariables.has(pv.distance.canonicalInstance)
+    ) {
+      gizmoHack = true;
+      knowns.add(pv.distance.canonicalInstance);
+    }
+  }
+  if (gizmoHack) {
+    freeVariables = new Set(
+      [...freeVariables].filter(fv => !knowns.has(fv.canonicalInstance))
+    );
   }
 
   // The state that goes into `inputs` is the stuff that can be modified by the solver.
