@@ -28,14 +28,14 @@ export function touchHandle(ctx: EventContext): Gesture | void {
 }
 
 export function touchHandleHelper(handle: Handle): Gesture {
-  let lastPos = handle.position;
+  let lastPos = Vec.clone(handle);
   let offset: Position;
 
   return new Gesture('Touch Handle', {
     began(ctx) {
       offset = Vec.sub(handle.position, ctx.event.position);
       if (Config.gesture.lookAt) {
-        lastPos = handle.position;
+        lastPos = Vec.clone(handle);
       } else {
         constraints.finger(handle);
       }
@@ -44,7 +44,7 @@ export function touchHandleHelper(handle: Handle): Gesture {
       handle.position = Vec.add(ctx.event.position, offset);
 
       if (Config.gesture.lookAt) {
-        lastPos = handle.position;
+        lastPos = Vec.clone(handle);
       } else {
         constraints.finger(handle);
       }

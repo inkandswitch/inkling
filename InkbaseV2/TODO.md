@@ -6,7 +6,7 @@
   ... like formulas, number tokens, etc.
   (Ivan)
 
-- P1: erase gesture in meta mode *maybe* shouldn't erase concrete strokes
+- P1: erase gesture in meta mode _maybe_ shouldn't erase concrete strokes
   (Ivan)
 
 - P1: when erasing inside a formula, call a different method (not remove)
@@ -22,6 +22,8 @@
   (Marcel)
 
 - P4: in meta mode, should you be able to break apart ink handles?
+
+- P1292: When using KB+M, a way to put a finger down and leave it there (and remove it later)
 
 ## Bugs
 
