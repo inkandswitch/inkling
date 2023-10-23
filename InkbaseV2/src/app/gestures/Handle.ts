@@ -19,7 +19,7 @@ export function touchHandle(ctx: EventContext): Gesture | void {
       ctx.pseudoCount >= 3 &&
       handle.canonicalInstance.absorbedHandles.size > 0
     ) {
-      let handles = [...handle.canonicalInstance.absorbedHandles];
+      const handles = [...handle.canonicalInstance.absorbedHandles];
       handle = handle.breakOff(handles[handles.length - 1]);
     }
 
