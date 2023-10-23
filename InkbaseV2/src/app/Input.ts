@@ -24,6 +24,7 @@ const gestureCreators = {
   finger: [
     closeFormulaEditor,
     scrubNumberToken,
+    tapPropertyPicker,
     touchToken,
     touchHandle,
     touchMetaToggle,
