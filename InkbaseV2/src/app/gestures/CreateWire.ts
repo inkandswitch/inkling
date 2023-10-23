@@ -64,16 +64,22 @@ export function createWire(ctx: EventContext): Gesture | void {
         const primaryToken = find({ what: aPrimaryToken, near });
         const gizmo = find({ what: aGizmo, near });
 
+        // If you tapped something and didn't perform a drag, don't create anything
+        if ((primaryToken || component || token || gizmo) && !ctx.state.drag) {
+          wire.remove();
+          return;
+        }
+
         // Instantiate a formula
         if (wire.isCollapsable()) {
           if (wire.a && wire.a.deref()) {
-            const token = wire.a.deref()?.parent as Token;
+            const token = wire.a.deref()?.parent;
             if (token instanceof Formula) {
               // TODO: not a reachable path
               token.edit();
-            } else if (token.parent instanceof Formula) {
+            } else if (token?.parent instanceof Formula) {
               token.parent.edit();
-            } else {
+            } else if (token instanceof Token) {
               const formula = Formula.createFromContext(ctx);
               formula.position = Vec.sub(token.position, Vec(-3, -3));
               formula.adopt(token);

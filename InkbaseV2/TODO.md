@@ -2,6 +2,8 @@
 
 ## UX Improvements
 
+- P0: Allow the property picker editor to be tapped with a finger
+
 - P0: erase gesture in concrete mode shouldn't erase (invisible!) meta stuff
   ... like formulas, number tokens, etc.
   (Ivan)
