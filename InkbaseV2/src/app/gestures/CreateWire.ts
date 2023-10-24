@@ -82,9 +82,8 @@ export function createWire(ctx: EventContext): Gesture | void {
             } else if (token?.parent instanceof Formula) {
               token.parent.edit();
             } else if (token instanceof Token) {
-              const formula = Formula.createFromContext(ctx);
+              const formula = Formula.createFromContext(ctx, token);
               formula.position = Vec.sub(token.position, Vec(-3, -3));
-              formula.adopt(token);
               formula.edit();
             }
           } else {

@@ -23,9 +23,13 @@ export default class Formula extends Token {
   maxHp = 120;
   hp = this.maxHp;
 
-  static createFromContext(ctx: EventContext) {
+  static createFromContext(ctx: EventContext, token?: Token) {
     const formula = new Formula();
     ctx.page.adopt(formula);
+    if (token) {
+      formula.adopt(token);
+    }
+
     formula.edit();
     formula.position = ctx.event.position;
     return formula;
@@ -90,6 +94,11 @@ export default class Formula extends Token {
 
     const tokens = this.findAll({ what: aToken });
     const filteredTokens = tokens.filter(t => !(t instanceof EmptyToken));
+
+    if (filteredTokens.length == 0) {
+      return;
+    }
+
     // Detach single token formulas
     if (filteredTokens.length === 1) {
       const firstToken = tokens[0];
@@ -114,8 +123,6 @@ export default class Formula extends Token {
     } else if (equalsIndex === filteredTokens.length - 1) {
       this.adopt(new NumberToken());
     }
-
-    console.log(this);
 
     // Compile the formula
     const compiler = new FormulaCompiler(this.page);

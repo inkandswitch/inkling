@@ -8,7 +8,6 @@ import * as ohm from 'ohm-js';
 import { GameObject } from '../GameObject';
 import { generateId } from '../../lib/helpers';
 import VarMover from '../VarMover';
-import { Position } from '../../lib/types';
 
 export default class NumberToken extends Token {
   readonly id = generateId();
