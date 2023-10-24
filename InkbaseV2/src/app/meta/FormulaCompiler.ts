@@ -14,8 +14,8 @@ const formulaGrammar = ohm.grammar(String.raw`
 
 Formula {
   Formula
-    = Exp "=" ref  -- oneExp
-    | Exp "=" Exp  -- twoExps
+    = Exp "=" Exp  -- twoExps
+    | Exp "=" ref  -- oneExp
 
   Exp
     = AddExp
