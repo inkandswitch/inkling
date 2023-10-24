@@ -10,7 +10,7 @@ import FormulaCompiler from './FormulaCompiler';
 import LabelToken from './LabelToken';
 import * as constraints from '../constraints';
 import PropertyPicker from './PropertyPicker';
-import { Position } from '../../lib/types';
+import { Position, Removable } from '../../lib/types';
 import { EventContext } from '../gestures/Gesture';
 import { clip } from '../../lib/math';
 
@@ -27,6 +27,7 @@ export default class Formula extends Token {
   static createFromContext(ctx: EventContext) {
     const formula = new Formula();
     ctx.page.adopt(formula);
+    formula.edit();
     formula.position = ctx.event.position;
     return formula;
   }
@@ -42,7 +43,7 @@ export default class Formula extends Token {
     class: 'parsed-formula',
   });
 
-  private constraint: constraints.Formula | null = null;
+  private constraint: Removable | null = null;
 
   isPrimary() {
     return false;
@@ -88,20 +89,10 @@ export default class Formula extends Token {
       return;
     }
 
-    // Compile the formula
-    const compiler = new FormulaCompiler(this.page);
-    const newFormulaConstraint = compiler.compile(this.getFormulaAsText());
-    if (!newFormulaConstraint) {
-      // don't close the editor
-      return;
-    }
-
-    this.discardEmptyTokens();
-
     const tokens = this.findAll({ what: aToken });
-
+    const filteredTokens = tokens.filter(t => !(t instanceof EmptyToken))
     // Detach single token formulas
-    if (tokens.length === 1) {
+    if (filteredTokens.length === 1) {
       const firstToken = tokens[0];
       firstToken.embedded = false;
       firstToken.editing = false;
@@ -114,12 +105,32 @@ export default class Formula extends Token {
       return;
     }
 
+    // Find if there is an =
+    const equalsIndex = filteredTokens.findIndex(token => token instanceof OpToken && token.stringValue == "=");
+    if (equalsIndex == -1) {
+      this.adopt(new OpToken('='));
+      this.adopt(new NumberToken());
+    } else if (equalsIndex == filteredTokens.length - 1) {
+      this.adopt(new NumberToken());
+    }
+
+    console.log(this);
+
+    // Compile the formula
+    const compiler = new FormulaCompiler(this.page);
+    const newFormulaConstraint = compiler.compile(this.getFormulaAsText());
+    if (!newFormulaConstraint) {
+      // Don't close the editor
+      return;
+    }
+
+    this.discardEmptyTokens();
+
     this.constraint = newFormulaConstraint;
     for (const numberToken of this.findAll({ what: aNumberToken })) {
       numberToken.close();
     }
-    this.adopt(new OpToken('='));
-    this.adopt(new NumberToken(newFormulaConstraint.result));
+
     this.editing = false;
     this.updateCells();
   }

@@ -88,7 +88,7 @@ export function createWire(ctx: EventContext): Gesture | void {
               formula.edit();
             }
           } else {
-            Formula.createFromContext(ctx).edit();
+            Formula.createFromContext(ctx);
           }
           wire.remove();
         } else if (isTokenWithVariable(primaryToken)) {
