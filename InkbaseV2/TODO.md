@@ -52,8 +52,6 @@
 
 ## Constraints
 
-- P1: fix the gizmo hack
-
 - P2: Should we make it impossible to have both handles in a stroke group or gizmo absorb one another?
 
 - P2/3: consider unlocking a locked variable instead of pausing a constraint
