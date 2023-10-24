@@ -2,7 +2,9 @@ import { EventContext, Gesture } from './Gesture';
 import { rand } from '../../lib/math';
 import SVG from '../Svg';
 import { Position } from '../../lib/types';
-import { aGameObject } from '../GameObject';
+import { GameObject, aGameObject } from '../GameObject';
+import Stroke, { aStroke } from '../ink/Stroke';
+import StrokeGroup from '../ink/StrokeGroup';
 
 export function erase(ctx: EventContext): Gesture | void {
   if (ctx.pseudoCount === 2) {
@@ -11,7 +13,7 @@ export function erase(ctx: EventContext): Gesture | void {
         spawn(ctx.event.position);
 
         const gos = ctx.root.findAll({
-          what: aGameObject,
+          what: ctx.metaToggle.active ? aGameObject : aStrokeOrGroup,
           near: ctx.event.position,
           tooFar: 10,
         });
@@ -35,3 +37,6 @@ function spawn(p: Position) {
   SVG.add('line', elm, { y2: 6 });
   elm.onanimationend = () => elm.remove();
 }
+
+export const aStrokeOrGroup = (gameObj: GameObject) =>
+  gameObj instanceof StrokeGroup || gameObj instanceof Stroke ? gameObj : null;
