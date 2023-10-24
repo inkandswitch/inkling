@@ -6,7 +6,7 @@ import PropertyPickerEditor from '../meta/PropertyPickerEditor';
 import { aComponent } from '../meta/Component';
 import { isPropertyPicker, isTokenWithVariable } from '../meta/token-helpers';
 import Wire from '../meta/Wire';
-import { MetaStruct } from '../meta/MetaSemantics';
+import { MetaNumber, MetaStruct } from '../meta/MetaSemantics';
 import PropertyPicker from '../meta/PropertyPicker';
 import Vec from '../../lib/vec';
 import Formula from '../meta/Formula';
@@ -119,6 +119,7 @@ export function createWire(ctx: EventContext): Gesture | void {
             const n = new NumberToken();
             (primaryToken.parent as Formula).insertInto(primaryToken, n);
             wire.attachEnd(n.wirePort);
+            n.editValue = (wire.a?.deref()?.value as MetaNumber).variable.value.toFixed();
           }
         } else if (wire.a?.deref()?.value instanceof MetaStruct) {
           const p = ctx.page.adopt(new PropertyPicker());

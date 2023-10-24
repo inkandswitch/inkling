@@ -305,6 +305,7 @@ export default class Formula extends Token {
       throw new Error('bad call to Formula.insertInto()');
     }
     tokens.splice(idx, 0, newToken);
+    newToken.editing = true;
 
     // update the order of the children in this game object
     for (const t of tokens) {
