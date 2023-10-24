@@ -27,7 +27,6 @@ export default class Formula extends Token {
   static createFromContext(ctx: EventContext) {
     const formula = new Formula();
     ctx.page.adopt(formula);
-    formula.edit();
     formula.position = ctx.event.position;
     return formula;
   }
@@ -284,8 +283,6 @@ export default class Formula extends Token {
             tokens.push(new EmptyToken());
           }
         }
-
-        console.log(tokens);
 
         cell.stringValue = '';
 

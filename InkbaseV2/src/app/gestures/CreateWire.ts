@@ -65,15 +65,17 @@ export function createWire(ctx: EventContext): Gesture | void {
         const gizmo = find({ what: aGizmo, near });
 
         // If you tapped something and didn't perform a drag, don't create anything
-        if ((primaryToken || component || token || gizmo) && !ctx.state.drag) {
-          wire.remove();
-          return;
-        }
+        // if ((primaryToken || component || token || gizmo) && !ctx.state.drag) {
+        //   wire.remove();
+        //   return;
+        // }
 
         // Instantiate a formula
         if (wire.isCollapsable()) {
+          console.log(wire);
           if (wire.a && wire.a.deref()) {
-            const token = wire.a.deref()?.parent;
+            const token = wire.a.deref()?.parent; // Find the token
+
             if (token instanceof Formula) {
               // TODO: not a reachable path
               token.edit();
@@ -83,14 +85,14 @@ export function createWire(ctx: EventContext): Gesture | void {
               const formula = Formula.createFromContext(ctx);
               formula.position = Vec.sub(token.position, Vec(-3, -3));
               formula.adopt(token);
+              formula.edit();
             }
           } else {
-            Formula.createFromContext(ctx);
+            Formula.createFromContext(ctx).edit();
           }
           wire.remove();
         } else if (isTokenWithVariable(primaryToken)) {
           wire.attachEnd(primaryToken.wirePort);
-
           if (wire.a === null) {
             const n = ctx.page.adopt(new NumberToken());
             n.variable.value = primaryToken.getVariable().value;
