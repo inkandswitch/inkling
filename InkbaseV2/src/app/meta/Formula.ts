@@ -8,7 +8,6 @@ import WritingCell, { aWritingCell } from './WritingCell';
 import { GameObject } from '../GameObject';
 import FormulaCompiler from './FormulaCompiler';
 import LabelToken from './LabelToken';
-import * as constraints from '../constraints';
 import PropertyPicker from './PropertyPicker';
 import { Position, Removable } from '../../lib/types';
 import { EventContext } from '../gestures/Gesture';
@@ -90,7 +89,7 @@ export default class Formula extends Token {
     }
 
     const tokens = this.findAll({ what: aToken });
-    const filteredTokens = tokens.filter(t => !(t instanceof EmptyToken))
+    const filteredTokens = tokens.filter(t => !(t instanceof EmptyToken));
     // Detach single token formulas
     if (filteredTokens.length === 1) {
       const firstToken = tokens[0];
@@ -106,11 +105,13 @@ export default class Formula extends Token {
     }
 
     // Find if there is an =
-    const equalsIndex = filteredTokens.findIndex(token => token instanceof OpToken && token.stringValue == "=");
-    if (equalsIndex == -1) {
+    const equalsIndex = filteredTokens.findIndex(
+      token => token instanceof OpToken && token.stringValue === '='
+    );
+    if (equalsIndex < 0) {
       this.adopt(new OpToken('='));
       this.adopt(new NumberToken());
-    } else if (equalsIndex == filteredTokens.length - 1) {
+    } else if (equalsIndex === filteredTokens.length - 1) {
       this.adopt(new NumberToken());
     }
 
