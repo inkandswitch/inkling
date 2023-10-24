@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="app/App.js"></script>
+</head>
+
+<body>
+  <svg>
+    <g id="gizmo"></g>
+    <g id="handle"></g>
+    <g id="ink"></g>
+    <g id="constraint"></g>
+    <g id="box"></g>
+    <g id="wires"></g>
+    <g id="meta"></g>
+    <g id="label"></g>
+    <g id="gui"></g>
+    <g id="now"></g>
+  </svg>
+
+  <script>
+    // Inlining this script to avoid flicker on page load
+    const themes = ['light color', 'dark color', 'light mono', 'dark mono'];
+    let themeIndex = +(localStorage.getItem('themeIndex') || 0) % themes.length;
+
+    function cycleTheme() {
+      themeIndex = ++themeIndex % themes.length;
+      updateTheme();
+    }
+
+    function updateTheme() {
+      document.documentElement.setAttribute('theme', themes[themeIndex]);
+      localStorage.setItem('themeIndex', '' + themeIndex);
+    }
+
+    updateTheme();
+  </script>
+</body>
+
+</html>
