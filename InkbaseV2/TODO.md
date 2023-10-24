@@ -12,8 +12,6 @@
 - P1: when breaking apart handles, put a temp finger of god constraint
   on left over handle
 
-- P1: formula grammar requires =, has expr on RHS
-
 - P1: when erasing inside a formula, call a different method (not remove)
   (Marcel)
 
