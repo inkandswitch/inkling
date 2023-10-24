@@ -3,6 +3,7 @@ export interface Position {
   y: number;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isPosition(value: any): value is Position {
   return (
     value instanceof Object &&
@@ -19,4 +20,8 @@ export interface PositionWithPressure extends Position {
 
 export interface PositionWithRadius extends Position {
   radius: number;
+}
+
+export interface Removable {
+  remove(): void;
 }
