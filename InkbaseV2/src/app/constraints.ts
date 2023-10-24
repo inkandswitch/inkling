@@ -550,9 +550,7 @@ class LLFormula extends LowLevelConstraint {
     return currValue - this.result.value;
   }
 
-  private computeResult(
-    xs: number[] = this.args.map(arg => arg.value)
-  ): number {
+  computeResult(xs: number[] = this.args.map(arg => arg.value)): number {
     return this.fn(xs);
   }
 }
@@ -919,13 +917,18 @@ export class Formula extends Constraint {
   }
 
   readonly result: Variable;
+  readonly llFormula: LLFormula;
 
   private constructor(args: Variable[], fn: (xs: number[]) => number) {
     super();
-    const fc = new LLFormula(this, args, fn);
-    this.lowLevelConstraints.push(fc);
-    this.result = fc.result;
+    this.llFormula = new LLFormula(this, args, fn);
+    this.lowLevelConstraints.push(this.llFormula);
+    this.result = this.llFormula.result;
     this.variables.push(...args, this.result);
+  }
+
+  computeResult() {
+    return this.llFormula.computeResult();
   }
 }
 

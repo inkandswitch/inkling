@@ -155,6 +155,7 @@ export default class FormulaCompiler {
             return null;
           }
           const formula = createFormulaConstraint([...vars], e.compile());
+          ref.variable.value = formula.computeResult(); // obliterates the result
           constraints.equals(ref.variable, formula.result);
           return formula;
         },
@@ -176,6 +177,7 @@ export default class FormulaCompiler {
             right.compile()
           );
           constraints.equals(rightFormula.result, leftFormula.result);
+          rightFormula.result.value = leftFormula.computeResult(); // give preference to LHS
           return {
             remove() {
               leftFormula.remove();
