@@ -78,7 +78,8 @@ export default class NumberToken extends Token {
     if (Number.isNaN(value)) {
       value = 0;
     }
-    VarMover.move(this.variable, value, 0.2);
+    // VarMover.move(this.variable, value, 0.2);
+    this.variable.value = value;
   }
 
   render(dt: number, t: number): void {
