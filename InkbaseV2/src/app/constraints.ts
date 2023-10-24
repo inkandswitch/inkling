@@ -97,7 +97,7 @@ export class Variable {
     return m * value + b;
   }
 
-  // y.makeEqualTo(x, { m, b }) ==> y = m * x + b
+  /** y.makeEqualTo(x, { m, b }) ==> y = m * x + b */
   makeEqualTo(that: Variable, offset = { m: 1, b: 0 }) {
     if (this === that) {
       return;
