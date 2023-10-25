@@ -85,6 +85,7 @@ export default class Formula extends Token {
 
     if (filteredTokens.length === 0) {
       this.editing = false;
+      this.remove();
       return;
     }
 
@@ -113,6 +114,10 @@ export default class Formula extends Token {
       this.adopt(new NumberToken());
     }
 
+    for (const numberToken of this.findAll({ what: aNumberToken })) {
+      numberToken.refreshValue();
+    }
+
     // Compile the formula
     const compiler = new FormulaCompiler(this.page);
     const newFormulaConstraint = compiler.compile(this.getFormulaAsText());
@@ -121,12 +126,8 @@ export default class Formula extends Token {
       return;
     }
 
-    this.discardEmptyTokens();
-
     this.constraint = newFormulaConstraint;
-    for (const numberToken of this.findAll({ what: aNumberToken })) {
-      numberToken.refreshValue();
-    }
+    this.discardEmptyTokens();
 
     this.editing = false;
     this.updateCells();
