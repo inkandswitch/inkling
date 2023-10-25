@@ -20,8 +20,8 @@ const PADDING = 3;
 // Can be improved significiantly if we have a better interface
 
 export default class Formula extends Token {
-  maxHp = 120;
-  hp = this.maxHp;
+  // maxHp = 120;
+  // hp = this.maxHp;
 
   static createFromContext(ctx: EventContext, token?: Token) {
     const formula = new Formula();
@@ -322,11 +322,11 @@ export default class Formula extends Token {
   }
 
   render(dt: number, t: number): void {
-    // Heal
-    this.hp = clip(this.hp + 1, 0, this.maxHp);
-    SVG.update(this.boxElement, {
-      opacity: this.hp / this.maxHp,
-    });
+    // // Heal
+    // this.hp = clip(this.hp + 1, 0, this.maxHp);
+    // SVG.update(this.boxElement, {
+    //   opacity: this.hp / this.maxHp,
+    // });
 
     // Process input
     if (this.editing) {
@@ -379,6 +379,7 @@ export default class Formula extends Token {
   }
 
   remove() {
+    this.constraint?.remove();
     this.boxElement.remove();
     for (const child of this.children) {
       child.remove();
