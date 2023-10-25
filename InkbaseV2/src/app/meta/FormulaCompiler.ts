@@ -147,7 +147,6 @@ export default class FormulaCompiler {
       })
       .addOperation<Removable | null>('toConstraint', {
         Formula_oneExp(e, eq, ref, end) {
-          console.log('aaa');
           let vars: Set<Variable>;
           try {
             vars = e.vars;
@@ -156,21 +155,10 @@ export default class FormulaCompiler {
             return null;
           }
           const formula = createFormulaConstraint([...vars], e.compile());
-          console.log(
-            'f formula result (pre)',
-            formula.result.value,
-            formula.result
-          );
           constraints.equals(ref.variable, formula.result);
-          console.log(
-            'f formula result (post)',
-            formula.result.value,
-            formula.result
-          );
           return formula;
         },
         Formula_twoExps(left, eq, right) {
-          console.log('bbb');
           let leftVars: Set<Variable>, rightVars: Set<Variable>;
           try {
             leftVars = left.vars;
@@ -187,21 +175,9 @@ export default class FormulaCompiler {
             [...rightVars],
             right.compile()
           );
-          console.log(
-            'formula results (pre)',
-            leftFormula.result.value,
-            leftFormula.result,
-            rightFormula.result.value,
-            rightFormula.result
-          );
           constraints.equals(rightFormula.result, leftFormula.result);
-          console.log(
-            'formula results (post)',
-            leftFormula.result.value,
-            leftFormula.result,
-            rightFormula.result.value,
-            rightFormula.result
-          );
+          // const ks = [...leftVars].map(lv => constraints.constant(lv));
+          // setTimeout(() => ks.forEach(k => k.remove()), 100);
           return {
             remove() {
               leftFormula.remove();
