@@ -25292,9 +25292,10 @@ var MetaToggle = class extends GameObject {
         const d = rand(1, 3);
         points2.push(vec_default.polar(a, d));
       }
-      const g = Svg_default.add("g", splatsElm, {class: "splat"});
-      Svg_default.add("polyline", g, {points: Svg_default.points(points2)});
-      this.splats.push(g);
+      this.splats.push(Svg_default.add("polyline", splatsElm, {
+        points: Svg_default.points(points2),
+        class: "splat"
+      }));
     }
     Svg_default.add("circle", this.element, {class: "secret", r: radius});
     this.resplat();
@@ -25302,35 +25303,28 @@ var MetaToggle = class extends GameObject {
   resplat() {
     if (!this.active) {
       let angles = [];
-      angles = [];
-      for (let i = rand(3, 8); i > 0; i--) {
-        angles.push(rand(0, 360));
-      }
       this.splats.forEach((splat) => {
-        let curve = rand(0, 1) ** 8;
-        let a = curve < 0.5 ? rand(0, 360) : angles[rand(0, angles.length) | 0];
-        curve = curve < 0.5 ? 0 : curve;
+        angles = [];
+        for (let i = rand(2, 12); i > 0; i--) {
+          angles.push(rand(0, 360));
+        }
+        const a = angles[rand(0, angles.length) | 0];
+        const curve = rand(0, 1) ** 8;
         const mass = lerpN(curve, 1, 0.5);
-        const t = curve < 0.5 ? 10 : rand(18, 24);
-        const squish = curve * rand(0, 0.7);
-        const xtra = curve < 0.5 ? " wobble" : "";
-        const scale = lerpN(curve, 0.5, 1);
-        const h = rand(0, 360);
+        const t = 10 / mass / mass;
+        const squish = rand(0, 0.7);
         Svg_default.update(splat, {
           style: `scale: .25; transition-delay: ${rand(0, 0.17)}s`,
-          class: "splat" + xtra,
           transform: `
             rotate(${a})
             translate(${t})
-            scale(${scale + squish}, ${scale - squish})
+            scale(${1 + squish}, ${1 - squish})
           `
         });
       });
     } else {
       this.splats.forEach((splat) => {
-        Svg_default.update(splat, {
-          style: `scale: 0.1; transition-delay: ${rand(0, 0.1)}s`
-        });
+        Svg_default.update(splat, {style: `scale: 0.1`});
       });
     }
   }

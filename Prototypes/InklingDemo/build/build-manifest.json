@@ -1,7 +1,7 @@
 {
   "inputs": {
     "style.css": {
-      "bytes": 10918,
+      "bytes": 10567,
       "imports": []
     },
     "lib/math.js": {
@@ -633,7 +633,7 @@
       "imports": []
     },
     "app/gui/MetaToggle.js": {
-      "bytes": 3729,
+      "bytes": 3405,
       "imports": [
         {
           "path": "lib/types.js",
@@ -1134,10 +1134,10 @@
       "entryPoint": "style.css",
       "inputs": {
         "style.css": {
-          "bytesInOutput": 9300
+          "bytesInOutput": 9015
         }
       },
-      "bytes": 9316
+      "bytes": 9031
     },
     "../~~bundle~~/app/App.js": {
       "imports": [],
@@ -1265,7 +1265,7 @@
           "bytesInOutput": 307
         },
         "app/gui/MetaToggle.js": {
-          "bytesInOutput": 3698
+          "bytesInOutput": 3366
         },
         "app/gestures/MetaToggle.js": {
           "bytesInOutput": 633
@@ -1325,7 +1325,7 @@
           "bytesInOutput": 526
         }
       },
-      "bytes": 876450
+      "bytes": 876118
     }
   }
 }
