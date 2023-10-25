@@ -22,9 +22,15 @@
 
 - P4: in meta mode, should you be able to break apart ink handles?
 
+- P4: should we be able to delete a handle w/ a pin if it's not
+  connected to anything? (right now we can't)
+
 - P1292: When using KB+M, a way to put a finger down and leave it there (and remove it later)
 
 ## Bugs
+
+- P1/2: can't erase a connection between a number outside a formula and inside
+  (deleting the line does nothing)
 
 - P1/2: Wires to formula cells render behind the formula box. This is bad.
   (Ivan)
