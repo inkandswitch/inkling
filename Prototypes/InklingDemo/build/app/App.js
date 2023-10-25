@@ -32061,7 +32061,7 @@ function erase(ctx) {
       moved(ctx2) {
         spawn(ctx2.event.position);
         const gos = ctx2.root.findAll({
-          what: ctx2.metaToggle.active ? aGameObject : aStrokeOrGroup,
+          what: ctx2.metaToggle.active ? aMetaErasable : aConcreteErasable,
           near: ctx2.event.position,
           tooFar: 10
         });
@@ -32083,7 +32083,9 @@ function spawn(p) {
   Svg_default.add("line", elm, {y2: 6});
   elm.onanimationend = () => elm.remove();
 }
-var aStrokeOrGroup = (gameObj) => gameObj instanceof StrokeGroup_default || gameObj instanceof Stroke_default ? gameObj : null;
+var concreteErasables = [StrokeGroup_default, Stroke_default, MetaToggle_default];
+var aConcreteErasable = (gameObj) => concreteErasables.some((cls) => gameObj instanceof cls) ? gameObj : null;
+var aMetaErasable = aGameObject;
 
 // app/gestures/ToggleHandles.js
 function toggleHandles(ctx) {

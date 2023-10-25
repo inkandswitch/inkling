@@ -942,7 +942,7 @@
       ]
     },
     "app/gestures/Erase.js": {
-      "bytes": 1079,
+      "bytes": 1233,
       "imports": [
         {
           "path": "app/gestures/Gesture.js",
@@ -966,6 +966,10 @@
         },
         {
           "path": "app/ink/StrokeGroup.js",
+          "kind": "import-statement"
+        },
+        {
+          "path": "app/gui/MetaToggle.js",
           "kind": "import-statement"
         }
       ]
@@ -1307,7 +1311,7 @@
           "bytesInOutput": 337
         },
         "app/gestures/Erase.js": {
-          "bytesInOutput": 870
+          "bytesInOutput": 974
         },
         "app/gestures/ToggleHandles.js": {
           "bytesInOutput": 779
@@ -1325,7 +1329,7 @@
           "bytesInOutput": 526
         }
       },
-      "bytes": 876118
+      "bytes": 876222
     }
   }
 }
