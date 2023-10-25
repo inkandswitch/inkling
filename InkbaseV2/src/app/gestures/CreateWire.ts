@@ -113,12 +113,12 @@ export function createWire(ctx: EventContext): Gesture | void {
           if (wire.a?.deref()?.value instanceof MetaStruct) {
             const p = ctx.page.adopt(new PropertyPicker());
             p.position = ctx.event.position;
-            (primaryToken.parent as Formula).insertAt(primaryToken, p);
+            (primaryToken.parent as Formula).insertInto(primaryToken, p);
             wire.attachEnd(p.inputPort);
             ctx.page.adopt(new PropertyPickerEditor(p));
           } else {
             const n = new NumberToken();
-            (primaryToken.parent as Formula).insertAt(primaryToken, n);
+            (primaryToken.parent as Formula).insertInto(primaryToken, n);
             wire.attachEnd(n.wirePort);
             n.editValue = (
               wire.a?.deref()?.value as MetaNumber
