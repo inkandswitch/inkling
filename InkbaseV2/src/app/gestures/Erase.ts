@@ -5,6 +5,7 @@ import { Position } from '../../lib/types';
 import { GameObject, aGameObject } from '../GameObject';
 import Stroke, { aStroke } from '../ink/Stroke';
 import StrokeGroup from '../ink/StrokeGroup';
+import MetaToggle from '../gui/MetaToggle';
 
 export function erase(ctx: EventContext): Gesture | void {
   if (ctx.pseudoCount === 2) {
@@ -13,7 +14,7 @@ export function erase(ctx: EventContext): Gesture | void {
         spawn(ctx.event.position);
 
         const gos = ctx.root.findAll({
-          what: ctx.metaToggle.active ? aGameObject : aStrokeOrGroup,
+          what: ctx.metaToggle.active ? aMetaErasable : aConcreteErasable,
           near: ctx.event.position,
           tooFar: 10,
         });
@@ -38,5 +39,8 @@ function spawn(p: Position) {
   elm.onanimationend = () => elm.remove();
 }
 
-export const aStrokeOrGroup = (gameObj: GameObject) =>
-  gameObj instanceof StrokeGroup || gameObj instanceof Stroke ? gameObj : null;
+const concreteErasables = [StrokeGroup, Stroke, MetaToggle];
+export const aConcreteErasable = (gameObj: GameObject) =>
+  concreteErasables.some(cls => gameObj instanceof cls) ? gameObj : null;
+
+export const aMetaErasable = aGameObject;
