@@ -59,18 +59,6 @@ export default class Formula extends Token {
       this.constraint = null;
     }
 
-    // remove anything after the '=' sign
-    // TODO: I don't really like this, but okay for now
-    const tokens = this.findAll({ what: aToken });
-    const equalsTokenIndex = tokens.findIndex(
-      t => t instanceof OpToken && t.stringValue === '='
-    );
-    if (equalsTokenIndex >= 0) {
-      while (equalsTokenIndex < tokens.length) {
-        tokens.pop()!.remove();
-      }
-    }
-
     // create new empty spaces
     this.adopt(new EmptyToken());
     this.adopt(new EmptyToken());
