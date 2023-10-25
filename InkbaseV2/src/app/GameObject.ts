@@ -61,6 +61,7 @@ export abstract class GameObject {
   }
 
   remove() {
+    // TODO: remove my children here?
     this.parent?.children.delete(this);
     this.parent = null;
   }
