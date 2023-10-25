@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["/Users/admin/Work/Inkling/InkbaseV2/src/app/Page.ts"],
+  "sourcesContent": ["import { aStrokeGroup } from './ink/StrokeGroup';\nimport Stroke from './ink/Stroke';\nimport { Position } from '../lib/types';\nimport { GameObject } from './GameObject';\nimport { MetaStruct } from './meta/MetaSemantics';\n\nexport default class Page extends GameObject {\n  readonly scope = new MetaStruct([]);\n\n  constructor() {\n    super();\n  }\n\n  get strokeGroups() {\n    return this.findAll({ what: aStrokeGroup, recursive: false });\n  }\n\n  addStroke<S extends Stroke>(stroke: S) {\n    return this.adopt(stroke);\n  }\n\n  distanceToPoint(point: Position) {\n    return null;\n  }\n\n  render(dt: number, t: number) {\n    for (const child of this.children) {\n      child.render(dt, t);\n    }\n  }\n}\n"],
+  "mappings": "AAAA;AAGA;AACA;AAEA,kCAAkC,WAAW;AAAA,EAG3C,cAAc;AACZ;AAHO,iBAAQ,IAAI,WAAW;AAAA;AAAA,MAM5B,eAAe;AACjB,WAAO,KAAK,QAAQ,CAAE,MAAM,cAAc,WAAW;AAAA;AAAA,EAGvD,UAA4B,QAAW;AACrC,WAAO,KAAK,MAAM;AAAA;AAAA,EAGpB,gBAAgB,OAAiB;AAC/B,WAAO;AAAA;AAAA,EAGT,OAAO,IAAY,GAAW;AAC5B,eAAW,SAAS,KAAK,UAAU;AACjC,YAAM,OAAO,IAAI;AAAA;AAAA;AAAA;",
+  "names": []
+}

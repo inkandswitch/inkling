@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["/Users/admin/Work/Inkling/InkbaseV2/src/lib/bounding_box.ts"],
+  "sourcesContent": ["import { Position } from './types';\n\nexport function boundingBoxFromStrokes(strokes: Position[][]) {\n  let minX = Infinity;\n  let maxX = -Infinity;\n  let minY = Infinity;\n  let maxY = -Infinity;\n\n  for (const stroke of strokes) {\n    for (const pt of stroke) {\n      if (pt.x < minX) {\n        minX = pt.x;\n      }\n      if (pt.x > maxX) {\n        maxX = pt.x;\n      }\n\n      if (pt.y < minY) {\n        minY = pt.y;\n      }\n      if (pt.y > maxY) {\n        maxY = pt.y;\n      }\n    }\n  }\n\n  return {\n    minX,\n    maxX,\n    minY,\n    maxY,\n    width: maxX - minX,\n    height: maxY - minY,\n  };\n}\n"],
+  "mappings": "AAEO,uCAAgC,SAAuB;AAC5D,MAAI,OAAO;AACX,MAAI,OAAO;AACX,MAAI,OAAO;AACX,MAAI,OAAO;AAEX,aAAW,UAAU,SAAS;AAC5B,eAAW,MAAM,QAAQ;AACvB,UAAI,GAAG,IAAI,MAAM;AACf,eAAO,GAAG;AAAA;AAEZ,UAAI,GAAG,IAAI,MAAM;AACf,eAAO,GAAG;AAAA;AAGZ,UAAI,GAAG,IAAI,MAAM;AACf,eAAO,GAAG;AAAA;AAEZ,UAAI,GAAG,IAAI,MAAM;AACf,eAAO,GAAG;AAAA;AAAA;AAAA;AAKhB,SAAO;AAAA,IACL;AAAA,IACA;AAAA,IACA;AAAA,IACA;AAAA,IACA,OAAO,OAAO;AAAA,IACd,QAAQ,OAAO;AAAA;AAAA;",
+  "names": []
+}

@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["/Users/admin/Work/Inkling/InkbaseV2/src/app/gestures/DrawInk.ts"],
+  "sourcesContent": ["import { EventContext, Gesture } from './Gesture';\nimport Stroke from '../ink/Stroke';\nimport StrokeGroup from '../ink/StrokeGroup';\nimport { aMetaToggle } from '../gui/MetaToggle';\n\nexport function drawInk(ctx: EventContext): Gesture | void {\n  if (!ctx.metaToggle.active) {\n    // If the touch begins on the Meta Toggle, don't draw ink\n    if (\n      ctx.root.find({\n        what: aMetaToggle,\n        near: ctx.event.position,\n        recursive: false,\n        tooFar: 35,\n      })\n    ) {\n      return;\n    }\n\n    const stroke = ctx.page.addStroke(new Stroke());\n\n    return new Gesture('Draw Ink', {\n      moved(ctx) {\n        stroke.points.push(ctx.event.position);\n      },\n      ended(ctx) {\n        if (!ctx.state.drag && ctx.state.dragDist < 20) {\n          stroke.remove();\n        }\n      },\n    });\n  }\n}\n"],
+  "mappings": "AAAA;AACA;AAEA;AAEO,wBAAiB,KAAmC;AACzD,MAAI,CAAC,IAAI,WAAW,QAAQ;AAE1B,QACE,IAAI,KAAK,KAAK;AAAA,MACZ,MAAM;AAAA,MACN,MAAM,IAAI,MAAM;AAAA,MAChB,WAAW;AAAA,MACX,QAAQ;AAAA,QAEV;AACA;AAAA;AAGF,UAAM,SAAS,IAAI,KAAK,UAAU,IAAI;AAEtC,WAAO,IAAI,QAAQ,YAAY;AAAA,MAC7B,MAAM,MAAK;AACT,eAAO,OAAO,KAAK,KAAI,MAAM;AAAA;AAAA,MAE/B,MAAM,MAAK;AACT,YAAI,CAAC,KAAI,MAAM,QAAQ,KAAI,MAAM,WAAW,IAAI;AAC9C,iBAAO;AAAA;AAAA;AAAA;AAAA;AAAA;",
+  "names": []
+}

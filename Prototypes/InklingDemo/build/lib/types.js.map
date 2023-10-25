@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["/Users/admin/Work/Inkling/InkbaseV2/src/lib/types.ts"],
+  "sourcesContent": ["export interface Position {\n  x: number;\n  y: number;\n}\n\n// eslint-disable-next-line @typescript-eslint/no-explicit-any\nexport function isPosition(value: any): value is Position {\n  return (\n    value instanceof Object &&\n    typeof value.x === 'number' &&\n    typeof value.y === 'number'\n  );\n}\n\n// TODO: move this to the right place -- it's application-specific,\n// so it doesn't belong here.\nexport interface PositionWithPressure extends Position {\n  pressure: number;\n}\n\nexport interface PositionWithRadius extends Position {\n  radius: number;\n}\n\nexport interface Removable {\n  remove(): void;\n}\n"],
+  "mappings": "AAMO,2BAAoB,OAA+B;AACxD,SACE,iBAAiB,UACjB,OAAO,MAAM,MAAM,YACnB,OAAO,MAAM,MAAM;AAAA;",
+  "names": []
+}

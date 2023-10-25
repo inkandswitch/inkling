@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["/Users/admin/Work/Inkling/InkbaseV2/src/app/gestures/ToggleWire.ts"],
+  "sourcesContent": ["import { aWire } from '../meta/Wire';\nimport { EventContext, Gesture } from './Gesture';\n\nexport function toggleWire(ctx: EventContext): Gesture | void {\n  if (ctx.metaToggle.active) {\n    const wire = ctx.page.find({\n      what: aWire,\n      near: ctx.event.position,\n    });\n\n    if (wire) {\n      return new Gesture('Toggle Wire', {\n        ended(ctx) {\n          if (!ctx.state.drag) {\n            wire.togglePaused();\n          }\n        },\n      });\n    }\n  }\n}\n"],
+  "mappings": "AAAA;AACA;AAEO,2BAAoB,KAAmC;AAC5D,MAAI,IAAI,WAAW,QAAQ;AACzB,UAAM,OAAO,IAAI,KAAK,KAAK;AAAA,MACzB,MAAM;AAAA,MACN,MAAM,IAAI,MAAM;AAAA;AAGlB,QAAI,MAAM;AACR,aAAO,IAAI,QAAQ,eAAe;AAAA,QAChC,MAAM,MAAK;AACT,cAAI,CAAC,KAAI,MAAM,MAAM;AACnB,iBAAK;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA;",
+  "names": []
+}

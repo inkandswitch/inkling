@@ -1,0 +1,6 @@
+{
+  "imports": {
+    "@doodle3d/clipper-js": "./@doodle3d/clipper-js.js",
+    "ohm-js": "./ohm-js.js"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["/Users/admin/Work/Inkling/InkbaseV2/src/app/meta/Outline.ts"],
+  "sourcesContent": ["export default class Outline {}\n"],
+  "mappings": "AAAA,6BAA6B;AAAA;",
+  "names": []
+}

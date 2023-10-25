@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["/Users/admin/Work/Inkling/InkbaseV2/src/app/gestures/Gizmo.ts"],
+  "sourcesContent": ["import { EventContext, Gesture } from './Gesture';\nimport { aGizmo } from '../meta/Gizmo';\nimport Vec from '../../lib/vec';\n\nexport function touchGizmo(ctx: EventContext): Gesture | void {\n  if (ctx.metaToggle.active) {\n    // TODO: We only want to perform this gesture on a tap near the center of the gizmo.\n    // But for other gestures, we want to perform them when any part of the gizmo is touched.\n    // The current GameObject.find() method doesn't seemingly allow for this sort of distinction,\n    // where different find() calls need a different distanceToPoint() implementation.\n    const gizmo = ctx.root.find({\n      what: aGizmo,\n      that: g => g.centerDistanceToPoint(ctx.event.position) < 50,\n    });\n\n    if (gizmo) {\n      return new Gesture('Touch Gizmo', {\n        ended(ctx) {\n          gizmo.cycleConstraints();\n        },\n      });\n    }\n  }\n}\n"],
+  "mappings": "AAAA;AACA;AAGO,2BAAoB,KAAmC;AAC5D,MAAI,IAAI,WAAW,QAAQ;AAKzB,UAAM,QAAQ,IAAI,KAAK,KAAK;AAAA,MAC1B,MAAM;AAAA,MACN,MAAM,OAAK,EAAE,sBAAsB,IAAI,MAAM,YAAY;AAAA;AAG3D,QAAI,OAAO;AACT,aAAO,IAAI,QAAQ,eAAe;AAAA,QAChC,MAAM,MAAK;AACT,gBAAM;AAAA;AAAA;AAAA;AAAA;AAAA;",
+  "names": []
+}

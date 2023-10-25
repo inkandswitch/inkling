@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["/Users/admin/Work/Inkling/InkbaseV2/src/app/Store.ts"],
+  "sourcesContent": ["export type Serializable =\n  | null\n  | boolean\n  | number\n  | string\n  | Serializable[]\n  | { [key: string]: Serializable };\n\ntype InitArgs<T extends Serializable> = {\n  name: string;\n  isValid: (value: Serializable) => value is T;\n  def: T;\n};\n\nexport default {\n  init<T extends Serializable>({ name, isValid, def }: InitArgs<T>) {\n    const result = this.get(name);\n    return isValid(result) ? result : def;\n  },\n\n  set<T extends Serializable>(key: string, val: T) {\n    localStorage.setItem(key, JSON.stringify(val));\n    return val;\n  },\n\n  // eslint-disable-next-line @typescript-eslint/no-explicit-any\n  get(key: string): any {\n    return JSON.parse(localStorage.getItem(key) || 'null');\n  },\n};\n"],
+  "mappings": "AAcA,eAAe;AAAA,EACb,KAA6B,CAAE,MAAM,SAAS,MAAoB;AAChE,UAAM,SAAS,KAAK,IAAI;AACxB,WAAO,QAAQ,UAAU,SAAS;AAAA;AAAA,EAGpC,IAA4B,KAAa,KAAQ;AAC/C,iBAAa,QAAQ,KAAK,KAAK,UAAU;AACzC,WAAO;AAAA;AAAA,EAIT,IAAI,KAAkB;AACpB,WAAO,KAAK,MAAM,aAAa,QAAQ,QAAQ;AAAA;AAAA;",
+  "names": []
+}

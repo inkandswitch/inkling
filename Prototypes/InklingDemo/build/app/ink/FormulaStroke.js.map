@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["/Users/admin/Work/Inkling/InkbaseV2/src/app/ink/FormulaStroke.ts"],
+  "sourcesContent": ["import Stroke from './Stroke';\nimport SVG from '../Svg';\n\nexport default class FormulaStroke extends Stroke {\n  protected element = SVG.add('polyline', SVG.guiElm, {\n    class: 'formula stroke',\n  });\n}\n"],
+  "mappings": "AAAA;AACA;AAEA,2CAA2C,OAAO;AAAA,EAAlD,cAHA;AAGA;AACY,mBAAU,IAAI,IAAI,YAAY,IAAI,QAAQ;AAAA,MAClD,OAAO;AAAA;AAAA;AAAA;",
+  "names": []
+}
