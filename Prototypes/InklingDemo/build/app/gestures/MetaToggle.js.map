@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["/Users/admin/Work/Inkling/InkbaseV2/src/app/gestures/MetaToggle.ts"],
-  "sourcesContent": ["import { EventContext, Gesture } from './Gesture';\nimport { aMetaToggle } from '../gui/MetaToggle';\n\ndeclare global {\n  function cycleTheme(): void;\n}\n\nexport function touchMetaToggle(ctx: EventContext): Gesture | void {\n  const metaToggle = ctx.root.find({\n    what: aMetaToggle,\n    near: ctx.event.position,\n    recursive: false,\n    tooFar: 50,\n  });\n\n  const dragThreshold = 100;\n\n  if (metaToggle) {\n    return new Gesture('Touch Meta Toggle', {\n      moved(ctx) {\n        if (ctx.state.dragDist > dragThreshold) {\n          metaToggle.dragTo(ctx.event.position);\n        }\n      },\n      ended(ctx) {\n        metaToggle.snapToCorner();\n        if (ctx.pseudo) {\n          cycleTheme();\n        } else if (ctx.state.dragDist <= dragThreshold) {\n          metaToggle.toggle();\n        }\n      },\n    });\n  }\n}\n"],
-  "mappings": "AAAA;AACA;AAMO,gCAAyB,KAAmC;AACjE,QAAM,aAAa,IAAI,KAAK,KAAK;AAAA,IAC/B,MAAM;AAAA,IACN,MAAM,IAAI,MAAM;AAAA,IAChB,WAAW;AAAA,IACX,QAAQ;AAAA;AAGV,QAAM,gBAAgB;AAEtB,MAAI,YAAY;AACd,WAAO,IAAI,QAAQ,qBAAqB;AAAA,MACtC,MAAM,MAAK;AACT,YAAI,KAAI,MAAM,WAAW,eAAe;AACtC,qBAAW,OAAO,KAAI,MAAM;AAAA;AAAA;AAAA,MAGhC,MAAM,MAAK;AACT,mBAAW;AACX,YAAI,KAAI,QAAQ;AACd;AAAA,mBACS,KAAI,MAAM,YAAY,eAAe;AAC9C,qBAAW;AAAA;AAAA;AAAA;AAAA;AAAA;",
-  "names": []
-}

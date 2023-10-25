@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["/Users/admin/Work/Inkling/InkbaseV2/src/app/gestures/CreateFormula.ts"],
-  "sourcesContent": ["import { EventContext, Gesture } from './Gesture';\nimport Formula from '../meta/Formula';\n\nexport function createFormula(ctx: EventContext): Gesture | void {\n  if (ctx.metaToggle.active) {\n    return new Gesture('Create Formula', {\n      ended(ctx) {\n        if (!ctx.state.drag) {\n          Formula.createFromContext(ctx);\n        }\n      },\n    });\n  }\n}\n"],
-  "mappings": "AAAA;AACA;AAEO,8BAAuB,KAAmC;AAC/D,MAAI,IAAI,WAAW,QAAQ;AACzB,WAAO,IAAI,QAAQ,kBAAkB;AAAA,MACnC,MAAM,MAAK;AACT,YAAI,CAAC,KAAI,MAAM,MAAM;AACnB,kBAAQ,kBAAkB;AAAA;AAAA;AAAA;AAAA;AAAA;",
-  "names": []
-}

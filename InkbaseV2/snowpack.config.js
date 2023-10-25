@@ -7,10 +7,10 @@ module.exports = {
     sourcemap: true,
   },
   buildOptions: {
-    sourcemap: true,
+    sourcemap: false,
   },
   optimize: {
-    bundle: false, // Ivan turned these off so that `dev` and `build` scripts
+    bundle: true, // Ivan turned these off so that `dev` and `build` scripts
     minify: false, // produce identical output, which makes debugging easier.
   },
 };

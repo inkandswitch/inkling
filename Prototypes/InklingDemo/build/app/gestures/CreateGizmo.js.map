@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["/Users/admin/Work/Inkling/InkbaseV2/src/app/gestures/CreateGizmo.ts"],
-  "sourcesContent": ["import Gizmo from '../meta/Gizmo';\nimport { EventContext, Gesture } from './Gesture';\nimport Handle, { aCanonicalHandle } from '../ink/Handle';\nimport { touchHandleHelper } from './Handle';\n\nexport function createGizmo(ctx: EventContext): Gesture | void {\n  if (ctx.metaToggle.active) {\n    const handle = ctx.page.find({\n      what: aCanonicalHandle,\n      near: ctx.event.position,\n    });\n\n    if (handle) {\n      const a = ctx.page.adopt(Handle.create({ ...ctx.event.position }, true));\n      const b = ctx.page.adopt(Handle.create({ ...ctx.event.position }, false));\n      ctx.page.adopt(new Gizmo(a, b));\n      return touchHandleHelper(b);\n    }\n  }\n}\n"],
-  "mappings": "AAAA;AAEA;AACA;AAEO,4BAAqB,KAAmC;AAC7D,MAAI,IAAI,WAAW,QAAQ;AACzB,UAAM,SAAS,IAAI,KAAK,KAAK;AAAA,MAC3B,MAAM;AAAA,MACN,MAAM,IAAI,MAAM;AAAA;AAGlB,QAAI,QAAQ;AACV,YAAM,IAAI,IAAI,KAAK,MAAM,OAAO,OAAO,IAAK,IAAI,MAAM,WAAY;AAClE,YAAM,IAAI,IAAI,KAAK,MAAM,OAAO,OAAO,IAAK,IAAI,MAAM,WAAY;AAClE,UAAI,KAAK,MAAM,IAAI,MAAM,GAAG;AAC5B,aAAO,kBAAkB;AAAA;AAAA;AAAA;",
-  "names": []
-}

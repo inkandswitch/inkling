@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["/Users/admin/Work/Inkling/InkbaseV2/src/app/meta/token-helpers.ts"],
-  "sourcesContent": ["import LabelToken from './LabelToken';\nimport NumberToken from './NumberToken';\nimport PropertyPicker from './PropertyPicker';\nimport Token from './Token';\n\nexport type TokenWithVariable = NumberToken | LabelToken | PropertyPicker;\n\nexport const isTokenWithVariable = (\n  token: Token | null\n): token is TokenWithVariable =>\n  token instanceof NumberToken ||\n  token instanceof LabelToken ||\n  token instanceof PropertyPicker;\n\nexport const isPropertyPicker = (\n  token: Token | null\n): token is PropertyPicker => token instanceof PropertyPicker;\n\nexport const isLabelToken = (token: Token | null): token is LabelToken =>\n  token instanceof LabelToken;\n\nexport const isNumberToken = (token: Token | null): token is NumberToken =>\n  token instanceof NumberToken;\n"],
-  "mappings": "AAAA;AACA;AACA;AAKO,aAAM,sBAAsB,CACjC,UAEA,iBAAiB,eACjB,iBAAiB,cACjB,iBAAiB;AAEZ,aAAM,mBAAmB,CAC9B,UAC4B,iBAAiB;AAExC,aAAM,eAAe,CAAC,UAC3B,iBAAiB;AAEZ,aAAM,gBAAgB,CAAC,UAC5B,iBAAiB;",
-  "names": []
-}

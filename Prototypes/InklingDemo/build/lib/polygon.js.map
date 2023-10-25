@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["/Users/admin/Work/Inkling/InkbaseV2/src/lib/polygon.ts"],
-  "sourcesContent": ["import Line from './line';\nimport { Position } from './types';\nimport Vec from './vec';\n\nexport function closestPointOnPolygon(polygon: Array<Position>, pos: Position) {\n  let closestPoint = polygon[0];\n  let closestDistance = Infinity;\n\n  for (let idx = 0; idx < polygon.length - 1; idx++) {\n    const p1 = polygon[idx];\n    const p2 = polygon[idx + 1];\n    const pt = Line.closestPoint(Line(p1, p2), pos);\n    const distance = Vec.dist(pt, pos);\n    if (distance < closestDistance) {\n      closestPoint = pt;\n      closestDistance = distance;\n    }\n  }\n\n  return closestPoint;\n}\n"],
-  "mappings": "AAAA;AAEA;AAEO,sCAA+B,SAA0B,KAAe;AAC7E,MAAI,eAAe,QAAQ;AAC3B,MAAI,kBAAkB;AAEtB,WAAS,MAAM,GAAG,MAAM,QAAQ,SAAS,GAAG,OAAO;AACjD,UAAM,KAAK,QAAQ;AACnB,UAAM,KAAK,QAAQ,MAAM;AACzB,UAAM,KAAK,KAAK,aAAa,KAAK,IAAI,KAAK;AAC3C,UAAM,WAAW,IAAI,KAAK,IAAI;AAC9B,QAAI,WAAW,iBAAiB;AAC9B,qBAAe;AACf,wBAAkB;AAAA;AAAA;AAItB,SAAO;AAAA;",
-  "names": []
-}

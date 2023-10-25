@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["/Users/admin/Work/Inkling/InkbaseV2/src/app/gestures/PropertyPicker.ts"],
-  "sourcesContent": ["import { EventContext, Gesture } from './Gesture';\nimport { aPropertyPickerEditor } from '../meta/PropertyPickerEditor';\n\nexport function tapPropertyPicker(ctx: EventContext): Gesture | void {\n  if (ctx.metaToggle.active) {\n    const propertyPicker = ctx.page.find({\n      what: aPropertyPickerEditor,\n      near: ctx.event.position,\n      recursive: false,\n    });\n\n    if (propertyPicker) {\n      return new Gesture('Tap Property Picker', {\n        began(ctx) {\n          propertyPicker.onTapInside(ctx.event.position);\n        },\n      });\n    }\n  }\n}\n"],
-  "mappings": "AAAA;AACA;AAEO,kCAA2B,KAAmC;AACnE,MAAI,IAAI,WAAW,QAAQ;AACzB,UAAM,iBAAiB,IAAI,KAAK,KAAK;AAAA,MACnC,MAAM;AAAA,MACN,MAAM,IAAI,MAAM;AAAA,MAChB,WAAW;AAAA;AAGb,QAAI,gBAAgB;AAClB,aAAO,IAAI,QAAQ,uBAAuB;AAAA,QACxC,MAAM,MAAK;AACT,yBAAe,YAAY,KAAI,MAAM;AAAA;AAAA;AAAA;AAAA;AAAA;",
-  "names": []
-}

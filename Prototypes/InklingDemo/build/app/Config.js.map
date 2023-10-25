@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["/Users/admin/Work/Inkling/InkbaseV2/src/app/Config.ts"],
-  "sourcesContent": ["export default {\n  gesture: {\n    debugVisualization: false,\n    reapTouches: false, // This is kinda buggy right now\n    lookAt: false,\n  },\n};\n"],
-  "mappings": "AAAA,eAAe;AAAA,EACb,SAAS;AAAA,IACP,oBAAoB;AAAA,IACpB,aAAa;AAAA,IACb,QAAQ;AAAA;AAAA;",
-  "names": []
-}

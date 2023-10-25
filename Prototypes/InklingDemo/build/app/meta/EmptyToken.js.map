@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["/Users/admin/Work/Inkling/InkbaseV2/src/app/meta/EmptyToken.ts"],
-  "sourcesContent": ["import Token from './Token';\nimport { GameObject } from '../GameObject';\n\nexport default class EmptyToken extends Token {\n  width = 24;\n  height = 30;\n  value = '';\n\n  constructor() {\n    super();\n  }\n\n  isPrimary(): boolean {\n    return true;\n  }\n\n  render(dt: number, t: number): void {\n    // NOOP\n  }\n}\n\nexport const anEmptyToken = (gameObj: GameObject) =>\n  gameObj instanceof EmptyToken ? gameObj : null;\n"],
-  "mappings": "AAAA;AAGA,wCAAwC,MAAM;AAAA,EAK5C,cAAc;AACZ;AALF,iBAAQ;AACR,kBAAS;AACT,iBAAQ;AAAA;AAAA,EAMR,YAAqB;AACnB,WAAO;AAAA;AAAA,EAGT,OAAO,IAAY,GAAiB;AAAA;AAAA;AAK/B,aAAM,eAAe,CAAC,YAC3B,mBAAmB,aAAa,UAAU;",
-  "names": []
-}
