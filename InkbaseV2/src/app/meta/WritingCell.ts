@@ -46,7 +46,7 @@ export default class WritingCell extends GameObject {
     this.timer = 0.5;
   }
 
-  recognizeStrokes() {
+  private recognizeStrokes() {
     const strokes = this.findAll({ what: aStroke }).map(s => s.points);
     if (strokes.length === 0) {
       return;
@@ -56,7 +56,7 @@ export default class WritingCell extends GameObject {
     this.stringValue = result.Name;
 
     // Remember stroke data if we want to add it to the library
-    //this.strokeData = strokes;
+    // this.strokeData = strokes;
 
     // Clean up strokes that have been recognized
     this.children.forEach(child => {

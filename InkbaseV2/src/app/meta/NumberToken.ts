@@ -7,7 +7,7 @@ import * as constraints from '../constraints';
 import * as ohm from 'ohm-js';
 import { GameObject } from '../GameObject';
 import { generateId } from '../../lib/helpers';
-import VarMover from '../VarMover';
+// import VarMover from '../VarMover';
 
 export default class NumberToken extends Token {
   readonly id = generateId();
@@ -69,11 +69,11 @@ export default class NumberToken extends Token {
     this.editValue = array.join('');
   }
 
-  edit() {
+  refreshEditValue() {
     this.editValue = this.variable.value.toFixed(0);
   }
 
-  close() {
+  refreshValue() {
     let value = parseFloat(this.editValue);
     if (Number.isNaN(value)) {
       value = 0;

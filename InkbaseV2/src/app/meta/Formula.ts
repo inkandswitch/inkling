@@ -79,7 +79,7 @@ export default class Formula extends Token {
 
     // Toggle embedded numbers
     for (const numberToken of this.findAll({ what: aNumberToken })) {
-      numberToken.edit();
+      numberToken.refreshEditValue();
     }
 
     // Toggle mode
@@ -95,7 +95,8 @@ export default class Formula extends Token {
     const tokens = this.findAll({ what: aToken });
     const filteredTokens = tokens.filter(t => !(t instanceof EmptyToken));
 
-    if (filteredTokens.length == 0) {
+    if (filteredTokens.length === 0) {
+      this.editing = false;
       return;
     }
 
@@ -105,7 +106,7 @@ export default class Formula extends Token {
       firstToken.embedded = false;
       firstToken.editing = false;
       if (firstToken instanceof NumberToken) {
-        firstToken.close();
+        firstToken.refreshValue();
       }
       this.page.adopt(firstToken);
       this.editing = false;
@@ -136,7 +137,7 @@ export default class Formula extends Token {
 
     this.constraint = newFormulaConstraint;
     for (const numberToken of this.findAll({ what: aNumberToken })) {
-      numberToken.close();
+      numberToken.refreshValue();
     }
 
     this.editing = false;
