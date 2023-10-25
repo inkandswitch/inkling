@@ -4,7 +4,7 @@ import { aPropertyPicker } from './PropertyPicker';
 import { TokenWithVariable } from './token-helpers';
 import Page from '../Page';
 import SVG from '../Svg';
-import { Formula, Variable } from '../constraints';
+import { Variable } from '../constraints';
 import * as constraints from '../constraints';
 import { GameObject } from '../GameObject';
 import * as ohm from 'ohm-js';
