@@ -39,6 +39,12 @@
         <a id="custom" href="#">Custom IP</a>
     </nav>
 
+    <nav>
+        <a class="button" href="Prototypes/InklingDemo/build/">
+            <h1>Get in, nerds!</h1>
+        </a>
+    </nav>
+
     <script>
         document.querySelector("#custom").onclick = (e) => {
             const ip = prompt("Enter your IP (no protocol, no port)", "192.168.x.y");
@@ -66,6 +72,18 @@
 
         hr {
             border: .5px solid #ddd;
+        }
+
+        .button {
+            background: #eee;
+            border: 2px solid currentColor;
+            box-shadow: 0 .2em 1em -.5em black, 0 .2em .2em white inset;
+            border-radius: 8px;
+            text-decoration: none;
+            color: lch(100% 300 0);
+            padding: .2em 1em;
+            margin-top: 20em;
+            margin-left: -10em;
         }
     </style>
 </body>
