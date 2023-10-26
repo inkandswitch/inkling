@@ -7,6 +7,7 @@ export function toggleHandles(ctx: EventContext): Gesture | void {
     const strokeGroup = ctx.page.find({
       what: aStrokeGroup,
       near: ctx.event.position,
+      tooFar: 20,
     });
 
     if (strokeGroup) {
@@ -26,6 +27,7 @@ export function toggleHandles(ctx: EventContext): Gesture | void {
     const stroke = ctx.page.find({
       what: aStroke,
       near: ctx.event.position,
+      tooFar: 50,
     });
 
     if (stroke) {
