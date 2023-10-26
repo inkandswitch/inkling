@@ -62,7 +62,11 @@ export function touchHandleHelper(handle: Handle): Gesture {
       if (!Config.gesture.lookAt) {
         constraints.finger(handle).remove();
       }
-      if (!ctx.state.drag && ctx.metaToggle.active) {
+
+      // Tune: you must tap a little more precisely to toggle a pin than drag a handle
+      // TODO: This creates a small tap deadzone between the stroke (to toggle handles) and the handle (to toggle pin), because the handle claims the gesture but doesn't do anything with it
+      const tappedPrecisely = Vec.dist(handle, ctx.event.position) < 20;
+      if (!ctx.state.drag && ctx.metaToggle.active && tappedPrecisely) {
         handle.togglePin();
       }
     },
