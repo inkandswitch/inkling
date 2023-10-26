@@ -23,7 +23,12 @@ export default class Stroke extends GameObject {
   }
 
   becomeGroup() {
-    return this.parent?.adopt(new StrokeGroup(new Set([this])));
+    let sg;
+    if (!(this.parent instanceof StrokeGroup)) {
+      sg = new StrokeGroup(new Set([this]));
+      this.parent?.adopt(sg);
+    }
+    return sg;
   }
 
   distanceToPoint(point: Position) {
