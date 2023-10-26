@@ -500,7 +500,7 @@
       ]
     },
     "app/meta/Formula.js": {
-      "bytes": 9599,
+      "bytes": 9416,
       "imports": [
         {
           "path": "app/meta/Token.js",
@@ -540,10 +540,6 @@
         },
         {
           "path": "app/meta/PropertyPicker.js",
-          "kind": "import-statement"
-        },
-        {
-          "path": "lib/math.js",
           "kind": "import-statement"
         }
       ]
@@ -942,7 +938,7 @@
       ]
     },
     "app/gestures/Erase.js": {
-      "bytes": 1233,
+      "bytes": 1216,
       "imports": [
         {
           "path": "app/gestures/Gesture.js",
@@ -1248,7 +1244,7 @@
           "bytesInOutput": 4400
         },
         "app/meta/Formula.js": {
-          "bytesInOutput": 9469
+          "bytesInOutput": 9318
         },
         "app/ink/FormulaStroke.js": {
           "bytesInOutput": 251
@@ -1311,7 +1307,7 @@
           "bytesInOutput": 337
         },
         "app/gestures/Erase.js": {
-          "bytesInOutput": 974
+          "bytesInOutput": 957
         },
         "app/gestures/ToggleHandles.js": {
           "bytesInOutput": 779
@@ -1329,7 +1325,7 @@
           "bytesInOutput": 526
         }
       },
-      "bytes": 876222
+      "bytes": 876054
     }
   }
 }

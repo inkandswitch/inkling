@@ -24782,8 +24782,6 @@ var PADDING = 3;
 var Formula2 = class extends Token_default {
   constructor() {
     super(...arguments);
-    this.maxHp = 120;
-    this.hp = this.maxHp;
     this.height = 30 + PADDING * 2;
     this.boxElement = Svg_default.add("rect", Svg_default.metaElm, {
       x: this.position.x,
@@ -25023,10 +25021,6 @@ var Formula2 = class extends Token_default {
     this.updateCells();
   }
   render(dt, t) {
-    this.hp = clip(this.hp + 1, 0, this.maxHp);
-    Svg_default.update(this.boxElement, {
-      opacity: this.hp / this.maxHp
-    });
     if (this.editing) {
       this.updateWritingCells();
     }
@@ -25060,6 +25054,7 @@ var Formula2 = class extends Token_default {
   erase(position) {
   }
   remove() {
+    this.constraint?.remove();
     this.boxElement.remove();
     for (const child of this.children) {
       child.remove();
@@ -32066,8 +32061,7 @@ function erase(ctx) {
           tooFar: 10
         });
         for (const go of gos) {
-          go.hp--;
-          if (go.hp <= 0) {
+          if (--go.hp <= 0) {
             go.remove();
           }
         }
