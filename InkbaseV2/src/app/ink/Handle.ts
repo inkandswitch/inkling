@@ -71,6 +71,8 @@ export default class Handle extends GameObject {
     this.frontElm.remove();
     if (!this.isCanonical) {
       this.canonicalInstance.breakOff(this);
+    } else if (this.absorbedHandles.size > 1) {
+      // TODO: Pick one of the absorbed handles to become the new cannonicalInstance
     }
     this.xVariable.remove();
     this.yVariable.remove();

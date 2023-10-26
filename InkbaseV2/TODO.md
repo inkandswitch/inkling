@@ -11,6 +11,8 @@
 - P1: when erasing inside a formula, call a different method (not remove)
   (Marcel)
 
+- P2: When removing a canonicalInstance handle, pick one of the absorbed handles to become the new canonicalInstance
+
 - P2: tokens snap to each other, and can be moved together w/ a single finger
   (e.g., two number tokens, or a number token right next to a property picker)
   (Marcel)
