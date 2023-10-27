@@ -40,7 +40,7 @@ export default class NumberToken extends Token {
 
   constructor(value?: number, source?: ohm.Interval);
   constructor(variable: Variable, source?: ohm.Interval);
-  constructor(arg: number | Variable = 0, source?: ohm.Interval) {
+  constructor(arg: number | Variable = 1, source?: ohm.Interval) {
     super(source);
     if (arg instanceof Variable) {
       this.variable = arg;
