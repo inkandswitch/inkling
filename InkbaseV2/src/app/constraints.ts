@@ -373,7 +373,7 @@ class Angle extends LowLevelConstraint {
     this.variables.push(
       variable(Vec.angle(Vec.sub(b.position, a.position)), {
         object: constraint,
-        property: 'distance',
+        property: 'angle',
       }),
       a.xVariable,
       a.yVariable,
