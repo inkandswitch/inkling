@@ -26,6 +26,7 @@ Formula {
 
   MulExp
     = MulExp "×" UnExp  -- mul
+    | MulExp "/" UnExp  -- div
     | UnExp
 
   UnExp
@@ -99,6 +100,10 @@ export default class FormulaCompiler {
           a.collectVars(this.args.vars);
           b.collectVars(this.args.vars);
         },
+        MulExp_div(a, op, b) {
+          a.collectVars(this.args.vars);
+          b.collectVars(this.args.vars);
+        },
         UnExp_neg(op, e) {
           e.collectVars(this.args.vars);
         },
@@ -128,6 +133,9 @@ export default class FormulaCompiler {
         },
         MulExp_mul(a, op, b) {
           return `(${a.compile()} * ${b.compile()})`;
+        },
+        MulExp_div(a, op, b) {
+          return `((a, b) => b === 0 ? 0 : a / b)(${a.compile()}, ${b.compile()})`;
         },
         UnExp_neg(op, e) {
           return `(${op.sourceString}${e.compile()})`;
