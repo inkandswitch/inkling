@@ -100,6 +100,7 @@ export class Variable {
   /** y.makeEqualTo(x, { m, b }) ==> y = m * x + b */
   makeEqualTo(that: Variable, offset = { m: 1, b: 0 }) {
     if (this === that) {
+      // TODO: set m to 1 and b to 0?
       return;
     } else if (!this.info.isCanonical) {
       const { m: mThat, b: bThat } = offset;
