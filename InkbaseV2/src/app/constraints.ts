@@ -297,7 +297,7 @@ abstract class LowLevelConstraint {
   ): number;
 }
 
-class Distance extends LowLevelConstraint {
+class LLDistance extends LowLevelConstraint {
   constructor(
     constraint: Constraint,
     public readonly a: Handle,
@@ -324,7 +324,7 @@ class Distance extends LowLevelConstraint {
   addTo(constraints: LowLevelConstraint[]) {
     for (const that of constraints) {
       if (
-        that instanceof Distance &&
+        that instanceof LLDistance &&
         ((this.a.equals(that.a) && this.b.equals(that.b)) ||
           (this.a.equals(that.b) && this.b.equals(that.a)))
       ) {
@@ -364,7 +364,7 @@ class Distance extends LowLevelConstraint {
   }
 }
 
-class Angle extends LowLevelConstraint {
+class LLAngle extends LowLevelConstraint {
   constructor(
     constraint: Constraint,
     public readonly a: Handle,
@@ -390,7 +390,7 @@ class Angle extends LowLevelConstraint {
 
   addTo(constraints: LowLevelConstraint[]) {
     for (const that of constraints) {
-      if (!(that instanceof Angle)) {
+      if (!(that instanceof LLAngle)) {
         continue;
       } else if (this.a.equals(that.a) && this.b.equals(that.b)) {
         that.angle.makeEqualTo(this.angle);
@@ -884,11 +884,11 @@ export class PolarVector extends Constraint {
   ) {
     super();
 
-    const dc = new Distance(this, a, b);
+    const dc = new LLDistance(this, a, b);
     this.lowLevelConstraints.push(dc);
     this.distance = dc.distance;
 
-    const ac = new Angle(this, a, b);
+    const ac = new LLAngle(this, a, b);
     this.lowLevelConstraints.push(ac);
     this.angle = ac.angle;
 
