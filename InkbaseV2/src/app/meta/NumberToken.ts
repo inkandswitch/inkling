@@ -162,6 +162,7 @@ export default class NumberToken extends Token {
   }
 
   remove() {
+    this.variable.remove();
     this.elm.remove();
     super.remove();
   }
