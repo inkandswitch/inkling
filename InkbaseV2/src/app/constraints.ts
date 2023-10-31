@@ -412,7 +412,7 @@ class LLAngle extends LowLevelConstraint {
       knowns.has(this.b.xVariable.canonicalInstance) &&
       knowns.has(this.b.yVariable.canonicalInstance)
     ) {
-      updateAngle(this.angle, this.a, this.b);
+      LLAngle.updateAngle(this.angle, this.a, this.b);
       knowns.add(this.angle.canonicalInstance);
     }
   }
@@ -434,7 +434,7 @@ class LLAngle extends LowLevelConstraint {
     const aPos = { x: ax, y: ay };
     const bPos = { x: bx, y: by };
     if (freeVariables.has(this.angle.canonicalInstance)) {
-      updateAngle(this.angle, aPos, bPos);
+      LLAngle.updateAngle(this.angle, aPos, bPos);
       return 0;
     }
 
@@ -491,21 +491,25 @@ class LLAngle extends LowLevelConstraint {
 
     return error;
   }
-}
 
-function updateAngle(angleVar: Variable, aPos: Position, bPos: Position) {
-  const currAngle = normalizeAngle(angleVar.value);
-  const newAngle = normalizeAngle(Vec.angle(Vec.sub(bPos, aPos)));
-  let diff = normalizeAngle(newAngle - currAngle);
-  if (diff > Math.PI) {
-    diff -= TAU;
+  private static updateAngle(
+    angleVar: Variable,
+    aPos: Position,
+    bPos: Position
+  ) {
+    const currAngle = LLAngle.normalizeAngle(angleVar.value);
+    const newAngle = LLAngle.normalizeAngle(Vec.angle(Vec.sub(bPos, aPos)));
+    let diff = LLAngle.normalizeAngle(newAngle - currAngle);
+    if (diff > Math.PI) {
+      diff -= TAU;
+    }
+    angleVar.value += diff;
   }
-  angleVar.value += diff;
-}
 
-/** Returns the equivalent angle in the range [0, 2pi) */
-function normalizeAngle(angle: number) {
-  return ((angle % TAU) + TAU) % TAU;
+  /** Returns the equivalent angle in the range [0, 2pi) */
+  private static normalizeAngle(angle: number) {
+    return ((angle % TAU) + TAU) % TAU;
+  }
 }
 
 class LLFormula extends LowLevelConstraint {
