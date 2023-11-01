@@ -951,6 +951,8 @@ interface ClusterForSolver {
   // their owning low-level constraint's `getError` method in order to make the error due
   // to that constraint equal to zero.
   freeVariables: Set<Variable>;
+  // The variables whose values are determined by the solver.
+  parameters: Variable[];
 }
 
 let clustersForSolver: Set<ClusterForSolver> | null = null;
@@ -1078,6 +1080,9 @@ function createClusterForSolver(
     lowLevelConstraints,
     variables: Array.from(variables),
     freeVariables,
+    parameters: [...variables].filter(
+      v => v.isCanonicalInstance && !knowns.has(v) && !freeVariables.has(v)
+    ),
   };
 }
 
@@ -1093,8 +1098,8 @@ export function solve(root: GameObject) {
 }
 
 function solveCluster(cluster: ClusterForSolver) {
-  const { constraints, lowLevelConstraints, variables } = cluster;
-  let { freeVariables } = cluster;
+  const { constraints, lowLevelConstraints } = cluster;
+  let { freeVariables, parameters } = cluster;
 
   if (constraints.length === 0) {
     // nothing to solve!
@@ -1142,21 +1147,22 @@ function solveCluster(cluster: ClusterForSolver) {
     freeVariables = new Set(
       [...freeVariables].filter(fv => !knowns.has(fv.canonicalInstance))
     );
+    parameters = parameters.filter(v => !knowns.has(v));
   }
 
   // The state that goes into `inputs` is the stuff that can be modified by the solver.
   // It excludes any value that we've already computed from known values like pin and
   // constant constraints.
   const inputs: number[] = [];
-  const varIdx = new Map<Variable, number>();
-  for (const variable of variables) {
+  const paramIdx = new Map<Variable, number>();
+  for (const param of parameters) {
     if (
-      variable.isCanonicalInstance &&
-      !knowns.has(variable) &&
-      !freeVariables.has(variable)
+      param.isCanonicalInstance &&
+      !knowns.has(param) &&
+      !freeVariables.has(param)
     ) {
-      varIdx.set(variable, inputs.length);
-      inputs.push(variable.value);
+      paramIdx.set(param, inputs.length);
+      inputs.push(param.value);
     }
   }
 
@@ -1168,8 +1174,8 @@ function solveCluster(cluster: ClusterForSolver) {
       const values = llc.variables.map(variable => {
         const { m, b } = variable.offset;
         variable = variable.canonicalInstance;
-        const vi = varIdx.get(variable);
-        return ((vi === undefined ? variable.value : currState[vi]) - b) / m;
+        const pi = paramIdx.get(variable);
+        return ((pi === undefined ? variable.value : currState[pi]) - b) / m;
       });
       error += Math.pow(llc.getError(values, knowns, freeVariables), 2);
     }
@@ -1221,16 +1227,10 @@ function solveCluster(cluster: ClusterForSolver) {
     return;
   }
 
-  // Now we write the solution from the solver back into our variables and handles.
+  // Now we write the solution from the solver back into our variables.
   const outputs = result.solution;
-  for (const variable of variables) {
-    if (
-      variable.isCanonicalInstance &&
-      !knowns.has(variable) &&
-      !freeVariables.has(variable)
-    ) {
-      variable.value = outputs.shift()!;
-    }
+  for (const param of parameters) {
+    param.value = outputs.shift()!;
   }
 }
 
