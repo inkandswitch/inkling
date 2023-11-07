@@ -297,6 +297,28 @@ abstract class LowLevelConstraint {
   ): number;
 }
 
+class LLFinger extends LowLevelConstraint {
+  constructor(private constraint: Finger) {
+    super();
+    this.variables.push(
+      constraint.handle.xVariable,
+      constraint.handle.yVariable
+    );
+  }
+
+  addTo(constraints: LowLevelConstraint[]) {
+    constraints.push(this);
+  }
+
+  getError(
+    [x, y]: number[],
+    knowns: Set<Variable>,
+    freeVariables: Set<Variable>
+  ): number {
+    return Math.sqrt(Vec.dist({ x, y }, this.constraint.position));
+  }
+}
+
 class LLDistance extends LowLevelConstraint {
   constructor(
     constraint: Constraint,
@@ -412,7 +434,7 @@ class LLAngle extends LowLevelConstraint {
       knowns.has(this.b.xVariable.canonicalInstance) &&
       knowns.has(this.b.yVariable.canonicalInstance)
     ) {
-      LLAngle.updateAngle(this.angle, this.a, this.b);
+      this.angle.value = LLAngle.computeAngle(this.angle, this.a, this.b);
       knowns.add(this.angle.canonicalInstance);
     }
   }
@@ -434,7 +456,7 @@ class LLAngle extends LowLevelConstraint {
     const aPos = { x: ax, y: ay };
     const bPos = { x: bx, y: by };
     if (freeVariables.has(this.angle.canonicalInstance)) {
-      LLAngle.updateAngle(this.angle, aPos, bPos);
+      this.angle.value = LLAngle.computeAngle(this.angle, aPos, bPos);
       return 0;
     }
 
@@ -492,18 +514,14 @@ class LLAngle extends LowLevelConstraint {
     return error;
   }
 
-  private static updateAngle(
-    angleVar: Variable,
-    aPos: Position,
-    bPos: Position
-  ) {
+  static computeAngle(angleVar: Variable, aPos: Position, bPos: Position) {
     const currAngle = LLAngle.normalizeAngle(angleVar.value);
     const newAngle = LLAngle.normalizeAngle(Vec.angle(Vec.sub(bPos, aPos)));
     let diff = LLAngle.normalizeAngle(newAngle - currAngle);
     if (diff > Math.PI) {
       diff -= TAU;
     }
-    angleVar.value += diff;
+    return angleVar.value + diff;
   }
 
   /** Returns the equivalent angle in the range [0, 2pi) */
@@ -676,8 +694,21 @@ export class Constant extends Constraint {
 
 export const constant = Constant.create;
 
-abstract class PinLikeConstraint extends Constraint {
-  constructor(
+export class Pin extends Constraint {
+  private static readonly memo = new Map<Handle, Pin>();
+
+  static create(handle: Handle, position: Position = handle.position) {
+    let pin = Pin.memo.get(handle);
+    if (pin) {
+      pin.position = position;
+    } else {
+      pin = new Pin(handle, position);
+      Pin.memo.set(handle, pin);
+    }
+    return pin;
+  }
+
+  private constructor(
     public readonly handle: Handle,
     public position: Position
   ) {
@@ -694,25 +725,6 @@ abstract class PinLikeConstraint extends Constraint {
     }
     super.propagateKnowns(knowns);
   }
-}
-
-export class Pin extends PinLikeConstraint {
-  private static readonly memo = new Map<Handle, Pin>();
-
-  static create(handle: Handle, position: Position = handle.position) {
-    let pin = Pin.memo.get(handle);
-    if (pin) {
-      pin.position = position;
-    } else {
-      pin = new Pin(handle, position);
-      Pin.memo.set(handle, pin);
-    }
-    return pin;
-  }
-
-  private constructor(handle: Handle, position: Position) {
-    super(handle, position);
-  }
 
   public remove() {
     Pin.memo.delete(this.handle);
@@ -722,7 +734,7 @@ export class Pin extends PinLikeConstraint {
 
 export const pin = Pin.create;
 
-export class Finger extends PinLikeConstraint {
+export class Finger extends Constraint {
   private static readonly memo = new Map<Handle, Finger>();
 
   static create(handle: Handle, position: Position = handle.position) {
@@ -736,8 +748,14 @@ export class Finger extends PinLikeConstraint {
     return finger;
   }
 
-  private constructor(handle: Handle, position: Position) {
-    super(handle, position);
+  private constructor(
+    public readonly handle: Handle,
+    public position: Position
+  ) {
+    super();
+    const fc = new LLFinger(this);
+    this.lowLevelConstraints.push(fc);
+    this.variables.push(handle.xVariable, handle.yVariable);
   }
 
   public remove() {
@@ -1106,29 +1124,38 @@ function solveCluster(cluster: ClusterForSolver) {
     return;
   }
 
-  const knowns = computeKnowns(constraints, lowLevelConstraints);
-
   // Let the user to modify the locked distance or angle of a polar vector
   // constraint by manipulating the handles with their fingers.
-  const handlesWithFingers = getHandlesWithFingers(constraints);
+  const handleToFinger = getHandleToFingerMap(constraints);
   for (const pv of constraints) {
-    if (
-      pv instanceof PolarVector &&
-      handlesWithFingers.has(pv.a.canonicalInstance) &&
-      handlesWithFingers.has(pv.b.canonicalInstance)
-    ) {
+    if (!(pv instanceof PolarVector)) {
+      continue;
+    }
+
+    const aFinger = handleToFinger.get(pv.a.canonicalInstance);
+    const bFinger = handleToFinger.get(pv.b.canonicalInstance);
+    if (aFinger && bFinger) {
       for (const k of constraints) {
-        if (
-          k instanceof Constant &&
-          (k.variable.hasLinearRelationshipWith(pv.distance) ||
-            k.variable.hasLinearRelationshipWith(pv.angle))
-        ) {
-          // TODO: do we need to do this to the siblings too? (to avoid getting out of step)
+        if (!(k instanceof Constant)) {
+          continue;
+        }
+        if (k.variable.hasLinearRelationshipWith(pv.distance)) {
+          pv.distance.value = Vec.dist(aFinger.position, bFinger.position);
+          k.value = k.variable.value;
+        }
+        if (k.variable.hasLinearRelationshipWith(pv.angle)) {
+          pv.angle.value = LLAngle.computeAngle(
+            pv.angle,
+            aFinger.position,
+            bFinger.position
+          );
           k.value = k.variable.value;
         }
       }
     }
   }
+
+  const knowns = computeKnowns(constraints, lowLevelConstraints);
 
   // Hack to avoid gizmos' handles converging as user scrubs the angle
   // TODO: make sure this doesn't break anything!
@@ -1242,29 +1269,12 @@ function computeKnowns(
   while (true) {
     const oldNumKnowns = knowns.size;
 
-    // do finger and polar vector constraints first
-    // (that way the user can set gizmo distances and angles w/ fingers)
+    // do the high-level constraints first ...
     for (const constraint of constraints) {
-      if (constraint instanceof Finger) {
-        constraint.propagateKnowns(knowns);
-      }
-    }
-    for (const constraint of constraints) {
-      if (constraint instanceof PolarVector) {
-        constraint.propagateKnowns(knowns);
-      }
+      constraint.propagateKnowns(knowns);
     }
 
-    // ... then do other constraints
-    for (const constraint of constraints) {
-      if (
-        !(constraint instanceof Finger || constraint instanceof PolarVector)
-      ) {
-        constraint.propagateKnowns(knowns);
-      }
-    }
-
-    // ... and the low-level constraints
+    // ... then the low-level constraints
     for (const llc of lowLevelConstraints) {
       llc.propagateKnowns(knowns);
     }
@@ -1276,14 +1286,14 @@ function computeKnowns(
   return knowns;
 }
 
-function getHandlesWithFingers(constraints: Constraint[]) {
-  const handlesWithFingers = new Set<Handle>();
+function getHandleToFingerMap(constraints: Constraint[]) {
+  const handleToFinger = new Map<Handle, Finger>();
   for (const constraint of constraints) {
     if (constraint instanceof Finger) {
-      handlesWithFingers.add(constraint.handle.canonicalInstance);
+      handleToFinger.set(constraint.handle.canonicalInstance, constraint);
     }
   }
-  return handlesWithFingers;
+  return handleToFinger;
 }
 
 // #endregion solver

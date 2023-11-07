@@ -2,10 +2,17 @@
 
 ## UX Improvements
 
+- P1: fix clock demo (it broke w/ new finger constraint)
+  (Alex)
+
+- P1: finger constraint needs to feel better
+  * e.g., when manipulating gizmo w/ locked distance and/or angle
+  (Alex)
+
 - P1: erase gesture in meta mode _maybe_ shouldn't erase concrete strokes
   (Ivan)
 
-- P1: when breaking apart handles, put a temp finger of god constraint
+- P1: when breaking apart handles, put a temp pin constraint
   on left over handle
 
 - P1: when erasing inside a formula, call a different method (not remove)
