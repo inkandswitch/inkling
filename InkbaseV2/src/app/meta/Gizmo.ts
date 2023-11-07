@@ -189,6 +189,9 @@ export default class Gizmo extends GameObject {
   }
 
   remove() {
+    this.distance.remove();
+    this.angleInRadians.remove();
+    this.angleInDegrees.remove();
     this.elm.remove();
     this.a?.remove();
     this.b?.remove();
