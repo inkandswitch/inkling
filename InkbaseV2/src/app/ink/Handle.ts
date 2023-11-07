@@ -69,11 +69,7 @@ export default class Handle extends GameObject {
   remove() {
     this.backElm.remove();
     this.frontElm.remove();
-    if (!this.isCanonical) {
-      this.canonicalInstance.breakOff(this);
-    } else if (this.absorbedHandles.size > 1) {
-      // TODO: Pick one of the absorbed handles to become the new cannonicalInstance
-    }
+    this.canonicalInstance.breakOff(this);
     this.xVariable.remove();
     this.yVariable.remove();
     super.remove();
@@ -133,11 +129,13 @@ export default class Handle extends GameObject {
     if (this.absorbedHandles.has(handle)) {
       constraints.absorb(this, handle).remove();
     } else if (handle === this) {
-      const absorbedHandles = [...this.absorbedHandles];
-      const newCanonicalHandle = absorbedHandles.shift()!;
-      constraints.absorb(this, newCanonicalHandle).remove();
-      for (const absorbedHandle of absorbedHandles) {
-        constraints.absorb(newCanonicalHandle, absorbedHandle);
+      if (this.absorbedHandles.size > 0) {
+        const absorbedHandles = [...this.absorbedHandles];
+        const newCanonicalHandle = absorbedHandles.shift()!;
+        constraints.absorb(this, newCanonicalHandle).remove();
+        for (const absorbedHandle of absorbedHandles) {
+          constraints.absorb(newCanonicalHandle, absorbedHandle);
+        }
       }
     } else {
       throw new Error('tried to break off a handle that was not absorbed');
