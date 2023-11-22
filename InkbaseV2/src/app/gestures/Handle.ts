@@ -14,17 +14,27 @@ export function touchHandle(ctx: EventContext): Gesture | void {
     tooFar: 40,
   });
 
-  if (handle) {
-    if (
-      ctx.pseudoCount >= 3 &&
-      handle.canonicalInstance.absorbedHandles.size > 0
-    ) {
-      const handles = [...handle.canonicalInstance.absorbedHandles];
-      handle = handle.breakOff(handles[handles.length - 1]);
-    }
-
-    return touchHandleHelper(handle);
+  if (!handle) {
+    return;
   }
+
+  if (ctx.pseudoCount >= 4) {
+    return new Gesture('go anywhere', {
+      began() {
+        handle!.canonicalInstance.toggleGoesAnywhere();
+      },
+    });
+  }
+
+  if (
+    ctx.pseudoCount >= 3 &&
+    handle.canonicalInstance.absorbedHandles.size > 0
+  ) {
+    const handles = [...handle.canonicalInstance.absorbedHandles];
+    handle = handle.breakOff(handles[handles.length - 1]);
+  }
+
+  return touchHandleHelper(handle);
 }
 
 export function touchHandleHelper(handle: Handle): Gesture {

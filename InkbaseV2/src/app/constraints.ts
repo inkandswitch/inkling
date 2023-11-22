@@ -6,6 +6,10 @@ import { minimize } from '../lib/g9';
 import { TAU } from '../lib/math';
 import { Position } from '../lib/types';
 import Vec from '../lib/vec';
+import { aGizmo } from './meta/Gizmo';
+
+// TODO: make this toggleable w/ a gesture
+const goAnywhereHandleMode: 'continuous' | 'snapshot' = 'continuous';
 
 // #region variables
 
@@ -1111,11 +1115,11 @@ function forgetClustersForSolver() {
 export function solve(root: GameObject) {
   const clusters = getClustersForSolver(root);
   for (const cluster of clusters) {
-    solveCluster(cluster);
+    solveCluster(cluster, root);
   }
 }
 
-function solveCluster(cluster: ClusterForSolver) {
+function solveCluster(cluster: ClusterForSolver, root: GameObject) {
   const { constraints, lowLevelConstraints } = cluster;
   let { freeVariables, parameters } = cluster;
 
@@ -1253,6 +1257,85 @@ function solveCluster(cluster: ClusterForSolver) {
     // console.log('paused', lastConstraint, 'to see if it helps');
     return;
   }
+
+  function moveHauntedHandle() {
+    const hauntedHandle = root.find({
+      what: aHandle,
+      that: handle => handle.goesAnywhere,
+    });
+    if (
+      !hauntedHandle ||
+      cluster.constraints.find(
+        c =>
+          c instanceof Finger &&
+          c.handle.canonicalInstance === hauntedHandle.canonicalInstance
+      )
+    ) {
+      return;
+    }
+
+    const xIndex = paramIdx.get(hauntedHandle.xVariable);
+    const yIndex = paramIdx.get(hauntedHandle.yVariable);
+    if (xIndex === undefined && yIndex === undefined) {
+      return;
+    }
+
+    const gridSize = goAnywhereHandleMode === 'continuous' ? 100 : 25;
+    const maxIterations = goAnywhereHandleMode === 'continuous' ? 25 : 100;
+    const life = goAnywhereHandleMode === 'continuous' ? 0 : 5;
+    for (let x = 0; x < 1000; x += gridSize) {
+      if (xIndex !== undefined) {
+        inputs[xIndex] = x;
+      }
+      for (let y = 0; y < 1300; y += gridSize) {
+        if (yIndex !== undefined) {
+          inputs[yIndex] = y;
+        }
+        try {
+          const solution = minimize(
+            computeTotalError,
+            inputs,
+            maxIterations,
+            1
+          ).solution;
+          SVG.now('polyline', {
+            points: SVG.points(
+              { x, y },
+              {
+                x: xIndex !== undefined ? solution[xIndex] : hauntedHandle.x,
+                y: yIndex !== undefined ? solution[yIndex] : hauntedHandle.y,
+              }
+            ),
+            stroke: 'rgba(255, 255, 255, 0.1)',
+            life,
+          });
+          SVG.now('circle', {
+            cx: xIndex !== undefined ? solution[xIndex] : hauntedHandle.x,
+            cy: yIndex !== undefined ? solution[yIndex] : hauntedHandle.y,
+            r: 2,
+            fill: 'rgba(255, 255, 255, 0.2)',
+            life,
+          });
+        } catch {
+          // ignore
+        }
+      }
+    }
+
+    if (goAnywhereHandleMode === 'snapshot') {
+      hauntedHandle.toggleGoesAnywhere();
+    }
+  }
+
+  root.forEach({
+    what: aGizmo,
+    do: gizmo => gizmo.saveState(),
+  });
+  moveHauntedHandle();
+  root.forEach({
+    what: aGizmo,
+    do: gizmo => gizmo.restoreState(),
+  });
 
   // Now we write the solution from the solver back into our variables.
   const outputs = result.solution;

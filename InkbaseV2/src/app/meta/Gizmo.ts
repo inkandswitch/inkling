@@ -30,6 +30,23 @@ export default class Gizmo extends GameObject {
 
   readonly wirePort: WirePort;
 
+  // ------
+
+  private savedDistance = 0;
+  private savedAngleInRadians = 0;
+
+  saveState() {
+    this.savedDistance = this.distance.value;
+    this.savedAngleInRadians = this.angleInRadians.value;
+  }
+
+  restoreState() {
+    this.distance.value = this.savedDistance;
+    this.angleInRadians.value = this.savedAngleInRadians;
+  }
+
+  // ------
+
   get a(): Handle | undefined {
     return this._a.deref();
   }

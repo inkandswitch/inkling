@@ -274,6 +274,11 @@ svg * {
     fill: transparent;
   }
 
+  &[goes-anywhere][is-canonical] circle,
+  &[goes-anywhere] circle {
+    fill: yellow;
+  }
+
   &[is-canonical] circle {
     fill: var(--handle-fill);
   }

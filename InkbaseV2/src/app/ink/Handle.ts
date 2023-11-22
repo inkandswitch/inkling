@@ -7,6 +7,8 @@ import Vec from '../../lib/vec';
 import { Constraint, Pin } from '../constraints';
 import { TAU } from '../../lib/math';
 
+let goesAnywhereId = -1;
+
 export default class Handle extends GameObject {
   static create(position: Position, getAbsorbed = true): Handle {
     const handle = new Handle(position);
@@ -48,6 +50,14 @@ export default class Handle extends GameObject {
     SVG.add('path', arcs2, { d: arc((1 * TAU) / 4) });
     SVG.add('path', arcs2, { d: arc((2 * TAU) / 4) });
     SVG.add('path', arcs2, { d: arc((3 * TAU) / 4) });
+  }
+
+  toggleGoesAnywhere() {
+    goesAnywhereId = this.goesAnywhere ? -1 : this.id;
+  }
+
+  get goesAnywhere() {
+    return this.id === goesAnywhereId;
   }
 
   get x() {
@@ -174,6 +184,7 @@ export default class Handle extends GameObject {
       transform: SVG.positionToTransform(this),
       'is-canonical': this.isCanonical,
       'has-pin': this.hasPin,
+      'goes-anywhere': this.id === goesAnywhereId,
     };
     SVG.update(this.backElm, attrs);
     SVG.update(this.frontElm, attrs);
