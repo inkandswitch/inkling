@@ -8,9 +8,6 @@ import { Position } from '../lib/types';
 import Vec from '../lib/vec';
 import { aGizmo } from './meta/Gizmo';
 
-// TODO: make this toggleable w/ a gesture
-const goAnywhereHandleMode: 'continuous' | 'snapshot' = 'continuous';
-
 // #region variables
 
 type VariableInfo = CanonicalVariableInfo | AbsorbedVariableInfo;
@@ -1261,7 +1258,7 @@ function solveCluster(cluster: ClusterForSolver, root: GameObject) {
   function moveHauntedHandle() {
     const hauntedHandle = root.find({
       what: aHandle,
-      that: handle => handle.goesAnywhere,
+      that: handle => handle.goesAnywhereMode !== 'off',
     });
     if (
       !hauntedHandle ||
@@ -1280,9 +1277,10 @@ function solveCluster(cluster: ClusterForSolver, root: GameObject) {
       return;
     }
 
-    const gridSize = goAnywhereHandleMode === 'continuous' ? 100 : 25;
-    const maxIterations = goAnywhereHandleMode === 'continuous' ? 25 : 100;
-    const life = goAnywhereHandleMode === 'continuous' ? 0 : 5;
+    const goesAnywhereMode = hauntedHandle.goesAnywhereMode;
+    const gridSize = goesAnywhereMode === 'continuous' ? 100 : 25;
+    const maxIterations = goesAnywhereMode === 'continuous' ? 25 : 100;
+    const life = goesAnywhereMode === 'continuous' ? 0 : 5;
     for (let x = 0; x < 1000; x += gridSize) {
       if (xIndex !== undefined) {
         inputs[xIndex] = x;
@@ -1322,7 +1320,7 @@ function solveCluster(cluster: ClusterForSolver, root: GameObject) {
       }
     }
 
-    if (goAnywhereHandleMode === 'snapshot') {
+    if (goesAnywhereMode === 'snapshot') {
       hauntedHandle.toggleGoesAnywhere();
     }
   }

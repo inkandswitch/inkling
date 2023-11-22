@@ -8,6 +8,7 @@ import { Constraint, Pin } from '../constraints';
 import { TAU } from '../../lib/math';
 
 let goesAnywhereId = -1;
+let goesAnywhereMode: 'continuous' | 'snapshot' = 'continuous';
 
 export default class Handle extends GameObject {
   static create(position: Position, getAbsorbed = true): Handle {
@@ -53,11 +54,22 @@ export default class Handle extends GameObject {
   }
 
   toggleGoesAnywhere() {
-    goesAnywhereId = this.goesAnywhere ? -1 : this.id;
+    if (goesAnywhereId !== this.id) {
+      goesAnywhereId = this.id;
+      goesAnywhereMode = 'continuous';
+    } else if (goesAnywhereMode === 'continuous') {
+      goesAnywhereMode = 'snapshot';
+    } else {
+      goesAnywhereId = -1;
+    }
+
+    if (this.goesAnywhereMode !== 'off') {
+      SVG.showStatus('goes anywhere: ' + this.goesAnywhereMode);
+    }
   }
 
-  get goesAnywhere() {
-    return this.id === goesAnywhereId;
+  get goesAnywhereMode(): 'off' | typeof goesAnywhereMode {
+    return goesAnywhereId === this.id ? goesAnywhereMode : 'off';
   }
 
   get x() {
