@@ -46,6 +46,9 @@
 - P2: when writing a label in the formula editor, sometimes the label.display in LabelToken is undefined and errors.
   (Marcel)
 
+- P#wontfix: It's possible to erase 1 handle from a strokegroup. We'll "fix" this by implementing Components.
+  (Ivan)
+
 ## Formulas / Wires / Meta
 
 - P2/3: using / in formulas causes gradient errors
@@ -77,3 +80,19 @@
 - P4: constraints should only have weak refs to handles
 
 ## Clean-up
+
+- P3: If tapping and dragging perform different actions to the same object,
+  they need to be handled by the same gesture, because they both need to claim the touch.
+  This is awkward! For instance, in meta, tapping empty space currently creates a formula,
+  and dragging empty space creates a gizmo. (In this example, "empty space" is the object).
+  (We will probably replace both of these with some sort of "create seed" gesture. Set that aside for a sec.)
+  We have a separate gesture for creating a gizmo by dragging on a handle.
+  This is bad.
+  (Ivan)
+
+- P3: The CreateWire gesture is way too big. It's doing too much logic. That logic needs to be moved,
+  or better obviated with a bit of redesign work.
+  (Ivan)
+
+- P3: Idea: We can continue tracking a "hold still" timer to check for dead touches, but only actually
+  perform the reap when we toggle in/out of meta mode, which should make reaping less awful.
