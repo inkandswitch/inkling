@@ -42,15 +42,11 @@ export function touchHandleHelper(handle: Handle): Gesture {
   let offset: Position;
 
   return new Gesture('Touch Handle', {
-    began(ctx) {
-      offset = Vec.sub(handle.position, ctx.event.position);
-      if (Config.gesture.lookAt) {
-        lastPos = Vec.clone(handle);
-      } else {
-        constraints.finger(handle);
-      }
-    },
     moved(ctx) {
+      // touchHandleHelper is sometimes called from another gesture, after began,
+      // so we need to do our initialization lazily.
+      offset ??= Vec.sub(handle.position, ctx.event.position);
+
       handle.position = Vec.add(ctx.event.position, offset);
 
       if (Config.gesture.lookAt) {

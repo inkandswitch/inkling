@@ -3,7 +3,7 @@ import {
   pencilFormulaEditor,
   tapFormulaLabel,
 } from './gestures/FormulaEditor';
-import Events, { Event, TouchId, wasRecentlyUpdated } from './NativeEvents';
+import { Event, TouchId, wasRecentlyUpdated } from './NativeEvents';
 import { EventContext, Gesture } from './gestures/Gesture';
 import { touchHandle } from './gestures/Handle';
 import { touchMetaToggle } from './gestures/MetaToggle';
@@ -12,13 +12,13 @@ import { drawInk } from './gestures/DrawInk';
 import { createWire } from './gestures/CreateWire';
 import { tapPropertyPicker } from './gestures/PropertyPicker';
 import SVG from './Svg';
-import { createGizmo } from './gestures/CreateGizmo';
+import { createGizmoFromHandle } from './gestures/CreateGizmo';
 import { touchGizmo } from './gestures/Gizmo';
 import Config from './Config';
 import { erase } from './gestures/Erase';
 import { toggleHandles } from './gestures/ToggleHandles';
 import { toggleWire } from './gestures/ToggleWire';
-import { createFormula } from './gestures/CreateFormula';
+import { touchMetaEmptySpace } from './gestures/TouchMetaEmptySpace';
 
 const gestureCreators = {
   finger: [
@@ -34,12 +34,12 @@ const gestureCreators = {
   ],
   pencil: [
     erase,
-    createGizmo,
+    createGizmoFromHandle,
     tapPropertyPicker,
     tapFormulaLabel,
     pencilFormulaEditor,
     createWire,
-    createFormula,
+    touchMetaEmptySpace,
     drawInk,
   ],
 };
