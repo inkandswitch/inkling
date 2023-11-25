@@ -1,4 +1,4 @@
-import { EventContext, Gesture } from './Gesture';
+import { EventContext, Gesture } from '../Gesture';
 import Stroke from '../ink/Stroke';
 import StrokeGroup from '../ink/StrokeGroup';
 import { aMetaToggle } from '../gui/MetaToggle';

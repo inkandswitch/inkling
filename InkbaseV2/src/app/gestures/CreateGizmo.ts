@@ -1,5 +1,5 @@
 import Gizmo from '../meta/Gizmo';
-import { EventContext, Gesture } from './Gesture';
+import { EventContext, Gesture } from '../Gesture';
 import Handle, { aCanonicalHandle } from '../ink/Handle';
 import { touchHandleHelper } from './Handle';
 

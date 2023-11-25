@@ -1,4 +1,4 @@
-import { EventContext, Gesture } from './Gesture';
+import { EventContext, Gesture } from '../Gesture';
 import { rand } from '../../lib/math';
 import SVG from '../Svg';
 import { Position } from '../../lib/types';

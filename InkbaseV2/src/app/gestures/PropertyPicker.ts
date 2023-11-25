@@ -1,4 +1,4 @@
-import { EventContext, Gesture } from './Gesture';
+import { EventContext, Gesture } from '../Gesture';
 import { aPropertyPickerEditor } from '../meta/PropertyPickerEditor';
 
 export function tapPropertyPicker(ctx: EventContext): Gesture | void {

@@ -1,4 +1,4 @@
-import { EventContext, Gesture } from './Gesture';
+import { EventContext, Gesture } from '../Gesture';
 import { aPrimaryToken, aToken } from '../meta/Token';
 import { isNumberToken } from '../meta/token-helpers';
 import Vec from '../../lib/vec';

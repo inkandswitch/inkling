@@ -1,4 +1,4 @@
-import { EventContext, Gesture } from './Gesture';
+import { EventContext, Gesture } from '../Gesture';
 import { aMetaToggle } from '../gui/MetaToggle';
 
 declare global {

@@ -1,7 +1,7 @@
 import { Position, PositionWithPressure } from '../lib/types';
 import Vec from '../lib/vec';
 import Config from './Config';
-import { Gesture } from './gestures/Gesture';
+import { Gesture } from './Gesture';
 import MetaToggle from './gui/MetaToggle';
 
 // TODO: Do we want to add some way to fake pencil input with a finger?

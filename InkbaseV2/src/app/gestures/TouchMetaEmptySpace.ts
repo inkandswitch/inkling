@@ -1,4 +1,4 @@
-import { EventContext, Gesture } from './Gesture';
+import { EventContext, Gesture } from '../Gesture';
 import Formula from '../meta/Formula';
 import { createGizmo } from './CreateGizmo';
 

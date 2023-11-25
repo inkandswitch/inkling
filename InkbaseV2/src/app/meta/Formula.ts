@@ -10,7 +10,7 @@ import FormulaCompiler from './FormulaCompiler';
 import LabelToken from './LabelToken';
 import PropertyPicker from './PropertyPicker';
 import { Position, Removable } from '../../lib/types';
-import { EventContext } from '../gestures/Gesture';
+import { EventContext } from '../Gesture';
 import { clip } from '../../lib/math';
 
 const PADDING = 3;

@@ -1,4 +1,4 @@
-import { EventContext, Gesture } from './Gesture';
+import { EventContext, Gesture } from '../Gesture';
 import Handle, { aCanonicalHandle } from '../ink/Handle';
 import * as constraints from '../constraints';
 import StrokeGroup from '../ink/StrokeGroup';

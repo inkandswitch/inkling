@@ -1,7 +1,7 @@
 import { aGizmo } from '../meta/Gizmo';
 import NumberToken from '../meta/NumberToken';
 import Token, { aPrimaryToken, aToken } from '../meta/Token';
-import { EventContext, Gesture } from './Gesture';
+import { EventContext, Gesture } from '../Gesture';
 import PropertyPickerEditor from '../meta/PropertyPickerEditor';
 import { aComponent } from '../meta/Component';
 import { isPropertyPicker, isTokenWithVariable } from '../meta/token-helpers';

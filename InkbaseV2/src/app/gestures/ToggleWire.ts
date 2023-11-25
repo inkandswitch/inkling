@@ -1,5 +1,5 @@
 import { aWire } from '../meta/Wire';
-import { EventContext, Gesture } from './Gesture';
+import { EventContext, Gesture } from '../Gesture';
 
 export function toggleWire(ctx: EventContext): Gesture | void {
   if (ctx.metaToggle.active) {

@@ -1,12 +1,7 @@
-import { root } from '../GameObject';
-import Events, {
-  Event,
-  InputState,
-  EventState,
-  TouchId,
-} from '../NativeEvents';
-import MetaToggle from '../gui/MetaToggle';
-import SVG from '../Svg';
+import { root } from './GameObject';
+import Events, { Event, InputState, EventState, TouchId } from './NativeEvents';
+import MetaToggle from './gui/MetaToggle';
+import SVG from './Svg';
 
 export type EventContext = {
   event: Event; // The current event we're processing.

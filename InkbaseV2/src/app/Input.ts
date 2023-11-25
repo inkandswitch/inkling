@@ -4,7 +4,7 @@ import {
   tapFormulaLabel,
 } from './gestures/FormulaEditor';
 import { Event, TouchId, wasRecentlyUpdated } from './NativeEvents';
-import { EventContext, Gesture } from './gestures/Gesture';
+import { EventContext, Gesture } from './Gesture';
 import { touchHandle } from './gestures/Handle';
 import { touchMetaToggle } from './gestures/MetaToggle';
 import { touchToken, scrubNumberToken } from './gestures/Token';

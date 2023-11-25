@@ -1,7 +1,7 @@
 import { aFormula } from '../meta/Formula';
 import FormulaStroke from '../ink/FormulaStroke';
 import { aWritingCell } from '../meta/WritingCell';
-import { EventContext, Gesture } from './Gesture';
+import { EventContext, Gesture } from '../Gesture';
 // import { aPrimaryToken } from '../meta/Token';
 // import { isLabelToken } from '../meta/token-helpers';
 

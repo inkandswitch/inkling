@@ -1,6 +1,6 @@
 import { aStroke } from '../ink/Stroke';
 import { aStrokeGroup } from '../ink/StrokeGroup';
-import { EventContext, Gesture } from './Gesture';
+import { EventContext, Gesture } from '../Gesture';
 
 export function toggleHandles(ctx: EventContext): Gesture | void {
   if (ctx.metaToggle.active) {

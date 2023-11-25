@@ -1,4 +1,4 @@
-import { EventContext, Gesture } from './Gesture';
+import { EventContext, Gesture } from '../Gesture';
 import { aGizmo } from '../meta/Gizmo';
 import Vec from '../../lib/vec';
 
