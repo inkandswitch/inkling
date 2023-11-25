@@ -8,6 +8,9 @@
 - P1: finger constraint needs to feel better (e.g., when manipulating gizmo w/ locked distance and/or angle)
   (Alex)
 
+- P1: (Possibly repeat of above) — Make a gizmo with 1 locked handle, locked angle. Drag the free handle. It moves and flickers.
+  (Alex)
+
 - P1: when breaking apart handles, put a temp pin constraint
   on left over handle
 
