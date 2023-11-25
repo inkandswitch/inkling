@@ -42,4 +42,6 @@ const concreteErasables = [StrokeGroup, Stroke, MetaToggle];
 export const aConcreteErasable = (gameObj: GameObject) =>
   concreteErasables.some(cls => gameObj instanceof cls) ? gameObj : null;
 
-export const aMetaErasable = aGameObject;
+const metaNonErasables = [StrokeGroup, Stroke];
+export const aMetaErasable = (gameObj: GameObject) =>
+  metaNonErasables.some(cls => gameObj instanceof cls) ? null : gameObj;
