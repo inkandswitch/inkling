@@ -223,7 +223,7 @@ svg * {
 
   .inner {
     fill: var(--bg-color);
-    scale: 0.75;
+    scale: 1.1;
   }
 
   .secret {
@@ -233,6 +233,7 @@ svg * {
   .splats {
     stroke: var(--meta-toggle);
     stroke-width: 8;
+    scale: 1.7;
     .splat {
       transition: scale 2s cubic-bezier(0, 1.5, 0, 1);
     }
