@@ -3,7 +3,7 @@ import SVG from './Svg';
 import Handle, { aHandle } from './ink/Handle';
 import { forDebugging, generateId, sets } from '../lib/helpers';
 import { minimize } from '../lib/g9';
-import { TAU } from '../lib/math';
+import { TAU, normalizeAngle } from '../lib/math';
 import { Position } from '../lib/types';
 import Vec from '../lib/vec';
 import { aGizmo } from './meta/Gizmo';
@@ -516,18 +516,13 @@ class LLAngle extends LowLevelConstraint {
   }
 
   static computeAngle(angleVar: Variable, aPos: Position, bPos: Position) {
-    const currAngle = LLAngle.normalizeAngle(angleVar.value);
-    const newAngle = LLAngle.normalizeAngle(Vec.angle(Vec.sub(bPos, aPos)));
-    let diff = LLAngle.normalizeAngle(newAngle - currAngle);
+    const currAngle = normalizeAngle(angleVar.value);
+    const newAngle = normalizeAngle(Vec.angle(Vec.sub(bPos, aPos)));
+    let diff = normalizeAngle(newAngle - currAngle);
     if (diff > Math.PI) {
       diff -= TAU;
     }
     return angleVar.value + diff;
-  }
-
-  /** Returns the equivalent angle in the range [0, 2pi) */
-  private static normalizeAngle(angle: number) {
-    return ((angle % TAU) + TAU) % TAU;
   }
 }
 

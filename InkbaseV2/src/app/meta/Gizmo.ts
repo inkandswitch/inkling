@@ -1,4 +1,4 @@
-import { TAU, lerp } from '../../lib/math';
+import { TAU, lerp, normalizeAngle } from '../../lib/math';
 import SVG from '../Svg';
 import Handle from '../ink/Handle';
 import Vec from '../../lib/vec';
@@ -9,6 +9,7 @@ import Line from '../../lib/line';
 import { GameObject } from '../GameObject';
 import { WirePort } from './Wire';
 import { MetaLabel, MetaStruct } from './MetaSemantics';
+import Config from '../Config';
 
 const arc = SVG.arcPath(Vec.zero, 10, TAU / 4, Math.PI / 3);
 
@@ -151,17 +152,35 @@ export default class Gizmo extends GameObject {
 
     const a = handles.a.position;
     const b = handles.b.position;
-    const len = Vec.dist(a, b);
 
-    const angle = this.angleInDegrees.value;
+    const solverLength = this.distance.value;
+    const realLength = Vec.dist(a, b);
+    const distanceTension = Math.abs(solverLength - realLength) / 100;
+
+    const solverAngle = normalizeAngle(this.angleInRadians.value);
+    const realAngle = normalizeAngle(Vec.angle(Vec.sub(b, a)));
+    const angleTension = Math.abs(solverAngle - realAngle);
+
     const aLock = this.angleInRadians.isLocked;
     const dLock = this.distance.isLocked;
-    const fade = lerp(len, 80, 100, 0, 1);
+    const fade = lerp(realLength, 80, 100, 0, 1);
+
+    if (Config.gizmo.showTension && distanceTension + angleTension > 0.1) {
+      SVG.update(this.thick, {
+        // Temporary gross hack styling, yum!
+        style: `
+          stroke-dashoffset:${-realLength / 2}px;
+          stroke: color(display-p3 1 0 0);
+          stroke-dasharray: 20 15;
+          opacity: 0.2;
+        `,
+      });
+    }
 
     SVG.update(this.elm, { 'is-constrained': aLock || dLock });
     SVG.update(this.thick, { points: SVG.points(a, b) });
 
-    if (len > 0) {
+    if (realLength > 0) {
       const ab = Vec.sub(b, a);
       const arrow = Vec.renormalize(ab, 4);
       const tail = Vec.sub(this.center, Vec.renormalize(ab, 30));
@@ -179,7 +198,7 @@ export default class Gizmo extends GameObject {
         opacity: ${fade};
         transform:
           translate(${this.center.x}px, ${this.center.y}px)
-          rotate(${angle}deg)
+          rotate(${realAngle}rad)
         `,
       });
 

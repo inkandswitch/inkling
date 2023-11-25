@@ -69,3 +69,8 @@ export const easeInOut = (t: number) => {
 export function nearestMultiple(n: number, m: number) {
   return Math.round(n / m) * m;
 }
+
+/** Returns the equivalent angle in the range [0, 2pi) */
+export function normalizeAngle(angle: number) {
+  return ((angle % TAU) + TAU) % TAU;
+}
