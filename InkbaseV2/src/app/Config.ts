@@ -4,4 +4,5 @@ export default {
     reapTouches: false, // This is kinda buggy right now
     lookAt: false,
   },
+  storeMetaMode: true,
 };

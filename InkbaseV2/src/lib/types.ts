@@ -12,6 +12,10 @@ export function isPosition(value: any): value is Position {
   );
 }
 
+export function isBoolean(value: any): value is boolean {
+  return typeof value === 'boolean';
+}
+
 // TODO: move this to the right place -- it's application-specific,
 // so it doesn't belong here.
 export interface PositionWithPressure extends Position {

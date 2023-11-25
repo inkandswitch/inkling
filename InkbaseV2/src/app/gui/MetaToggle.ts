@@ -1,9 +1,10 @@
-import { Position, isPosition } from '../../lib/types';
+import { Position, isBoolean, isPosition } from '../../lib/types';
 import SVG from '../Svg';
 import { GameObject } from '../GameObject';
 import Vec from '../../lib/vec';
 import Store, { Serializable } from '../Store';
 import { TAU, lerpN, rand } from '../../lib/math';
+import Config from '../Config';
 
 const padding = 30;
 const radius = 20;
@@ -55,6 +56,13 @@ export default class MetaToggle extends GameObject {
     this.resplat();
 
     // setInterval(this.toggle.bind(this), 1500);
+
+    if (
+      Config.storeMetaMode &&
+      Store.init({ name: 'Meta Mode', isValid: isBoolean, def: false })
+    ) {
+      this.toggle();
+    }
   }
 
   resplat() {
@@ -90,6 +98,8 @@ export default class MetaToggle extends GameObject {
     this.active = !this.active;
     document.documentElement.toggleAttribute('meta-mode', this.active);
     this.resplat();
+
+    Store.set('Meta Mode', this.active);
   }
 
   distanceToPoint(point: Position) {

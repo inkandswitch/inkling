@@ -12,8 +12,21 @@ type InitArgs<T extends Serializable> = {
   def: T;
 };
 
+const initializedNames = new Set();
+
 export default {
   init<T extends Serializable>({ name, isValid, def }: InitArgs<T>) {
+    // This check is meant to avoid accidental redundant calls.
+    // If you find a case where doing redundant calls makes sense,
+    // feel free to remove this check, and replace it with a check
+    // to ensure the redundant calls have the same isValid type.
+    if (initializedNames.has(name)) {
+      throw new Error(
+        `Store.init() was called more than once for name: ${name}`
+      );
+    }
+    initializedNames.add(name);
+
     const result = this.get(name);
     return isValid(result) ? result : def;
   },
