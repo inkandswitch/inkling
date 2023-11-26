@@ -1,6 +1,5 @@
 import { EventContext, Gesture } from '../Gesture';
 import { aGizmo } from '../meta/Gizmo';
-import Vec from '../../lib/vec';
 
 export function touchGizmo(ctx: EventContext): Gesture | void {
   if (ctx.metaToggle.active) {

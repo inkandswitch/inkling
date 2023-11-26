@@ -1,6 +1,6 @@
 import { EventContext, Gesture } from '../Gesture';
 import Formula from '../meta/Formula';
-import { createGizmo } from './CreateGizmo';
+import { createGizmo } from './effects/CreateGizmo';
 
 export function touchMetaEmptySpace(ctx: EventContext): Gesture | void {
   if (ctx.metaToggle.active) {

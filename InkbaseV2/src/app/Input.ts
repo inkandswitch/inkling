@@ -12,7 +12,7 @@ import { drawInk } from './gestures/DrawInk';
 import { createWire } from './gestures/CreateWire';
 import { tapPropertyPicker } from './gestures/PropertyPicker';
 import SVG from './Svg';
-import { createGizmoFromHandle } from './gestures/CreateGizmo';
+import { drawGizmoFromHandle } from './gestures/DrawGizmoFromHandle';
 import { touchGizmo } from './gestures/Gizmo';
 import Config from './Config';
 import { erase } from './gestures/Erase';
@@ -35,7 +35,7 @@ const gestureCreators = {
   pencil: [
     pencilMetaToggle,
     erase,
-    createGizmoFromHandle,
+    drawGizmoFromHandle,
     tapPropertyPicker,
     tapFormulaLabel,
     pencilFormulaEditor,
