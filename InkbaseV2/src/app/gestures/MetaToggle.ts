@@ -1,5 +1,5 @@
 import { EventContext, Gesture } from '../Gesture';
-import { aMetaToggle } from '../gui/MetaToggle';
+import { aMetaToggle, padding } from '../gui/MetaToggle';
 
 declare global {
   function cycleTheme(): void;
@@ -31,5 +31,19 @@ export function touchMetaToggle(ctx: EventContext): Gesture | void {
         }
       },
     });
+  }
+}
+
+export function pencilMetaToggle(ctx: EventContext): Gesture | void {
+  if (
+    ctx.root.find({
+      what: aMetaToggle,
+      near: ctx.event.position,
+      recursive: false,
+      tooFar: padding + 5,
+    })
+  ) {
+    // This gesture exists just to block other gestures from running when a pencil touch begins on the Meta Toggle
+    return new Gesture('Pencil Meta Toggle', {});
   }
 }

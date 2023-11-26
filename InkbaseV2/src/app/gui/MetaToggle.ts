@@ -6,7 +6,7 @@ import Store, { Serializable } from '../Store';
 import { TAU, lerpN, rand } from '../../lib/math';
 import Config from '../Config';
 
-const padding = 30;
+export const padding = 30;
 const radius = 20;
 
 export const aMetaToggle = (gameObj: GameObject) =>
