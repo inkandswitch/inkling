@@ -11,22 +11,9 @@ import PropertyPicker from '../meta/PropertyPicker';
 import Vec from '../../lib/vec';
 import Formula from '../meta/Formula';
 import EmptyToken from '../meta/EmptyToken';
-import { aMetaToggle } from '../gui/MetaToggle';
 
 export function createWire(ctx: EventContext): Gesture | void {
   if (ctx.metaToggle.active) {
-    // If the touch begins on the Meta Toggle, don't create a wire
-    if (
-      ctx.root.find({
-        what: aMetaToggle,
-        near: ctx.event.position,
-        recursive: false,
-        tooFar: 35,
-      })
-    ) {
-      return;
-    }
-
     // Rebind for concision
     const find = ctx.page.find.bind(ctx.page);
     const near = ctx.event.position;
@@ -59,6 +46,7 @@ export function createWire(ctx: EventContext): Gesture | void {
       moved(ctx) {
         wire.points[1] = ctx.event.position;
       },
+
       ended(ctx) {
         const near = ctx.event.position;
         const primaryToken = find({ what: aPrimaryToken, near });
@@ -129,23 +117,21 @@ export function createWire(ctx: EventContext): Gesture | void {
           p.position = ctx.event.position;
           wire.attachEnd(p.inputPort);
           ctx.page.adopt(new PropertyPickerEditor(p));
+        } else if (!wire.a) {
+          // TODO: In lieu of a seed, let's just do nothing for now
+          wire.remove();
         } else {
-          if (!wire.a) {
-            // TODO: In lieu of a seed, let's just do nothing for now
-            wire.remove();
-          } else {
-            const n = ctx.page.adopt(new NumberToken());
-            wire.attachEnd(n.wirePort);
-            // Force a render, which computes the token width
-            n.render(0, 0);
-            // Position the token so that it's centered on the pencil
-            n.position = Vec.sub(
-              ctx.event.position,
-              Vec(n.width / 2, n.height / 2)
-            );
-            // Re-add the wire, so it renders after the token (avoids a flicker)
-            ctx.page.adopt(wire);
-          }
+          const n = ctx.page.adopt(new NumberToken());
+          wire.attachEnd(n.wirePort);
+          // Force a render, which computes the token width
+          n.render(0, 0);
+          // Position the token so that it's centered on the pencil
+          n.position = Vec.sub(
+            ctx.event.position,
+            Vec(n.width / 2, n.height / 2)
+          );
+          // Re-add the wire, so it renders after the token (avoids a flicker)
+          ctx.page.adopt(wire);
         }
       },
     });
