@@ -979,7 +979,6 @@ function getClustersForSolver(root: GameObject): Set<ClusterForSolver> {
   // break up all relationships between handles ...
   root.forEach({
     what: aHandle,
-    recursive: true,
     do(handle) {
       handle._forgetAbsorbedHandles();
     },
@@ -1154,7 +1153,6 @@ function solveCluster(cluster: ClusterForSolver, root: GameObject) {
   const knowns = computeKnowns(constraints, lowLevelConstraints);
 
   // Hack to avoid gizmos' handles converging as user scrubs the angle
-  // TODO: make sure this doesn't break anything!
   let gizmoHack = false;
   for (const pv of constraints) {
     if (
