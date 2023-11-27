@@ -20,6 +20,12 @@ export default abstract class Token extends GameObject {
 
   abstract isPrimary(): boolean;
 
+  onTap() {
+    // Override as needed.
+    // We want all tokens to have this, even if it's a noop, to simplify gesture code.
+    // We may eventually want to consider moving this method into GameObject.
+  }
+
   distanceToPoint(pos: Position) {
     return signedDistanceToBox(
       this.position.x,
