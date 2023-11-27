@@ -22,6 +22,8 @@ type GestureAPI = Partial<{
   moved: EventHandler;
   dragged: EventHandler;
   ended: EventHandler;
+  endedTap: EventHandler;
+  endedDrag: EventHandler;
   done: VoidFn;
   render: VoidFn;
 }>;
@@ -32,7 +34,7 @@ type EventHandler = (ctx: EventContext) => EventHandlerResult;
 // TODO: should this be a type parameter of EventHandler?
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type EventHandlerResult = Gesture | any;
-type EventHandlerName = EventState | 'dragged';
+type EventHandlerName = EventState | 'dragged' | 'endedTap' | 'endedDrag';
 
 export class Gesture {
   public lastUpdated = 0;
@@ -82,6 +84,16 @@ export class Gesture {
     // Synthetic "dragged" event
     if (eventHandlerName === 'moved' && ctx.state.drag && this.api.dragged) {
       eventHandlerName = 'dragged';
+    }
+
+    // Synthetic "endedTap" event
+    if (eventHandlerName === 'ended' && !ctx.state.drag && this.api.endedTap) {
+      eventHandlerName = 'endedTap';
+    }
+
+    // Synthetic "endedDrag" event
+    if (eventHandlerName === 'ended' && ctx.state.drag && this.api.endedDrag) {
+      eventHandlerName = 'endedDrag';
     }
 
     // Run the event handler
