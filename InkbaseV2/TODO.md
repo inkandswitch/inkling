@@ -90,9 +90,5 @@
   This is bad.
   (Ivan)
 
-- P3: The CreateWire gesture is way too big. It's doing too much logic. That logic needs to be moved,
-  or better obviated with a bit of redesign work.
-  (Ivan)
-
 - P3: Idea: We can continue tracking a "hold still" timer to check for dead touches, but only actually
   perform the reap when we toggle in/out of meta mode, which should make reaping less awful.

@@ -6,42 +6,69 @@ import Vec from '../../lib/vec';
 import SVG from '../Svg';
 import Config from '../Config';
 import { Position } from '../../lib/types';
+import { createGizmo } from './effects/CreateGizmo';
 
-export function touchHandle(ctx: EventContext): Gesture | void {
-  let handle = ctx.page.find({
+const handleTouchDist = 40;
+
+export function handleCreateGizmo(ctx: EventContext): Gesture | void {
+  if (
+    ctx.metaToggle.active &&
+    ctx.page.find({ what: aCanonicalHandle, near: ctx.event.position })
+  ) {
+    return createGizmo(ctx);
+  }
+}
+
+export function handleGoAnywhere(ctx: EventContext): Gesture | void {
+  const handle = ctx.page.find({
     what: aCanonicalHandle,
     near: ctx.event.position,
-    tooFar: 40,
+    tooFar: handleTouchDist,
   });
 
-  if (!handle) {
-    return;
-  }
-
-  if (ctx.pseudoCount >= 4) {
-    return new Gesture('go anywhere', {
+  if (handle && ctx.pseudoCount >= 4) {
+    return new Gesture('Go Anywhere', {
       began() {
-        handle!.canonicalInstance.toggleGoesAnywhere();
+        handle.canonicalInstance.toggleGoesAnywhere();
       },
     });
   }
+}
+
+export function handleBreakOff(ctx: EventContext): Gesture | void {
+  const handle = ctx.page.find({
+    what: aCanonicalHandle,
+    near: ctx.event.position,
+    tooFar: handleTouchDist,
+  });
 
   if (
+    handle &&
     ctx.pseudoCount >= 3 &&
     handle.canonicalInstance.absorbedHandles.size > 0
   ) {
     const handles = [...handle.canonicalInstance.absorbedHandles];
-    handle = handle.breakOff(handles[handles.length - 1]);
+    touchHandleHelper(handle.breakOff(handles[handles.length - 1]));
   }
+}
 
-  return touchHandleHelper(handle);
+export function handleMoveOrTogglePin(ctx: EventContext): Gesture | void {
+  let handle = ctx.page.find({
+    what: aCanonicalHandle,
+    near: ctx.event.position,
+    tooFar: handleTouchDist,
+  });
+
+  if (handle) {
+    return touchHandleHelper(handle);
+  }
 }
 
 export function touchHandleHelper(handle: Handle): Gesture {
   let lastPos = Vec.clone(handle);
   let offset: Position;
 
-  return new Gesture('Touch Handle', {
+  return new Gesture('Handle Move or Toggle Constraints', {
     moved(ctx) {
       // touchHandleHelper is sometimes called from another gesture, after began,
       // so we need to do our initialization lazily.

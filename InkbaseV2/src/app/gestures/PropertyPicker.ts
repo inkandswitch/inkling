@@ -1,20 +1,17 @@
 import { EventContext, Gesture } from '../Gesture';
-import { aPropertyPickerEditor } from '../meta/PropertyPickerEditor';
+import { aPropertyPicker } from '../meta/PropertyPicker';
+import { createWire } from './effects/CreateWire';
 
-export function tapPropertyPicker(ctx: EventContext): Gesture | void {
+export function propertyPickerCreateWire(ctx: EventContext): Gesture | void {
   if (ctx.metaToggle.active) {
     const propertyPicker = ctx.page.find({
-      what: aPropertyPickerEditor,
+      what: aPropertyPicker,
       near: ctx.event.position,
       recursive: false,
     });
 
     if (propertyPicker) {
-      return new Gesture('Tap Property Picker', {
-        began(ctx) {
-          propertyPicker.onTapInside(ctx.event.position);
-        },
-      });
+      createWire(propertyPicker.wirePort, ctx);
     }
   }
 }

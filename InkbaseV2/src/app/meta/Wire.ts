@@ -35,6 +35,11 @@ export default class Wire extends GameObject {
     class: 'wire',
   });
 
+  constructor(wirePort: WirePort) {
+    super();
+    this.a = new WeakRef(wirePort);
+  }
+
   distanceToPoint(point: Position) {
     return distanceToPath(point, this.points);
   }
@@ -66,26 +71,20 @@ export default class Wire extends GameObject {
     return p1 && p2 && Vec.dist(p1, p2) < 10;
   }
 
-  attachFront(element: WirePort) {
-    this.a = new WeakRef(element);
-    this.updateConstraint();
-  }
-
   attachEnd(element: WirePort) {
     this.b = new WeakRef(element);
-    this.updateConstraint();
-  }
 
-  private updateConstraint() {
     const a = this.a?.deref();
     const b = this.b?.deref();
+
     if (a && b) {
       this.connection = a.value.wireTo(b.value);
-      if (this.connection === null) {
-        // Remove the wire if it's not a valid connection
-        Svg.showStatus("You can't wire those things together silly billy");
-        this.remove();
-      }
+    }
+
+    if (this.connection === null) {
+      // Remove the wire if it's not a valid connection
+      Svg.showStatus("You can't wire those things together silly billy");
+      this.remove();
     }
   }
 

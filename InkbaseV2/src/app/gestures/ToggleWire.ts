@@ -1,7 +1,7 @@
 import { aWire } from '../meta/Wire';
 import { EventContext, Gesture } from '../Gesture';
 
-export function toggleWire(ctx: EventContext): Gesture | void {
+export function wireTogglePaused(ctx: EventContext): Gesture | void {
   if (ctx.metaToggle.active) {
     const wire = ctx.page.find({
       what: aWire,
@@ -9,11 +9,9 @@ export function toggleWire(ctx: EventContext): Gesture | void {
     });
 
     if (wire) {
-      return new Gesture('Toggle Wire', {
-        ended(ctx) {
-          if (!ctx.state.drag) {
-            wire.togglePaused();
-          }
+      return new Gesture('Toggle Paused', {
+        endedTap(ctx) {
+          wire.togglePaused();
         },
       });
     }

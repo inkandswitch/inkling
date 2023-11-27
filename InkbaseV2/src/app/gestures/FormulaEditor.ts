@@ -5,7 +5,7 @@ import { EventContext, Gesture } from '../Gesture';
 // import { aPrimaryToken } from '../meta/Token';
 // import { isLabelToken } from '../meta/token-helpers';
 
-export function tapFormulaLabel(ctx: EventContext): Gesture | void {
+export function formulaLabelTap(ctx: EventContext): Gesture | void {
   // TODO: Rewrite
   // if (ctx.metaToggle.active && ctx.formulaEditor.isActive()) {
   //   const primaryToken = ctx.page.find({
@@ -21,7 +21,7 @@ export function tapFormulaLabel(ctx: EventContext): Gesture | void {
   // }
 }
 
-export function pencilFormulaEditor(ctx: EventContext): Gesture | void {
+export function formulaEditorWrite(ctx: EventContext): Gesture | void {
   if (!ctx.metaToggle.active) {
     return;
   }
@@ -76,7 +76,7 @@ export function pencilFormulaEditor(ctx: EventContext): Gesture | void {
   // }
 }
 
-export function closeFormulaEditor(ctx: EventContext): Gesture | void {
+export function formulaEditorClose(ctx: EventContext): Gesture | void {
   // This one is a bit weird.
   // We don't actually need to claim the 3rd finger, so we just perform the effect right away.
   if (

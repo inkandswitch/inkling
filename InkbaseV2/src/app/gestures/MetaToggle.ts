@@ -5,7 +5,7 @@ declare global {
   function cycleTheme(): void;
 }
 
-export function touchMetaToggle(ctx: EventContext): Gesture | void {
+export function metaToggleFingerActions(ctx: EventContext): Gesture | void {
   const metaToggle = ctx.root.find({
     what: aMetaToggle,
     near: ctx.event.position,
@@ -16,7 +16,7 @@ export function touchMetaToggle(ctx: EventContext): Gesture | void {
   const dragThreshold = 100;
 
   if (metaToggle) {
-    return new Gesture('Touch Meta Toggle', {
+    return new Gesture('Meta Toggle Finger Actions', {
       moved(ctx) {
         if (ctx.state.dragDist > dragThreshold) {
           metaToggle.dragTo(ctx.event.position);
@@ -24,17 +24,19 @@ export function touchMetaToggle(ctx: EventContext): Gesture | void {
       },
       ended(ctx) {
         metaToggle.snapToCorner();
-        if (ctx.pseudo) {
-          cycleTheme();
-        } else if (ctx.state.dragDist <= dragThreshold) {
-          metaToggle.toggle();
+        if (ctx.state.dragDist <= dragThreshold) {
+          if (ctx.pseudo) {
+            cycleTheme();
+          } else {
+            metaToggle.toggle();
+          }
         }
       },
     });
   }
 }
 
-export function pencilMetaToggle(ctx: EventContext): Gesture | void {
+export function metaToggleIgnorePencil(ctx: EventContext): Gesture | void {
   if (
     ctx.root.find({
       what: aMetaToggle,
@@ -44,6 +46,6 @@ export function pencilMetaToggle(ctx: EventContext): Gesture | void {
     })
   ) {
     // This gesture exists just to block other gestures from running when a pencil touch begins on the Meta Toggle
-    return new Gesture('Pencil Meta Toggle', {});
+    return new Gesture('Ignore Pencil', {});
   }
 }

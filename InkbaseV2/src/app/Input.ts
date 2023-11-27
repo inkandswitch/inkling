@@ -1,47 +1,75 @@
 import {
-  closeFormulaEditor,
-  pencilFormulaEditor,
-  tapFormulaLabel,
+  formulaEditorClose,
+  formulaEditorWrite,
+  formulaLabelTap,
 } from './gestures/FormulaEditor';
 import { Event, TouchId, wasRecentlyUpdated } from './NativeEvents';
 import { EventContext, Gesture } from './Gesture';
-import { touchHandle } from './gestures/Handle';
-import { pencilMetaToggle, touchMetaToggle } from './gestures/MetaToggle';
-import { touchToken, scrubNumberToken } from './gestures/Token';
-import { drawInk } from './gestures/DrawInk';
-import { createWire } from './gestures/CreateWire';
-import { tapPropertyPicker } from './gestures/PropertyPicker';
+import {
+  handleBreakOff,
+  handleCreateGizmo,
+  handleGoAnywhere,
+  handleMoveOrTogglePin,
+} from './gestures/Handle';
+import {
+  metaToggleIgnorePencil,
+  metaToggleFingerActions,
+} from './gestures/MetaToggle';
+import {
+  tokenMoveOrToggleConstraint,
+  numberTokenScrub,
+  tokenCreateWireOrEditFormula,
+} from './gestures/Token';
+import {
+  emptySpaceDrawInk,
+  emptySpaceCreateGizmoOrFormula,
+} from './gestures/EmptySpace';
+import { propertyPickerEditorChoose } from './gestures/PropertyPickerEditor';
 import SVG from './Svg';
-import { drawGizmoFromHandle } from './gestures/DrawGizmoFromHandle';
-import { touchGizmo } from './gestures/Gizmo';
+import { gizmoCycleConstraints, gizmoCreateWire } from './gestures/Gizmo';
 import Config from './Config';
 import { erase } from './gestures/Erase';
-import { toggleHandles } from './gestures/ToggleHandles';
-import { toggleWire } from './gestures/ToggleWire';
-import { touchMetaEmptySpace } from './gestures/TouchMetaEmptySpace';
+import { strokeAddHandles } from './gestures/Stroke';
+import { wireTogglePaused } from './gestures/ToggleWire';
+import { componentCreateWire } from './gestures/Component';
+import { strokeGroupRemoveHandles } from './gestures/StrokeGroup';
+import { propertyPickerCreateWire } from './gestures/PropertyPicker';
 
 const gestureCreators = {
   finger: [
-    closeFormulaEditor,
-    scrubNumberToken,
-    tapPropertyPicker,
-    touchToken,
-    touchHandle,
-    touchMetaToggle,
-    touchGizmo,
-    toggleWire,
-    toggleHandles,
+    formulaEditorClose,
+    //
+    handleGoAnywhere,
+    numberTokenScrub,
+    handleBreakOff,
+    //
+    propertyPickerEditorChoose,
+    tokenMoveOrToggleConstraint,
+    handleMoveOrTogglePin,
+    gizmoCycleConstraints,
+    wireTogglePaused,
+    //
+    strokeGroupRemoveHandles,
+    strokeAddHandles,
+    //
+    metaToggleFingerActions,
   ],
   pencil: [
-    pencilMetaToggle,
+    metaToggleIgnorePencil,
     erase,
-    drawGizmoFromHandle,
-    tapPropertyPicker,
-    tapFormulaLabel,
-    pencilFormulaEditor,
-    createWire,
-    touchMetaEmptySpace,
-    drawInk,
+    //
+    propertyPickerEditorChoose,
+    formulaLabelTap,
+    formulaEditorWrite,
+    //
+    tokenCreateWireOrEditFormula,
+    propertyPickerCreateWire,
+    componentCreateWire,
+    gizmoCreateWire,
+    handleCreateGizmo,
+    //
+    emptySpaceCreateGizmoOrFormula,
+    emptySpaceDrawInk,
   ],
 };
 

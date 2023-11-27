@@ -2,8 +2,8 @@ import { EventContext, Gesture } from '../Gesture';
 import { rand } from '../../lib/math';
 import SVG from '../Svg';
 import { Position } from '../../lib/types';
-import { GameObject, aGameObject } from '../GameObject';
-import Stroke, { aStroke } from '../ink/Stroke';
+import { GameObject } from '../GameObject';
+import Stroke from '../ink/Stroke';
 import StrokeGroup from '../ink/StrokeGroup';
 import MetaToggle from '../gui/MetaToggle';
 

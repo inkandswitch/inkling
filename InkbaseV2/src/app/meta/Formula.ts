@@ -10,8 +10,6 @@ import FormulaCompiler from './FormulaCompiler';
 import LabelToken from './LabelToken';
 import PropertyPicker from './PropertyPicker';
 import { Position, Removable } from '../../lib/types';
-import { EventContext } from '../Gesture';
-import { clip } from '../../lib/math';
 
 const PADDING = 3;
 
@@ -22,18 +20,6 @@ const PADDING = 3;
 export default class Formula extends Token {
   // maxHp = 120;
   // hp = this.maxHp;
-
-  static createFromContext(ctx: EventContext, token?: Token) {
-    const formula = new Formula();
-    ctx.page.adopt(formula);
-    if (token) {
-      formula.adopt(token);
-    }
-
-    formula.edit();
-    formula.position = ctx.event.position;
-    return formula;
-  }
 
   readonly height = 30 + PADDING * 2;
 
