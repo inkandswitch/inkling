@@ -1,55 +1,77 @@
 import TransformationMatrix from '../../lib/TransformationMatrix';
 import { Position } from '../../lib/types';
 import Vec from '../../lib/vec';
-import { GameObject } from '../GameObject';
 import { EventContext, Gesture } from '../Gesture';
-import { FingerState, TouchId } from '../NativeEvents';
+import { FingerState } from '../NativeEvents';
 import Selected from '../Selected';
+import { Finger } from '../constraints';
 import Handle from '../ink/Handle';
 
 export function transformSelection(ctx: EventContext): Gesture | void {
-  if (Selected.size > 0) {
+  if (Selected.size > 0 && ctx.pseudo) {
     let firstFinger: FingerState | null = null;
     let secondFinger: FingerState | null = null;
     const handlePositions = new Map<Handle, Position>();
 
-    function makeTransform(
-      firstFinger: FingerState,
-      secondFinger: FingerState
-    ) {
-      const a = Vec.avg(firstFinger.position, secondFinger.position);
-      const b = secondFinger.position;
-      return TransformationMatrix.fromLineTranslateRotate(a, b);
+    const makeMoveTransform = (p: Position) =>
+      TransformationMatrix.identity().translate(p.x, p.y);
+    const makePinchTransform = (a: Position, b: Position) =>
+      TransformationMatrix.fromLine(Vec.avg(a, b), b);
+
+    function resetTransform() {
+      let transform: TransformationMatrix;
+      if (firstFinger && secondFinger) {
+        transform = makePinchTransform(
+          firstFinger.position,
+          secondFinger.position
+        );
+      } else if (firstFinger) {
+        transform = makeMoveTransform(firstFinger.position);
+      } else {
+        return;
+      }
+      transform = transform.inverse();
+      handlePositions.clear();
+      Selected.forEach(obj => {
+        if (obj instanceof Handle) {
+          handlePositions.set(obj, transform.transformPoint(obj.position));
+        }
+      });
     }
 
     return new Gesture('Transform Selection', {
-      claim(ctx) {
-        // Claim 2 fingers
-        return ctx.event.type === 'finger' && !(firstFinger && secondFinger);
-      },
+      claim: 'fingers',
 
       began(ctx) {
         if (!firstFinger) {
           firstFinger = ctx.state as FingerState;
-        } else {
+          resetTransform();
+        } else if (!secondFinger) {
           secondFinger = ctx.state as FingerState;
+          resetTransform();
+        }
+      },
 
-          const transform = makeTransform(firstFinger, secondFinger).inverse();
-
-          Selected.forEach(obj => {
-            if (obj instanceof Handle) {
-              handlePositions.set(obj, transform.transformPoint(obj.position));
-            }
-          });
+      ended(ctx) {
+        if (ctx.event.id == firstFinger?.id) {
+          firstFinger = secondFinger;
+          secondFinger = null;
+          resetTransform();
+        } else if (ctx.event.id == secondFinger?.id) {
+          secondFinger = null;
+          resetTransform();
         }
       },
 
       moved(ctx) {
         let transform: TransformationMatrix;
         if (firstFinger && secondFinger) {
-          transform = makeTransform(firstFinger, secondFinger);
-        } else {
-          return;
+          transform = makePinchTransform(
+            firstFinger.position,
+            secondFinger.position
+          );
+        } else if (firstFinger) {
+          transform = makeMoveTransform(firstFinger.position);
         }
 
         Selected.forEach(obj => {
