@@ -5,20 +5,20 @@
 
 :root[theme*='light'] {
   --L0: 90%;
-  --L1: 80%;
-  --L2: 70%;
-  --L3: 50%;
-  --L4: 30%;
+  --L1: 72%;
+  --L2: 54%;
+  --L3: 36%;
+  --L4: 18%;
   --L5: 0%;
 }
 
 :root[theme*='dark'] {
   --L0: 10%;
-  --L1: 30%;
-  --L2: 50%;
-  --L3: 70%;
-  --L4: 80%;
-  --L5: 90%;
+  --L1: 28%;
+  --L2: 46%;
+  --L3: 64%;
+  --L4: 82%;
+  --L5: 100%;
 }
 
 /* Generate a range of greyscale colors based on the above lightness values */
@@ -44,6 +44,7 @@
   --gesture-circle: var(--grey2);
   --gesture-text: var(--grey2);
   --pseudo-touch: var(--grey2);
+  --selector: var(--grey3);
   --status-text: var(--grey3);
 
   /* These colors are different in concrete and meta mode */
@@ -57,7 +58,8 @@
   --gizmo-arrow: transparent;
   --gizmo-thick: transparent;
   --handle-fill: lch(var(--L5) 0 0 / 0.03);
-  --ink-color: lch(var(--L5) 0 0 / 0.65);
+  --ink-color: lch(var(--L5) 0 0 / 0.6);
+  --ink-selected-color: lch(var(--L5) 0 0);
   --label-box: transparent;
   --label-stroke: transparent;
   --label-text: transparent;
@@ -88,7 +90,8 @@
     --gizmo-arrow: var(--grey4);
     --gizmo-thick: var(--grey5);
     --handle-fill: transparent;
-    --ink-color: lch(var(--L5) 0 0 / 0.12);
+    --ink-color: lch(var(--L5) 0 0 / 0.1);
+    --ink-selected-color: lch(var(--L5) 0 0 / 0.3);
     --label-box: var(--grey3);
     --label-stroke: var(--grey1);
     --label-text: var(--grey1);
@@ -123,11 +126,14 @@
   --eraser: color(display-p3 1 0.4 0);
   --gesture-circle: var(--yellow);
   --gesture-text: var(--yellow);
+  --ink-selected-color: color(display-p3 0.3 0.6 1);
   --pseudo-touch: var(--yellow);
+  --selector: color(display-p3 0.3 0.6 1);
 
   &[meta-mode] {
     --constrained: var(--green);
     --formula-editor-cell-non-default: var(--blue);
+    --ink-selected-color: color(display-p3 0.3 0.6 1 / 0.2);
     --label-box: var(--blue);
     --meta-toggle: color(display-p3 1 0.7 0);
   }
@@ -264,6 +270,11 @@ svg * {
   fill: none;
   stroke: var(--ink-color);
   stroke-width: 2;
+
+  &.selected {
+    stroke: var(--ink-selected-color);
+    stroke-width: 2.5;
+  }
 }
 
 .formula.stroke {
@@ -525,6 +536,20 @@ svg * {
   to {
     translate: 0px 10px;
     scale: 3 0;
+  }
+}
+
+.selector {
+  fill: var(--selector);
+  & circle {
+    animation: selector 0.1s cubic-bezier(0, 0, 0.3, 0) both;
+  }
+}
+
+@keyframes selector {
+  to {
+    scale: 0.3;
+    opacity: 0;
   }
 }
 

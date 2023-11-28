@@ -34,6 +34,7 @@ import { wireTogglePaused } from './gestures/ToggleWire';
 import { componentCreateWire } from './gestures/Component';
 import { strokeGroupRemoveHandles } from './gestures/StrokeGroup';
 import { propertyPickerCreateWire } from './gestures/PropertyPicker';
+import { select } from './gestures/Select';
 
 const gestureCreators = {
   finger: [
@@ -57,6 +58,7 @@ const gestureCreators = {
   pencil: [
     metaToggleIgnorePencil,
     erase,
+    select,
     //
     propertyPickerEditorChoose,
     formulaLabelTap,

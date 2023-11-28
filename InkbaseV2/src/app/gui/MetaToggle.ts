@@ -17,7 +17,15 @@ export default class MetaToggle extends GameObject {
   position: Position;
   dragging = false;
 
-  public active = false; // Temporary hack — this should be somewhere more global
+  // This state doesn't belong here, but moving it means we need a way for Meta Toggle
+  // to run code whenever it changes. I don't feel like tackling RX nonsense right now.
+  private static _active = false;
+  public static get active() {
+    return this._active;
+  }
+  public get active() {
+    return MetaToggle.active;
+  }
 
   private splats: SVGElement[] = [];
 
@@ -66,7 +74,7 @@ export default class MetaToggle extends GameObject {
   }
 
   resplat() {
-    if (!this.active) {
+    if (!MetaToggle.active) {
       let angles: number[] = [];
       this.splats.forEach(splat => {
         angles = [];
@@ -95,11 +103,11 @@ export default class MetaToggle extends GameObject {
   }
 
   toggle() {
-    this.active = !this.active;
-    document.documentElement.toggleAttribute('meta-mode', this.active);
+    MetaToggle._active = !MetaToggle._active;
+    document.documentElement.toggleAttribute('meta-mode', MetaToggle.active);
     this.resplat();
 
-    Store.set('Meta Mode', this.active);
+    Store.set('Meta Mode', MetaToggle.active);
   }
 
   distanceToPoint(point: Position) {
@@ -138,7 +146,7 @@ export default class MetaToggle extends GameObject {
   private getAttrs() {
     const classes: string[] = ['meta-toggle'];
 
-    if (this.active) {
+    if (MetaToggle.active) {
       classes.push('active');
     }
 
