@@ -53,8 +53,8 @@ interface SharedStateProperties {
   drag: boolean; // Has the touch moved at least a tiny bit since being put down?
   dragDist: number; // How far has the touch moved?
   // TODO — do we want to store the original & current *event* instead of cherry-picking their properties?
-  position: Position | null; // Where is the touch now?
-  originalPosition: Position | null; // Where was the touch initially put down?
+  position: Position; // Where is the touch now?
+  originalPosition: Position; // Where was the touch initially put down?
   lastUpdated: number;
 }
 

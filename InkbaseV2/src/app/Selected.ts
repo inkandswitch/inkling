@@ -9,8 +9,8 @@ export default Selected;
 
 export function aSelectable(gameObj: GameObject) {
   // These can't live at the top level because that causes a load-time circular dependency
-  const concreteSelectables = [Stroke];
-  const metaSelectables: Array<typeof GameObject> = [];
+  const concreteSelectables = [Stroke, Handle];
+  const metaSelectables = [Handle];
 
   const set = MetaToggle.active ? metaSelectables : concreteSelectables;
   return set.some(cls => gameObj instanceof cls) ? gameObj : null;

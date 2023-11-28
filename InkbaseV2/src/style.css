@@ -58,6 +58,7 @@
   --gizmo-arrow: transparent;
   --gizmo-thick: transparent;
   --handle-fill: lch(var(--L5) 0 0 / 0.03);
+  --handle-selected-fill: lch(var(--L5) 0 0 / 0.2);
   --ink-color: lch(var(--L5) 0 0 / 0.6);
   --ink-selected-color: lch(var(--L5) 0 0);
   --label-box: transparent;
@@ -90,6 +91,7 @@
     --gizmo-arrow: var(--grey4);
     --gizmo-thick: var(--grey5);
     --handle-fill: transparent;
+    --handle-selected-fill: lch(var(--L5) 0 0 / 0.2);
     --ink-color: lch(var(--L5) 0 0 / 0.1);
     --ink-selected-color: lch(var(--L5) 0 0 / 0.3);
     --label-box: var(--grey3);
@@ -126,6 +128,7 @@
   --eraser: color(display-p3 1 0.4 0);
   --gesture-circle: var(--yellow);
   --gesture-text: var(--yellow);
+  --handle-selected-fill: color(display-p3 0.3 0.6 1 / 0.3);
   --ink-selected-color: color(display-p3 0.3 0.6 1);
   --pseudo-touch: var(--yellow);
   --selector: color(display-p3 0.3 0.6 1);
@@ -133,6 +136,7 @@
   &[meta-mode] {
     --constrained: var(--green);
     --formula-editor-cell-non-default: var(--blue);
+    --handle-selected-fill: color(display-p3 0.3 0.6 1 / 0.2);
     --ink-selected-color: color(display-p3 0.3 0.6 1 / 0.2);
     --label-box: var(--blue);
     --meta-toggle: color(display-p3 1 0.7 0);
@@ -286,13 +290,16 @@ svg * {
     fill: transparent;
   }
 
-  &[goes-anywhere][is-canonical] circle,
-  &[goes-anywhere] circle {
-    fill: yellow;
-  }
-
   &[is-canonical] circle {
     fill: var(--handle-fill);
+  }
+
+  &[is-canonical].selected circle {
+    fill: var(--handle-selected-fill);
+  }
+
+  &[goes-anywhere] circle {
+    fill: yellow;
   }
 
   & path {

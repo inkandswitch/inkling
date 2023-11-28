@@ -35,6 +35,7 @@ import { componentCreateWire } from './gestures/Component';
 import { strokeGroupRemoveHandles } from './gestures/StrokeGroup';
 import { propertyPickerCreateWire } from './gestures/PropertyPicker';
 import { select } from './gestures/Select';
+import { transformSelection } from './gestures/TransformSelection';
 
 const gestureCreators = {
   finger: [
@@ -54,6 +55,7 @@ const gestureCreators = {
     strokeAddHandles,
     //
     metaToggleFingerActions,
+    transformSelection,
   ],
   pencil: [
     metaToggleIgnorePencil,
