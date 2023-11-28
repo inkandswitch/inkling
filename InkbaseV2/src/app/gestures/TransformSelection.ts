@@ -4,8 +4,8 @@ import Vec from '../../lib/vec';
 import { EventContext, Gesture } from '../Gesture';
 import { FingerState } from '../NativeEvents';
 import Selected from '../Selected';
-import { Finger } from '../constraints';
 import Handle from '../ink/Handle';
+import * as constraints from '../constraints';
 
 export function transformSelection(ctx: EventContext): Gesture | void {
   if (Selected.size > 0 && ctx.pseudo) {
@@ -61,6 +61,11 @@ export function transformSelection(ctx: EventContext): Gesture | void {
           secondFinger = null;
           resetTransform();
         }
+        Selected.forEach(obj => {
+          if (obj instanceof Handle) {
+            constraints.finger(obj).remove();
+          }
+        });
       },
 
       moved(ctx) {
@@ -72,6 +77,8 @@ export function transformSelection(ctx: EventContext): Gesture | void {
           );
         } else if (firstFinger) {
           transform = makeMoveTransform(firstFinger.position);
+        } else {
+          return;
         }
 
         Selected.forEach(obj => {
@@ -79,6 +86,7 @@ export function transformSelection(ctx: EventContext): Gesture | void {
             const oldPos = handlePositions.get(obj);
             if (oldPos) {
               obj.position = transform.transformPoint(oldPos);
+              constraints.finger(obj);
             }
           }
         });
