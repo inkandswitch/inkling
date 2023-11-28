@@ -35,11 +35,11 @@ export function transformSelection(ctx: EventContext): Gesture | void {
     }
     transform = transform.inverse();
     handlePositions.clear();
-    Selected.forEach(obj => {
+    for (const obj of Selected) {
       if (obj instanceof Handle) {
         handlePositions.set(obj, transform.transformPoint(obj.position));
       }
-    });
+    }
   }
 
   return new Gesture('Transform Selection', {
@@ -84,7 +84,7 @@ export function transformSelection(ctx: EventContext): Gesture | void {
         return;
       }
 
-      Selected.forEach(obj => {
+      for (const obj of Selected) {
         if (obj instanceof Handle) {
           const oldPos = handlePositions.get(obj);
           if (oldPos) {
@@ -92,7 +92,7 @@ export function transformSelection(ctx: EventContext): Gesture | void {
             constraints.finger(obj);
           }
         }
-      });
+      }
     },
   });
 }
