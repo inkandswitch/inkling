@@ -1274,11 +1274,11 @@ function solveCluster(cluster: ClusterForSolver, root: GameObject) {
     const gridSize = goesAnywhereMode === 'continuous' ? 100 : 25;
     const maxIterations = goesAnywhereMode === 'continuous' ? 25 : 100;
     const life = goesAnywhereMode === 'continuous' ? 0 : 5;
-    for (let x = 0; x < 1000; x += gridSize) {
+    for (let x = -50; x < innerWidth + 50; x += gridSize) {
       if (xIndex !== undefined) {
         inputs[xIndex] = x;
       }
-      for (let y = 0; y < 1300; y += gridSize) {
+      for (let y = -50; y < innerHeight + 50; y += gridSize) {
         if (yIndex !== undefined) {
           inputs[yIndex] = y;
         }
