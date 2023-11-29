@@ -248,7 +248,7 @@ svg * {
     stroke: var(--meta-splats);
     stroke-width: 7;
     fill: none;
-    scale: 0.5;
+    scale: 0.4;
     transition: none;
   }
 
