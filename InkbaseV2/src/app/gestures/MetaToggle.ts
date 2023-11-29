@@ -23,13 +23,14 @@ export function metaToggleFingerActions(ctx: EventContext): Gesture | void {
         }
       },
       ended(ctx) {
-        metaToggle.snapToCorner();
         if (ctx.state.dragDist <= dragThreshold) {
           if (ctx.pseudo) {
             cycleTheme();
           } else {
             metaToggle.toggle();
           }
+        } else {
+          metaToggle.snapToCorner();
         }
       },
     });

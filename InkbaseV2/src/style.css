@@ -65,6 +65,8 @@
   --label-stroke: transparent;
   --label-text: transparent;
   --meta-toggle: var(--grey5);
+  --meta-circles: var(--grey5);
+  --meta-splats: var(--grey5);
   --op-token: transparent;
   --parsed-formula: transparent;
   --property-picker-box: transparent;
@@ -97,7 +99,6 @@
     --label-box: var(--grey3);
     --label-stroke: var(--grey1);
     --label-text: var(--grey1);
-    --meta-toggle: var(--grey5);
     --op-token: var(--grey4);
     --parsed-formula: var(--grey5);
     --property-picker-box: var(--grey5);
@@ -130,6 +131,7 @@
   --gesture-text: var(--yellow);
   --handle-selected-fill: color(display-p3 0.3 0.6 1 / 0.3);
   --ink-selected-color: color(display-p3 0.3 0.6 1);
+  --meta-circles: color(display-p3 1 0.7 0);
   --pseudo-touch: var(--yellow);
   --selector: color(display-p3 0.3 0.6 1);
 
@@ -214,7 +216,7 @@ svg * {
   animation: zoom-in 0.7s cubic-bezier(0, 1.2, 0, 1) backwards;
 
   transition:
-    scale 0.8s cubic-bezier(1, 0, 0, 1.3),
+    scale 0.4s 0.2s cubic-bezier(1, 0, 0, 1),
     translate 0.5s cubic-bezier(0.4, 1.3, 0.1, 0.98);
 
   &.dragging {
@@ -225,10 +227,8 @@ svg * {
   }
 
   & circle {
-    fill: var(--meta-toggle);
-    transition:
-      scale 1s cubic-bezier(0.1, 1.3, 0, 1),
-      var(--transition-fill);
+    fill: var(--meta-circles);
+    transition: scale 2s cubic-bezier(0, 1.3, 0, 1);
   }
 
   .inner {
@@ -237,26 +237,66 @@ svg * {
   }
 
   .secret {
-    scale: 0.15;
+    fill: var(--meta-toggle);
+    scale: 0.25;
+    transition:
+      scale 2s cubic-bezier(0, 1.3, 0, 1),
+      fill 0.1s linear;
   }
 
   .splats {
-    stroke: var(--meta-toggle);
-    stroke-width: 8;
-    scale: 1.7;
-    .splat {
-      transition: scale 2s cubic-bezier(0, 1.5, 0, 1);
+    stroke: var(--meta-splats);
+    stroke-width: 7;
+    fill: none;
+    scale: 0.5;
+    transition: none;
+  }
+
+  .splat {
+    rotate: var(--rotate);
+    transform: translateX(var(--translate)) scale(var(--scaleX), var(--scaleY));
+    transition: transform 1s var(--delay) cubic-bezier(0, 1.2, 0, 1);
+
+    & polyline {
+      transition:
+        translate 0.3s 0.45s cubic-bezier(0.3, 0.6, 0, 1),
+        scale 0.6s cubic-bezier(0.3, 0, 0.5, 1);
+    }
+  }
+
+  &:not(.active).dragging .splat {
+    transform: translateX(var(--translate));
+    & polyline {
+      scale: 8;
+      translate: calc(-0.5 * var(--translate)) 0;
+      animation: spin 60s infinite both linear var(--flip);
+      transition:
+        translate 2s calc(var(--delay) * 5) cubic-bezier(0, 1.2, 0, 1),
+        scale 2s calc(var(--delay) * 5) cubic-bezier(0, 1.2, 0, 1);
     }
   }
 
   &.active {
     .inner {
       scale: 0.85;
+      transition-delay: 0.1s;
     }
 
     .secret {
       scale: 0.7;
+      transition-delay: 0.2s;
     }
+
+    .splat {
+      transform: translateX(0) scale(var(--scaleX), var(--scaleY));
+      transition: transform 0.2s calc(var(--delay) / 2) cubic-bezier(0, 0, 0, 1);
+    }
+  }
+}
+
+@keyframes spin {
+  to {
+    rotate: 360deg;
   }
 }
 

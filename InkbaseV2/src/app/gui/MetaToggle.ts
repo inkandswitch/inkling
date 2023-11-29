@@ -3,7 +3,7 @@ import SVG from '../Svg';
 import { GameObject } from '../GameObject';
 import Vec from '../../lib/vec';
 import Store, { Serializable } from '../Store';
-import { TAU, lerpN, rand } from '../../lib/math';
+import { TAU, lerpN, rand, randInt } from '../../lib/math';
 import Config from '../Config';
 
 export const padding = 30;
@@ -11,6 +11,35 @@ const radius = 20;
 
 export const aMetaToggle = (gameObj: GameObject) =>
   gameObj instanceof MetaToggle ? gameObj : null;
+
+type Splat = {
+  elm: SVGElement;
+  delay: number;
+  translate: number;
+  rotate: number;
+  squish: number;
+  flip: string;
+};
+
+function randomAngles() {
+  const angles: number[] = [];
+  for (let i = 0; i < rand(5, 8); i++) {
+    angles.push(rand(0, 360));
+  }
+  return angles;
+}
+
+function randomSplat(angle: number) {
+  const ran = rand(0, 1);
+  const curve = ran ** 6;
+  return {
+    delay: ran * 0.17,
+    translate: 12 / lerpN(curve, 1, 0.5) ** 2,
+    rotate: curve < 0.1 ? rand(0, 360) : angle,
+    squish: rand(0, 0.7) * curve,
+    flip: rand() < 0 ? 'normal' : 'reverse',
+  };
+}
 
 export default class MetaToggle extends GameObject {
   private readonly element: SVGElement;
@@ -27,7 +56,7 @@ export default class MetaToggle extends GameObject {
     return MetaToggle.active;
   }
 
-  private splats: SVGElement[] = [];
+  private splats: Splat[] = [];
 
   constructor() {
     super();
@@ -45,25 +74,29 @@ export default class MetaToggle extends GameObject {
     SVG.add('circle', this.element, { class: 'outer', r: radius });
     SVG.add('circle', this.element, { class: 'inner', r: radius });
     const splatsElm = SVG.add('g', this.element, { class: 'splats' });
+
+    const angles = randomAngles();
+
     for (let i = 0; i < 50; i++) {
       const points: Position[] = [];
       const steps = 5;
       for (let s = 0; s < steps; s++) {
-        const a = (TAU * (rand(-0.1, 0.1) + s)) / steps;
-        const d = rand(1, 3);
+        const a = (s / steps) * TAU;
+        const d = rand(0, 4);
         points.push(Vec.polar(a, d));
       }
-      this.splats.push(
-        SVG.add('polyline', splatsElm, {
-          points: SVG.points(points),
+      points[steps] = points[0];
+      const splat: Splat = {
+        elm: SVG.add('g', splatsElm, {
           class: 'splat',
-        })
-      );
+        }),
+        ...randomSplat(angles[randInt(0, angles.length - 1)]),
+      };
+      this.splats.push(splat);
+      SVG.add('polyline', splat.elm, { points: SVG.points(points) });
     }
     SVG.add('circle', this.element, { class: 'secret', r: radius });
     this.resplat();
-
-    // setInterval(this.toggle.bind(this), 1500);
 
     if (
       Config.storeMetaMode &&
@@ -74,38 +107,32 @@ export default class MetaToggle extends GameObject {
   }
 
   resplat() {
-    if (!MetaToggle.active) {
-      let angles: number[] = [];
-      this.splats.forEach(splat => {
-        angles = [];
-        for (let i = rand(2, 12); i > 0; i--) {
-          angles.push(rand(0, 360));
-        }
-        const a = angles[rand(0, angles.length) | 0];
-        const curve = rand(0, 1) ** 8;
-        const mass = lerpN(curve, 1, 0.5);
-        const t = 10 / mass / mass;
-        const squish = rand(0, 0.7);
-        SVG.update(splat, {
-          style: `scale: .25; transition-delay: ${rand(0, 0.17)}s`,
-          transform: `
-            rotate(${a})
-            translate(${t})
-            scale(${1 + squish}, ${1 - squish})
-          `,
-        });
+    const angles = randomAngles();
+    this.splats.forEach(splat => {
+      const s = randomSplat(angles[randInt(0, angles.length - 1)]);
+      splat.translate = s.translate;
+      splat.rotate = s.rotate;
+      splat.squish = s.squish;
+      SVG.update(splat.elm, {
+        style: `
+          --delay: ${splat.delay}s;
+          --translate: ${splat.translate}px;
+          --rotate: ${splat.rotate}deg;
+          --scaleX: ${1 + splat.squish};
+          --scaleY: ${1 - splat.squish};
+          --flip: ${splat.flip};
+        `,
       });
-    } else {
-      this.splats.forEach(splat => {
-        SVG.update(splat, { style: `scale: 0.1` });
-      });
-    }
+    });
   }
 
   toggle() {
     MetaToggle._active = !MetaToggle._active;
     document.documentElement.toggleAttribute('meta-mode', MetaToggle.active);
-    this.resplat();
+
+    if (!MetaToggle.active) {
+      this.resplat();
+    }
 
     Store.set('Meta Mode', MetaToggle.active);
   }
@@ -141,6 +168,7 @@ export default class MetaToggle extends GameObject {
     this.position = Vec.add(cornerPosition, Vec.mulS(sign, padding));
 
     Store.set('Meta Toggle Position', this.position as unknown as Serializable);
+    this.resplat();
   }
 
   private getAttrs() {
