@@ -8,7 +8,7 @@ let lastTapTime = -Infinity;
 
 // The min is to avoid accidental deselection if the pen tip bounces
 const minDoubleTapInterval = 50;
-const maxDoubleTapInterval = 300;
+const maxDoubleTapInterval = 350;
 
 export function select(ctx: EventContext): Gesture | void {
   if (ctx.pseudoCount === 1) {
@@ -50,9 +50,11 @@ export function select(ctx: EventContext): Gesture | void {
           const time = performance.now();
           const delta = time - lastTapTime;
           if (minDoubleTapInterval < delta && delta < maxDoubleTapInterval) {
-            Selected.clear();
+            Selected.deselectOrReselect();
+            lastTapTime = 0;
+          } else {
+            lastTapTime = time;
           }
-          lastTapTime = time;
         }
       },
     });

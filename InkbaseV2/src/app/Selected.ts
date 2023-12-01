@@ -4,7 +4,36 @@ import StrokeGroup from './ink/StrokeGroup';
 import Handle from './ink/Handle';
 import MetaToggle from './gui/MetaToggle';
 
-const Selected = new Set<GameObject>();
+class SelectionSet<T> extends Set<T> {
+  previous: Set<T> = new Set();
+
+  deselect() {
+    if (this.size > 0) {
+      this.previous = new Set(this);
+      this.clear();
+    }
+  }
+
+  reselect() {
+    if (this.previous.size > 0) {
+      this.clear();
+      for (const v of this.previous) {
+        this.add(v);
+      }
+      this.previous.clear();
+    }
+  }
+
+  deselectOrReselect() {
+    if (this.size === 0) {
+      this.reselect();
+    } else {
+      this.deselect();
+    }
+  }
+}
+
+const Selected = new SelectionSet<GameObject>();
 export default Selected;
 
 export function aSelectable(gameObj: GameObject) {
