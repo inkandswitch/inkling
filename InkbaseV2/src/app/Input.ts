@@ -36,6 +36,7 @@ import { strokeGroupRemoveHandles } from './gestures/StrokeGroup';
 import { propertyPickerCreateWire } from './gestures/PropertyPicker';
 import { select } from './gestures/Select';
 import { transformSelection } from './gestures/TransformSelection';
+import { toolbarIgnorePencil, toolbarMove } from './gestures/Toolbar';
 
 const gestureCreators = {
   finger: [
@@ -55,10 +56,12 @@ const gestureCreators = {
     strokeAddHandles,
     //
     metaToggleFingerActions,
+    toolbarMove,
     transformSelection,
   ],
   pencil: [
     metaToggleIgnorePencil,
+    toolbarIgnorePencil,
     erase,
     select,
     //

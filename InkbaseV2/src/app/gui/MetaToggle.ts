@@ -6,7 +6,6 @@ import Store, { Serializable } from '../Store';
 import { TAU, lerpN, rand, randInt } from '../../lib/math';
 import Config from '../Config';
 
-export const padding = 30;
 const radius = 20;
 
 export const aMetaToggle = (gameObj: GameObject) =>
@@ -64,7 +63,7 @@ export default class MetaToggle extends GameObject {
     this.position = Store.init({
       name: 'Meta Toggle Position',
       isValid: isPosition,
-      def: { x: padding, y: padding },
+      def: { x: Config.gui.padding, y: Config.gui.padding },
     });
 
     this.element = SVG.add('g', SVG.guiElm, {
@@ -165,7 +164,7 @@ export default class MetaToggle extends GameObject {
     const sign = Vec.addS(Vec.mulS(normalizedPosition, -2), 1);
 
     // Inset from the corner
-    this.position = Vec.add(cornerPosition, Vec.mulS(sign, padding));
+    this.position = Vec.add(cornerPosition, Vec.mulS(sign, Config.gui.padding));
 
     Store.set('Meta Toggle Position', this.position as unknown as Serializable);
     this.resplat();
@@ -183,7 +182,6 @@ export default class MetaToggle extends GameObject {
     }
 
     return {
-      color: 'black',
       class: classes.join(' '),
       style: `translate: ${this.position.x}px ${this.position.y}px`,
     };

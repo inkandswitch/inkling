@@ -306,6 +306,59 @@ svg * {
   }
 }
 
+.toolbar main {
+  display: none;
+  height: 40px;
+  flex-flow: row nowrap;
+  justify-content: space-evenly;
+  align-items: center;
+  border: 2px solid var(--grey2);
+  background: var(--grey1);
+  border-radius: 10px;
+
+  transition: scale 0.4s 0.2s cubic-bezier(1, 0, 0, 1);
+
+  .showing & {
+    display: flex;
+  }
+
+  .dragging & {
+    scale: 1.8;
+    transition: scale 2s cubic-bezier(0, 1.2, 0, 1);
+  }
+
+  .vertical & {
+    flex-flow: column nowrap;
+    width: 40px;
+    height: 110px;
+  }
+
+  & div {
+    flex: 0 0 34px;
+    width: 34px;
+    height: 34px;
+    text-align: center;
+    line-height: 34px;
+    font-weight: 900;
+    background: var(--grey3);
+    border-radius: 1px;
+
+    &:first-child {
+      border-radius: 7px 1px 1px 7px;
+    }
+    &:last-child {
+      border-radius: 1px 7px 7px 1px;
+    }
+
+    .vertical &:first-child {
+      border-radius: 7px 7px 1px 1px;
+    }
+    .vertical &:last-child {
+      border-radius: 1px 1px 7px 7px;
+    }
+  }
+}
+
 .pseudo-touch {
   fill: var(--pseudo-touch);
 }

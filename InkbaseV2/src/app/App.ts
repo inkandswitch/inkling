@@ -7,6 +7,7 @@ import { onEveryFrame } from '../lib/helpers';
 import * as Input from './Input';
 import { root } from './GameObject';
 import MetaToggle from './gui/MetaToggle';
+import Toolbar from './gui/Toolbar';
 // import Component from './meta/Component';
 // import LabelToken from './meta/LabelToken';
 // import Stroke from './ink/Stroke';
@@ -18,6 +19,9 @@ root.currentPage = page;
 
 const metaToggle = new MetaToggle();
 root.adopt(metaToggle);
+
+const toolbar = new Toolbar();
+root.adopt(toolbar);
 
 // This is a pretzel, because the interface between NativeEvents and Input is a work in progress.
 const events = new Events(metaToggle, (event: Event, state: InputState) => {
