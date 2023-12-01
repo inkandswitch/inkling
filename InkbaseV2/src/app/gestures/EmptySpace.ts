@@ -11,12 +11,6 @@ export function emptySpaceDrawInk(ctx: EventContext): Gesture | void {
       moved(ctx) {
         stroke.points.push(ctx.event.position);
       },
-      ended(ctx) {
-        // dragDist will be small if you draw a big circle, so it's important to also check state.drag
-        if (ctx.state.dragDist < 3 && !ctx.state.drag) {
-          stroke.remove();
-        }
-      },
     });
   }
 }
