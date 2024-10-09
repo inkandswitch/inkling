@@ -1,6 +1,4 @@
-node_modules
 .DS_Store
-**/yarn.lock
+node_modules
 xcuserdata
 package-lock.json
-**/.clang-format

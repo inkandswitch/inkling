@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "module": "Preserve",
+    "noEmit": true,
+    "noImplicitAny": true,
+    "strict": false,
+    "noFallthroughCasesInSwitch": true,
+    "target": "ESNext"
+  },
+  "include": ["src/**/*.ts"]
+}
