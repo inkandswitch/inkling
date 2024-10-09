@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["/Users/admin/Work/Inkling/Prototypes/OldInputSystem/src/app/StrokeClusters.ts"],
-  "sourcesContent": ["// Stroke Clusters are potential Groupings\n\nimport { SortedSet } from '../lib/helpers';\nimport FreehandStroke from './strokes/FreehandStroke';\n\ntype Cluster = Set<FreehandStroke>;\n\nexport default class StrokeClusters {\n  private clustersByStroke = new Map<FreehandStroke, SortedSet<Cluster>>();\n\n  addClusterForStroke(stroke: FreehandStroke, cluster: Cluster) {\n    let clusters = this.getClustersForStroke(stroke);\n    if (!clusters) {\n      clusters = new SortedSet();\n      this.clustersByStroke.set(stroke, clusters);\n    }\n\n    clusters.add(cluster);\n  }\n\n  getClustersForStroke(stroke: FreehandStroke) {\n    return this.clustersByStroke.get(stroke);\n  }\n}\n"],
-  "mappings": "AAEA;AAKA,oCAAoC;AAAA,EAApC,cAPA;AAQU,4BAAmB,IAAI;AAAA;AAAA,EAE/B,oBAAoB,QAAwB,SAAkB;AAC5D,QAAI,WAAW,KAAK,qBAAqB;AACzC,QAAI,CAAC,UAAU;AACb,iBAAW,IAAI;AACf,WAAK,iBAAiB,IAAI,QAAQ;AAAA;AAGpC,aAAS,IAAI;AAAA;AAAA,EAGf,qBAAqB,QAAwB;AAC3C,WAAO,KAAK,iBAAiB,IAAI;AAAA;AAAA;",
-  "names": []
-}

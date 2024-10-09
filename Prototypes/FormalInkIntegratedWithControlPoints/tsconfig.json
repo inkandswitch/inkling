@@ -1,8 +1,0 @@
-{
-  "compilerOptions": {
-    "lib": [
-      "ES2023",
-    ],
-    "strictNullChecks": true,
-  }
-}

@@ -1,7 +1,0 @@
-{
-  "extends": "gts/tslint.json",
-  "rules": {
-    "no-default-export": false,
-    "no-unused-expression": false
-  }
-}

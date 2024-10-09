@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["/Users/admin/Work/Inkling/Prototypes/OldInputSystem/src/app/strokes/Stroke.ts"],
-  "sourcesContent": ["import SVG from '../Svg';\nimport { PositionWithPressure } from '../../lib/types';\n\nexport default class Stroke {\n  protected element = SVG.add('polyline', {\n    fill: 'none',\n    stroke: '#000',\n    'stroke-width': 2,\n  });\n\n  constructor(public points: PositionWithPressure[]) {}\n\n  render(): void {\n    SVG.update(this.element, { points: SVG.points(this.points) });\n  }\n}\n"],
-  "mappings": "AAAA;AAGA,4BAA4B;AAAA,EAO1B,YAAmB,QAAgC;AAAhC;AANT,mBAAU,IAAI,IAAI,YAAY;AAAA,MACtC,MAAM;AAAA,MACN,QAAQ;AAAA,MACR,gBAAgB;AAAA;AAAA;AAAA,EAKlB,SAAe;AACb,QAAI,OAAO,KAAK,SAAS,CAAE,QAAQ,IAAI,OAAO,KAAK;AAAA;AAAA;",
-  "names": []
-}

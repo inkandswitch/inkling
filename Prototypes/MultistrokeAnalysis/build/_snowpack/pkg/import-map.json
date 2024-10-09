@@ -1,6 +1,0 @@
-{
-  "imports": {
-    "hull.js": "./hulljs.js",
-    "voronoi": "./voronoi.js"
-  }
-}

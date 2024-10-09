@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["/Users/admin/Work/Inkling/Prototypes/OldInputSystem/src/app/tools/ColorTool.ts"],
-  "sourcesContent": ["import Vec from '../../lib/vec';\nimport { PositionWithPressure } from '../../lib/types';\nimport Page from '../Page';\nimport Tool from './Tool';\nimport ColorStroke from '../strokes/ColorStroke';\n\nexport default class ColorTool extends Tool<ColorStroke> {\n  last?: PositionWithPressure;\n\n  constructor(label: string, buttonX: number, buttonY: number, page: Page) {\n    super(label, buttonX, buttonY, page, ColorStroke);\n  }\n\n  startStroke(point: PositionWithPressure) {\n    super.startStroke(point);\n    this.last = point;\n  }\n\n  extendStroke(point: PositionWithPressure) {\n    if (this.last && Vec.dist(this.last, point) > 50) {\n      super.extendStroke(point);\n      this.last = point;\n    }\n  }\n}\n"],
-  "mappings": "AAAA;AAGA;AACA;AAEA,uCAAuC,KAAkB;AAAA,EAGvD,YAAY,OAAe,SAAiB,SAAiB,MAAY;AACvE,UAAM,OAAO,SAAS,SAAS,MAAM;AAAA;AAAA,EAGvC,YAAY,OAA6B;AACvC,UAAM,YAAY;AAClB,SAAK,OAAO;AAAA;AAAA,EAGd,aAAa,OAA6B;AACxC,QAAI,KAAK,QAAQ,IAAI,KAAK,KAAK,MAAM,SAAS,IAAI;AAChD,YAAM,aAAa;AACnB,WAAK,OAAO;AAAA;AAAA;AAAA;",
-  "names": []
-}
