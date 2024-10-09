@@ -1,24 +1,24 @@
-import * as ohm from 'ohm-js';
-import { GameObject } from '../GameObject';
-import { Position } from '../../lib/types';
+import * as ohm from "ohm-js"
+import { GameObject } from "../GameObject"
+import { Position } from "../../lib/types"
 
-import { signedDistanceToBox } from '../../lib/SignedDistance';
-import Vec from '../../lib/vec';
+import { signedDistanceToBox } from "../../lib/SignedDistance"
+import Vec from "../../lib/vec"
 
 export default abstract class Token extends GameObject {
-  position: Position = { x: 100, y: 100 };
-  width = 90;
-  height = 30;
+  position: Position = { x: 100, y: 100 }
+  width = 90
+  height = 30
 
-  public embedded = false;
-  public hidden = false;
-  public editing = false;
+  public embedded = false
+  public hidden = false
+  public editing = false
 
   constructor(public source?: ohm.Interval) {
-    super();
+    super()
   }
 
-  abstract isPrimary(): boolean;
+  abstract isPrimary(): boolean
 
   onTap() {
     // Override as needed.
@@ -27,18 +27,11 @@ export default abstract class Token extends GameObject {
   }
 
   distanceToPoint(pos: Position) {
-    return signedDistanceToBox(
-      this.position.x,
-      this.position.y,
-      this.width,
-      this.height,
-      pos.x,
-      pos.y
-    );
+    return signedDistanceToBox(this.position.x, this.position.y, this.width, this.height, pos.x, pos.y)
   }
 
   midPoint() {
-    return Vec.add(this.position, Vec.mulS(Vec(this.width, this.height), 0.5));
+    return Vec.add(this.position, Vec.mulS(Vec(this.width, this.height), 0.5))
   }
 
   render(dt: number, t: number): void {
@@ -46,8 +39,6 @@ export default abstract class Token extends GameObject {
   }
 }
 
-export const aToken = (gameObj: GameObject) =>
-  gameObj instanceof Token ? gameObj : null;
+export const aToken = (gameObj: GameObject) => (gameObj instanceof Token ? gameObj : null)
 
-export const aPrimaryToken = (gameObj: GameObject) =>
-  gameObj instanceof Token && gameObj.isPrimary() ? gameObj : null;
+export const aPrimaryToken = (gameObj: GameObject) => (gameObj instanceof Token && gameObj.isPrimary() ? gameObj : null)

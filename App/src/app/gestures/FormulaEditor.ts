@@ -1,7 +1,7 @@
-import { aFormula } from '../meta/Formula';
-import FormulaStroke from '../ink/FormulaStroke';
-import { aWritingCell } from '../meta/WritingCell';
-import { EventContext, Gesture } from '../Gesture';
+import { aFormula } from "../meta/Formula"
+import FormulaStroke from "../ink/FormulaStroke"
+import { aWritingCell } from "../meta/WritingCell"
+import { EventContext, Gesture } from "../Gesture"
 // import { aPrimaryToken } from '../meta/Token';
 // import { isLabelToken } from '../meta/token-helpers';
 
@@ -23,25 +23,25 @@ export function formulaLabelTap(ctx: EventContext): Gesture | void {
 
 export function formulaEditorWrite(ctx: EventContext): Gesture | void {
   if (!ctx.metaToggle.active) {
-    return;
+    return
   }
 
   const writingCell = ctx.root.find({
     what: aWritingCell,
     near: ctx.event.position,
-    recursive: true,
-  });
+    recursive: true
+  })
 
   if (writingCell) {
-    const stroke = ctx.page.addStroke(new FormulaStroke());
-    return new Gesture('Writing In Formula Editor', {
+    const stroke = ctx.page.addStroke(new FormulaStroke())
+    return new Gesture("Writing In Formula Editor", {
       moved(ctx) {
-        stroke.points.push(ctx.event.position);
+        stroke.points.push(ctx.event.position)
       },
       ended(_ctx) {
-        writingCell.captureStroke(stroke);
-      },
-    });
+        writingCell.captureStroke(stroke)
+      }
+    })
   }
 
   // TODO: Rewrite
@@ -81,10 +81,10 @@ export function formulaEditorClose(ctx: EventContext): Gesture | void {
   // We don't actually need to claim the 3rd finger, so we just perform the effect right away.
   if (
     ctx.pseudoCount >= 2 && // two pseudo fingers plus…
-    ctx.event.type === 'finger' // …one more finger.
+    ctx.event.type === "finger" // …one more finger.
   ) {
     for (const formula of ctx.root.findAll({ what: aFormula })) {
-      formula.close();
+      formula.close()
     }
   }
 }

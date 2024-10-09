@@ -1,9 +1,9 @@
-import { EventContext, Gesture } from '../Gesture';
-import { aGizmo } from '../meta/Gizmo';
-import { createWire } from './effects/CreateWire';
+import { EventContext, Gesture } from "../Gesture"
+import { aGizmo } from "../meta/Gizmo"
+import { createWire } from "./effects/CreateWire"
 
-const tapDist = 50;
-const wireDist = 30;
+const tapDist = 50
+const wireDist = 30
 
 export function gizmoCycleConstraints(ctx: EventContext): Gesture | void {
   if (ctx.metaToggle.active) {
@@ -13,15 +13,15 @@ export function gizmoCycleConstraints(ctx: EventContext): Gesture | void {
     // where different find() calls need a different distanceToPoint() implementation.
     const gizmo = ctx.root.find({
       what: aGizmo,
-      that: g => g.centerDistanceToPoint(ctx.event.position) < tapDist,
-    });
+      that: (g) => g.centerDistanceToPoint(ctx.event.position) < tapDist
+    })
 
     if (gizmo) {
-      return new Gesture('Cycle Constraints', {
+      return new Gesture("Cycle Constraints", {
         endedTap(ctx) {
-          gizmo.cycleConstraints();
-        },
-      });
+          gizmo.cycleConstraints()
+        }
+      })
     }
   }
 }
@@ -31,11 +31,11 @@ export function gizmoCreateWire(ctx: EventContext): Gesture | void {
     // See comment above
     const gizmo = ctx.root.find({
       what: aGizmo,
-      that: g => g.centerDistanceToPoint(ctx.event.position) < wireDist,
-    });
+      that: (g) => g.centerDistanceToPoint(ctx.event.position) < wireDist
+    })
 
     if (gizmo) {
-      return createWire(gizmo.wirePort, ctx);
+      return createWire(gizmo.wirePort, ctx)
     }
   }
 }

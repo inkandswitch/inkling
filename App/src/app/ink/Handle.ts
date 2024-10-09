@@ -1,225 +1,218 @@
-import { GameObject, root } from '../GameObject';
-import SVG from '../Svg';
-import * as constraints from '../constraints';
-import { generateId } from '../../lib/helpers';
-import { Position } from '../../lib/types';
-import Vec from '../../lib/vec';
-import { Constraint, Pin } from '../constraints';
-import { TAU } from '../../lib/math';
-import Selected from '../Selected';
+import { GameObject, root } from "../GameObject"
+import SVG from "../Svg"
+import * as constraints from "../constraints"
+import { generateId } from "../../lib/helpers"
+import { Position } from "../../lib/types"
+import Vec from "../../lib/vec"
+import { Constraint, Pin } from "../constraints"
+import { TAU } from "../../lib/math"
+import Selected from "../Selected"
 
-let goesAnywhereId = -1;
-let goesAnywhereMode: 'continuous' | 'snapshot' = 'continuous';
+let goesAnywhereId = -1
+let goesAnywhereMode: "continuous" | "snapshot" = "continuous"
 
 export default class Handle extends GameObject {
   static create(position: Position, getAbsorbed = true): Handle {
-    const handle = new Handle(position);
+    const handle = new Handle(position)
     if (getAbsorbed) {
-      handle.getAbsorbedByNearestHandle();
+      handle.getAbsorbedByNearestHandle()
     }
-    return handle;
+    return handle
   }
 
-  public readonly id = generateId();
+  public readonly id = generateId()
 
-  private readonly backElm = SVG.add('g', SVG.handleElm);
-  private readonly frontElm = SVG.add('g', SVG.constraintElm);
+  private readonly backElm = SVG.add("g", SVG.handleElm)
+  private readonly frontElm = SVG.add("g", SVG.constraintElm)
 
   public readonly xVariable = constraints.variable(0, {
     object: this,
-    property: 'x',
-  });
+    property: "x"
+  })
   public readonly yVariable = constraints.variable(0, {
     object: this,
-    property: 'y',
-  });
+    property: "y"
+  })
 
   private constructor(position: Position) {
-    super(root);
-    this.position = position;
+    super(root)
+    this.position = position
 
-    SVG.add('circle', this.backElm, { r: 15 });
-    const arcs1 = SVG.add('g', this.frontElm, { class: 'arcs1' });
-    const arcs2 = SVG.add('g', this.frontElm, { class: 'arcs2' });
-    const arc = (angle = 0) => SVG.arcPath(Vec.zero, 14, angle, Math.PI / 10);
-    SVG.add('path', arcs1, { d: arc((0 * TAU) / 4) });
-    SVG.add('path', arcs1, { d: arc((1 * TAU) / 4) });
-    SVG.add('path', arcs1, { d: arc((2 * TAU) / 4) });
-    SVG.add('path', arcs1, { d: arc((3 * TAU) / 4) });
-    SVG.add('path', arcs2, { d: arc((0 * TAU) / 4) });
-    SVG.add('path', arcs2, { d: arc((1 * TAU) / 4) });
-    SVG.add('path', arcs2, { d: arc((2 * TAU) / 4) });
-    SVG.add('path', arcs2, { d: arc((3 * TAU) / 4) });
+    SVG.add("circle", this.backElm, { r: 15 })
+    const arcs1 = SVG.add("g", this.frontElm, { class: "arcs1" })
+    const arcs2 = SVG.add("g", this.frontElm, { class: "arcs2" })
+    const arc = (angle = 0) => SVG.arcPath(Vec.zero, 14, angle, Math.PI / 10)
+    SVG.add("path", arcs1, { d: arc((0 * TAU) / 4) })
+    SVG.add("path", arcs1, { d: arc((1 * TAU) / 4) })
+    SVG.add("path", arcs1, { d: arc((2 * TAU) / 4) })
+    SVG.add("path", arcs1, { d: arc((3 * TAU) / 4) })
+    SVG.add("path", arcs2, { d: arc((0 * TAU) / 4) })
+    SVG.add("path", arcs2, { d: arc((1 * TAU) / 4) })
+    SVG.add("path", arcs2, { d: arc((2 * TAU) / 4) })
+    SVG.add("path", arcs2, { d: arc((3 * TAU) / 4) })
   }
 
   toggleGoesAnywhere() {
     if (goesAnywhereId !== this.id) {
-      goesAnywhereId = this.id;
-      goesAnywhereMode = 'continuous';
-    } else if (goesAnywhereMode === 'continuous') {
-      goesAnywhereMode = 'snapshot';
+      goesAnywhereId = this.id
+      goesAnywhereMode = "continuous"
+    } else if (goesAnywhereMode === "continuous") {
+      goesAnywhereMode = "snapshot"
     } else {
-      goesAnywhereId = -1;
+      goesAnywhereId = -1
     }
 
-    if (this.goesAnywhereMode !== 'off') {
-      SVG.showStatus('goes anywhere: ' + this.goesAnywhereMode);
+    if (this.goesAnywhereMode !== "off") {
+      SVG.showStatus("goes anywhere: " + this.goesAnywhereMode)
     }
   }
 
-  get goesAnywhereMode(): 'off' | typeof goesAnywhereMode {
-    return goesAnywhereId === this.id ? goesAnywhereMode : 'off';
+  get goesAnywhereMode(): "off" | typeof goesAnywhereMode {
+    return goesAnywhereId === this.id ? goesAnywhereMode : "off"
   }
 
   get x() {
-    return this.xVariable.value;
+    return this.xVariable.value
   }
 
   get y() {
-    return this.yVariable.value;
+    return this.yVariable.value
   }
 
   get position(): Position {
-    return this;
+    return this
   }
 
   set position(pos: Position) {
-    ({ x: this.xVariable.value, y: this.yVariable.value } = pos);
+    ;({ x: this.xVariable.value, y: this.yVariable.value } = pos)
   }
 
   remove() {
-    this.backElm.remove();
-    this.frontElm.remove();
-    this.canonicalInstance.breakOff(this);
-    this.xVariable.remove();
-    this.yVariable.remove();
-    super.remove();
+    this.backElm.remove()
+    this.frontElm.remove()
+    this.canonicalInstance.breakOff(this)
+    this.xVariable.remove()
+    this.yVariable.remove()
+    super.remove()
   }
 
   absorb(that: Handle) {
-    constraints.absorb(this, that);
+    constraints.absorb(this, that)
   }
 
   getAbsorbedByNearestHandle() {
     const nearestHandle = this.page.find({
       what: aCanonicalHandle,
       near: this.position,
-      that: handle => handle !== this,
-    });
+      that: (handle) => handle !== this
+    })
     if (nearestHandle) {
-      nearestHandle.absorb(this);
+      nearestHandle.absorb(this)
     }
   }
 
-  private _canonicalHandle: Handle = this;
-  readonly absorbedHandles = new Set<Handle>();
+  private _canonicalHandle: Handle = this
+  readonly absorbedHandles = new Set<Handle>()
 
   get isCanonical() {
-    return this._canonicalHandle === this;
+    return this._canonicalHandle === this
   }
 
   get canonicalInstance() {
-    return this._canonicalHandle;
+    return this._canonicalHandle
   }
 
   private set canonicalInstance(handle: Handle) {
-    this._canonicalHandle = handle;
+    this._canonicalHandle = handle
   }
 
   /** This method should only be called by the constraint system. */
   _absorb(that: Handle) {
     if (that === this) {
-      return;
+      return
     }
 
-    that.canonicalInstance.absorbedHandles.delete(that);
+    that.canonicalInstance.absorbedHandles.delete(that)
     for (const handle of that.absorbedHandles) {
-      this._absorb(handle);
+      this._absorb(handle)
     }
-    that.canonicalInstance = this;
-    this.absorbedHandles.add(that);
+    that.canonicalInstance = this
+    this.absorbedHandles.add(that)
   }
 
   /** This method should only be called by the constraint system. */
   _forgetAbsorbedHandles() {
-    this.canonicalInstance = this;
-    this.absorbedHandles.clear();
+    this.canonicalInstance = this
+    this.absorbedHandles.clear()
   }
 
   breakOff(handle: Handle) {
     if (this.absorbedHandles.has(handle)) {
-      constraints.absorb(this, handle).remove();
+      constraints.absorb(this, handle).remove()
     } else if (handle === this) {
       if (this.absorbedHandles.size > 0) {
-        const absorbedHandles = [...this.absorbedHandles];
-        const newCanonicalHandle = absorbedHandles.shift()!;
-        constraints.absorb(this, newCanonicalHandle).remove();
+        const absorbedHandles = [...this.absorbedHandles]
+        const newCanonicalHandle = absorbedHandles.shift()!
+        constraints.absorb(this, newCanonicalHandle).remove()
         for (const absorbedHandle of absorbedHandles) {
-          constraints.absorb(newCanonicalHandle, absorbedHandle);
+          constraints.absorb(newCanonicalHandle, absorbedHandle)
         }
       }
     } else {
-      throw new Error('tried to break off a handle that was not absorbed');
+      throw new Error("tried to break off a handle that was not absorbed")
     }
-    return handle;
+    return handle
   }
 
   get hasPin() {
     for (const constraint of Constraint.all) {
-      if (
-        constraint instanceof Pin &&
-        constraint.handle.canonicalInstance === this.canonicalInstance
-      ) {
-        return true;
+      if (constraint instanceof Pin && constraint.handle.canonicalInstance === this.canonicalInstance) {
+        return true
       }
     }
-    return false;
+    return false
   }
 
   togglePin(doPin = !this.hasPin): void {
     if (!this.isCanonical) {
-      return this.canonicalInstance.togglePin(doPin);
+      return this.canonicalInstance.togglePin(doPin)
     }
 
     for (const h of [this, ...this.absorbedHandles]) {
       if (doPin) {
-        constraints.pin(h);
+        constraints.pin(h)
       } else {
-        constraints.pin(h).remove();
+        constraints.pin(h).remove()
       }
     }
   }
 
   render(t: number, dt: number) {
     const attrs = {
-      class: Selected.has(this) ? 'handle selected' : 'handle',
+      class: Selected.has(this) ? "handle selected" : "handle",
       transform: SVG.positionToTransform(this),
-      'is-canonical': this.isCanonical,
-      'has-pin': this.hasPin,
-      'goes-anywhere': this.id === goesAnywhereId,
-    };
-    SVG.update(this.backElm, attrs);
-    SVG.update(this.frontElm, attrs);
+      "is-canonical": this.isCanonical,
+      "has-pin": this.hasPin,
+      "goes-anywhere": this.id === goesAnywhereId
+    }
+    SVG.update(this.backElm, attrs)
+    SVG.update(this.frontElm, attrs)
 
     for (const child of this.children) {
-      child.render(dt, t);
+      child.render(dt, t)
     }
   }
 
   distanceToPoint(point: Position) {
-    return Vec.dist(this.position, point);
+    return Vec.dist(this.position, point)
   }
 
   equals(that: Handle) {
-    return (
-      this.xVariable.equals(that.xVariable) &&
-      this.yVariable.equals(that.yVariable)
-    );
+    return this.xVariable.equals(that.xVariable) && this.yVariable.equals(that.yVariable)
   }
 }
 
-export const aHandle = (gameObj: GameObject) =>
-  gameObj instanceof Handle ? gameObj : null;
+export const aHandle = (gameObj: GameObject) => (gameObj instanceof Handle ? gameObj : null)
 
 export const aCanonicalHandle = (gameObj: GameObject) =>
-  gameObj instanceof Handle && gameObj.isCanonical ? gameObj : null;
+  gameObj instanceof Handle && gameObj.isCanonical ? gameObj : null

@@ -1,17 +1,17 @@
-import Token from './Token';
-import { GameObject } from '../GameObject';
+import Token from "./Token"
+import { GameObject } from "../GameObject"
 
 export default class EmptyToken extends Token {
-  width = 24;
-  height = 30;
-  value = '';
+  width = 24
+  height = 30
+  value = ""
 
   constructor() {
-    super();
+    super()
   }
 
   isPrimary(): boolean {
-    return true;
+    return true
   }
 
   render(dt: number, t: number): void {
@@ -19,5 +19,4 @@ export default class EmptyToken extends Token {
   }
 }
 
-export const anEmptyToken = (gameObj: GameObject) =>
-  gameObj instanceof EmptyToken ? gameObj : null;
+export const anEmptyToken = (gameObj: GameObject) => (gameObj instanceof EmptyToken ? gameObj : null)

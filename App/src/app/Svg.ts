@@ -1,43 +1,33 @@
-import { clip } from '../lib/math';
-import { Position, PositionWithPressure } from '../lib/types';
-import Vec from '../lib/vec';
+import { clip } from "../lib/math"
+import { Position, PositionWithPressure } from "../lib/types"
+import Vec from "../lib/vec"
 
-type Attributes = Record<string, string | number | boolean | null | undefined>;
+type Attributes = Record<string, string | number | boolean | null | undefined>
 
-const NS = 'http://www.w3.org/2000/svg';
+const NS = "http://www.w3.org/2000/svg"
 
-const gizmoElm = document.querySelector('#gizmo') as SVGSVGElement;
-const handleElm = document.querySelector('#handle') as SVGSVGElement;
-const inkElm = document.querySelector('#ink') as SVGSVGElement;
-const constraintElm = document.querySelector('#constraint') as SVGSVGElement;
-const boxElm = document.querySelector('#box') as SVGSVGElement;
-const wiresElm = document.querySelector('#wires') as SVGSVGElement;
-const metaElm = document.querySelector('#meta') as SVGSVGElement;
-const labelElm = document.querySelector('#label') as SVGSVGElement;
-const guiElm = document.querySelector('#gui') as SVGSVGElement;
-const nowElm = document.querySelector('#now') as SVGGElement;
+const gizmoElm = document.querySelector("#gizmo") as SVGSVGElement
+const handleElm = document.querySelector("#handle") as SVGSVGElement
+const inkElm = document.querySelector("#ink") as SVGSVGElement
+const constraintElm = document.querySelector("#constraint") as SVGSVGElement
+const boxElm = document.querySelector("#box") as SVGSVGElement
+const wiresElm = document.querySelector("#wires") as SVGSVGElement
+const metaElm = document.querySelector("#meta") as SVGSVGElement
+const labelElm = document.querySelector("#label") as SVGSVGElement
+const guiElm = document.querySelector("#gui") as SVGSVGElement
+const nowElm = document.querySelector("#now") as SVGGElement
 
-function add(
-  type: 'text',
-  parent: SVGElement,
-  attributes?: Attributes
-): SVGTextElement;
-function add(
-  type: string,
-  parent: SVGElement,
-  attributes?: Attributes
-): SVGElement;
+function add(type: "text", parent: SVGElement, attributes?: Attributes): SVGTextElement
+function add(type: string, parent: SVGElement, attributes?: Attributes): SVGElement
 function add(type: string, parent: SVGElement, attributes: Attributes = {}) {
-  return parent.appendChild(
-    update(document.createElementNS(NS, type), attributes)
-  );
+  return parent.appendChild(update(document.createElementNS(NS, type), attributes))
 }
 
 function bringToFront(element: SVGElement) {
-  const parent = element.parentNode;
+  const parent = element.parentNode
   if (parent) {
-    element.remove();
-    parent.appendChild(element);
+    element.remove()
+    parent.appendChild(element)
   }
 }
 
@@ -47,30 +37,28 @@ function bringToFront(element: SVGElement) {
  */
 function update<T extends SVGElement>(elm: T, attributes: Attributes) {
   Object.entries(attributes).forEach(([key, value]) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const cache = ((elm as any).__cache ||= {});
+    const cache = ((elm as any).__cache ||= {})
     if (cache[key] === value) {
-      return;
+      return
     }
-    cache[key] = value;
+    cache[key] = value
 
-    const boolish =
-      typeof value === 'boolean' || value === null || value === undefined;
+    const boolish = typeof value === "boolean" || value === null || value === undefined
 
-    if (key === 'content') {
-      elm.innerHTML = '' + value;
+    if (key === "content") {
+      elm.innerHTML = "" + value
     } else if (boolish) {
-      value ? elm.setAttribute(key, '') : elm.removeAttribute(key);
+      value ? elm.setAttribute(key, "") : elm.removeAttribute(key)
     } else {
-      elm.setAttribute(key, '' + value);
+      elm.setAttribute(key, "" + value)
     }
-  });
-  return elm;
+  })
+  return elm
 }
 
 // Store the current time whenever SVG.clearNow() is called, so that elements
 // created by SVG.now() will live for a duration relative to that time.
-let lastTime = 0;
+let lastTime = 0
 
 /**
  * Puts an element on the screen for a brief moment, after which it's automatically deleted.
@@ -79,15 +67,14 @@ let lastTime = 0;
  * Include a `life` attribute to specify a minimum duration until the element is removed.
  */
 function now(type: string, attributes: Attributes) {
-  const life = +(attributes.life || 0);
-  delete attributes.life;
+  const life = +(attributes.life || 0)
+  delete attributes.life
 
-  const elm = add(type, nowElm, attributes);
+  const elm = add(type, nowElm, attributes)
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (elm as any).__expiry = lastTime + life;
+  ;(elm as any).__expiry = lastTime + life
 
-  return elm;
+  return elm
 }
 
 /**
@@ -97,14 +84,13 @@ function now(type: string, attributes: Attributes) {
  */
 function clearNow(currentTime = Infinity) {
   if (isFinite(currentTime)) {
-    lastTime = currentTime;
+    lastTime = currentTime
   }
 
   for (const elm of Array.from(nowElm.children)) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const expiry = (elm as any).__expiry || 0;
+    const expiry = (elm as any).__expiry || 0
     if (currentTime > expiry) {
-      elm.remove();
+      elm.remove()
     }
   }
 }
@@ -115,17 +101,17 @@ function clearNow(currentTime = Infinity) {
  * E.g.: SVG.now('polyline', { points: SVG.points(pos1, pos2, posArr), stroke: '#F00' });
  */
 function points(...positions: Array<Position | Position[]>) {
-  return positions.flat().map(positionToPointsString).join(' ');
+  return positions.flat().map(positionToPointsString).join(" ")
 }
 
 // TODO: This function is probably the #1 perf hotspot in the codebase.
 function positionToPointsString(p: Position) {
-  return p.x + ' ' + p.y;
+  return p.x + " " + p.y
 }
 
 /** Returns a `translate(x y)` string that can be used for the 'transform' attribute. */
 function positionToTransform(p: Position) {
-  return `translate(${p.x} ${p.y})`;
+  return `translate(${p.x} ${p.y})`
 }
 
 /**
@@ -140,43 +126,41 @@ function arcPath(
   mirror = true // Mirror the arc across the start. Required to draw more than a half-circle.
 ) {
   // Values outside this range produce nonsense arcs
-  rotation = clip(rotation, -Math.PI, Math.PI);
+  rotation = clip(rotation, -Math.PI, Math.PI)
 
-  const S = Vec.add(center, Vec.polar(angle, radius));
-  let path = '';
+  const S = Vec.add(center, Vec.polar(angle, radius))
+  let path = ""
 
   if (mirror) {
-    const B = Vec.add(center, Vec.polar(angle - rotation, radius));
-    path += `M ${B.x}, ${B.y} A ${radius},${radius} 0 0,1 ${S.x}, ${S.y}`;
+    const B = Vec.add(center, Vec.polar(angle - rotation, radius))
+    path += `M ${B.x}, ${B.y} A ${radius},${radius} 0 0,1 ${S.x}, ${S.y}`
   } else {
-    path += `M ${S.x}, ${S.y}`;
+    path += `M ${S.x}, ${S.y}`
   }
 
-  const A = Vec.add(center, Vec.polar(angle + rotation, radius));
-  path += `A ${radius},${radius} 0 0,1 ${A.x}, ${A.y}`;
+  const A = Vec.add(center, Vec.polar(angle + rotation, radius))
+  path += `A ${radius},${radius} 0 0,1 ${A.x}, ${A.y}`
 
-  return path;
+  return path
 }
 
 /** Returns a string that can be used as the 'd' attribute of an SVG path element. */
 function path(points: Position[] | PositionWithPressure[]) {
-  return points
-    .map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x} ${p.y}`)
-    .join(' ');
+  return points.map((p, idx) => `${idx === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ")
 }
 
-const statusElement = add('text', guiElm, { class: 'status-text' });
+const statusElement = add("text", guiElm, { class: "status-text" })
 
-let statusHideTimeMillis = 0;
+let statusHideTimeMillis = 0
 
 function showStatus(content: string, time = 3_000) {
-  update(statusElement, { content, 'is-visible': true });
-  statusHideTimeMillis = performance.now() + time;
+  update(statusElement, { content, "is-visible": true })
+  statusHideTimeMillis = performance.now() + time
   setTimeout(() => {
     if (performance.now() >= statusHideTimeMillis) {
-      update(statusElement, { 'is-visible': false });
+      update(statusElement, { "is-visible": false })
     }
-  }, time);
+  }, time)
 }
 
 export default {
@@ -198,5 +182,5 @@ export default {
   wiresElm,
   metaElm,
   labelElm,
-  guiElm,
-};
+  guiElm
+}

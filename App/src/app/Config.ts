@@ -1,14 +1,14 @@
 export default {
   gui: {
-    padding: 30,
+    padding: 30
   },
   gesture: {
     debugVisualization: false,
     reapTouches: false, // This is kinda buggy right now
-    lookAt: false,
+    lookAt: false
   },
   gizmo: {
-    showTension: true,
+    showTension: true
   },
-  storeMetaMode: true,
-};
+  storeMetaMode: true
+}

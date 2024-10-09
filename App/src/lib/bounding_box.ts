@@ -1,25 +1,25 @@
-import { Position } from './types';
+import { Position } from "./types"
 
 export function boundingBoxFromStrokes(strokes: Position[][]) {
-  let minX = Infinity;
-  let maxX = -Infinity;
-  let minY = Infinity;
-  let maxY = -Infinity;
+  let minX = Infinity
+  let maxX = -Infinity
+  let minY = Infinity
+  let maxY = -Infinity
 
   for (const stroke of strokes) {
     for (const pt of stroke) {
       if (pt.x < minX) {
-        minX = pt.x;
+        minX = pt.x
       }
       if (pt.x > maxX) {
-        maxX = pt.x;
+        maxX = pt.x
       }
 
       if (pt.y < minY) {
-        minY = pt.y;
+        minY = pt.y
       }
       if (pt.y > maxY) {
-        maxY = pt.y;
+        maxY = pt.y
       }
     }
   }
@@ -30,6 +30,6 @@ export function boundingBoxFromStrokes(strokes: Position[][]) {
     minY,
     maxY,
     width: maxX - minX,
-    height: maxY - minY,
-  };
+    height: maxY - minY
+  }
 }
