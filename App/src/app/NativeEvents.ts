@@ -25,8 +25,25 @@ export type InputState = PencilState | FingerState
 
 export type EventType = Event["type"]
 export type EventState = "began" | "moved" | "ended"
-export type EventStateWithCancelled = EventState | "cancelled"
-export type TouchId = string
+export type TouchId = number
+
+// This is hacked in from PlayBook as part of the prep for LIVE — redundant with other stuff here, sorry past-Ivan
+export type NativeEventType = "pencil" | "finger"
+export type NativeEventPhase = "began" | "moved" | "ended"
+export type NativeEvent = {
+  id: TouchId
+  type: NativeEventType
+  phase: NativeEventPhase
+  predicted: boolean
+  position: Position
+  worldPos: Position
+  pressure: number
+  altitude: number
+  azimuth: number
+  rollAngle: number
+  radius: number
+  timestamp: number
+}
 
 interface SharedEventProperties {
   state: EventState
@@ -134,7 +151,7 @@ export default class Events {
   private mouseEvent(e: MouseEvent, state: EventState) {
     this.events.push({
       position: { x: e.clientX, y: e.clientY },
-      id: "-1",
+      id: -1,
       state,
       type: this.keymap.space ? "pencil" : "finger",
       timestamp: performance.now(),
@@ -191,15 +208,12 @@ export default class Events {
     window.onkeyup = null
   }
 
+  //state: EventStateWithCancelled, touches: Record<TouchId, TouchPoint[]>
+
   // prettier-ignore
   private setupNativeEventHandler() {
-    (window as any).nativeEvent = (state: EventStateWithCancelled, touches: Record<TouchId, TouchPoint[]>) => {
+    (window as any).wrapperEvents = (nativeEvents: NativeEvent[]) => {
       this.disableFallbackEvents();
-
-      // The swift wrapper passes us 'cancelled' events, but they're a pain to code around, so we treat them as 'ended'
-      if (state === 'cancelled') {
-        state = 'ended'
-      }
 
       const lastUpdated = performance.now();
 
@@ -209,15 +223,13 @@ export default class Events {
       // Why doesn't the Swift wrapper just give us an array of Events?
       // This seems like an abstraction leak, where the design of UIGestureRecognizer
       // is forcing a data model that doesn't match what we're actually trying to do.
-      for (const id in touches) {
-        for (const point of touches[id]) {
-          const { type, timestamp, position, radius, pressure, altitude, azimuth } = point;
-          const sharedProperties = { id, state, type, timestamp, position, radius, lastUpdated };
-          const event: Event = type === 'finger'
-            ? { ...sharedProperties, type }
-            : { ...sharedProperties, type, pressure, altitude, azimuth };
-          this.events.push(event);
-        }
+      for (const nativeEvent of nativeEvents) {
+        const { id, type, phase, timestamp, position, radius, pressure, altitude, azimuth } = nativeEvent;
+        const sharedProperties = { id, state: phase, type, timestamp, position, radius, lastUpdated };
+        const event: Event = type === 'finger'
+          ? { ...sharedProperties, type }
+          : { ...sharedProperties, type, pressure, altitude, azimuth };
+        this.events.push(event);
       }
     };
   }

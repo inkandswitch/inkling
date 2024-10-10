@@ -904,7 +904,6 @@ function getClustersForSolver(root: GameObject): Set<ClusterForSolver> {
 
   clustersForSolver = computeClusters(activeConstraints)
   forDebugging("clusters", clustersForSolver)
-  SVG.showStatus(`${clustersForSolver.size} clusters`)
 
   return clustersForSolver
 }
@@ -1157,17 +1156,17 @@ function solveCluster(cluster: ClusterForSolver, root: GameObject) {
         }
         try {
           const solution = minimize(computeTotalError, inputs, maxIterations, 1).solution
-          SVG.now("polyline", {
-            points: SVG.points(
-              { x, y },
-              {
-                x: xIndex !== undefined ? solution[xIndex] : hauntedHandle.x,
-                y: yIndex !== undefined ? solution[yIndex] : hauntedHandle.y
-              }
-            ),
-            stroke: "rgba(255, 255, 255, 0.1)",
-            life
-          })
+          // SVG.now("polyline", {
+          //   points: SVG.points(
+          //     { x, y },
+          //     {
+          //       x: xIndex !== undefined ? solution[xIndex] : hauntedHandle.x,
+          //       y: yIndex !== undefined ? solution[yIndex] : hauntedHandle.y
+          //     }
+          //   ),
+          //   stroke: "rgba(255, 255, 255, 0.1)",
+          //   life
+          // })
           SVG.now("circle", {
             cx: xIndex !== undefined ? solution[xIndex] : hauntedHandle.x,
             cy: yIndex !== undefined ? solution[yIndex] : hauntedHandle.y,

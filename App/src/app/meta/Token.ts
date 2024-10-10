@@ -1,4 +1,3 @@
-import * as ohm from "ohm-js"
 import { GameObject } from "../GameObject"
 import { Position } from "../../lib/types"
 
@@ -14,7 +13,7 @@ export default abstract class Token extends GameObject {
   public hidden = false
   public editing = false
 
-  constructor(public source?: ohm.Interval) {
+  constructor() {
     super()
   }
 

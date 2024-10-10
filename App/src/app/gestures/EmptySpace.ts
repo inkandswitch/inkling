@@ -1,6 +1,6 @@
 import { EventContext, Gesture } from "../Gesture"
 import Stroke from "../ink/Stroke"
-import { createFormula } from "./effects/CreateFormula"
+import { createLinear } from "./effects/CreateLinear"
 import { createGizmo } from "./effects/CreateGizmo"
 
 export function emptySpaceDrawInk(ctx: EventContext): Gesture | void {
@@ -15,14 +15,14 @@ export function emptySpaceDrawInk(ctx: EventContext): Gesture | void {
   }
 }
 
-export function emptySpaceCreateGizmoOrFormula(ctx: EventContext): Gesture | void {
+export function emptySpaceCreateGizmoOrLinear(ctx: EventContext): Gesture | void {
   if (ctx.metaToggle.active) {
-    return new Gesture("Create Gizmo or Formula", {
+    return new Gesture("Create Gizmo or Linear", {
       dragged(ctx) {
         return createGizmo(ctx)
       },
       ended(ctx) {
-        createFormula(ctx)
+        createLinear(ctx)
       }
     })
   }

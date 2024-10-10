@@ -1,5 +1,3 @@
-// TODO: Move this to lib
-
 export function signedDistanceToBox(
   xA: number,
   yA: number,

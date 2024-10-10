@@ -30,7 +30,7 @@ export default class TransformationMatrix {
     this.f = 0
   }
 
-  // STATEFULL TRANSFORMS
+  // STATEFUL TRANSFORMS
 
   transform(a2: number, b2: number, c2: number, d2: number, e2: number, f2: number) {
     const { a: a1, b: b1, c: c1, d: d1, e: e1, f: f1 } = this

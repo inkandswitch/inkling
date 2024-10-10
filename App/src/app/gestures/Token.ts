@@ -3,28 +3,19 @@ import Token, { aPrimaryToken, aToken } from "../meta/Token"
 import Vec from "../../lib/vec"
 import NumberToken from "../meta/NumberToken"
 import { createWire, isTokenWithVariable } from "./effects/CreateWire"
-import { createFormula } from "./effects/CreateFormula"
-import Formula from "../meta/Formula"
 
 export const isNumberToken = (token: Token | null): token is NumberToken => token instanceof NumberToken
 
-export function tokenCreateWireOrEditFormula(ctx: EventContext): Gesture | void {
+export function tokenCreateWire(ctx: EventContext): Gesture | void {
   if (ctx.metaToggle.active) {
     const primaryToken = ctx.page.find({
       what: aPrimaryToken,
       near: ctx.event.position
     })
     if (primaryToken && isTokenWithVariable(primaryToken)) {
-      return new Gesture("Create Wire or Edit Formula", {
+      return new Gesture("Create Wire", {
         dragged(ctx) {
           return createWire(primaryToken.wirePort, ctx)
-        },
-        endedTap(ctx) {
-          if (primaryToken.parent instanceof Formula) {
-            primaryToken.parent.edit()
-          } else {
-            createFormula(ctx, primaryToken)
-          }
         }
       })
     }

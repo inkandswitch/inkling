@@ -1,10 +1,9 @@
-import { formulaEditorClose, formulaEditorWrite, formulaLabelTap } from "./gestures/FormulaEditor"
 import { Event, TouchId, wasRecentlyUpdated } from "./NativeEvents"
 import { EventContext, Gesture } from "./Gesture"
 import { handleBreakOff, handleCreateGizmo, handleGoAnywhere, handleMoveOrTogglePin } from "./gestures/Handle"
 import { metaToggleIgnorePencil, metaToggleFingerActions } from "./gestures/MetaToggle"
-import { tokenMoveOrToggleConstraint, numberTokenScrub, tokenCreateWireOrEditFormula } from "./gestures/Token"
-import { emptySpaceDrawInk, emptySpaceCreateGizmoOrFormula } from "./gestures/EmptySpace"
+import { tokenMoveOrToggleConstraint, numberTokenScrub, tokenCreateWire } from "./gestures/Token"
+import { emptySpaceDrawInk, emptySpaceCreateGizmoOrLinear } from "./gestures/EmptySpace"
 import { propertyPickerEditorChoose } from "./gestures/PropertyPickerEditor"
 import SVG from "./Svg"
 import { gizmoCycleConstraints, gizmoCreateWire } from "./gestures/Gizmo"
@@ -12,17 +11,12 @@ import Config from "./Config"
 import { erase } from "./gestures/Erase"
 import { strokeAddHandles } from "./gestures/Stroke"
 import { wireTogglePaused } from "./gestures/ToggleWire"
-import { componentCreateWire } from "./gestures/Component"
 import { strokeGroupRemoveHandles } from "./gestures/StrokeGroup"
 import { propertyPickerCreateWire } from "./gestures/PropertyPicker"
-import { select } from "./gestures/Select"
 import { transformSelection } from "./gestures/TransformSelection"
-import { toolbarIgnorePencil, toolbarMove } from "./gestures/Toolbar"
 
 const gestureCreators = {
   finger: [
-    formulaEditorClose,
-    //
     handleGoAnywhere,
     numberTokenScrub,
     handleBreakOff,
@@ -37,26 +31,20 @@ const gestureCreators = {
     strokeAddHandles,
     //
     metaToggleFingerActions,
-    toolbarMove,
     transformSelection
   ],
   pencil: [
     metaToggleIgnorePencil,
-    toolbarIgnorePencil,
     erase,
-    select,
     //
     propertyPickerEditorChoose,
-    formulaLabelTap,
-    formulaEditorWrite,
     //
-    tokenCreateWireOrEditFormula,
+    tokenCreateWire,
     propertyPickerCreateWire,
-    componentCreateWire,
     gizmoCreateWire,
     handleCreateGizmo,
     //
-    emptySpaceCreateGizmoOrFormula,
+    emptySpaceCreateGizmoOrLinear,
     emptySpaceDrawInk
   ]
 }

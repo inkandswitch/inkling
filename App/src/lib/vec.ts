@@ -9,25 +9,12 @@ export interface Vector {
   y: number
 }
 
-interface Rectangle {
-  x: number
-  y: number
-  w: number
-  h: number
-}
-
 // Constructors ///////////////////////////////////////////////////////////////
 
 const Vec = (x = 0, y = 0): Vector => ({ x, y })
 export default Vec
 
 Vec.clone = (v: Vector) => Vec(v.x, v.y)
-
-Vec.fromRectXY = (r: Rectangle) => Vec(r.x, r.y)
-
-Vec.fromRectWH = (r: Rectangle) => Vec(r.w, r.h)
-
-Vec.fromRectRB = (r: Rectangle) => Vec(r.x + r.w, r.y + r.h)
 
 Vec.of = (s: number) => Vec(s, s)
 

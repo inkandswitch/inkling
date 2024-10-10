@@ -1,6 +1,5 @@
 import { GameObject } from "./GameObject"
 import Stroke from "./ink/Stroke"
-import StrokeGroup from "./ink/StrokeGroup"
 import Handle from "./ink/Handle"
 import MetaToggle from "./gui/MetaToggle"
 

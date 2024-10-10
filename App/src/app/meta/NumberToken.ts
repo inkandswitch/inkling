@@ -4,7 +4,6 @@ import { MetaNumber } from "./MetaSemantics"
 import SVG from "../Svg"
 import { Variable } from "../constraints"
 import * as constraints from "../constraints"
-import * as ohm from "ohm-js"
 import { GameObject } from "../GameObject"
 import { generateId } from "../../lib/helpers"
 // import VarMover from '../VarMover';
@@ -38,10 +37,10 @@ export default class NumberToken extends Token {
   readonly variable: Variable
   wirePort: WirePort
 
-  constructor(value?: number, source?: ohm.Interval)
-  constructor(variable: Variable, source?: ohm.Interval)
-  constructor(arg: number | Variable = 1, source?: ohm.Interval) {
-    super(source)
+  constructor(value?: number)
+  constructor(variable: Variable)
+  constructor(arg: number | Variable = 1) {
+    super()
     if (arg instanceof Variable) {
       this.variable = arg
     } else {

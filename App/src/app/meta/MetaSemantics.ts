@@ -172,10 +172,3 @@ export class MetaStructConnection implements MetaConnection {
     return
   }
 }
-
-// COLLECTION (TBD)
-export class MetaCollection implements MetaValue {
-  wireTo(that: MetaValue) {
-    return null
-  }
-}
