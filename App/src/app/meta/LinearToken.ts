@@ -4,6 +4,7 @@ import Token from "./Token"
 import { GameObject } from "../GameObject"
 import NumberToken from "./NumberToken"
 import Vec from "../../lib/vec"
+import * as constraints from "../Constraints"
 
 export default class LinearToken extends Token {
   readonly id = generateId()
@@ -33,6 +34,10 @@ export default class LinearToken extends Token {
     this.b = this.adopt(new NumberToken(0))
     this.m.variable.lock()
     this.b.variable.lock()
+    const formula = constraints.formula([this.m.variable, this.x.variable, this.b.variable], ([m, x, b]) => {
+      return m * x + b
+    })
+    constraints.equals(this.y.variable, formula.result)
   }
 
   render(dt: number, t: number): void {
