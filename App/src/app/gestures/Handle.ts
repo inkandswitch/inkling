@@ -1,6 +1,6 @@
 import { EventContext, Gesture } from "../Gesture"
 import Handle, { aCanonicalHandle } from "../ink/Handle"
-import * as constraints from "../constraints"
+import * as constraints from "../Constraints"
 import StrokeGroup from "../ink/StrokeGroup"
 import Vec from "../../lib/vec"
 import SVG from "../Svg"

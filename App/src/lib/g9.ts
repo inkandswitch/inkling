@@ -154,8 +154,9 @@ export function gradient(f: (x: number[]) => number, x: number[]): number[] {
 export function minimize(
   f: (x: number[]) => number,
   x0: number[],
-  maxit = 1000,
   tol = 1e-8,
+  _noooooo: undefined,
+  maxit = 1000,
   end_on_line_search = false
 ): {
   solution: number[]

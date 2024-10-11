@@ -2,27 +2,10 @@ import { GameObject } from "../GameObject"
 import SVG from "../Svg"
 import { Position } from "../../lib/types"
 import Vec from "../../lib/vec"
-import { MetaConnection, MetaValue } from "./MetaSemantics"
+import { MetaConnection } from "./MetaSemantics"
 import { distanceToPath } from "../../lib/helpers"
 import Svg from "../Svg"
-
-// TODO: maybe this shouldn't be a GameObject
-export class WirePort extends GameObject {
-  position: Position
-  value: MetaValue
-
-  constructor(position: Position, value: MetaValue) {
-    super()
-    this.position = position
-    this.value = value
-  }
-
-  distanceToPoint(point: Position): null {
-    return null
-  }
-
-  render(dt: number, t: number): void {}
-}
+import { WirePort } from "./WirePort"
 
 export default class Wire extends GameObject {
   points: Position[] = []
@@ -52,13 +35,8 @@ export default class Wire extends GameObject {
     const a = this.a?.deref()
     const b = this.b?.deref()
 
-    if (a) {
-      this.points[0] = a.position
-    }
-
-    if (b) {
-      this.points[1] = b.position
-    }
+    if (a) this.points[0] = a.position
+    if (b) this.points[1] = b.position
 
     SVG.update(this.elm, {
       points: SVG.points(this.points),

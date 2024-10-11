@@ -9,15 +9,9 @@ export default abstract class Token extends GameObject {
   width = 90
   height = 30
 
-  public embedded = false
-  public hidden = false
-  public editing = false
-
   constructor() {
     super()
   }
-
-  abstract isPrimary(): boolean
 
   onTap() {
     // Override as needed.
@@ -30,7 +24,7 @@ export default abstract class Token extends GameObject {
   }
 
   midPoint() {
-    return Vec.add(this.position, Vec.mulS(Vec(this.width, this.height), 0.5))
+    return Vec.add(this.position, Vec.half(Vec(this.width, this.height)))
   }
 
   render(dt: number, t: number): void {
@@ -39,5 +33,3 @@ export default abstract class Token extends GameObject {
 }
 
 export const aToken = (gameObj: GameObject) => (gameObj instanceof Token ? gameObj : null)
-
-export const aPrimaryToken = (gameObj: GameObject) => (gameObj instanceof Token && gameObj.isPrimary() ? gameObj : null)

@@ -1,10 +1,10 @@
 import { GameObject, root } from "../GameObject"
 import SVG from "../Svg"
-import * as constraints from "../constraints"
+import * as constraints from "../Constraints"
 import { generateId } from "../../lib/helpers"
 import { Position } from "../../lib/types"
 import Vec from "../../lib/vec"
-import { Constraint, Pin } from "../constraints"
+import { Constraint, Pin } from "../Constraints"
 import { TAU } from "../../lib/math"
 import Selected from "../Selected"
 

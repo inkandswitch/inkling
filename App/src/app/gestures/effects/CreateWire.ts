@@ -1,12 +1,13 @@
 import { aGizmo } from "../../meta/Gizmo"
 import NumberToken from "../../meta/NumberToken"
-import Token, { aPrimaryToken } from "../../meta/Token"
 import { EventContext, Gesture } from "../../Gesture"
 import PropertyPicker from "../../meta/PropertyPicker"
 import Vec from "../../../lib/vec"
-import Wire, { WirePort } from "../../meta/Wire"
+import Wire from "../../meta/Wire"
 import { MetaStruct } from "../../meta/MetaSemantics"
 import PropertyPickerEditor from "../../meta/PropertyPickerEditor"
+import { WirePort } from "../../meta/WirePort"
+import { GameObject } from "../../GameObject"
 
 export function createWire(wirePort: WirePort, ctx: EventContext): Gesture | void {
   const wire = new Wire(wirePort)
@@ -19,11 +20,11 @@ export function createWire(wirePort: WirePort, ctx: EventContext): Gesture | voi
 
     ended(ctx) {
       const near = ctx.event.position
-      const primaryToken = ctx.page.find({ what: aPrimaryToken, near })
+      const token = ctx.page.find({ what: aTokenWithVariable, near })
       const gizmo = ctx.page.find({ what: aGizmo, near })
 
-      if (primaryToken && isTokenWithVariable(primaryToken)) {
-        wire.attachEnd(primaryToken.wirePort)
+      if (token) {
+        wire.attachEnd(token.wirePort)
       } else if (gizmo) {
         wire.attachEnd(gizmo.wirePort)
       } else if (wire.a?.deref()?.value instanceof MetaStruct) {
@@ -45,7 +46,5 @@ export function createWire(wirePort: WirePort, ctx: EventContext): Gesture | voi
   })
 }
 
-type TokenWithVariable = NumberToken | PropertyPicker
-
-export const isTokenWithVariable = (token: Token): token is TokenWithVariable =>
-  token instanceof NumberToken || token instanceof PropertyPicker
+export const aTokenWithVariable = (gameObj: GameObject) =>
+  gameObj instanceof NumberToken || gameObj instanceof PropertyPicker ? gameObj : null

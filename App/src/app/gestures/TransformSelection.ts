@@ -5,7 +5,7 @@ import { EventContext, Gesture } from "../Gesture"
 import { FingerState } from "../NativeEvents"
 import Selected from "../Selected"
 import Handle from "../ink/Handle"
-import * as constraints from "../constraints"
+import * as constraints from "../Constraints"
 
 export function transformSelection(ctx: EventContext): Gesture | void {
   if (!(Selected.size > 0 && ctx.pseudo)) {

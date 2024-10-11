@@ -1,8 +1,8 @@
 import Token from "./Token"
 import SVG from "../Svg"
 import { Position } from "../../lib/types"
-import { WirePort } from "./Wire"
-import * as constraints from "../constraints"
+import { WirePort } from "./WirePort"
+import * as constraints from "../Constraints"
 import Vec from "../../lib/vec"
 import { MetaStruct, MetaLabel, MetaNumber, MetaConnection, MetaNumberConnection } from "./MetaSemantics"
 import { generateId } from "../../lib/helpers"
@@ -49,10 +49,6 @@ export default class PropertyPicker extends Token {
 
   internalConnection: MetaConnection | null = null
 
-  isPrimary(): boolean {
-    return true
-  }
-
   getVariable(): constraints.Variable {
     return this.outputVariable.variable
   }
@@ -67,8 +63,7 @@ export default class PropertyPicker extends Token {
     }
 
     SVG.update(this.boxElement, {
-      d: PropertyPickerPath(this.position, this.width, this.height),
-      "is-embedded": this.embedded
+      d: PropertyPickerPath(this.position, this.width, this.height)
     })
 
     SVG.update(this.textElement, {

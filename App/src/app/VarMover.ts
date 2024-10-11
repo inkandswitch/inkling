@@ -1,4 +1,4 @@
-import { Variable } from "./constraints"
+import { Variable } from "./Constraints"
 
 interface Move {
   variable: Variable

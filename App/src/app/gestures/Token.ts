@@ -1,21 +1,19 @@
 import { EventContext, Gesture } from "../Gesture"
-import Token, { aPrimaryToken, aToken } from "../meta/Token"
+import { aToken } from "../meta/Token"
 import Vec from "../../lib/vec"
-import NumberToken from "../meta/NumberToken"
-import { createWire, isTokenWithVariable } from "./effects/CreateWire"
-
-export const isNumberToken = (token: Token | null): token is NumberToken => token instanceof NumberToken
+import { aNumberToken } from "../meta/NumberToken"
+import { aTokenWithVariable, createWire } from "./effects/CreateWire"
 
 export function tokenCreateWire(ctx: EventContext): Gesture | void {
   if (ctx.metaToggle.active) {
-    const primaryToken = ctx.page.find({
-      what: aPrimaryToken,
+    const token = ctx.page.find({
+      what: aTokenWithVariable,
       near: ctx.event.position
     })
-    if (primaryToken && isTokenWithVariable(primaryToken)) {
+    if (token) {
       return new Gesture("Create Wire", {
         dragged(ctx) {
-          return createWire(primaryToken.wirePort, ctx)
+          return createWire(token.wirePort, ctx)
         }
       })
     }
@@ -47,11 +45,11 @@ export function tokenMoveOrToggleConstraint(ctx: EventContext): Gesture | void {
 export function numberTokenScrub(ctx: EventContext): Gesture | void {
   if (ctx.metaToggle.active && ctx.pseudo) {
     const token = ctx.page.find({
-      what: aPrimaryToken,
+      what: aNumberToken,
       near: ctx.event.position
     })
 
-    if (isNumberToken(token)) {
+    if (token) {
       const v = token.getVariable()
       const wasLocked = v.isLocked
       let initialY = ctx.event.position.y

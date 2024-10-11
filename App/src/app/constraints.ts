@@ -2,11 +2,15 @@ import { GameObject } from "./GameObject"
 import SVG from "./Svg"
 import Handle, { aHandle } from "./ink/Handle"
 import { forDebugging, generateId, sets } from "../lib/helpers"
+import { uncmin } from "../lib/numeric"
 import { minimize } from "../lib/g9"
 import { TAU, normalizeAngle } from "../lib/math"
 import { Position } from "../lib/types"
 import Vec from "../lib/vec"
 import { aGizmo } from "./meta/Gizmo"
+
+// Change this to either uncmin or minimize (g9)
+const solver = minimize
 
 // #region variables
 
@@ -1093,7 +1097,8 @@ function solveCluster(cluster: ClusterForSolver, root: GameObject) {
 
   let result: ReturnType<typeof minimize>
   try {
-    result = minimize(computeTotalError, inputs, 1_000, 1e-3)
+    // @ts-ignore-error
+    result = solver(computeTotalError, inputs, 1e-3, undefined, 1_000)
   } catch (e) {
     console.log("minimizeError threw", e, "while working on cluster", cluster, "with knowns", knowns)
     SVG.showStatus("" + e)
@@ -1155,7 +1160,8 @@ function solveCluster(cluster: ClusterForSolver, root: GameObject) {
           inputs[yIndex] = y
         }
         try {
-          const solution = minimize(computeTotalError, inputs, maxIterations, 1).solution
+          // @ts-ignore-error
+          const solution = solver(computeTotalError, inputs, 1, undefined, maxIterations).solution
           // SVG.now("polyline", {
           //   points: SVG.points(
           //     { x, y },

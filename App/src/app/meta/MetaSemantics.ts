@@ -1,5 +1,5 @@
-import * as constraints from "../constraints"
-import { Constraint, Variable } from "../constraints"
+import * as constraints from "../Constraints"
+import { Constraint, Variable } from "../Constraints"
 import { Position } from "../../lib/types"
 import { generateId } from "../../lib/helpers"
 
@@ -7,7 +7,7 @@ import { generateId } from "../../lib/helpers"
 // There are two main types: Meta Value & Meta Connection
 
 // Meta Value
-// A meta value can be a Number, Struct(Component?) or Collection
+// A meta value can be a Number or Struct
 export interface MetaValue {
   /** Connects `this` MetaValue to `that` MetaValue. */
   wireTo(that: MetaValue): MetaConnection | null
