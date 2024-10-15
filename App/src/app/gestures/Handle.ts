@@ -68,12 +68,9 @@ export function touchHandleHelper(handle: Handle): Gesture {
       offset ??= Vec.sub(handle.position, ctx.event.position)
 
       handle.position = Vec.add(ctx.event.position, offset)
+      lastPos = Vec.clone(handle)
 
-      if (Config.gesture.lookAt) {
-        lastPos = Vec.clone(handle)
-      } else {
-        constraints.finger(handle)
-      }
+      constraints.finger(handle)
 
       if (
         ctx.pseudoCount === 2 &&
@@ -85,9 +82,7 @@ export function touchHandleHelper(handle: Handle): Gesture {
     },
     ended(ctx) {
       handle.getAbsorbedByNearestHandle()
-      if (!Config.gesture.lookAt) {
-        constraints.finger(handle).remove()
-      }
+      constraints.finger(handle).remove()
 
       // Tune: you must tap a little more precisely to toggle a pin than drag a handle
       // TODO: This creates a small tap deadzone between the stroke (to toggle handles) and the handle (to toggle pin), because the handle claims the gesture but doesn't do anything with it
