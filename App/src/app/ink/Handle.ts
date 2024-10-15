@@ -34,7 +34,7 @@ export default class Handle extends GameObject {
     property: "y"
   })
 
-  private constructor(position: Position) {
+  protected constructor(position: Position) {
     super(root)
     this.position = position
 
@@ -187,7 +187,7 @@ export default class Handle extends GameObject {
     }
   }
 
-  render(t: number, dt: number) {
+  render(dt: number, t: number) {
     const attrs = {
       class: Selected.has(this) ? "handle selected" : "handle",
       transform: SVG.positionToTransform(this),

@@ -6,6 +6,7 @@ import { GameObject } from "../GameObject"
 import Stroke from "../ink/Stroke"
 import StrokeGroup from "../ink/StrokeGroup"
 import MetaToggle from "../gui/MetaToggle"
+import Lead from "../ink/Lead"
 
 export function erase(ctx: EventContext): Gesture | void {
   if (ctx.pseudoCount === 2) {
@@ -36,7 +37,7 @@ function spawn(p: Position) {
   elm.onanimationend = () => elm.remove()
 }
 
-const concreteErasables = [StrokeGroup, Stroke, MetaToggle]
+const concreteErasables = [StrokeGroup, Stroke, Lead, MetaToggle]
 export const aConcreteErasable = (gameObj: GameObject) =>
   concreteErasables.some((cls) => gameObj instanceof cls) ? gameObj : null
 
