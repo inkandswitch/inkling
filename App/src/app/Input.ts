@@ -159,7 +159,7 @@ export function render() {
     gesturesByTouchId[id].render()
   }
 
-  if (Config.gesture.debugVisualization) {
+  if (Config.gesture.presentationMode) {
     for (const id in gesturesByTouchId) {
       gesturesByTouchId[id].debugRender()
     }
@@ -170,7 +170,7 @@ export function render() {
         class: "pseudo-touch",
         cx: event.position.x,
         cy: event.position.y,
-        r: 8
+        r: 16
       })
     }
   }

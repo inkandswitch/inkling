@@ -3,7 +3,7 @@ export default {
     padding: 30
   },
   gesture: {
-    debugVisualization: false,
+    presentationMode: true,
     reapTouches: false, // This is kinda buggy right now
     lookAt: true
   },

@@ -129,6 +129,8 @@ When a handle is told to "go everywhere", the system will try to move that handl
 
 The Bulb's tap has a big radius and is very forgiving — you can mash your thumb anywhere in that corner of the screen, or slide your thumb outward off the side. Let it feel good.
 
+You can tap on some wires to *pause* them, temporarily breaking the equality constraint they represent.
+
 When using Inkling on a desktop computer, you can press the Tab key to switch modes.
 
 You can also pseudo tap the bulb to cycle through color themes:
@@ -139,4 +141,4 @@ You can also pseudo tap the bulb to cycle through color themes:
 
 You can customize these themes in `style.css`, and add/remove themes in `index.html`
 
-You can 2-pseudo draw to erase the bulb, which triggers a reload. Handy.
+You can erase the bulb, which triggers a reload. Handy.

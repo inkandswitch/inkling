@@ -119,8 +119,8 @@ export class Gesture {
         class: "gesture",
         transform: SVG.positionToTransform(event.position)
       })
-      SVG.add("circle", elm, { r: event.type === "pencil" ? 2 : 8 })
-      SVG.add("text", elm, { content: this.label })
+      SVG.add("circle", elm, { r: event.type === "pencil" ? 3 : 16 })
+      // SVG.add("text", elm, { content: this.label })
     }
   }
 }
