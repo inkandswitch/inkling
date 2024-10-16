@@ -19,8 +19,6 @@ export default class Handle extends GameObject {
     return handle
   }
 
-  public readonly id = generateId()
-
   private readonly backElm = SVG.add("g", SVG.handleElm, { class: "handle" })
   private readonly frontElm = SVG.add("g", SVG.constraintElm, { class: "handle" })
 
@@ -33,7 +31,7 @@ export default class Handle extends GameObject {
     property: "y"
   })
 
-  protected constructor(position: Position) {
+  protected constructor(position: Position, public readonly id = generateId()) {
     super(root)
     this.position = position
 
