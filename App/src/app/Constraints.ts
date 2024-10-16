@@ -532,21 +532,25 @@ class LLFormula extends LowLevelConstraint {
 export type SerializedConstraint =
   | {
       type: "constant"
+      paused: boolean
       variableId: number
       value: number
     }
   | {
       type: "pin"
+      paused: boolean
       handleId: number
       position: Position
     }
   | {
       type: "finger"
+      paused: boolean
       handleId: number
       position: Position
     }
   | {
       type: "linearRelationship"
+      paused: boolean
       yVariableId: number
       m: number
       xVariableId: number
@@ -554,11 +558,13 @@ export type SerializedConstraint =
     }
   | {
       type: "absorb"
+      paused: boolean
       parentHandleId: number
       childHandleId: number
     }
   | {
       type: "polarVector"
+      paused: boolean
       aHandleId: number
       bHandleId: number
       distanceVariableId: number
@@ -566,6 +572,7 @@ export type SerializedConstraint =
     }
   | {
       type: "linearFormula"
+      paused: boolean
       mVariableId: number
       xVariableId: number
       bVariableId: number
@@ -586,6 +593,10 @@ export abstract class Constraint {
       this._paused = newValue
       forgetClustersForSolver()
     }
+  }
+
+  togglePaused() {
+    this.paused = !this.paused
   }
 
   readonly variables = [] as Variable[]
@@ -668,6 +679,7 @@ export class Constant extends Constraint {
   override serialize(): SerializedConstraint {
     return {
       type: "constant",
+      paused: this.paused,
       variableId: this.variable.id,
       value: this.value
     }
@@ -711,6 +723,7 @@ export class Pin extends Constraint {
   override serialize(): SerializedConstraint {
     return {
       type: "pin",
+      paused: this.paused,
       handleId: this.handle.id,
       position: { x: this.position.x, y: this.position.y }
     }
@@ -758,6 +771,7 @@ export class Finger extends Constraint {
   override serialize(): SerializedConstraint {
     return {
       type: "finger",
+      paused: this.paused,
       handleId: this.handle.id,
       position: this.position
     }
@@ -809,6 +823,7 @@ export class LinearRelationship extends Constraint {
   override serialize(): SerializedConstraint {
     return {
       type: "linearRelationship",
+      paused: this.paused,
       yVariableId: this.y.id,
       m: this.m,
       xVariableId: this.x.id,
@@ -867,6 +882,7 @@ export class Absorb extends Constraint {
   override serialize(): SerializedConstraint {
     return {
       type: "absorb",
+      paused: this.paused,
       parentHandleId: this.parent.id,
       childHandleId: this.child.id
     }
@@ -932,6 +948,7 @@ export class PolarVector extends Constraint {
   override serialize(): SerializedConstraint {
     return {
       type: "polarVector",
+      paused: this.paused,
       aHandleId: this.a.id,
       bHandleId: this.b.id,
       distanceVariableId: this.distance.id,
@@ -984,6 +1001,7 @@ export class LinearFormula extends Formula {
   override serialize(): SerializedConstraint {
     return {
       type: "linearFormula",
+      paused: this.paused,
       mVariableId: this.variables[0].id,
       xVariableId: this.variables[1].id,
       bVariableId: this.variables[2].id,
@@ -1399,6 +1417,14 @@ export function deserializeConstraints(constraints: SerializedConstraint[]) {
 }
 
 function deserializeConstraint(constraint: SerializedConstraint): Constraint {
+  const ans = _deserializeConstraint(constraint)
+  if (constraint.paused) {
+    ans.paused = true
+  }
+  return ans
+}
+
+function _deserializeConstraint(constraint: SerializedConstraint): Constraint {
   switch (constraint.type) {
     case "constant": {
       const variable = Variable.withId(constraint.variableId)!
