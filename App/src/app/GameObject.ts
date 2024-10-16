@@ -24,6 +24,7 @@ export abstract class GameObject {
     throw new Error("Override me")
   }
 
+  // TODO: remove this, and just say Root.current anywhere it's used
   get root(): GameObject {
     let p: GameObject = this
     while (p.parent) {

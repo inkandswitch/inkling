@@ -2,11 +2,11 @@ import { GameObject } from "../GameObject"
 import SVG from "../Svg"
 import { Position } from "../../lib/types"
 import Vec from "../../lib/vec"
-import { MetaConnection } from "./MetaSemantics"
+import { MetaConnection, MetaNumber } from "./MetaSemantics"
 import { distanceToPath } from "../../lib/helpers"
 import Svg from "../Svg"
 import { WirePort } from "./WirePort"
-import { SerializedGameObject } from "../Core"
+import { Variable } from "../Constraints"
 
 export type SerializedWire = {
   type: "Wire"
@@ -24,15 +24,20 @@ export default class Wire extends GameObject {
     class: "wire"
   })
 
-  constructor(wirePort: WirePort) {
+  constructor(wirePort?: WirePort) {
     super()
-    this.a = new WeakRef(wirePort)
+    if (wirePort) {
+      this.a = new WeakRef(wirePort)
+    }
   }
 
   // TODO: Need the real wireports
   static deserialize(v: SerializedWire): Wire {
-    return new Wire()
+    const w = new Wire()
+    w.points = v.points
+    return w
   }
+
   serialize(): SerializedWire {
     return {
       type: "Wire",

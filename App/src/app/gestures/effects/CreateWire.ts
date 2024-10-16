@@ -28,12 +28,12 @@ export function createWire(wirePort: WirePort, ctx: EventContext): Gesture | voi
       } else if (gizmo) {
         wire.attachEnd(gizmo.wirePort)
       } else if (wire.a?.deref()?.value instanceof MetaStruct) {
-        const p = ctx.root.adopt(new PropertyPicker())
+        const p = ctx.root.adopt(PropertyPicker.create())
         p.position = ctx.event.position
         wire.attachEnd(p.inputPort)
         ctx.root.adopt(new PropertyPickerEditor(p))
       } else {
-        const n = ctx.root.adopt(new NumberToken())
+        const n = ctx.root.adopt(NumberToken.create())
         wire.attachEnd(n.wirePort)
         // Force a render, which computes the token width
         n.render(0, 0)

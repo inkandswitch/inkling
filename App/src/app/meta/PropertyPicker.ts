@@ -6,7 +6,9 @@ import * as constraints from "../Constraints"
 import Vec from "../../lib/vec"
 import { MetaStruct, MetaLabel, MetaNumber, MetaConnection, MetaNumberConnection } from "./MetaSemantics"
 import { GameObject } from "../GameObject"
-import { generateId } from "../Root"
+import { Variable } from "../Constraints"
+
+// TODO: revisit (wrt serialization) after we get rid of MetaXXX
 
 const TAB_SIZE = 5
 
@@ -23,10 +25,17 @@ function PropertyPickerPath(pos: Position, w: number, h: number) {
 
 export type SerializedPropertyPicker = {
   type: "PropertyPicker"
+  outputVariableId: number
 }
 
 export default class PropertyPicker extends Token {
-  readonly id = generateId()
+  static create() {
+    return this._create(constraints.variable())
+  }
+
+  static _create(outputVariable: Variable) {
+    return new this(outputVariable)
+  }
 
   private lastRenderedValue = ""
 
@@ -41,11 +50,17 @@ export default class PropertyPicker extends Token {
     class: "property-picker-text"
   })
 
-  readonly inputVariable = new MetaStruct([])
-  readonly inputPort = new WirePort(this.position, this.inputVariable)
+  readonly inputMetaVariable = new MetaStruct([])
+  readonly inputPort = new WirePort(this.position, this.inputMetaVariable)
 
-  readonly outputVariable = new MetaNumber(constraints.variable())
-  readonly wirePort = new WirePort(this.position, this.outputVariable)
+  readonly outputMetaVariable
+  readonly wirePort: WirePort
+
+  private constructor(outputVariable: Variable) {
+    super()
+    this.outputMetaVariable = new MetaNumber(outputVariable)
+    this.wirePort = new WirePort(this.position, this.outputMetaVariable)
+  }
 
   // Alias this so we conform to TokenWithVariable
 
@@ -53,15 +68,19 @@ export default class PropertyPicker extends Token {
 
   internalConnection: MetaConnection | null = null
 
-  static deserialize(v: SerializedPropertyPicker): PropertyPicker {}
+  static deserialize(v: SerializedPropertyPicker): PropertyPicker {
+    return this._create(Variable.withId(v.outputVariableId))
+  }
+
   serialize(): SerializedPropertyPicker {
     return {
-      type: "PropertyPicker"
+      type: "PropertyPicker",
+      outputVariableId: this.outputMetaVariable.variable.id
     }
   }
 
   getVariable(): constraints.Variable {
-    return this.outputVariable.variable
+    return this.outputMetaVariable.variable
   }
 
   render() {
@@ -96,7 +115,7 @@ export default class PropertyPicker extends Token {
       return
     }
 
-    this.internalConnection = new MetaNumberConnection(this.property, this.outputVariable)
+    this.internalConnection = new MetaNumberConnection(this.property, this.outputMetaVariable)
   }
 
   remove() {

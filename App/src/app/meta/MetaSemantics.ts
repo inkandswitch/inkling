@@ -3,7 +3,8 @@ import { Constraint, Variable } from "../Constraints"
 import { Position } from "../../lib/types"
 import { generateId } from "../Root"
 
-// TODO: figure out how to serialize and deserialize this!
+// TODO: get rid of this, and merge functionality into Wire, NumberToken, etc.
+// (GOs that represent connectable things get the semantics for making connections to/from them)
 
 // This file implements the semantics of meta ink independently of the visual language
 // There are two main types: Meta Value & Meta Connection

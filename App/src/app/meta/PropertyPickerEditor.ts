@@ -1,14 +1,16 @@
-import PropertyPicker from "./PropertyPicker"
+import PropertyPicker, { SerializedPropertyPicker } from "./PropertyPicker"
 import SVG from "../Svg"
 import { Position } from "../../lib/types"
 import { MetaLabel, MetaStruct } from "./MetaSemantics"
 import { GameObject } from "../GameObject"
 import { signedDistanceToBox } from "../../lib/SignedDistance"
+import { deserialize } from "../Deserialize"
 
 const LINEHEIGHT = 30
 
 export type SerializedPropertyPickerEditor = {
   type: "PropertyPickerEditor"
+  propertyPicker: SerializedPropertyPicker
 }
 
 export default class PropertyPickerEditor extends GameObject {
@@ -52,10 +54,14 @@ export default class PropertyPickerEditor extends GameObject {
     })
   }
 
-  static deserialize(v: SerializedPropertyPickerEditor): PropertyPickerEditor {}
+  static deserialize(v: SerializedPropertyPickerEditor) {
+    return new this(deserialize(v.propertyPicker) as PropertyPicker)
+  }
+
   serialize(): SerializedPropertyPickerEditor {
     return {
-      type: "PropertyPickerEditor"
+      type: "PropertyPickerEditor",
+      propertyPicker: this.propertyPicker.serialize()
     }
   }
 
