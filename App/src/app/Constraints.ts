@@ -712,7 +712,7 @@ export class Pin extends Constraint {
     return {
       type: "pin",
       handleId: this.handle.id,
-      position: this.position
+      position: { x: this.position.x, y: this.position.y }
     }
   }
 

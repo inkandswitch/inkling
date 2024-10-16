@@ -134,7 +134,7 @@ export default class MetaToggle extends GameObject {
   }
 
   remove() {
-    window.location.reload()
+    // window.location.reload()
   }
 
   snapToCorner() {

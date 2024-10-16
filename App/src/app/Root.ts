@@ -39,6 +39,14 @@ export class Root extends GameObject {
     }
   }
 
+  static roundtrip() {
+    const stale = Root.current.serialize()
+    const json = JSON.stringify(stale)
+    Root.deserialize(JSON.parse(json))
+    const fresh = Root.current.serialize()
+    return json === JSON.stringify(fresh)
+  }
+
   static deserialize(v: SerializedRoot): Root {
     Root.current?.remove()
 
