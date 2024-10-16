@@ -1,9 +1,12 @@
 import { forDebugging } from "../lib/helpers"
 import { Position } from "../lib/types"
-import Page from "./Page"
 import SVG from "./Svg"
 
 const DEFAULT_TOO_FAR = 20
+
+export type SerializedGameObject = {
+  children: SerializedGameObject[]
+}
 
 export interface FindOptions<T extends GameObject> {
   what(gameObj: GameObject): T | null
@@ -25,21 +28,6 @@ export abstract class GameObject {
     if (parent) {
       parent.adopt(this)
     }
-  }
-
-  get page(): Page {
-    let p = this.parent
-    while (p) {
-      if (p instanceof Page) {
-        return p
-      }
-      p = p.parent
-    }
-
-    // If we get to this point, this object does not belong to a page.
-    // But the root object knows what the current page is, so we can
-    // return that.
-    return this.root.page
   }
 
   get root(): GameObject {
@@ -72,6 +60,8 @@ export abstract class GameObject {
   }
 
   abstract render(dt: number, t: number): void
+
+  abstract serialize(): SerializedGameObject
 
   // TODO: write comment for this method
   abstract distanceToPoint(point: Position): number | null
@@ -148,12 +138,6 @@ export abstract class GameObject {
 export const aGameObject = (gameObj: GameObject) => gameObj
 
 export const root = new (class extends GameObject {
-  currentPage: Page | null = null
-
-  get page() {
-    return this.currentPage!
-  }
-
   distanceToPoint(point: Position): number | null {
     return null
   }
@@ -161,6 +145,12 @@ export const root = new (class extends GameObject {
   render(dt: number, t: number) {
     for (const child of this.children) {
       child.render(dt, t)
+    }
+  }
+
+  serialize() {
+    return {
+      children: Array.from(this.children).map((c) => c.serialize())
     }
   }
 })()

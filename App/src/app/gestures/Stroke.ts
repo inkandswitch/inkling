@@ -3,7 +3,7 @@ import { EventContext, Gesture } from "../Gesture"
 
 export function strokeAddHandles(ctx: EventContext): Gesture | void {
   if (ctx.metaToggle.active) {
-    const stroke = ctx.page.find({
+    const stroke = ctx.root.find({
       what: aStroke,
       near: ctx.event.position,
       tooFar: 50

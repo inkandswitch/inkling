@@ -3,7 +3,7 @@ import { aPropertyPickerEditor } from "../meta/PropertyPickerEditor"
 
 export function propertyPickerEditorChoose(ctx: EventContext): Gesture | void {
   if (ctx.metaToggle.active) {
-    const propertyPickerEditor = ctx.page.find({
+    const propertyPickerEditor = ctx.root.find({
       what: aPropertyPickerEditor,
       near: ctx.event.position,
       recursive: false

@@ -6,7 +6,6 @@ import { Position } from "../../lib/types"
 import Vec from "../../lib/vec"
 import { Constraint, Pin } from "../Constraints"
 import { TAU } from "../../lib/math"
-import Selected from "../Selected"
 
 let goesAnywhereId = -1
 let goesAnywhereMode: "continuous" | "snapshot" = "continuous"
@@ -22,8 +21,8 @@ export default class Handle extends GameObject {
 
   public readonly id = generateId()
 
-  private readonly backElm = SVG.add("g", SVG.handleElm)
-  private readonly frontElm = SVG.add("g", SVG.constraintElm)
+  private readonly backElm = SVG.add("g", SVG.handleElm, { class: "handle" })
+  private readonly frontElm = SVG.add("g", SVG.constraintElm, { class: "handle" })
 
   public readonly xVariable = constraints.variable(0, {
     object: this,
@@ -101,7 +100,7 @@ export default class Handle extends GameObject {
   }
 
   getAbsorbedByNearestHandle() {
-    const nearestHandle = this.page.find({
+    const nearestHandle = this.root.find({
       what: aCanonicalHandle,
       near: this.position,
       that: (handle) => handle !== this
@@ -189,7 +188,6 @@ export default class Handle extends GameObject {
 
   render(dt: number, t: number) {
     const attrs = {
-      class: Selected.has(this) ? "handle selected" : "handle",
       transform: SVG.positionToTransform(this),
       "is-canonical": this.isCanonical,
       "has-pin": this.hasPin,

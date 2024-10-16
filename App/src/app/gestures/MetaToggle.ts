@@ -44,7 +44,7 @@ export function metaToggleIgnorePencil(ctx: EventContext): Gesture | void {
       what: aMetaToggle,
       near: ctx.event.position,
       recursive: false,
-      tooFar: Config.gui.padding + 5
+      tooFar: 35
     })
   ) {
     // This gesture exists just to block other gestures from running when a pencil touch begins on the Meta Toggle

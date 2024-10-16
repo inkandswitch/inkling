@@ -7,6 +7,7 @@ import { TAU, lerpN, rand, randInt } from "../../lib/math"
 import Config from "../Config"
 
 const radius = 20
+const padding = 30
 
 export const aMetaToggle = (gameObj: GameObject) => (gameObj instanceof MetaToggle ? gameObj : null)
 
@@ -62,7 +63,7 @@ export default class MetaToggle extends GameObject {
     this.position = Store.init({
       name: "Meta Toggle Position",
       isValid: isPosition,
-      def: { x: Config.gui.padding, y: Config.gui.padding }
+      def: { x: padding, y: padding }
     })
 
     this.element = SVG.add("g", SVG.guiElm, {
@@ -96,7 +97,7 @@ export default class MetaToggle extends GameObject {
     SVG.add("circle", this.element, { class: "secret", r: radius })
     this.resplat()
 
-    if (Config.storeMetaMode && Store.init({ name: "Meta Mode", isValid: isBoolean, def: false })) {
+    if (Store.init({ name: "Meta Mode", isValid: isBoolean, def: false })) {
       this.toggle()
     }
   }
@@ -160,7 +161,7 @@ export default class MetaToggle extends GameObject {
     const sign = Vec.addS(Vec.mulS(normalizedPosition, -2), 1)
 
     // Inset from the corner
-    this.position = Vec.add(cornerPosition, Vec.mulS(sign, Config.gui.padding))
+    this.position = Vec.add(cornerPosition, Vec.mulS(sign, padding))
 
     Store.set("Meta Toggle Position", this.position as unknown as Serializable)
     this.resplat()

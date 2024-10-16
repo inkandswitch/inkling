@@ -11,13 +11,13 @@ import { createGizmo } from "./effects/CreateGizmo"
 const handleTouchDist = 40
 
 export function handleCreateGizmo(ctx: EventContext): Gesture | void {
-  if (ctx.metaToggle.active && ctx.page.find({ what: aCanonicalHandle, near: ctx.event.position })) {
+  if (ctx.metaToggle.active && ctx.root.find({ what: aCanonicalHandle, near: ctx.event.position })) {
     return createGizmo(ctx)
   }
 }
 
 export function handleGoAnywhere(ctx: EventContext): Gesture | void {
-  const handle = ctx.page.find({
+  const handle = ctx.root.find({
     what: aCanonicalHandle,
     near: ctx.event.position,
     tooFar: handleTouchDist
@@ -33,7 +33,7 @@ export function handleGoAnywhere(ctx: EventContext): Gesture | void {
 }
 
 export function handleBreakOff(ctx: EventContext): Gesture | void {
-  const handle = ctx.page.find({
+  const handle = ctx.root.find({
     what: aCanonicalHandle,
     near: ctx.event.position,
     tooFar: handleTouchDist
@@ -46,7 +46,7 @@ export function handleBreakOff(ctx: EventContext): Gesture | void {
 }
 
 export function handleMoveOrTogglePin(ctx: EventContext): Gesture | void {
-  let handle = ctx.page.find({
+  let handle = ctx.root.find({
     what: aCanonicalHandle,
     near: ctx.event.position,
     tooFar: handleTouchDist
@@ -92,19 +92,17 @@ export function touchHandleHelper(handle: Handle): Gesture {
       }
     },
     render() {
-      if (Config.gesture.lookAt) {
-        const count = Math.pow(Vec.dist(handle.position, lastPos), 1 / 3)
-        let c = count
-        while (--c > 0) {
-          let v = Vec.sub(handle.position, lastPos)
-          v = Vec.add(lastPos, Vec.mulS(v, c / count))
-          SVG.now("circle", {
-            cx: v.x,
-            cy: v.y,
-            r: 4,
-            class: "desire"
-          })
-        }
+      const count = Math.pow(Vec.dist(handle.position, lastPos), 1 / 3)
+      let c = count
+      while (--c > 0) {
+        let v = Vec.sub(handle.position, lastPos)
+        v = Vec.add(lastPos, Vec.mulS(v, c / count))
+        SVG.now("circle", {
+          cx: v.x,
+          cy: v.y,
+          r: 4,
+          class: "desire"
+        })
       }
     }
   })

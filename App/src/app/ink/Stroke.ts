@@ -4,22 +4,18 @@ import { GameObject } from "../GameObject"
 import Rect from "../../lib/rect"
 import { distanceToPath } from "../../lib/helpers"
 import StrokeGroup from "./StrokeGroup"
-import Selected from "../Selected"
 
 export default class Stroke extends GameObject {
   public points: Position[] = []
 
-  protected element = SVG.add("polyline", SVG.inkElm)
+  protected element = SVG.add("polyline", SVG.inkElm, { class: "stroke" })
 
   updatePath(newPoints: Array<Position>) {
     this.points = newPoints
   }
 
   render() {
-    SVG.update(this.element, {
-      points: SVG.points(this.points),
-      class: Selected.has(this) ? "stroke selected" : "stroke"
-    })
+    SVG.update(this.element, { points: SVG.points(this.points) })
   }
 
   becomeGroup() {

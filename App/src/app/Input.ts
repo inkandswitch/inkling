@@ -11,8 +11,7 @@ import { strokeAddHandles } from "./gestures/Stroke"
 import { strokeGroupRemoveHandles } from "./gestures/StrokeGroup"
 import { wireTogglePaused } from "./gestures/ToggleWire"
 import { numberTokenScrub, tokenCreateWire, tokenMoveOrToggleConstraint } from "./gestures/Token"
-import { transformSelection } from "./gestures/TransformSelection"
-import { Event, TouchId, wasRecentlyUpdated } from "./NativeEvents"
+import { Event, TouchId } from "./NativeEvents"
 import SVG from "./Svg"
 
 const gestureCreators = {
@@ -30,8 +29,7 @@ const gestureCreators = {
     strokeGroupRemoveHandles,
     strokeAddHandles,
     //
-    metaToggleFingerActions,
-    transformSelection
+    metaToggleFingerActions
   ],
   pencil: [
     metaToggleIgnorePencil,
@@ -54,21 +52,6 @@ const gesturesByTouchId: Record<TouchId, Gesture> = {}
 
 // This function is called by NativeEvent (via App) once for every event sent from Swift.
 export function applyEvent(ctx: EventContext) {
-  // Before we begin, we need to reap any touches that haven't been updated in a while,
-  // because we don't always receive the "ended".
-  if (Config.gesture.reapTouches) {
-    for (const id in pseudoTouches) {
-      if (!wasRecentlyUpdated(pseudoTouches[id])) {
-        delete pseudoTouches[id]
-      }
-    }
-    for (const id in gesturesByTouchId) {
-      if (!wasRecentlyUpdated(gesturesByTouchId[id])) {
-        delete gesturesByTouchId[id]
-      }
-    }
-  }
-
   // Terminology:
   // Event — a single finger or pencil event sent to us from Swift, either "began", "moved", or "ended".
   // Touch — a series of finger or pencil events (from "began" to "ended) with a consistent TouchId.
@@ -159,7 +142,7 @@ export function render() {
     gesturesByTouchId[id].render()
   }
 
-  if (Config.gesture.presentationMode) {
+  if (Config.presentationMode) {
     for (const id in gesturesByTouchId) {
       gesturesByTouchId[id].debugRender()
     }

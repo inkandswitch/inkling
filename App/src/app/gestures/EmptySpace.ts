@@ -6,7 +6,7 @@ import { createLead } from "./effects/CreateLead"
 
 export function emptySpaceDrawInk(ctx: EventContext): Gesture | void {
   if (!ctx.metaToggle.active) {
-    const stroke = ctx.page.addStroke(new Stroke())
+    const stroke = ctx.root.adopt(new Stroke())
 
     return new Gesture("Draw Ink", {
       dragged(ctx) {

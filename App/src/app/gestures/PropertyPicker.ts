@@ -4,7 +4,7 @@ import { createWire } from "./effects/CreateWire"
 
 export function propertyPickerCreateWire(ctx: EventContext): Gesture | void {
   if (ctx.metaToggle.active) {
-    const propertyPicker = ctx.page.find({
+    const propertyPicker = ctx.root.find({
       what: aPropertyPicker,
       near: ctx.event.position,
       recursive: false

@@ -6,7 +6,7 @@ import { aTokenWithVariable, createWire } from "./effects/CreateWire"
 
 export function tokenCreateWire(ctx: EventContext): Gesture | void {
   if (ctx.metaToggle.active) {
-    const token = ctx.page.find({
+    const token = ctx.root.find({
       what: aTokenWithVariable,
       near: ctx.event.position
     })
@@ -22,7 +22,7 @@ export function tokenCreateWire(ctx: EventContext): Gesture | void {
 
 export function tokenMoveOrToggleConstraint(ctx: EventContext): Gesture | void {
   if (ctx.metaToggle.active) {
-    const token = ctx.page.find({
+    const token = ctx.root.find({
       what: aToken,
       near: ctx.event.position
     })
@@ -44,7 +44,7 @@ export function tokenMoveOrToggleConstraint(ctx: EventContext): Gesture | void {
 
 export function numberTokenScrub(ctx: EventContext): Gesture | void {
   if (ctx.metaToggle.active && ctx.pseudo) {
-    const token = ctx.page.find({
+    const token = ctx.root.find({
       what: aNumberToken,
       near: ctx.event.position
     })

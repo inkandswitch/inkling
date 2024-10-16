@@ -20,7 +20,7 @@ export default class Lead extends Handle {
     if (!Vec.equal(this.position, this.lastPos)) {
       this.lastPos = Vec.clone(this.position)
       if (this.stroke == null || this.stroke.parent == null || this.stroke.parent instanceof StrokeGroup) {
-        this.stroke = this.page.addStroke(new Stroke())
+        this.stroke = this.root.adopt(new Stroke())
       }
       this.stroke.points.push(Vec.clone(this.position))
     }

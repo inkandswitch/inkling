@@ -161,19 +161,17 @@ export default class Gizmo extends GameObject {
     const dLock = this.distance.isLocked
     const fade = lerp(realLength, 80, 100, 0, 1)
 
-    if (Config.gizmo.showTension) {
-      SVG.update(this.thick, {
-        style:
-          distanceTension + angleTension > 0.1
-            ? `
-            stroke-dashoffset:${-realLength / 2}px;
-            stroke: color(display-p3 1 .3 .2);
-            stroke-dasharray: 20 20;
-            opacity: 0.3;
-          `
-            : ""
-      })
-    }
+    SVG.update(this.thick, {
+      style:
+        distanceTension + angleTension < 0.1
+          ? ""
+          : `
+          stroke-dashoffset:${-realLength / 2}px;
+          stroke: color(display-p3 1 .3 .2);
+          stroke-dasharray: 20 20;
+          opacity: 0.3;
+        `
+    })
 
     SVG.update(this.elm, { "is-constrained": aLock || dLock })
     SVG.update(this.thick, { points: SVG.points(a, b) })

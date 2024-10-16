@@ -3,7 +3,7 @@ import { EventContext, Gesture } from "../Gesture"
 
 export function strokeGroupRemoveHandles(ctx: EventContext): Gesture | void {
   if (ctx.metaToggle.active) {
-    const strokeGroup = ctx.page.find({
+    const strokeGroup = ctx.root.find({
       what: aStrokeGroup,
       near: ctx.event.position,
       tooFar: 20

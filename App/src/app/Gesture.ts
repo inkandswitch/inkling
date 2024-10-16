@@ -8,7 +8,6 @@ export type EventContext = {
   state: InputState // The current state of the pencil or finger that generated this event.
   events: Events // The full NativeEvents instance, so we can look at other the pencils/fingers.
   root: typeof root // The root of the scene graph
-  page: typeof root.page // The current page the user is interacting with
   metaToggle: MetaToggle
   pseudo: boolean
   pseudoCount: number
@@ -36,8 +35,6 @@ type EventHandlerResult = Gesture | any
 type EventHandlerName = EventState | "dragged" | "endedTap" | "endedDrag"
 
 export class Gesture {
-  public lastUpdated = 0
-
   private touches: Record<TouchId, Event> = {}
 
   constructor(public label: string, public api: GestureAPI) {}
@@ -73,8 +70,6 @@ export class Gesture {
   }
 
   applyEvent(ctx: EventContext) {
-    this.lastUpdated = performance.now()
-
     let eventHandlerName: EventHandlerName = ctx.event.state
 
     // Synthetic "dragged" event

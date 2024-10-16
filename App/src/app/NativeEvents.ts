@@ -1,7 +1,5 @@
-import { Position, PositionWithPressure } from "../lib/types"
+import { Position } from "../lib/types"
 import Vec from "../lib/vec"
-import Config from "./Config"
-import { Gesture } from "./Gesture"
 import MetaToggle from "./gui/MetaToggle"
 
 // TODO: Do we want to add some way to fake pencil input with a finger?
@@ -16,9 +14,6 @@ import MetaToggle from "./gui/MetaToggle"
 // How far does the input need to move before we count it as a drag?
 const fingerMinDragDist = 10
 const pencilMinDragDist = 10
-
-// How long (milliseconds) can a touch go without being updated before we consider it "dead"?
-const touchMaxAge = 15000
 
 export type Event = PencilEvent | FingerEvent
 export type InputState = PencilState | FingerState
@@ -51,7 +46,6 @@ interface SharedEventProperties {
   position: Position
   timestamp: number
   radius: number
-  lastUpdated: number
 }
 
 export interface PencilEvent extends SharedEventProperties {
@@ -72,7 +66,6 @@ interface SharedStateProperties {
   // TODO — do we want to store the original & current *event* instead of cherry-picking their properties?
   position: Position // Where is the touch now?
   originalPosition: Position // Where was the touch initially put down?
-  lastUpdated: number
 }
 
 export interface PencilState extends SharedStateProperties {
@@ -81,16 +74,6 @@ export interface PencilState extends SharedStateProperties {
 export interface FingerState extends SharedStateProperties {
   id: TouchId // What's the ID of this finger?
   event: FingerEvent // What's the current (or most recent) event that has contributed to the state?
-}
-
-type TouchPoint = {
-  type: EventType
-  altitude: number
-  azimuth: number
-  pressure: number
-  radius: number
-  timestamp: number
-  position: Position
 }
 
 type ApplyEvent = (event: Event, state: InputState) => void
@@ -126,8 +109,6 @@ export default class Events {
         }
       }
 
-      state.lastUpdated = performance.now()
-
       this.applyEvent(event, state)
 
       // Remove states that are no longer down
@@ -137,15 +118,6 @@ export default class Events {
     }
 
     this.events = []
-
-    // We need to reap any eventStates that haven't been touched in a while,
-    // because we don't always receive the "ended".
-    if (Config.gesture.reapTouches) {
-      this.fingerStates = this.fingerStates.filter(wasRecentlyUpdated)
-      if (this.pencilState && !wasRecentlyUpdated(this.pencilState)) {
-        this.pencilState = null
-      }
-    }
   }
 
   private mouseEvent(e: MouseEvent, state: EventState) {
@@ -156,7 +128,6 @@ export default class Events {
       type: this.keymap.space ? "pencil" : "finger",
       timestamp: performance.now(),
       radius: 1,
-      lastUpdated: performance.now(),
       altitude: 0,
       azimuth: 0,
       pressure: 1
@@ -208,24 +179,13 @@ export default class Events {
     window.onkeyup = null
   }
 
-  //state: EventStateWithCancelled, touches: Record<TouchId, TouchPoint[]>
-
   // prettier-ignore
   private setupNativeEventHandler() {
     (window as any).wrapperEvents = (nativeEvents: NativeEvent[]) => {
       this.disableFallbackEvents();
-
-      const lastUpdated = performance.now();
-
-      // Okay, so this is weird. Swift gives us a single EventState, but multiple "touches"?
-      // And then we loop through the touches and make… an Event for each one?
-      // Why are we thinking of these as "touches"? What does that word mean here?
-      // Why doesn't the Swift wrapper just give us an array of Events?
-      // This seems like an abstraction leak, where the design of UIGestureRecognizer
-      // is forcing a data model that doesn't match what we're actually trying to do.
       for (const nativeEvent of nativeEvents) {
         const { id, type, phase, timestamp, position, radius, pressure, altitude, azimuth } = nativeEvent;
-        const sharedProperties = { id, state: phase, type, timestamp, position, radius, lastUpdated };
+        const sharedProperties = { id, state: phase, type, timestamp, position, radius };
         const event: Event = type === 'finger'
           ? { ...sharedProperties, type }
           : { ...sharedProperties, type, pressure, altitude, azimuth };
@@ -245,8 +205,7 @@ export default class Events {
       dragDist: 0,
       position: event.position,
       originalPosition: event.position,
-      event,
-      lastUpdated: 0
+      event
     }
     this.fingerStates.push(state)
     return state
@@ -259,8 +218,7 @@ export default class Events {
       dragDist: 0,
       position: event.position,
       originalPosition: event.position,
-      event,
-      lastUpdated: 0
+      event
     }
     return this.pencilState
   }
@@ -308,18 +266,6 @@ export default class Events {
     state.event = event
     return state
   }
-}
-
-export function getPositionWithPressure(event: PencilEvent): PositionWithPressure {
-  return { ...event.position, pressure: event.pressure }
-}
-
-export function wasRecentlyUpdated(thing: InputState | Gesture | Event) {
-  const recentlyUpdated = thing.lastUpdated + touchMaxAge > performance.now()
-  if (!recentlyUpdated) {
-    console.log("TELL IVAN YOU SAW THIS")
-  }
-  return recentlyUpdated
 }
 
 function keyName(e: KeyboardEvent) {

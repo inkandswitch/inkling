@@ -3,7 +3,7 @@ import { EventContext, Gesture } from "../Gesture"
 
 export function wireTogglePaused(ctx: EventContext): Gesture | void {
   if (ctx.metaToggle.active) {
-    const wire = ctx.page.find({
+    const wire = ctx.root.find({
       what: aWire,
       near: ctx.event.position
     })
