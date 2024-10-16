@@ -7,16 +7,24 @@ import StrokeGroup from "./StrokeGroup"
 
 export type SerializedLead = {
   type: "Lead"
+  handleId: number
 }
 
 export default class Lead extends GameObject {
+  static create(position: Position) {
+    return this._create(Handle.create(position))
+  }
+
+  static _create(handle: Handle) {
+    return new Lead(handle)
+  }
+
   stroke?: Stroke
   lastPos?: Position
-  handle: Handle
 
-  constructor(position: Position) {
+  constructor(readonly handle: Handle) {
     super()
-    this.handle = this.adopt(Handle.create(position))
+    this.adopt(handle)
   }
 
   distanceToPoint(point: Position) {
@@ -25,10 +33,13 @@ export default class Lead extends GameObject {
 
   serialize(): SerializedLead {
     return {
-      type: "Lead"
+      type: "Lead",
+      handleId: this.handle.id
     }
   }
-  static deserialize(v: SerializedLead) {}
+  static deserialize(v: SerializedLead) {
+    return Lead._create(Handle.withId(v.handleId))
+  }
 
   render(dt: number, t: number) {
     this.lastPos ??= Vec.clone(this.handle.position)

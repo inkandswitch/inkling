@@ -1,16 +1,36 @@
 import SVG from "../Svg"
 import Token from "./Token"
 import { GameObject } from "../GameObject"
-import NumberToken from "./NumberToken"
+import NumberToken, { SerializedNumberToken } from "./NumberToken"
 import Vec from "../../lib/vec"
 import * as constraints from "../Constraints"
-import { generateId } from "../Core"
+import { generateId } from "../Root"
+import { deserialize } from "../Deserialize"
+import { Position } from "../../lib/types"
 
 export type SerializedLinearToken = {
   type: "LinearToken"
+  position: Position
+  y: SerializedNumberToken
+  m: SerializedNumberToken
+  x: SerializedNumberToken
+  b: SerializedNumberToken
 }
 
 export default class LinearToken extends Token {
+  static create() {
+    const lt = this._create(NumberToken.create(0), NumberToken.create(1), NumberToken.create(0), NumberToken.create(0))
+    lt.m.variable.lock()
+    lt.b.variable.lock()
+    const formula = constraints.linearFormula(lt.m.variable, lt.x.variable, lt.b.variable)
+    constraints.equals(lt.y.variable, formula.result)
+    return lt
+  }
+
+  static _create(y: NumberToken, m: NumberToken, x: NumberToken, b: NumberToken) {
+    return new LinearToken(y, m, x, b)
+  }
+
   readonly id = generateId() // WHY DOES THIS NEED AN ID?
   width = 222
   height = 34
@@ -27,27 +47,33 @@ export default class LinearToken extends Token {
   private readonly dot = SVG.add("text", this.elm, { class: "token-text", content: "•" })
   private readonly plus = SVG.add("text", this.elm, { class: "token-text", content: "+" })
 
-  private y: NumberToken
-  private m: NumberToken
-  private x: NumberToken
-  private b: NumberToken
-
-  constructor() {
+  constructor(readonly y: NumberToken, readonly m: NumberToken, readonly x: NumberToken, readonly b: NumberToken) {
     super()
-    this.y = this.adopt(new NumberToken(0))
-    this.m = this.adopt(new NumberToken(1))
-    this.x = this.adopt(new NumberToken(0))
-    this.b = this.adopt(new NumberToken(0))
-    this.m.variable.lock()
-    this.b.variable.lock()
-    const formula = constraints.linearFormula(this.m.variable, this.x.variable, this.b.variable)
-    constraints.equals(this.y.variable, formula.result)
+    this.adopt(y)
+    this.adopt(m)
+    this.adopt(x)
+    this.adopt(b)
   }
 
-  static deserialize(v: SerializedLinearToken): LinearToken {}
+  static deserialize(v: SerializedLinearToken): LinearToken {
+    const lt = this._create(
+      deserialize(v.y) as NumberToken,
+      deserialize(v.m) as NumberToken,
+      deserialize(v.x) as NumberToken,
+      deserialize(v.b) as NumberToken
+    )
+    lt.position = v.position
+    return lt
+  }
+
   serialize(): SerializedLinearToken {
     return {
-      type: "LinearToken"
+      type: "LinearToken",
+      position: this.position,
+      y: this.y.serialize(),
+      m: this.m.serialize(),
+      x: this.x.serialize(),
+      b: this.b.serialize()
     }
   }
 

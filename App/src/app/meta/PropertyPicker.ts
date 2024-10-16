@@ -6,7 +6,7 @@ import * as constraints from "../Constraints"
 import Vec from "../../lib/vec"
 import { MetaStruct, MetaLabel, MetaNumber, MetaConnection, MetaNumberConnection } from "./MetaSemantics"
 import { GameObject } from "../GameObject"
-import { generateId } from "../Core"
+import { generateId } from "../Root"
 
 const TAB_SIZE = 5
 

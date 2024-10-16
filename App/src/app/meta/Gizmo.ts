@@ -9,15 +9,34 @@ import Line from "../../lib/line"
 import { GameObject } from "../GameObject"
 import { WirePort } from "./WirePort"
 import { MetaLabel, MetaStruct } from "./MetaSemantics"
-import { SerializedGameObject } from "../Core"
 
 const arc = SVG.arcPath(Vec.zero, 10, TAU / 4, Math.PI / 3)
 
 export type SerializedGizmo = {
   type: "Gizmo"
+  distanceVariableId: number
+  angleInRadiansVariableId: number
+  angleInDegreesVariableId: number
+  aHandleId: number
+  bHandleId: number
 }
 
 export default class Gizmo extends GameObject {
+  static create(a: Handle, b: Handle) {
+    const { distance, angle: angleInRadians } = constraints.polarVector(a, b)
+    const angleInDegrees = constraints.linearRelationship(
+      constraints.variable((angleInRadians.value * 180) / Math.PI),
+      180 / Math.PI,
+      angleInRadians,
+      0
+    ).y
+    return Gizmo._create(a, b, distance, angleInRadians, angleInDegrees)
+  }
+
+  static _create(a: Handle, b: Handle, distance: Variable, angleInRadians: Variable, angleInDegrees: Variable) {
+    return new Gizmo(a, b, distance, angleInRadians, angleInDegrees)
+  }
+
   center: Position
 
   private elm = SVG.add("g", SVG.gizmoElm, { class: "gizmo" })
@@ -27,9 +46,6 @@ export default class Gizmo extends GameObject {
   private arc1 = SVG.add("path", this.arcs, { d: arc, class: "arc1" })
   private arc2 = SVG.add("path", this.arcs, { d: arc, class: "arc2" })
 
-  readonly distance: Variable
-  readonly angleInRadians: Variable
-  readonly angleInDegrees: Variable
   private readonly _a: WeakRef<Handle>
   private readonly _b: WeakRef<Handle>
 
@@ -66,19 +82,17 @@ export default class Gizmo extends GameObject {
     return a && b ? { a, b } : null
   }
 
-  constructor(a: Handle, b: Handle) {
+  private constructor(
+    a: Handle,
+    b: Handle,
+    readonly distance: Variable,
+    readonly angleInRadians: Variable,
+    readonly angleInDegrees: Variable
+  ) {
     super()
     this._a = new WeakRef(a)
     this._b = new WeakRef(b)
     this.center = this.updateCenter()
-    ;({ distance: this.distance, angle: this.angleInRadians } = constraints.polarVector(a, b))
-    this.angleInDegrees = constraints.linearRelationship(
-      constraints.variable((this.angleInRadians.value * 180) / Math.PI),
-      180 / Math.PI,
-      this.angleInRadians,
-      0
-    ).y
-
     this.distance.represents = {
       object: this,
       property: "distance"
@@ -98,10 +112,24 @@ export default class Gizmo extends GameObject {
     )
   }
 
-  static deserialize(v: SerializedGizmo): Gizmo {}
+  static deserialize(v: SerializedGizmo): Gizmo {
+    return this._create(
+      Handle.withId(v.aHandleId),
+      Handle.withId(v.bHandleId),
+      Variable.withId(v.distanceVariableId),
+      Variable.withId(v.angleInRadiansVariableId),
+      Variable.withId(v.angleInDegreesVariableId)
+    )
+  }
+
   serialize(): SerializedGizmo {
     return {
-      type: "Gizmo"
+      type: "Gizmo",
+      distanceVariableId: this.distance.id,
+      angleInRadiansVariableId: this.angleInRadians.id,
+      angleInDegreesVariableId: this.angleInDegrees.id,
+      aHandleId: this.a!.id,
+      bHandleId: this.b!.id
     }
   }
 

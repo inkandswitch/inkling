@@ -9,7 +9,7 @@ import { Position } from "../lib/types"
 import Vec from "../lib/vec"
 import { aGizmo } from "./meta/Gizmo"
 import Config from "./Config"
-import { generateId } from "./Core"
+import { generateId } from "./Root"
 
 // Change this to either uncmin or minimize (g9)
 const solver = minimize
@@ -30,7 +30,7 @@ interface AbsorbedVariableInfo {
   offset: { m: number; b: number }
 }
 
-interface SerializedVariable {
+export interface SerializedVariable {
   id: number
   value: number
   // note: not including `represents` data here b/c it's only for debugging
@@ -529,7 +529,7 @@ class LLFormula extends LowLevelConstraint {
 
 // #region high-level constraints
 
-type SerializedConstraint =
+export type SerializedConstraint =
   | {
       type: "constant"
       variableId: number

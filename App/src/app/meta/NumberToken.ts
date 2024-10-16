@@ -5,14 +5,28 @@ import SVG from "../Svg"
 import { Variable } from "../Constraints"
 import * as constraints from "../Constraints"
 import { GameObject } from "../GameObject"
-import { generateId } from "../Core"
+import { Position } from "../../lib/types"
 
 export type SerializedNumberToken = {
   type: "NumberToken"
+  position: Position
+  variableId: number
 }
 
 export default class NumberToken extends Token {
-  readonly id = generateId()
+  static create(value = 1) {
+    const variable = constraints.variable(value)
+    const object = NumberToken._create(variable)
+    variable.represents = {
+      object,
+      property: "number-token-value"
+    }
+    return object
+  }
+
+  static _create(variable: Variable) {
+    return new NumberToken(variable)
+  }
 
   // Rendering stuff
   private lastRenderedValue = ""
@@ -22,22 +36,24 @@ export default class NumberToken extends Token {
   protected readonly fracElm = SVG.add("text", this.elm, { class: "token-frac-text" })
 
   // Meta stuff
-  readonly variable: Variable
   wirePort: WirePort
 
-  constructor(arg = 1) {
+  constructor(readonly variable: Variable) {
     super()
-    this.variable = constraints.variable(arg, {
-      object: this,
-      property: "number-token-value"
-    })
     this.wirePort = new WirePort(this.position, new MetaNumber(this.variable))
   }
 
-  static deserialize(v: SerializedNumberToken): NumberToken {}
+  static deserialize(v: SerializedNumberToken): NumberToken {
+    const nt = this._create(Variable.withId(v.variableId))
+    nt.position = v.position
+    return nt
+  }
+
   serialize(): SerializedNumberToken {
     return {
-      type: "NumberToken"
+      type: "NumberToken",
+      position: this.position,
+      variableId: this.variable.id
     }
   }
 

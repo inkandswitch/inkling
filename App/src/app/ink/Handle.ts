@@ -5,7 +5,8 @@ import { Constraint, Pin, Variable } from "../Constraints"
 import { Position } from "../../lib/types"
 import Vec from "../../lib/vec"
 import { TAU } from "../../lib/math"
-import { generateId, root } from "../Core"
+import { generateId } from "../Root"
+import { root } from "../App"
 
 let goesAnywhereId = -1
 let goesAnywhereMode: "continuous" | "snapshot" = "continuous"
