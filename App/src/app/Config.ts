@@ -10,5 +10,6 @@ export default {
   gizmo: {
     showTension: true
   },
-  storeMetaMode: true
+  storeMetaMode: true,
+  renderDebugPerf: true
 }

@@ -585,3 +585,12 @@ svg * {
 .desire {
   fill: var(--desire);
 }
+
+#perf {
+  position: absolute;
+  top: 1em;
+  left: 50%;
+  font-family: monospace;
+  font-size: 12px;
+  translate: -50% 0;
+}

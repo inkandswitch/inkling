@@ -7,6 +7,7 @@ import { onEveryFrame } from "../lib/helpers"
 import * as Input from "./Input"
 import { root } from "./GameObject"
 import MetaToggle from "./gui/MetaToggle"
+import { endPerf, startPerf } from "./Perf"
 
 const page = new Page()
 root.adopt(page)
@@ -21,6 +22,7 @@ const events = new Events(metaToggle, (event: Event, state: InputState) => {
 })
 
 onEveryFrame((dt, t) => {
+  startPerf()
   SVG.clearNow(t)
 
   events.update()
@@ -28,4 +30,5 @@ onEveryFrame((dt, t) => {
   constraints.solve(root)
   root.render(dt, t)
   Input.render()
+  endPerf()
 })
