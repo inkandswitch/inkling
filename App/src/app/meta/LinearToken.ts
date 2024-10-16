@@ -11,20 +11,22 @@ export default class LinearToken extends Token {
   width = 222
   height = 34
 
-  protected readonly elm = SVG.add("g", SVG.metaElm, { class: "linear-token" })
-  protected readonly boxElm = SVG.add("rect", this.elm, {
+  private readonly elm = SVG.add("g", SVG.metaElm, { class: "linear-token" })
+  private readonly boxElm = SVG.add("rect", this.elm, {
     class: "token-box",
     x: -2,
     y: -2,
     width: this.width,
     height: this.height
   })
-  protected readonly textElm = SVG.add("text", this.elm, { class: "token-text" })
+  private readonly eq = SVG.add("text", this.elm, { class: "token-text", content: "=" })
+  private readonly dot = SVG.add("text", this.elm, { class: "token-text", content: "•" })
+  private readonly plus = SVG.add("text", this.elm, { class: "token-text", content: "+" })
 
-  protected y: NumberToken
-  protected m: NumberToken
-  protected x: NumberToken
-  protected b: NumberToken
+  private y: NumberToken
+  private m: NumberToken
+  private x: NumberToken
+  private b: NumberToken
 
   constructor() {
     super()
@@ -45,10 +47,23 @@ export default class LinearToken extends Token {
       transform: SVG.positionToTransform(this.position)
     })
 
-    this.y.position = Vec.add(this.position, Vec(0, 0))
-    this.m.position = Vec.add(this.position, Vec(60, 0))
-    this.x.position = Vec.add(this.position, Vec(120, 0))
-    this.b.position = Vec.add(this.position, Vec(180, 0))
+    let p = { x: 0, y: 0 }
+    this.y.position = Vec.add(this.position, p)
+    p.x += this.y.width
+    SVG.update(this.eq, { transform: SVG.positionToTransform(p) })
+    p.x += 25
+    this.m.position = Vec.add(this.position, p)
+    p.x += this.m.width
+    SVG.update(this.dot, { transform: SVG.positionToTransform(p) })
+    p.x += 25
+    this.x.position = Vec.add(this.position, p)
+    p.x += this.x.width
+    SVG.update(this.plus, { transform: SVG.positionToTransform(p) })
+    p.x += 25
+    this.b.position = Vec.add(this.position, p)
+    p.x += this.b.width + 5
+    this.width = p.x
+    SVG.update(this.boxElm, { width: this.width })
 
     for (const child of this.children) {
       child.render(dt, t)

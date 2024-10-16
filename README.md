@@ -131,6 +131,8 @@ The Bulb's tap has a big radius and is very forgiving — you can mash your thum
 
 You can tap on some wires to *pause* them, temporarily breaking the equality constraint they represent.
 
+In ink mode, tap the pen to create a Lead (like the tip of a pencil). It's a special handle that leaves a trail of ink when it moves. You can erase the ink, or tap it in meta mode to add handles.
+
 When using Inkling on a desktop computer, you can press the Tab key to switch modes.
 
 You can also pseudo tap the bulb to cycle through color themes:
