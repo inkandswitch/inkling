@@ -526,6 +526,46 @@ class LLFormula extends LowLevelConstraint {
 
 // #region high-level constraints
 
+type SerializedConstraint =
+  | {
+      type: "constant"
+      variableId: number
+      value: number
+    }
+  | {
+      type: "pin"
+      handleId: number
+      position: Position
+    }
+  | {
+      type: "finger"
+      handleId: number
+      position: Position
+    }
+  | {
+      type: "linearRelationship"
+      yVariableId: number
+      m: number
+      xVariableId: number
+      b: number
+    }
+  | {
+      type: "absorb"
+      parentHandleId: number
+      childHandleId: number
+    }
+  | {
+      type: "polarVector"
+      aHandleId: number
+      bHandleId: number
+    }
+  | {
+      type: "linearFormula"
+      mVariableId: number
+      xVariableId: number
+      bVariableId: number
+    }
+
 export abstract class Constraint {
   static readonly all = new Set<Constraint>()
 
@@ -549,6 +589,8 @@ export abstract class Constraint {
     Constraint.all.add(this)
     forgetClustersForSolver()
   }
+
+  abstract serialize(): SerializedConstraint
 
   /**
    * In this constraint system, equality is not a constraint but rather a
@@ -617,6 +659,14 @@ export class Constant extends Constraint {
     this.variables.push(variable)
   }
 
+  override serialize(): SerializedConstraint {
+    return {
+      type: "constant",
+      variableId: this.variable.id,
+      value: this.value
+    }
+  }
+
   propagateKnowns(knowns: Set<Variable>) {
     if (!knowns.has(this.variable.canonicalInstance)) {
       this.variable.value = this.value
@@ -650,6 +700,14 @@ export class Pin extends Constraint {
   private constructor(public readonly handle: Handle, public position: Position) {
     super()
     this.variables.push(handle.xVariable, handle.yVariable)
+  }
+
+  override serialize(): SerializedConstraint {
+    return {
+      type: "pin",
+      handleId: this.handle.id,
+      position: this.position
+    }
   }
 
   propagateKnowns(knowns: Set<Variable>) {
@@ -689,6 +747,14 @@ export class Finger extends Constraint {
     const fc = new LLFinger(this)
     this.lowLevelConstraints.push(fc)
     this.variables.push(handle.xVariable, handle.yVariable)
+  }
+
+  override serialize(): SerializedConstraint {
+    return {
+      type: "finger",
+      handleId: this.handle.id,
+      position: this.position
+    }
   }
 
   public remove() {
@@ -732,6 +798,16 @@ export class LinearRelationship extends Constraint {
   private constructor(readonly y: Variable, private m: number, readonly x: Variable, private b: number) {
     super()
     this.variables.push(y, x)
+  }
+
+  override serialize(): SerializedConstraint {
+    return {
+      type: "linearRelationship",
+      yVariableId: this.y.id,
+      m: this.m,
+      xVariableId: this.x.id,
+      b: this.b
+    }
   }
 
   setUpVariableRelationships() {
@@ -782,6 +858,14 @@ export class Absorb extends Constraint {
     this.variables.push(parent.xVariable, parent.yVariable, child.xVariable, child.yVariable)
   }
 
+  override serialize(): SerializedConstraint {
+    return {
+      type: "absorb",
+      parentHandleId: this.parent.id,
+      childHandleId: this.child.id
+    }
+  }
+
   setUpVariableRelationships() {
     this.parent.xVariable.makeEqualTo(this.child.xVariable)
     this.parent.yVariable.makeEqualTo(this.child.yVariable)
@@ -830,6 +914,14 @@ export class PolarVector extends Constraint {
     this.variables.push(a.xVariable, a.yVariable, b.xVariable, b.yVariable, this.distance, this.angle)
   }
 
+  override serialize(): SerializedConstraint {
+    return {
+      type: "polarVector",
+      aHandleId: this.a.id,
+      bHandleId: this.b.id
+    }
+  }
+
   public remove() {
     const aDict = PolarVector.memo.get(this.a)!
     aDict.delete(this.b)
@@ -863,6 +955,15 @@ export class LinearFormula extends Formula {
 
   protected override fn([m, x, b]: number[]) {
     return m * x + b
+  }
+
+  override serialize(): SerializedConstraint {
+    return {
+      type: "linearFormula",
+      mVariableId: this.variables[0].id,
+      xVariableId: this.variables[1].id,
+      bVariableId: this.variables[2].id
+    }
   }
 }
 
