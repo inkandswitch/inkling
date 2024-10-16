@@ -11,9 +11,7 @@ import { aGizmo } from "./meta/Gizmo"
 import Config from "./Config"
 import { generateId } from "./Core"
 
-// TODO: the serialization/deserialization code here is not quite right yet
-// b/c some variables are introduced by low-level constraints
-// need to figure this out
+// TODO: serialization / deserialization of variables
 
 // Change this to either uncmin or minimize (g9)
 const solver = minimize
@@ -296,7 +294,8 @@ abstract class LowLevelConstraint {
 class LLFinger extends LowLevelConstraint {
   constructor(private constraint: Finger) {
     super()
-    this.variables.push(constraint.handle.xVariable, constraint.handle.yVariable)
+    const { xVariable, yVariable } = this.constraint.handle
+    this.variables.push(xVariable, yVariable)
   }
 
   addTo(constraints: LowLevelConstraint[]) {
@@ -321,23 +320,10 @@ class LLFinger extends LowLevelConstraint {
 }
 
 class LLDistance extends LowLevelConstraint {
-  constructor(constraint: Constraint, public readonly a: Handle, public readonly b: Handle) {
+  constructor(public readonly a: Handle, public readonly b: Handle, readonly distance: Variable) {
     super()
-    this.variables.push(
-      variable(Vec.dist(a.position, b.position), {
-        object: constraint,
-        property: "distance"
-      }),
-      a.xVariable,
-      a.yVariable,
-      b.xVariable,
-      b.yVariable
-    )
-    this.ownVariables.add(this.distance)
-  }
-
-  get distance() {
-    return this.variables[0]
+    this.variables.push(distance, a.xVariable, a.yVariable, b.xVariable, b.yVariable)
+    this.ownVariables.add(distance)
   }
 
   addTo(constraints: LowLevelConstraint[]) {
@@ -379,23 +365,10 @@ class LLDistance extends LowLevelConstraint {
 }
 
 class LLAngle extends LowLevelConstraint {
-  constructor(constraint: Constraint, public readonly a: Handle, public readonly b: Handle) {
+  constructor(public readonly a: Handle, public readonly b: Handle, readonly angle: Variable) {
     super()
-    this.variables.push(
-      variable(Vec.angle(Vec.sub(b.position, a.position)), {
-        object: constraint,
-        property: "angle"
-      }),
-      a.xVariable,
-      a.yVariable,
-      b.xVariable,
-      b.yVariable
-    )
-    this.ownVariables.add(this.angle)
-  }
-
-  get angle() {
-    return this.variables[0]
+    this.variables.push(angle, a.xVariable, a.yVariable, b.xVariable, b.yVariable)
+    this.ownVariables.add(angle)
   }
 
   addTo(constraints: LowLevelConstraint[]) {
@@ -504,16 +477,10 @@ class LLAngle extends LowLevelConstraint {
 }
 
 class LLFormula extends LowLevelConstraint {
-  readonly result: Variable
-
-  constructor(constraint: Constraint, readonly args: Variable[], private readonly fn: (xs: number[]) => number) {
+  constructor(readonly args: Variable[], readonly result: Variable, private readonly fn: (xs: number[]) => number) {
     super()
-    this.result = variable(this.computeResult(), {
-      object: constraint,
-      property: "result"
-    })
     this.variables.push(...args, this.result)
-    this.ownVariables.add(this.result)
+    this.ownVariables.add(result)
   }
 
   addTo(constraints: LowLevelConstraint[]) {
@@ -576,12 +543,15 @@ type SerializedConstraint =
       type: "polarVector"
       aHandleId: number
       bHandleId: number
+      distanceVariableId: number
+      angleVariableId: number
     }
   | {
       type: "linearFormula"
       mVariableId: number
       xVariableId: number
       bVariableId: number
+      resultVariableId: number
     }
 
 export abstract class Constraint {
@@ -627,7 +597,7 @@ export abstract class Constraint {
    * variables and add them to `knowns`.
    *
    * Subclasses may override this method, but should always call
-   * super.addKnowns(knowns) at the end!
+   * super.propagateKnowns(knowns) at the end!
    */
   propagateKnowns(knowns: Set<Variable>) {
     for (const llc of this.lowLevelConstraints) {
@@ -902,12 +872,32 @@ export class PolarVector extends Constraint {
   private static readonly memo = new Map<Handle, Map<Handle, PolarVector>>()
 
   static create(a: Handle, b: Handle) {
+    const pv = PolarVector._create(
+      a,
+      b,
+      variable(Vec.dist(a.position, b.position)),
+      variable(Vec.angle(Vec.sub(b.position, a.position)))
+    )
+    pv.distance.represents = {
+      object: pv,
+      property: "distance"
+    }
+    pv.angle.represents = {
+      object: pv,
+      property: "angle"
+    }
+    return pv
+  }
+
+  static _create(a: Handle, b: Handle, distance: Variable, angle: Variable) {
     let pv = PolarVector.memo.get(a)?.get(b)
     if (pv) {
+      equals(distance, pv.distance)
+      equals(angle, pv.angle)
       return pv
     }
 
-    pv = new PolarVector(a, b)
+    pv = new PolarVector(a, b, distance, angle)
     if (!PolarVector.memo.get(a)) {
       PolarVector.memo.set(a, new Map())
     }
@@ -915,20 +905,9 @@ export class PolarVector extends Constraint {
     return pv
   }
 
-  readonly distance: Variable
-  readonly angle: Variable
-
-  private constructor(readonly a: Handle, readonly b: Handle) {
+  private constructor(readonly a: Handle, readonly b: Handle, readonly distance: Variable, readonly angle: Variable) {
     super()
-
-    const dc = new LLDistance(this, a, b)
-    this.lowLevelConstraints.push(dc)
-    this.distance = dc.distance
-
-    const ac = new LLAngle(this, a, b)
-    this.lowLevelConstraints.push(ac)
-    this.angle = ac.angle
-
+    this.lowLevelConstraints.push(new LLDistance(a, b, distance), new LLAngle(a, b, angle))
     this.variables.push(a.xVariable, a.yVariable, b.xVariable, b.yVariable, this.distance, this.angle)
   }
 
@@ -936,7 +915,9 @@ export class PolarVector extends Constraint {
     return {
       type: "polarVector",
       aHandleId: this.a.id,
-      bHandleId: this.b.id
+      bHandleId: this.b.id,
+      distanceVariableId: this.distance.id,
+      angleVariableId: this.angle.id
     }
   }
 
@@ -953,22 +934,29 @@ export class PolarVector extends Constraint {
 export const polarVector = PolarVector.create
 
 abstract class Formula extends Constraint {
-  readonly result: Variable
-
   protected abstract fn(xs: number[]): number
 
-  protected constructor(args: Variable[]) {
+  protected constructor(args: Variable[], readonly result: Variable) {
     super()
-    const fc = new LLFormula(this, args, this.fn)
-    this.lowLevelConstraints.push(fc)
-    this.result = fc.result
-    this.variables.push(...args, this.result)
+    this.lowLevelConstraints.push(new LLFormula(args, result, this.fn))
+    this.variables.push(...args, result)
   }
 }
 
 export class LinearFormula extends Formula {
   static create(m: Variable, x: Variable, b: Variable) {
-    return new LinearFormula([m, x, b])
+    const result = variable()
+    const lf = LinearFormula._create(m, x, b, result)
+    result.value = lf.fn([m.value, x.value, b.value])
+    result.represents = {
+      object: lf,
+      property: "result"
+    }
+    return lf
+  }
+
+  static _create(m: Variable, x: Variable, b: Variable, result: Variable) {
+    return new LinearFormula([m, x, b], result)
   }
 
   protected override fn([m, x, b]: number[]) {
@@ -980,7 +968,8 @@ export class LinearFormula extends Formula {
       type: "linearFormula",
       mVariableId: this.variables[0].id,
       xVariableId: this.variables[1].id,
-      bVariableId: this.variables[2].id
+      bVariableId: this.variables[2].id,
+      resultVariableId: this.result.id
     }
   }
 }
@@ -1420,13 +1409,16 @@ function deserializeConstraint(
     case "polarVector": {
       const a = handleById.get(constraint.aHandleId)!
       const b = handleById.get(constraint.bHandleId)!
-      return polarVector(a, b)
+      const distance = variableById.get(constraint.distanceVariableId)!
+      const angle = variableById.get(constraint.angleVariableId)!
+      return PolarVector._create(a, b, distance, angle)
     }
     case "linearFormula": {
       const m = variableById.get(constraint.mVariableId)!
       const x = variableById.get(constraint.xVariableId)!
       const b = variableById.get(constraint.bVariableId)!
-      return linearFormula(m, x, b)
+      const result = variableById.get(constraint.resultVariableId)!
+      return LinearFormula._create(m, x, b, result)
     }
   }
 }
