@@ -40,6 +40,15 @@ interface SerializedVariable {
 export class Variable {
   static readonly all = new Set<Variable>()
 
+  static withId(id: number) {
+    for (const variable of Variable.all) {
+      if (variable.id === id) {
+        return variable
+      }
+    }
+    throw new Error("couldn't find variable w/ id " + id)
+  }
+
   static create(value = 0, represents?: { object: object; property: string }, id = generateId()) {
     return new Variable(value, represents, id)
   }
@@ -1383,60 +1392,52 @@ export function serializeConstraints() {
   return [...Constraint.all].map((constraint) => constraint.serialize())
 }
 
-export function deserializeConstraints(
-  constraints: SerializedConstraint[],
-  handleById: Map<number, Handle>,
-  variableById: Map<number, Variable>
-) {
+export function deserializeConstraints(constraints: SerializedConstraint[]) {
   for (const constraint of constraints) {
-    deserializeConstraint(constraint, handleById, variableById)
+    deserializeConstraint(constraint)
   }
 }
 
-function deserializeConstraint(
-  constraint: SerializedConstraint,
-  handleById: Map<number, Handle>,
-  variableById: Map<number, Variable>
-): Constraint {
+function deserializeConstraint(constraint: SerializedConstraint): Constraint {
   switch (constraint.type) {
     case "constant": {
-      const variable = variableById.get(constraint.variableId)!
+      const variable = Variable.withId(constraint.variableId)!
       const { value } = constraint
       return constant(variable, value)
     }
     case "pin": {
-      const handle = handleById.get(constraint.handleId)!
+      const handle = Handle.withId(constraint.handleId)!
       const { position } = constraint
       return pin(handle, position)
     }
     case "finger": {
-      const handle = handleById.get(constraint.handleId)!
+      const handle = Handle.withId(constraint.handleId)!
       const { position } = constraint
       return finger(handle, position)
     }
     case "linearRelationship": {
-      const y = variableById.get(constraint.yVariableId)!
-      const x = variableById.get(constraint.xVariableId)!
+      const y = Variable.withId(constraint.yVariableId)!
+      const x = Variable.withId(constraint.xVariableId)!
       const { m, b } = constraint
       return linearRelationship(y, m, x, b)
     }
     case "absorb": {
-      const parent = handleById.get(constraint.parentHandleId)!
-      const child = handleById.get(constraint.childHandleId)!
+      const parent = Handle.withId(constraint.parentHandleId)!
+      const child = Handle.withId(constraint.childHandleId)!
       return absorb(parent, child)
     }
     case "polarVector": {
-      const a = handleById.get(constraint.aHandleId)!
-      const b = handleById.get(constraint.bHandleId)!
-      const distance = variableById.get(constraint.distanceVariableId)!
-      const angle = variableById.get(constraint.angleVariableId)!
+      const a = Handle.withId(constraint.aHandleId)!
+      const b = Handle.withId(constraint.bHandleId)!
+      const distance = Variable.withId(constraint.distanceVariableId)!
+      const angle = Variable.withId(constraint.angleVariableId)!
       return PolarVector._create(a, b, distance, angle)
     }
     case "linearFormula": {
-      const m = variableById.get(constraint.mVariableId)!
-      const x = variableById.get(constraint.xVariableId)!
-      const b = variableById.get(constraint.bVariableId)!
-      const result = variableById.get(constraint.resultVariableId)!
+      const m = Variable.withId(constraint.mVariableId)!
+      const x = Variable.withId(constraint.xVariableId)!
+      const b = Variable.withId(constraint.bVariableId)!
+      const result = Variable.withId(constraint.resultVariableId)!
       return LinearFormula._create(m, x, b, result)
     }
   }
