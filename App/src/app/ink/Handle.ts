@@ -1,7 +1,7 @@
 import { GameObject } from "../GameObject"
 import SVG from "../Svg"
 import * as constraints from "../Constraints"
-import { Constraint, Pin } from "../Constraints"
+import { Constraint, Pin, Variable } from "../Constraints"
 import { Position } from "../../lib/types"
 import Vec from "../../lib/vec"
 import { TAU } from "../../lib/math"
@@ -14,6 +14,8 @@ export type SerializedHandle = {
   type: "Handle"
   id: number
   position: Position
+  xVariableId: number
+  yVariableId: number
 }
 
 export default class Handle extends GameObject {
@@ -26,26 +28,36 @@ export default class Handle extends GameObject {
   }
 
   static create(position: Position, getAbsorbed = true): Handle {
-    const handle = new Handle(position)
+    const handle = Handle._create(
+      position,
+      constraints.variable(0, {
+        object: this,
+        property: "x"
+      }),
+      constraints.variable(0, {
+        object: this,
+        property: "y"
+      })
+    )
     if (getAbsorbed) {
       handle.getAbsorbedByNearestHandle()
     }
     return handle
   }
 
+  static _create(position: Position, xVariable: Variable, yVariable: Variable, id = generateId()): Handle {
+    return new Handle(position, xVariable, yVariable, id)
+  }
+
   private readonly backElm = SVG.add("g", SVG.handleElm, { class: "handle" })
   private readonly frontElm = SVG.add("g", SVG.constraintElm, { class: "handle" })
 
-  public readonly xVariable = constraints.variable(0, {
-    object: this,
-    property: "x"
-  })
-  public readonly yVariable = constraints.variable(0, {
-    object: this,
-    property: "y"
-  })
-
-  protected constructor(position: Position, public readonly id = generateId()) {
+  protected constructor(
+    position: Position,
+    public readonly xVariable: Variable,
+    public readonly yVariable: Variable,
+    public readonly id: number
+  ) {
     super()
     this.position = position
 
@@ -67,12 +79,14 @@ export default class Handle extends GameObject {
     return {
       type: "Handle",
       id: this.id,
-      position: { x: this.x, y: this.y }
+      position: { x: this.x, y: this.y },
+      xVariableId: this.xVariable.id,
+      yVariableId: this.yVariable.id
     }
   }
 
   static deserialize(v: SerializedHandle) {
-    return new Handle(v.position, v.id)
+    return Handle._create(v.position, Variable.withId(v.xVariableId), Variable.withId(v.yVariableId), v.id)
   }
 
   toggleGoesAnywhere() {
