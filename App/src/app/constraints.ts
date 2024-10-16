@@ -9,6 +9,10 @@ import { Position } from "../lib/types"
 import Vec from "../lib/vec"
 import { aGizmo } from "./meta/Gizmo"
 
+// TODO: the serialization/deserialization code here is not quite right yet
+// b/c some variables are introduced by low-level constraints
+// need to figure this out
+
 // Change this to either uncmin or minimize (g9)
 const solver = minimize
 
@@ -1350,3 +1354,67 @@ function getHandleToFingerMap(constraints: Constraint[]) {
 }
 
 // #endregion solver
+
+// #region serialization-and-deserialization
+
+export function serializeConstraints() {
+  return [...Constraint.all].map((constraint) => constraint.serialize())
+}
+
+export function deserializeConstraints(
+  constraints: SerializedConstraint[],
+  handleById: Map<number, Handle>,
+  variableById: Map<number, Variable>
+) {
+  for (const constraint of constraints) {
+    deserializeConstraint(constraint, handleById, variableById)
+  }
+}
+
+function deserializeConstraint(
+  constraint: SerializedConstraint,
+  handleById: Map<number, Handle>,
+  variableById: Map<number, Variable>
+): Constraint {
+  switch (constraint.type) {
+    case "constant": {
+      const variable = variableById.get(constraint.variableId)!
+      const { value } = constraint
+      return constant(variable, value)
+    }
+    case "pin": {
+      const handle = handleById.get(constraint.handleId)!
+      const { position } = constraint
+      return pin(handle, position)
+    }
+    case "finger": {
+      const handle = handleById.get(constraint.handleId)!
+      const { position } = constraint
+      return finger(handle, position)
+    }
+    case "linearRelationship": {
+      const y = variableById.get(constraint.yVariableId)!
+      const x = variableById.get(constraint.xVariableId)!
+      const { m, b } = constraint
+      return linearRelationship(y, m, x, b)
+    }
+    case "absorb": {
+      const parent = handleById.get(constraint.parentHandleId)!
+      const child = handleById.get(constraint.childHandleId)!
+      return absorb(parent, child)
+    }
+    case "polarVector": {
+      const a = handleById.get(constraint.aHandleId)!
+      const b = handleById.get(constraint.bHandleId)!
+      return polarVector(a, b)
+    }
+    case "linearFormula": {
+      const m = variableById.get(constraint.mVariableId)!
+      const x = variableById.get(constraint.xVariableId)!
+      const b = variableById.get(constraint.bVariableId)!
+      return linearFormula(m, x, b)
+    }
+  }
+}
+
+// #endregion serialization-and-deserialization
