@@ -36,9 +36,7 @@ export default class LinearToken extends Token {
     this.b = this.adopt(new NumberToken(0))
     this.m.variable.lock()
     this.b.variable.lock()
-    const formula = constraints.formula([this.m.variable, this.x.variable, this.b.variable], ([m, x, b]) => {
-      return m * x + b
-    })
+    const formula = constraints.linearFormula(this.m.variable, this.x.variable, this.b.variable)
     constraints.equals(this.y.variable, formula.result)
   }
 

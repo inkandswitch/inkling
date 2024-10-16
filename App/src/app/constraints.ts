@@ -842,23 +842,31 @@ export class PolarVector extends Constraint {
 
 export const polarVector = PolarVector.create
 
-export class Formula extends Constraint {
-  static create(args: Variable[], fn: (xs: number[]) => number) {
-    return new Formula(args, fn)
-  }
-
+abstract class Formula extends Constraint {
   readonly result: Variable
 
-  private constructor(args: Variable[], fn: (xs: number[]) => number) {
+  protected abstract fn(xs: number[]): number
+
+  protected constructor(args: Variable[]) {
     super()
-    const fc = new LLFormula(this, args, fn)
+    const fc = new LLFormula(this, args, this.fn)
     this.lowLevelConstraints.push(fc)
     this.result = fc.result
     this.variables.push(...args, this.result)
   }
 }
 
-export const formula = Formula.create
+export class LinearFormula extends Formula {
+  static create(m: Variable, x: Variable, b: Variable) {
+    return new LinearFormula([m, x, b])
+  }
+
+  protected override fn([m, x, b]: number[]) {
+    return m * x + b
+  }
+}
+
+export const linearFormula = LinearFormula.create
 
 // #endregion high-level constraints
 
