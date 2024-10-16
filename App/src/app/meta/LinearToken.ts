@@ -10,6 +10,7 @@ import { Position } from "../../lib/types"
 
 export type SerializedLinearToken = {
   type: "LinearToken"
+  id: number
   position: Position
   y: SerializedNumberToken
   m: SerializedNumberToken
@@ -19,7 +20,13 @@ export type SerializedLinearToken = {
 
 export default class LinearToken extends Token {
   static create() {
-    const lt = this._create(NumberToken.create(0), NumberToken.create(1), NumberToken.create(0), NumberToken.create(0))
+    const lt = this._create(
+      generateId(),
+      NumberToken.create(0),
+      NumberToken.create(1),
+      NumberToken.create(0),
+      NumberToken.create(0)
+    )
     lt.m.variable.lock()
     lt.b.variable.lock()
     const formula = constraints.linearFormula(lt.m.variable, lt.x.variable, lt.b.variable)
@@ -27,8 +34,8 @@ export default class LinearToken extends Token {
     return lt
   }
 
-  static _create(y: NumberToken, m: NumberToken, x: NumberToken, b: NumberToken) {
-    return new LinearToken(y, m, x, b)
+  static _create(id: number, y: NumberToken, m: NumberToken, x: NumberToken, b: NumberToken) {
+    return new LinearToken(id, y, m, x, b)
   }
 
   readonly id = generateId() // WHY DOES THIS NEED AN ID?
@@ -47,8 +54,14 @@ export default class LinearToken extends Token {
   private readonly dot = SVG.add("text", this.elm, { class: "token-text", content: "•" })
   private readonly plus = SVG.add("text", this.elm, { class: "token-text", content: "+" })
 
-  constructor(readonly y: NumberToken, readonly m: NumberToken, readonly x: NumberToken, readonly b: NumberToken) {
-    super()
+  constructor(
+    id: number,
+    readonly y: NumberToken,
+    readonly m: NumberToken,
+    readonly x: NumberToken,
+    readonly b: NumberToken
+  ) {
+    super(id)
     this.adopt(y)
     this.adopt(m)
     this.adopt(x)
@@ -57,6 +70,7 @@ export default class LinearToken extends Token {
 
   static deserialize(v: SerializedLinearToken): LinearToken {
     const lt = this._create(
+      v.id,
       deserialize(v.y) as NumberToken,
       deserialize(v.m) as NumberToken,
       deserialize(v.x) as NumberToken,
@@ -69,6 +83,7 @@ export default class LinearToken extends Token {
   serialize(): SerializedLinearToken {
     return {
       type: "LinearToken",
+      id: this.id,
       position: this.position,
       y: this.y.serialize(),
       m: this.m.serialize(),

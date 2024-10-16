@@ -3,13 +3,22 @@ import { Position } from "../../lib/types"
 
 import { signedDistanceToBox } from "../../lib/SignedDistance"
 import Vec from "../../lib/vec"
+import { Root } from "../Root"
 
 export default abstract class Token extends GameObject {
+  static withId(id: number) {
+    const token = Root.current.find({ what: aToken, that: (t) => t.id === id })
+    if (token == null) {
+      throw new Error("coudln't find token w/ id " + id)
+    }
+    return token
+  }
+
   position: Position = { x: 100, y: 100 }
   width = 90
   height = 30
 
-  constructor() {
+  constructor(readonly id: number) {
     super()
   }
 

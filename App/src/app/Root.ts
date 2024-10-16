@@ -1,4 +1,3 @@
-import { forDebugging } from "../lib/helpers"
 import { Position } from "../lib/types"
 import {
   Constraint,

@@ -9,6 +9,7 @@ import LinearToken, { SerializedLinearToken } from "./meta/LinearToken"
 import NumberToken, { SerializedNumberToken } from "./meta/NumberToken"
 import PropertyPicker, { SerializedPropertyPicker } from "./meta/PropertyPicker"
 import PropertyPickerEditor, { SerializedPropertyPickerEditor } from "./meta/PropertyPickerEditor"
+import { Seed, SerializedSeed } from "./meta/Seed"
 import Wire, { SerializedWire } from "./meta/Wire"
 import { Root, SerializedRoot } from "./Root"
 
@@ -22,6 +23,7 @@ export type SerializedGameObject =
   | SerializedPropertyPicker
   | SerializedPropertyPickerEditor
   | SerializedRoot
+  | SerializedSeed
   | SerializedStroke
   | SerializedStrokeGroup
   | SerializedWire
@@ -38,6 +40,7 @@ export function deserialize(v: SerializedGameObject): GameObject {
     case "PropertyPicker": return PropertyPicker.deserialize(v)
     case "PropertyPickerEditor": return PropertyPickerEditor.deserialize(v)
     case "Root": return Root.deserialize(v)
+    case "Seed": return Seed.deserialize(v)
     case "Stroke": return Stroke.deserialize(v)
     case "StrokeGroup": return StrokeGroup.deserialize(v)
     case "Wire": return Wire.deserialize(v)

@@ -7,13 +7,14 @@ import * as constraints from "../Constraints"
 import { Variable } from "../Constraints"
 import Line from "../../lib/line"
 import { GameObject } from "../GameObject"
-import { WirePort } from "./WirePort"
-import { MetaLabel, MetaStruct } from "./MetaSemantics"
+import { generateId, Root } from "../Root"
+import { Pluggable } from "./Pluggable"
 
 const arc = SVG.arcPath(Vec.zero, 10, TAU / 4, Math.PI / 3)
 
 export type SerializedGizmo = {
   type: "Gizmo"
+  id: number
   distanceVariableId: number
   angleInRadiansVariableId: number
   angleInDegreesVariableId: number
@@ -21,7 +22,15 @@ export type SerializedGizmo = {
   bHandleId: number
 }
 
-export default class Gizmo extends GameObject {
+export default class Gizmo extends GameObject implements Pluggable {
+  static withId(id: number) {
+    const gizmo = Root.current.find({ what: aGizmo, that: (t) => t.id === id })
+    if (gizmo == null) {
+      throw new Error("coudln't find gizmo w/ id " + id)
+    }
+    return gizmo
+  }
+
   static create(a: Handle, b: Handle) {
     const { distance, angle: angleInRadians } = constraints.polarVector(a, b)
     const angleInDegrees = constraints.linearRelationship(
@@ -30,11 +39,18 @@ export default class Gizmo extends GameObject {
       angleInRadians,
       0
     ).y
-    return Gizmo._create(a, b, distance, angleInRadians, angleInDegrees)
+    return Gizmo._create(generateId(), a, b, distance, angleInRadians, angleInDegrees)
   }
 
-  static _create(a: Handle, b: Handle, distance: Variable, angleInRadians: Variable, angleInDegrees: Variable) {
-    return new Gizmo(a, b, distance, angleInRadians, angleInDegrees)
+  static _create(
+    id: number,
+    a: Handle,
+    b: Handle,
+    distance: Variable,
+    angleInRadians: Variable,
+    angleInDegrees: Variable
+  ) {
+    return new Gizmo(id, a, b, distance, angleInRadians, angleInDegrees)
   }
 
   center: Position
@@ -48,8 +64,6 @@ export default class Gizmo extends GameObject {
 
   private readonly _a: WeakRef<Handle>
   private readonly _b: WeakRef<Handle>
-
-  readonly wirePort: WirePort
 
   // ------
 
@@ -82,7 +96,10 @@ export default class Gizmo extends GameObject {
     return a && b ? { a, b } : null
   }
 
+  readonly plugs: { value: { distance: Variable; angleInDegrees: Variable } }
+
   private constructor(
+    readonly id: number,
     a: Handle,
     b: Handle,
     readonly distance: Variable,
@@ -90,9 +107,9 @@ export default class Gizmo extends GameObject {
     readonly angleInDegrees: Variable
   ) {
     super()
+    this.center = Vec.avg(a, b)
     this._a = new WeakRef(a)
     this._b = new WeakRef(b)
-    this.center = this.updateCenter()
     this.distance.represents = {
       object: this,
       property: "distance"
@@ -105,15 +122,21 @@ export default class Gizmo extends GameObject {
       object: this,
       property: "angle-degrees"
     }
+    this.plugs = {
+      value: {
+        distance,
+        angleInDegrees
+      }
+    }
+  }
 
-    this.wirePort = new WirePort(
-      this.center,
-      new MetaStruct([new MetaLabel("distance", this.distance), new MetaLabel("angle", this.angleInDegrees)])
-    )
+  getPlugPosition(id: string): Position {
+    return this.center
   }
 
   static deserialize(v: SerializedGizmo): Gizmo {
     return this._create(
+      v.id,
       Handle.withId(v.aHandleId),
       Handle.withId(v.bHandleId),
       Variable.withId(v.distanceVariableId),
@@ -125,25 +148,13 @@ export default class Gizmo extends GameObject {
   serialize(): SerializedGizmo {
     return {
       type: "Gizmo",
+      id: this.id,
       distanceVariableId: this.distance.id,
       angleInRadiansVariableId: this.angleInRadians.id,
       angleInDegreesVariableId: this.angleInDegrees.id,
       aHandleId: this.a!.id,
       bHandleId: this.b!.id
     }
-  }
-
-  updateCenter() {
-    const handles = this.handles
-    if (!handles) {
-      return this.center
-    }
-
-    return (this.center = Vec.avg(handles.a.position, handles.b.position))
-  }
-
-  midPoint() {
-    return this.center
   }
 
   cycleConstraints() {
@@ -174,10 +185,6 @@ export default class Gizmo extends GameObject {
   }
 
   render() {
-    this.updateCenter()
-
-    this.wirePort.position = this.center
-
     const handles = this.handles
     if (!handles) {
       return
@@ -185,6 +192,7 @@ export default class Gizmo extends GameObject {
 
     const a = handles.a.position
     const b = handles.b.position
+    this.center = Vec.avg(a, b)
 
     const solverLength = this.distance.value
     const realLength = Vec.dist(a, b)
@@ -254,7 +262,7 @@ export default class Gizmo extends GameObject {
   }
 
   centerDistanceToPoint(p: Position) {
-    return Vec.dist(this.midPoint(), p)
+    return Vec.dist(this.center, p)
   }
 
   remove() {

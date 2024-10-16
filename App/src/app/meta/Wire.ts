@@ -2,67 +2,84 @@ import { GameObject } from "../GameObject"
 import SVG from "../Svg"
 import { Position } from "../../lib/types"
 import Vec from "../../lib/vec"
-import { MetaConnection, MetaNumber } from "./MetaSemantics"
 import { distanceToPath } from "../../lib/helpers"
 import Svg from "../Svg"
-import { WirePort } from "./WirePort"
+import Gizmo from "./Gizmo"
+import Token from "./Token"
+import PropertyPicker from "./PropertyPicker"
+import NumberToken from "./NumberToken"
 import { Variable } from "../Constraints"
+import { Pluggable } from "./Pluggable"
 
 export type SerializedWire = {
   type: "Wire"
-  points: Position[]
+  fromTokenOrGizmoId: number
+  toTokenOrGizmoId?: number
+  toPosition?: Position
 }
 
-export default class Wire extends GameObject {
-  points: Position[] = []
-  a?: WeakRef<WirePort>
-  b?: WeakRef<WirePort>
-  connection: MetaConnection | null = null
+export default class Wire<D extends Variable | { distance: Variable; angle: Variable }> extends GameObject {
+  toObj?: Pluggable
+  toPosition?: Position
+
+  constructor(readonly fromObj: Pluggable<D>) {
+    super()
+  }
 
   protected readonly elm = SVG.add("polyline", SVG.wiresElm, {
     points: "",
     class: "wire"
   })
 
-  constructor(wirePort?: WirePort) {
-    super()
-    if (wirePort) {
-      this.a = new WeakRef(wirePort)
+  static deserialize(v: SerializedWire): Wire<any> {
+    const w = new Wire(this.getObjById(v.fromTokenOrGizmoId) as Pluggable<any>)
+    if (v.toTokenOrGizmoId != null) {
+      w.toObj = this.getObjById(v.toTokenOrGizmoId)
     }
+    w.toPosition = v.toPosition
+    return w
   }
 
-  // TODO: Need the real wireports
-  static deserialize(v: SerializedWire): Wire {
-    const w = new Wire()
-    w.points = v.points
-    return w
+  static getObjById(id: number) {
+    try {
+      return Token.withId(id) as NumberToken | PropertyPicker
+    } catch (e) {
+      return Gizmo.withId(id)
+    }
   }
 
   serialize(): SerializedWire {
     return {
       type: "Wire",
-      points: this.points
+      fromTokenOrGizmoId: this.fromObj.id,
+      toTokenOrGizmoId: this.toObj?.id,
+      toPosition: this.toPosition
     }
   }
 
   distanceToPoint(point: Position) {
-    return distanceToPath(point, this.points)
+    return distanceToPath(point, [
+      this.fromObj.getOutputPlugPosition(),
+      this.toPosition ?? this.toObj!.getInputPlugPosition()
+    ])
   }
 
-  togglePaused(isPaused = !this.connection?.paused) {
-    return this.connection?.togglePaused(isPaused)
+  togglePaused() {
+    // TODO
+  }
+
+  get paused() {
+    // TODO
+    return false
   }
 
   render(): void {
-    const a = this.a?.deref()
-    const b = this.b?.deref()
-
-    if (a) this.points[0] = a.position
-    if (b) this.points[1] = b.position
-
     SVG.update(this.elm, {
-      points: SVG.points(this.points),
-      "is-paused": this.connection?.paused
+      points: SVG.points([
+        this.fromObj.getOutputPlugPosition(),
+        this.toObj?.getInputPlugPosition() ?? this.toPosition!
+      ]),
+      "is-paused": this.paused
     })
   }
 

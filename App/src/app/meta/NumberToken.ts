@@ -1,22 +1,23 @@
 import Token from "./Token"
-import { WirePort } from "./WirePort"
-import { MetaNumber } from "./MetaSemantics"
 import SVG from "../Svg"
 import { Variable } from "../Constraints"
 import * as constraints from "../Constraints"
 import { GameObject } from "../GameObject"
 import { Position } from "../../lib/types"
+import { generateId } from "../Root"
+import { Pluggable } from "./Pluggable"
 
 export type SerializedNumberToken = {
   type: "NumberToken"
+  id: number
   position: Position
   variableId: number
 }
 
-export default class NumberToken extends Token {
+export default class NumberToken extends Token implements Pluggable {
   static create(value = 1) {
     const variable = constraints.variable(value)
-    const object = NumberToken._create(variable)
+    const object = NumberToken._create(generateId(), variable)
     variable.represents = {
       object,
       property: "number-token-value"
@@ -24,8 +25,8 @@ export default class NumberToken extends Token {
     return object
   }
 
-  static _create(variable: Variable) {
-    return new NumberToken(variable)
+  static _create(id: number, variable: Variable) {
+    return new NumberToken(id, variable)
   }
 
   // Rendering stuff
@@ -35,16 +36,19 @@ export default class NumberToken extends Token {
   protected readonly wholeElm = SVG.add("text", this.elm, { class: "token-text" })
   protected readonly fracElm = SVG.add("text", this.elm, { class: "token-frac-text" })
 
-  // Meta stuff
-  wirePort: WirePort
+  readonly plugs: { value: Variable }
 
-  constructor(readonly variable: Variable) {
-    super()
-    this.wirePort = new WirePort(this.position, new MetaNumber(this.variable))
+  constructor(id: number, readonly variable: Variable) {
+    super(id)
+    this.plugs = { value: variable }
+  }
+
+  getPlugPosition(id: string): Position {
+    return this.midPoint()
   }
 
   static deserialize(v: SerializedNumberToken): NumberToken {
-    const nt = this._create(Variable.withId(v.variableId))
+    const nt = this._create(v.id, Variable.withId(v.variableId))
     nt.position = v.position
     return nt
   }
@@ -52,6 +56,7 @@ export default class NumberToken extends Token {
   serialize(): SerializedNumberToken {
     return {
       type: "NumberToken",
+      id: this.id,
       position: this.position,
       variableId: this.variable.id
     }
@@ -62,8 +67,6 @@ export default class NumberToken extends Token {
       transform: SVG.positionToTransform(this.position),
       "is-locked": this.getVariable().isLocked
     })
-
-    this.wirePort.position = this.midPoint()
 
     // getComputedTextLength() is slow, so we're gonna do some dirty checking here
     const newValue = this.variable.value.toFixed(2)

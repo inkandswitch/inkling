@@ -4,18 +4,21 @@ import { EventContext, Gesture } from "../../Gesture"
 import PropertyPicker from "../../meta/PropertyPicker"
 import Vec from "../../../lib/vec"
 import Wire from "../../meta/Wire"
-import { MetaStruct } from "../../meta/MetaSemantics"
 import PropertyPickerEditor from "../../meta/PropertyPickerEditor"
-import { WirePort } from "../../meta/WirePort"
 import { GameObject } from "../../GameObject"
+import { Pluggable } from "../../meta/Pluggable"
+import { Variable } from "../../Constraints"
 
-export function createWire(wirePort: WirePort, ctx: EventContext): Gesture | void {
+export function createWire<D extends Variable | { distance: Variable; angle: Variable }>(
+  fromObj: Pluggable,
+  ctx: EventContext
+): Gesture | void {
   const wire = new Wire(wirePort)
   ctx.root.adopt(wire)
 
   return new Gesture("Create Wire", {
     moved(ctx) {
-      wire.points[1] = ctx.event.position
+      wire.toPosition = ctx.event.position
     },
 
     ended(ctx) {
