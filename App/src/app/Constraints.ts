@@ -11,8 +11,6 @@ import { aGizmo } from "./meta/Gizmo"
 import Config from "./Config"
 import { generateId } from "./Core"
 
-// TODO: serialization / deserialization of variables
-
 // Change this to either uncmin or minimize (g9)
 const solver = minimize
 
@@ -32,22 +30,29 @@ interface AbsorbedVariableInfo {
   offset: { m: number; b: number }
 }
 
+interface SerializedVariable {
+  id: number
+  value: number
+  // note: not including `represents` data here b/c it's only for debugging
+  // and sometimes `object` is a reference to a constraint and they don't have ids...
+}
+
 export class Variable {
   static readonly all = new Set<Variable>()
 
-  static create(value = 0, represents?: { object: object; property: string }) {
-    return new Variable(value, represents)
+  static create(value = 0, represents?: { object: object; property: string }, id = generateId()) {
+    return new Variable(value, represents, id)
   }
 
-  readonly id = generateId()
   info: VariableInfo = {
     isCanonical: true,
     absorbedVariables: new Set()
   }
-  represents?: { object: object; property: string }
-
-  private constructor(private _value: number = 0, represents?: { object: object; property: string }) {
-    this.represents = represents
+  private constructor(
+    private _value: number = 0,
+    public represents: { object: object; property: string } | undefined,
+    readonly id: number
+  ) {
     Variable.all.add(this)
   }
 
@@ -253,6 +258,10 @@ export class Variable {
 
   hasLinearRelationshipWith(that: Variable) {
     return this.canonicalInstance === that.canonicalInstance
+  }
+
+  serialize(): SerializedVariable {
+    return { id: this.id, value: this.value }
   }
 }
 
@@ -1359,6 +1368,16 @@ function getHandleToFingerMap(constraints: Constraint[]) {
 // #endregion solver
 
 // #region serialization-and-deserialization
+
+export function serializeVariables() {
+  return [...Variable.all].map((variable) => variable.serialize())
+}
+
+export function deserializeVariables(variables: SerializedVariable[]) {
+  for (const variable of variables) {
+    Variable.create(variable.value, undefined, variable.id)
+  }
+}
 
 export function serializeConstraints() {
   return [...Constraint.all].map((constraint) => constraint.serialize())
