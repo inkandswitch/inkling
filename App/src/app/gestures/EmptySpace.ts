@@ -12,7 +12,7 @@ export function emptySpaceDrawInk(ctx: EventContext): Gesture | void {
       dragged(ctx) {
         stroke.points.push(ctx.event.position)
       },
-      ended(ctx) {
+      endedTap(ctx) {
         createLead(ctx)
       }
     })
