@@ -8,6 +8,7 @@ import { TAU, normalizeAngle } from "../lib/math"
 import { Position } from "../lib/types"
 import Vec from "../lib/vec"
 import { aGizmo } from "./meta/Gizmo"
+import Config from "./Config"
 
 // TODO: the serialization/deserialization code here is not quite right yet
 // b/c some variables are introduced by low-level constraints
@@ -299,6 +300,18 @@ class LLFinger extends LowLevelConstraint {
 
   addTo(constraints: LowLevelConstraint[]) {
     constraints.push(this)
+  }
+
+  propagateKnowns(knowns: Set<Variable>): void {
+    if (Config.fingerOfGod) {
+      const { xVariable, yVariable } = this.constraint.handle
+      if (!knowns.has(xVariable.canonicalInstance) || !knowns.has(yVariable.canonicalInstance)) {
+        xVariable.value = this.constraint.position.x
+        yVariable.value = this.constraint.position.y
+        knowns.add(xVariable.canonicalInstance)
+        knowns.add(yVariable.canonicalInstance)
+      }
+    }
   }
 
   getError([x, y]: number[], knowns: Set<Variable>, freeVariables: Set<Variable>): number {
