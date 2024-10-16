@@ -2,12 +2,16 @@ import { Position, isBoolean, isPosition } from "../../lib/types"
 import SVG from "../Svg"
 import { GameObject } from "../GameObject"
 import Vec from "../../lib/vec"
-import Store, { Serializable } from "../Store"
 import { TAU, lerpN, rand, randInt } from "../../lib/math"
-import Config from "../Config"
+import { SerializedGameObject } from "../Core"
 
 const radius = 20
 const padding = 30
+
+export type SerializedMetaToggle = {
+  type: "MetaToggle"
+  position: Position
+}
 
 export const aMetaToggle = (gameObj: GameObject) => (gameObj instanceof MetaToggle ? gameObj : null)
 
@@ -41,30 +45,31 @@ function randomSplat(angle: number) {
 }
 
 export default class MetaToggle extends GameObject {
+  static active = false
+
+  static toggle() {
+    MetaToggle.active = !MetaToggle.active
+    document.documentElement.toggleAttribute("meta-mode", MetaToggle.active)
+  }
+
   private readonly element: SVGElement
-  position: Position
-  dragging = false
-
-  // This state doesn't belong here, but moving it means we need a way for Meta Toggle
-  // to run code whenever it changes. I don't feel like tackling RX nonsense right now.
-  private static _active = false
-  public static get active() {
-    return this._active
-  }
-  public get active() {
-    return MetaToggle.active
-  }
-
   private splats: Splat[] = []
+  dragging = false
+  active = false
 
-  constructor() {
+  serialize(): SerializedMetaToggle {
+    return {
+      type: "MetaToggle",
+      position: this.position
+    }
+  }
+
+  static deserialize(v: SerializedMetaToggle): MetaToggle {
+    return new MetaToggle(v.position)
+  }
+
+  constructor(public position = { x: padding, y: padding }) {
     super()
-
-    this.position = Store.init({
-      name: "Meta Toggle Position",
-      isValid: isPosition,
-      def: { x: padding, y: padding }
-    })
 
     this.element = SVG.add("g", SVG.guiElm, {
       ...this.getAttrs() // This avoids an unstyled flash on first load
@@ -96,10 +101,7 @@ export default class MetaToggle extends GameObject {
     }
     SVG.add("circle", this.element, { class: "secret", r: radius })
     this.resplat()
-
-    if (Store.init({ name: "Meta Mode", isValid: isBoolean, def: false })) {
-      this.toggle()
-    }
+    this.snapToCorner()
   }
 
   resplat() {
@@ -120,17 +122,6 @@ export default class MetaToggle extends GameObject {
         `
       })
     })
-  }
-
-  toggle() {
-    MetaToggle._active = !MetaToggle._active
-    document.documentElement.toggleAttribute("meta-mode", MetaToggle.active)
-
-    if (!MetaToggle.active) {
-      this.resplat()
-    }
-
-    Store.set("Meta Mode", MetaToggle.active)
   }
 
   distanceToPoint(point: Position) {
@@ -163,7 +154,6 @@ export default class MetaToggle extends GameObject {
     // Inset from the corner
     this.position = Vec.add(cornerPosition, Vec.mulS(sign, padding))
 
-    Store.set("Meta Toggle Position", this.position as unknown as Serializable)
     this.resplat()
   }
 
@@ -185,6 +175,11 @@ export default class MetaToggle extends GameObject {
   }
 
   render() {
+    if (this.active != MetaToggle.active) {
+      this.active = MetaToggle.active
+      this.resplat()
+    }
+
     SVG.update(this.element, this.getAttrs())
   }
 }

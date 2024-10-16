@@ -4,14 +4,14 @@ import * as constraints from "../Constraints"
 import StrokeGroup from "../ink/StrokeGroup"
 import Vec from "../../lib/vec"
 import SVG from "../Svg"
-import Config from "../Config"
 import { Position } from "../../lib/types"
 import { createGizmo } from "./effects/CreateGizmo"
+import MetaToggle from "../gui/MetaToggle"
 
 const handleTouchDist = 40
 
 export function handleCreateGizmo(ctx: EventContext): Gesture | void {
-  if (ctx.metaToggle.active && ctx.root.find({ what: aCanonicalHandle, near: ctx.event.position })) {
+  if (MetaToggle.active && ctx.root.find({ what: aCanonicalHandle, near: ctx.event.position })) {
     return createGizmo(ctx)
   }
 }
@@ -87,7 +87,7 @@ export function touchHandleHelper(handle: Handle): Gesture {
       // Tune: you must tap a little more precisely to toggle a pin than drag a handle
       // TODO: This creates a small tap deadzone between the stroke (to toggle handles) and the handle (to toggle pin), because the handle claims the gesture but doesn't do anything with it
       const tappedPrecisely = Vec.dist(handle, ctx.event.position) < 20
-      if (!ctx.state.drag && ctx.metaToggle.active && tappedPrecisely) {
+      if (!ctx.state.drag && MetaToggle.active && tappedPrecisely) {
         handle.togglePin()
       }
     },

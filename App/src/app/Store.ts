@@ -1,15 +1,15 @@
-export type Serializable = null | boolean | number | string | Serializable[] | { [key: string]: Serializable }
+export type Storable = null | boolean | number | string | Storable[] | { [key: string]: Storable }
 
-type InitArgs<T extends Serializable> = {
+type InitArgs<T extends Storable> = {
   name: string
-  isValid: (value: Serializable) => value is T
+  isValid: (value: Storable) => value is T
   def: T
 }
 
 const initializedNames = new Set()
 
 export default {
-  init<T extends Serializable>({ name, isValid, def }: InitArgs<T>) {
+  init<T extends Storable>({ name, isValid, def }: InitArgs<T>) {
     // This check is meant to avoid accidental redundant calls.
     // If you find a case where doing redundant calls makes sense,
     // feel free to remove this check, and replace it with a check
@@ -23,7 +23,7 @@ export default {
     return isValid(result) ? result : def
   },
 
-  set<T extends Serializable>(key: string, val: T) {
+  set<T extends Storable>(key: string, val: T) {
     localStorage.setItem(key, JSON.stringify(val))
     return val
   },

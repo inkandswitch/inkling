@@ -3,9 +3,10 @@ import { aToken } from "../meta/Token"
 import Vec from "../../lib/vec"
 import { aNumberToken } from "../meta/NumberToken"
 import { aTokenWithVariable, createWire } from "./effects/CreateWire"
+import MetaToggle from "../gui/MetaToggle"
 
 export function tokenCreateWire(ctx: EventContext): Gesture | void {
-  if (ctx.metaToggle.active) {
+  if (MetaToggle.active) {
     const token = ctx.root.find({
       what: aTokenWithVariable,
       near: ctx.event.position
@@ -21,7 +22,7 @@ export function tokenCreateWire(ctx: EventContext): Gesture | void {
 }
 
 export function tokenMoveOrToggleConstraint(ctx: EventContext): Gesture | void {
-  if (ctx.metaToggle.active) {
+  if (MetaToggle.active) {
     const token = ctx.root.find({
       what: aToken,
       near: ctx.event.position
@@ -43,7 +44,7 @@ export function tokenMoveOrToggleConstraint(ctx: EventContext): Gesture | void {
 }
 
 export function numberTokenScrub(ctx: EventContext): Gesture | void {
-  if (ctx.metaToggle.active && ctx.pseudo) {
+  if (MetaToggle.active && ctx.pseudo) {
     const token = ctx.root.find({
       what: aNumberToken,
       near: ctx.event.position

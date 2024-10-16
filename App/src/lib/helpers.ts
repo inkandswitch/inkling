@@ -21,11 +21,6 @@ export function forDebugging<T>(property: string, valueOrValueFn: T | ((oldValue
   ;(window as any)[property] = value
 }
 
-let nextId = 0
-export function generateId() {
-  return nextId++
-}
-
 export function onEveryFrame(update: (dt: number, time: number) => void) {
   // Set this to the number of updates you'd like to run per second.
   // Should be at least as high as the device frame rate to ensure smooth motion.

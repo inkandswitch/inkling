@@ -5,27 +5,42 @@ import Handle from "./Handle"
 import Stroke from "./Stroke"
 import StrokeGroup from "./StrokeGroup"
 
-export default class Lead extends Handle {
+export type SerializedLead = {
+  type: "Lead"
+}
+
+export default class Lead extends GameObject {
   stroke?: Stroke
   lastPos?: Position
+  handle: Handle
 
-  static create(position: Position): Lead {
-    const lead = new Lead(position)
-    lead.getAbsorbedByNearestHandle()
-    return lead
+  constructor(position: Position) {
+    super()
+    this.handle = this.adopt(Handle.create(position))
   }
 
+  distanceToPoint(point: Position) {
+    return this.handle.distanceToPoint(point)
+  }
+
+  serialize(): SerializedLead {
+    return {
+      type: "Lead"
+    }
+  }
+  static deserialize(v: SerializedLead) {}
+
   render(dt: number, t: number) {
-    this.lastPos ??= Vec.clone(this.position)
-    if (!Vec.equal(this.position, this.lastPos)) {
-      this.lastPos = Vec.clone(this.position)
+    this.lastPos ??= Vec.clone(this.handle.position)
+    if (!Vec.equal(this.handle.position, this.lastPos)) {
+      this.lastPos = Vec.clone(this.handle.position)
       if (this.stroke == null || this.stroke.parent == null || this.stroke.parent instanceof StrokeGroup) {
         this.stroke = this.root.adopt(new Stroke())
       }
-      this.stroke.points.push(Vec.clone(this.position))
+      this.stroke.points.push(Vec.clone(this.handle.position))
     }
 
-    super.render(dt, t)
+    this.handle.render(dt, t)
   }
 }
 

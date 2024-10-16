@@ -1,8 +1,9 @@
 import { aWire } from "../meta/Wire"
 import { EventContext, Gesture } from "../Gesture"
+import MetaToggle from "../gui/MetaToggle"
 
 export function wireTogglePaused(ctx: EventContext): Gesture | void {
-  if (ctx.metaToggle.active) {
+  if (MetaToggle.active) {
     const wire = ctx.root.find({
       what: aWire,
       near: ctx.event.position

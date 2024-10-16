@@ -6,6 +6,12 @@ import { MetaConnection } from "./MetaSemantics"
 import { distanceToPath } from "../../lib/helpers"
 import Svg from "../Svg"
 import { WirePort } from "./WirePort"
+import { SerializedGameObject } from "../Core"
+
+export type SerializedWire = {
+  type: "Wire"
+  points: Position[]
+}
 
 export default class Wire extends GameObject {
   points: Position[] = []
@@ -21,6 +27,17 @@ export default class Wire extends GameObject {
   constructor(wirePort: WirePort) {
     super()
     this.a = new WeakRef(wirePort)
+  }
+
+  // TODO: Need the real wireports
+  static deserialize(v: SerializedWire): Wire {
+    return new Wire()
+  }
+  serialize(): SerializedWire {
+    return {
+      type: "Wire",
+      points: this.points
+    }
   }
 
   distanceToPoint(point: Position) {

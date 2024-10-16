@@ -1,14 +1,20 @@
-import { GameObject, root } from "../GameObject"
+import { GameObject } from "../GameObject"
 import SVG from "../Svg"
 import * as constraints from "../Constraints"
-import { generateId } from "../../lib/helpers"
+import { Constraint, Pin } from "../Constraints"
 import { Position } from "../../lib/types"
 import Vec from "../../lib/vec"
-import { Constraint, Pin } from "../Constraints"
 import { TAU } from "../../lib/math"
+import { generateId } from "../Core"
 
 let goesAnywhereId = -1
 let goesAnywhereMode: "continuous" | "snapshot" = "continuous"
+
+export type SerializedHandle = {
+  type: "Handle"
+  id: number
+  position: Position
+}
 
 export default class Handle extends GameObject {
   static create(position: Position, getAbsorbed = true): Handle {
@@ -32,7 +38,7 @@ export default class Handle extends GameObject {
   })
 
   protected constructor(position: Position, public readonly id = generateId()) {
-    super(root)
+    super()
     this.position = position
 
     SVG.add("circle", this.backElm, { r: 15 })
@@ -47,6 +53,18 @@ export default class Handle extends GameObject {
     SVG.add("path", arcs2, { d: arc((1 * TAU) / 4) })
     SVG.add("path", arcs2, { d: arc((2 * TAU) / 4) })
     SVG.add("path", arcs2, { d: arc((3 * TAU) / 4) })
+  }
+
+  serialize(): SerializedHandle {
+    return {
+      type: "Handle",
+      id: this.id,
+      position: { x: this.x, y: this.y }
+    }
+  }
+
+  static deserialize(v: SerializedHandle) {
+    return new Handle(v.position, v.id)
   }
 
   toggleGoesAnywhere() {

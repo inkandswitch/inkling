@@ -5,7 +5,11 @@ import SVG from "../Svg"
 import { Variable } from "../Constraints"
 import * as constraints from "../Constraints"
 import { GameObject } from "../GameObject"
-import { generateId } from "../../lib/helpers"
+import { generateId } from "../Core"
+
+export type SerializedNumberToken = {
+  type: "NumberToken"
+}
 
 export default class NumberToken extends Token {
   readonly id = generateId()
@@ -27,7 +31,14 @@ export default class NumberToken extends Token {
       object: this,
       property: "number-token-value"
     })
-    this.wirePort = this.adopt(new WirePort(this.position, new MetaNumber(this.variable)))
+    this.wirePort = new WirePort(this.position, new MetaNumber(this.variable))
+  }
+
+  static deserialize(v: SerializedNumberToken): NumberToken {}
+  serialize(): SerializedNumberToken {
+    return {
+      type: "NumberToken"
+    }
   }
 
   render(dt: number, t: number): void {
@@ -57,10 +68,6 @@ export default class NumberToken extends Token {
 
     SVG.update(this.boxElm, { width: this.width })
     SVG.update(this.fracElm, { dx: wholeWidth + 2 })
-
-    for (const child of this.children) {
-      child.render(dt, t)
-    }
   }
 
   getVariable() {

@@ -1,12 +1,8 @@
-import { forDebugging } from "../lib/helpers"
 import { Position } from "../lib/types"
+import { SerializedGameObject } from "./Core"
 import SVG from "./Svg"
 
 const DEFAULT_TOO_FAR = 20
-
-export type SerializedGameObject = {
-  children: SerializedGameObject[]
-}
 
 export interface FindOptions<T extends GameObject> {
   what(gameObj: GameObject): T | null
@@ -24,10 +20,9 @@ export abstract class GameObject {
   parent: GameObject | null = null
   readonly children = new Set<GameObject>()
 
-  constructor(parent?: GameObject) {
-    if (parent) {
-      parent.adopt(this)
-    }
+  abstract serialize(): SerializedGameObject
+  static deserialize(v: SerializedGameObject): GameObject {
+    throw new Error("Override me")
   }
 
   get root(): GameObject {
@@ -60,8 +55,6 @@ export abstract class GameObject {
   }
 
   abstract render(dt: number, t: number): void
-
-  abstract serialize(): SerializedGameObject
 
   // TODO: write comment for this method
   abstract distanceToPoint(point: Position): number | null
@@ -136,23 +129,3 @@ export abstract class GameObject {
 }
 
 export const aGameObject = (gameObj: GameObject) => gameObj
-
-export const root = new (class extends GameObject {
-  distanceToPoint(point: Position): number | null {
-    return null
-  }
-
-  render(dt: number, t: number) {
-    for (const child of this.children) {
-      child.render(dt, t)
-    }
-  }
-
-  serialize() {
-    return {
-      children: Array.from(this.children).map((c) => c.serialize())
-    }
-  }
-})()
-
-forDebugging("root", root)

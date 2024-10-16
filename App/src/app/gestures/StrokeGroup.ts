@@ -1,8 +1,9 @@
 import { aStrokeGroup } from "../ink/StrokeGroup"
 import { EventContext, Gesture } from "../Gesture"
+import MetaToggle from "../gui/MetaToggle"
 
 export function strokeGroupRemoveHandles(ctx: EventContext): Gesture | void {
-  if (ctx.metaToggle.active) {
+  if (MetaToggle.active) {
     const strokeGroup = ctx.root.find({
       what: aStrokeGroup,
       near: ctx.event.position,

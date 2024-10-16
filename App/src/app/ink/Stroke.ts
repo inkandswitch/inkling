@@ -5,10 +5,25 @@ import Rect from "../../lib/rect"
 import { distanceToPath } from "../../lib/helpers"
 import StrokeGroup from "./StrokeGroup"
 
-export default class Stroke extends GameObject {
-  public points: Position[] = []
+export type SerializedStroke = {
+  type: "Stroke"
+  points: Position[]
+}
 
+export default class Stroke extends GameObject {
   protected element = SVG.add("polyline", SVG.inkElm, { class: "stroke" })
+
+  constructor(public points: Position[] = []) {
+    super()
+  }
+
+  static deserialize(v: SerializedStroke): Stroke {
+    return new Stroke(v.points)
+  }
+
+  serialize(): SerializedStroke {
+    return { type: "Stroke", points: this.points }
+  }
 
   updatePath(newPoints: Array<Position>) {
     this.points = newPoints

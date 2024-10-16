@@ -7,6 +7,10 @@ import { signedDistanceToBox } from "../../lib/SignedDistance"
 
 const LINEHEIGHT = 30
 
+export type SerializedPropertyPickerEditor = {
+  type: "PropertyPickerEditor"
+}
+
 export default class PropertyPickerEditor extends GameObject {
   width = 200
   height = 44
@@ -46,6 +50,13 @@ export default class PropertyPickerEditor extends GameObject {
       })
       return text
     })
+  }
+
+  static deserialize(v: SerializedPropertyPickerEditor): PropertyPickerEditor {}
+  serialize(): SerializedPropertyPickerEditor {
+    return {
+      type: "PropertyPickerEditor"
+    }
   }
 
   onTapInside(position: Position) {

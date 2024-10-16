@@ -9,9 +9,13 @@ import Line from "../../lib/line"
 import { GameObject } from "../GameObject"
 import { WirePort } from "./WirePort"
 import { MetaLabel, MetaStruct } from "./MetaSemantics"
-import Config from "../Config"
+import { SerializedGameObject } from "../Core"
 
 const arc = SVG.arcPath(Vec.zero, 10, TAU / 4, Math.PI / 3)
+
+export type SerializedGizmo = {
+  type: "Gizmo"
+}
 
 export default class Gizmo extends GameObject {
   center: Position
@@ -88,12 +92,17 @@ export default class Gizmo extends GameObject {
       property: "angle-degrees"
     }
 
-    this.wirePort = this.adopt(
-      new WirePort(
-        this.center,
-        new MetaStruct([new MetaLabel("distance", this.distance), new MetaLabel("angle", this.angleInDegrees)])
-      )
+    this.wirePort = new WirePort(
+      this.center,
+      new MetaStruct([new MetaLabel("distance", this.distance), new MetaLabel("angle", this.angleInDegrees)])
     )
+  }
+
+  static deserialize(v: SerializedGizmo): Gizmo {}
+  serialize(): SerializedGizmo {
+    return {
+      type: "Gizmo"
+    }
   }
 
   updateCenter() {

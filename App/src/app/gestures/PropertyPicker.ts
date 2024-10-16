@@ -1,9 +1,10 @@
 import { EventContext, Gesture } from "../Gesture"
+import MetaToggle from "../gui/MetaToggle"
 import { aPropertyPicker } from "../meta/PropertyPicker"
 import { createWire } from "./effects/CreateWire"
 
 export function propertyPickerCreateWire(ctx: EventContext): Gesture | void {
-  if (ctx.metaToggle.active) {
+  if (MetaToggle.active) {
     const propertyPicker = ctx.root.find({
       what: aPropertyPicker,
       near: ctx.event.position,

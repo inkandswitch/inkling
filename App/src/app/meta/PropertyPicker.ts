@@ -5,8 +5,8 @@ import { WirePort } from "./WirePort"
 import * as constraints from "../Constraints"
 import Vec from "../../lib/vec"
 import { MetaStruct, MetaLabel, MetaNumber, MetaConnection, MetaNumberConnection } from "./MetaSemantics"
-import { generateId } from "../../lib/helpers"
 import { GameObject } from "../GameObject"
+import { generateId } from "../Core"
 
 const TAB_SIZE = 5
 
@@ -19,6 +19,10 @@ function PropertyPickerPath(pos: Position, w: number, h: number) {
     L ${pos.x} ${pos.y + h / 2}
     L ${pos.x + TAB_SIZE} ${pos.y}
   `
+}
+
+export type SerializedPropertyPicker = {
+  type: "PropertyPicker"
 }
 
 export default class PropertyPicker extends Token {
@@ -38,16 +42,23 @@ export default class PropertyPicker extends Token {
   })
 
   readonly inputVariable = new MetaStruct([])
-  readonly inputPort = this.adopt(new WirePort(this.position, this.inputVariable))
+  readonly inputPort = new WirePort(this.position, this.inputVariable)
 
   readonly outputVariable = new MetaNumber(constraints.variable())
-  readonly wirePort = this.adopt(new WirePort(this.position, this.outputVariable))
+  readonly wirePort = new WirePort(this.position, this.outputVariable)
 
   // Alias this so we conform to TokenWithVariable
 
   private property: MetaLabel | null = null
 
   internalConnection: MetaConnection | null = null
+
+  static deserialize(v: SerializedPropertyPicker): PropertyPicker {}
+  serialize(): SerializedPropertyPicker {
+    return {
+      type: "PropertyPicker"
+    }
+  }
 
   getVariable(): constraints.Variable {
     return this.outputVariable.variable

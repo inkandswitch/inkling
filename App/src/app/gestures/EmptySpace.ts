@@ -3,9 +3,10 @@ import Stroke from "../ink/Stroke"
 import { createLinear } from "./effects/CreateLinear"
 import { createGizmo } from "./effects/CreateGizmo"
 import { createLead } from "./effects/CreateLead"
+import MetaToggle from "../gui/MetaToggle"
 
 export function emptySpaceDrawInk(ctx: EventContext): Gesture | void {
-  if (!ctx.metaToggle.active) {
+  if (!MetaToggle.active) {
     const stroke = ctx.root.adopt(new Stroke())
 
     return new Gesture("Draw Ink", {
@@ -20,7 +21,7 @@ export function emptySpaceDrawInk(ctx: EventContext): Gesture | void {
 }
 
 export function emptySpaceCreateGizmoOrLinear(ctx: EventContext): Gesture | void {
-  if (ctx.metaToggle.active) {
+  if (MetaToggle.active) {
     return new Gesture("Create Gizmo or Linear", {
       dragged(ctx) {
         return createGizmo(ctx)

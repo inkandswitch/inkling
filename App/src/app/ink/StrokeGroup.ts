@@ -1,11 +1,15 @@
-import Stroke, { aStroke } from "./Stroke"
-import Handle from "./Handle"
-
+import { farthestPair } from "../../lib/helpers"
 import TransformationMatrix from "../../lib/TransformationMatrix"
 import { Position } from "../../lib/types"
-
-import { farthestPair } from "../../lib/helpers"
+import { deserialize, SerializedGameObject } from "../Deserialize"
 import { GameObject } from "../GameObject"
+import Handle from "./Handle"
+import Stroke, { aStroke } from "./Stroke"
+
+export type SerializedStrokeGroup = {
+  type: "StrokeGroup"
+  children: SerializedGameObject[]
+}
 
 export default class StrokeGroup extends GameObject {
   private pointData: Position[][]
@@ -14,7 +18,7 @@ export default class StrokeGroup extends GameObject {
   readonly a: Handle
   readonly b: Handle
 
-  constructor(strokes: Set<Stroke>) {
+  constructor(strokes: Set<Stroke>, a?: Handle, b?: Handle) {
     super()
 
     for (const stroke of strokes) {
@@ -22,10 +26,35 @@ export default class StrokeGroup extends GameObject {
     }
 
     // Generate Handles
-    const points = this.strokes.flatMap((stroke) => stroke.points)
-    ;[this.a, this.b] = farthestPair(points).map((pos) => this.adopt(Handle.create(pos)))
+    if (a == null || b == null) {
+      const points = this.strokes.flatMap((stroke) => stroke.points)
+      ;[a, b] = farthestPair(points).map((pos) => Handle.create(pos))
+    }
+    this.a = this.adopt(a)
+    this.b = this.adopt(b)
 
     this.pointData = this.generatePointData()
+  }
+
+  static deserialize(v: SerializedStrokeGroup): StrokeGroup {
+    const strokes = new Set<Stroke>()
+    const handles: Handle[] = []
+    for (const c of v.children) {
+      if (c.type === "Handle") {
+        handles.push(deserialize(c) as Handle)
+      } else if (c.type === "Stroke") {
+        strokes.add(deserialize(c) as Stroke)
+      }
+    }
+    const [a, b] = handles
+    return new StrokeGroup(strokes, a, b)
+  }
+
+  serialize(): SerializedStrokeGroup {
+    return {
+      type: "StrokeGroup",
+      children: Array.from(this.children).map((c) => c.serialize())
+    }
   }
 
   generatePointData() {

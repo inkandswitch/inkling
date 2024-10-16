@@ -1,7 +1,7 @@
 import { GameObject } from "./GameObject"
 import SVG from "./Svg"
 import Handle, { aHandle } from "./ink/Handle"
-import { forDebugging, generateId, sets } from "../lib/helpers"
+import { forDebugging, sets } from "../lib/helpers"
 import { uncmin } from "../lib/numeric"
 import { minimize } from "../lib/g9"
 import { TAU, normalizeAngle } from "../lib/math"
@@ -9,6 +9,7 @@ import { Position } from "../lib/types"
 import Vec from "../lib/vec"
 import { aGizmo } from "./meta/Gizmo"
 import Config from "./Config"
+import { generateId } from "./Core"
 
 // TODO: the serialization/deserialization code here is not quite right yet
 // b/c some variables are introduced by low-level constraints

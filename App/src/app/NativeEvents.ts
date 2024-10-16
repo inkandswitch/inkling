@@ -84,7 +84,7 @@ export default class Events {
   fingerStates: FingerState[] = []
   forcePseudo: number = 0
 
-  constructor(private metaToggle: MetaToggle, private applyEvent: ApplyEvent) {
+  constructor(private applyEvent: ApplyEvent) {
     this.setupFallbackEvents()
     this.setupNativeEventHandler()
   }
@@ -159,7 +159,7 @@ export default class Events {
 
   private shortcuts: Record<string, Function> = {
     Tab: () => {
-      this.metaToggle.toggle()
+      MetaToggle.toggle()
     }
   }
 

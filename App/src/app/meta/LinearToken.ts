@@ -1,13 +1,17 @@
 import SVG from "../Svg"
-import { generateId } from "../../lib/helpers"
 import Token from "./Token"
 import { GameObject } from "../GameObject"
 import NumberToken from "./NumberToken"
 import Vec from "../../lib/vec"
 import * as constraints from "../Constraints"
+import { generateId } from "../Core"
+
+export type SerializedLinearToken = {
+  type: "LinearToken"
+}
 
 export default class LinearToken extends Token {
-  readonly id = generateId()
+  readonly id = generateId() // WHY DOES THIS NEED AN ID?
   width = 222
   height = 34
 
@@ -38,6 +42,13 @@ export default class LinearToken extends Token {
     this.b.variable.lock()
     const formula = constraints.linearFormula(this.m.variable, this.x.variable, this.b.variable)
     constraints.equals(this.y.variable, formula.result)
+  }
+
+  static deserialize(v: SerializedLinearToken): LinearToken {}
+  serialize(): SerializedLinearToken {
+    return {
+      type: "LinearToken"
+    }
   }
 
   render(dt: number, t: number): void {

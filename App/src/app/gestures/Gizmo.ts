@@ -1,4 +1,5 @@
 import { EventContext, Gesture } from "../Gesture"
+import MetaToggle from "../gui/MetaToggle"
 import { aGizmo } from "../meta/Gizmo"
 import { createWire } from "./effects/CreateWire"
 
@@ -6,7 +7,7 @@ const tapDist = 50
 const wireDist = 30
 
 export function gizmoCycleConstraints(ctx: EventContext): Gesture | void {
-  if (ctx.metaToggle.active) {
+  if (MetaToggle.active) {
     // TODO: We only want to perform this gesture on a tap near the center of the gizmo.
     // But for other gestures, we want to perform them when any part of the gizmo is touched.
     // The current GameObject.find() method doesn't seemingly allow for this sort of distinction,
@@ -27,7 +28,7 @@ export function gizmoCycleConstraints(ctx: EventContext): Gesture | void {
 }
 
 export function gizmoCreateWire(ctx: EventContext): Gesture | void {
-  if (ctx.metaToggle.active) {
+  if (MetaToggle.active) {
     // See comment above
     const gizmo = ctx.root.find({
       what: aGizmo,

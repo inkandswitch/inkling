@@ -1,6 +1,5 @@
-import Config from "../Config"
 import { EventContext, Gesture } from "../Gesture"
-import { aMetaToggle } from "../gui/MetaToggle"
+import MetaToggle, { aMetaToggle } from "../gui/MetaToggle"
 
 declare global {
   function cycleTheme(): void
@@ -28,7 +27,7 @@ export function metaToggleFingerActions(ctx: EventContext): Gesture | void {
           if (ctx.pseudo) {
             cycleTheme()
           } else {
-            metaToggle.toggle()
+            MetaToggle.toggle()
           }
         } else {
           metaToggle.snapToCorner()

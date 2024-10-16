@@ -1,8 +1,9 @@
 import { EventContext, Gesture } from "../Gesture"
+import MetaToggle from "../gui/MetaToggle"
 import { aPropertyPickerEditor } from "../meta/PropertyPickerEditor"
 
 export function propertyPickerEditorChoose(ctx: EventContext): Gesture | void {
-  if (ctx.metaToggle.active) {
+  if (MetaToggle.active) {
     const propertyPickerEditor = ctx.root.find({
       what: aPropertyPickerEditor,
       near: ctx.event.position,

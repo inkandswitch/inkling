@@ -1,14 +1,12 @@
-import { root } from "./GameObject"
 import Events, { Event, InputState, EventState, TouchId } from "./NativeEvents"
-import MetaToggle from "./gui/MetaToggle"
 import SVG from "./Svg"
+import { Root } from "./Root"
 
 export type EventContext = {
   event: Event // The current event we're processing.
   state: InputState // The current state of the pencil or finger that generated this event.
   events: Events // The full NativeEvents instance, so we can look at other the pencils/fingers.
-  root: typeof root // The root of the scene graph
-  metaToggle: MetaToggle
+  root: Root // The root of the scene graph
   pseudo: boolean
   pseudoCount: number
   pseudoTouches: Record<TouchId, Event>

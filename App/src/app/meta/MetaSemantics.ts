@@ -1,7 +1,7 @@
 import * as constraints from "../Constraints"
 import { Constraint, Variable } from "../Constraints"
 import { Position } from "../../lib/types"
-import { generateId } from "../../lib/helpers"
+import { generateId } from "../Core"
 
 // This file implements the semantics of meta ink independently of the visual language
 // There are two main types: Meta Value & Meta Connection

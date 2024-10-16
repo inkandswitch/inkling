@@ -15,7 +15,7 @@ export function erase(ctx: EventContext): Gesture | void {
         spawn(ctx.event.position)
 
         const gos = ctx.root.findAll({
-          what: ctx.metaToggle.active ? aMetaErasable : aConcreteErasable,
+          what: MetaToggle.active ? aMetaErasable : aConcreteErasable,
           near: ctx.event.position,
           tooFar: 10
         })
