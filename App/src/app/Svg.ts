@@ -23,14 +23,6 @@ function add(type: string, parent: SVGElement, attributes: Attributes = {}) {
   return parent.appendChild(update(document.createElementNS(NS, type), attributes))
 }
 
-function bringToFront(element: SVGElement) {
-  const parent = element.parentNode
-  if (parent) {
-    element.remove()
-    parent.appendChild(element)
-  }
-}
-
 /**
  * Use the sugar attribute `content` to set innerHTML.
  * E.g.: SVG.update(myTextElm, { content: 'hello' })
@@ -166,7 +158,6 @@ function showStatus(content: string, time = 3_000) {
 export default {
   add,
   update,
-  bringToFront,
   now,
   clearNow,
   points,

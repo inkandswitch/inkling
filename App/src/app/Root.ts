@@ -23,7 +23,7 @@ export class Root extends GameObject {
     return root
   }
 
-  distanceToPoint(point: Position): number | null {
+  distanceToPoint(point: Position) {
     return null
   }
 

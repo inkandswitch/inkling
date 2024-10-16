@@ -1,6 +1,5 @@
 import { Position } from "../lib/types"
-import { SerializedGameObject } from "./Core"
-import SVG from "./Svg"
+import { SerializedGameObject } from "./Deserialize"
 
 const DEFAULT_TOO_FAR = 20
 
@@ -46,17 +45,8 @@ export abstract class GameObject {
     this.parent = null
   }
 
-  /** This method is preferred over child.remove() b/c of the sanity check. */
-  removeChild(child: GameObject) {
-    if (!this.children.has(child)) {
-      throw new Error("GameObject.removeChild() called w/ non-child argument!")
-    }
-    child.remove()
-  }
-
   abstract render(dt: number, t: number): void
 
-  // TODO: write comment for this method
   abstract distanceToPoint(point: Position): number | null
 
   find<T extends GameObject>(options: FindOptions<T>): T | null {
@@ -116,14 +106,6 @@ export abstract class GameObject {
       }
 
       doFn.call(this, narrowedGameObj)
-    }
-  }
-
-  bringToFront() {
-    for (const obj of Object.values(this)) {
-      if (obj instanceof SVGElement) {
-        SVG.bringToFront(obj)
-      }
     }
   }
 }

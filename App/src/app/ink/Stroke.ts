@@ -1,7 +1,6 @@
 import SVG from "../Svg"
 import { Position } from "../../lib/types"
 import { GameObject } from "../GameObject"
-import Rect from "../../lib/rect"
 import { distanceToPath } from "../../lib/helpers"
 import StrokeGroup from "./StrokeGroup"
 
@@ -44,15 +43,6 @@ export default class Stroke extends GameObject {
 
   distanceToPoint(point: Position) {
     return distanceToPath(point, this.points)
-  }
-
-  overlapsRect(rect: Rect): boolean {
-    for (const point of this.points) {
-      if (Rect.isPointInside(rect, point)) {
-        return true
-      }
-    }
-    return false
   }
 
   remove() {
