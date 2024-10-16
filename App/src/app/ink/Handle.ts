@@ -5,7 +5,7 @@ import { Constraint, Pin } from "../Constraints"
 import { Position } from "../../lib/types"
 import Vec from "../../lib/vec"
 import { TAU } from "../../lib/math"
-import { generateId } from "../Core"
+import { generateId, root } from "../Core"
 
 let goesAnywhereId = -1
 let goesAnywhereMode: "continuous" | "snapshot" = "continuous"
@@ -17,6 +17,14 @@ export type SerializedHandle = {
 }
 
 export default class Handle extends GameObject {
+  static withId(id: number) {
+    const handle = root.find({ what: aHandle, that: (h) => h.id === id })
+    if (handle == null) {
+      throw new Error("coudln't find handle w/ id " + id)
+    }
+    return handle
+  }
+
   static create(position: Position, getAbsorbed = true): Handle {
     const handle = new Handle(position)
     if (getAbsorbed) {
