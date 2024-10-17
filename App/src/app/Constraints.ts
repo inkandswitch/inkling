@@ -49,8 +49,12 @@ export class Variable {
     throw new Error("couldn't find variable w/ id " + id)
   }
 
-  static create(value = 0, represents?: { object: object; property: string }, id = generateId()) {
-    return new Variable(value, represents, id)
+  static create(value = 0, represents?: { object: object; property: string }) {
+    return this._create(generateId(), value, represents)
+  }
+
+  static _create(id: number, value: number, represents?: { object: object; property: string }) {
+    return new this(id, value, represents)
   }
 
   info: VariableInfo = {
@@ -58,9 +62,9 @@ export class Variable {
     absorbedVariables: new Set()
   }
   private constructor(
-    private _value: number = 0,
-    public represents: { object: object; property: string } | undefined,
-    readonly id: number
+    readonly id: number,
+    private _value: number,
+    public represents?: { object: object; property: string }
   ) {
     Variable.all.add(this)
   }
@@ -532,24 +536,28 @@ class LLFormula extends LowLevelConstraint {
 export type SerializedConstraint =
   | {
       type: "constant"
+      id: number
       paused: boolean
       variableId: number
       value: number
     }
   | {
       type: "pin"
+      id: number
       paused: boolean
       handleId: number
       position: Position
     }
   | {
       type: "finger"
+      id: number
       paused: boolean
       handleId: number
       position: Position
     }
   | {
       type: "linearRelationship"
+      id: number
       paused: boolean
       yVariableId: number
       m: number
@@ -558,12 +566,14 @@ export type SerializedConstraint =
     }
   | {
       type: "absorb"
+      id: number
       paused: boolean
       parentHandleId: number
       childHandleId: number
     }
   | {
       type: "polarVector"
+      id: number
       paused: boolean
       aHandleId: number
       bHandleId: number
@@ -572,6 +582,7 @@ export type SerializedConstraint =
     }
   | {
       type: "linearFormula"
+      id: number
       paused: boolean
       mVariableId: number
       xVariableId: number
@@ -602,7 +613,7 @@ export abstract class Constraint {
   readonly variables = [] as Variable[]
   readonly lowLevelConstraints = [] as LowLevelConstraint[]
 
-  constructor() {
+  constructor(readonly id: number) {
     Constraint.all.add(this)
     forgetClustersForSolver()
   }
@@ -660,25 +671,30 @@ export abstract class Constraint {
 export class Constant extends Constraint {
   private static readonly memo = new Map<Variable, Constant>()
 
-  static create(variable: Variable, value: number = variable.value) {
+  static create(variable: Variable, value = variable.value) {
+    return this._create(generateId(), variable, value)
+  }
+
+  static _create(id: number, variable: Variable, value: number) {
     let constant = Constant.memo.get(variable)
     if (constant) {
       constant.value = value
     } else {
-      constant = new Constant(variable, value)
-      Constant.memo.set(variable, constant)
+      constant = new this(id, variable, value)
+      this.memo.set(variable, constant)
     }
     return constant
   }
 
-  private constructor(public readonly variable: Variable, public value: number) {
-    super()
+  private constructor(id: number, public readonly variable: Variable, public value: number) {
+    super(id)
     this.variables.push(variable)
   }
 
   override serialize(): SerializedConstraint {
     return {
       type: "constant",
+      id: this.id,
       paused: this.paused,
       variableId: this.variable.id,
       value: this.value
@@ -704,25 +720,30 @@ export const constant = Constant.create
 export class Pin extends Constraint {
   private static readonly memo = new Map<Handle, Pin>()
 
-  static create(handle: Handle, position: Position = handle.position) {
-    let pin = Pin.memo.get(handle)
+  static create(handle: Handle, position = handle.position) {
+    return this._create(generateId(), handle, position)
+  }
+
+  static _create(id: number, handle: Handle, position: Position) {
+    let pin = this.memo.get(handle)
     if (pin) {
       pin.position = position
     } else {
-      pin = new Pin(handle, position)
-      Pin.memo.set(handle, pin)
+      pin = new this(id, handle, position)
+      this.memo.set(handle, pin)
     }
     return pin
   }
 
-  private constructor(public readonly handle: Handle, public position: Position) {
-    super()
+  private constructor(id: number, public readonly handle: Handle, public position: Position) {
+    super(id)
     this.variables.push(handle.xVariable, handle.yVariable)
   }
 
   override serialize(): SerializedConstraint {
     return {
       type: "pin",
+      id: this.id,
       paused: this.paused,
       handleId: this.handle.id,
       position: { x: this.position.x, y: this.position.y }
@@ -750,19 +771,23 @@ export const pin = Pin.create
 export class Finger extends Constraint {
   private static readonly memo = new Map<Handle, Finger>()
 
-  static create(handle: Handle, position: Position = handle.position) {
-    let finger = Finger.memo.get(handle)
+  static create(handle: Handle, position = handle.position) {
+    return this._create(generateId(), handle, position)
+  }
+
+  static _create(id: number, handle: Handle, position: Position) {
+    let finger = this.memo.get(handle)
     if (finger) {
       finger.position = position
     } else {
-      finger = new Finger(handle, position)
-      Finger.memo.set(handle, finger)
+      finger = new this(id, handle, position)
+      this.memo.set(handle, finger)
     }
     return finger
   }
 
-  private constructor(public readonly handle: Handle, public position: Position) {
-    super()
+  private constructor(id: number, public readonly handle: Handle, public position: Position) {
+    super(id)
     const fc = new LLFinger(this)
     this.lowLevelConstraints.push(fc)
     this.variables.push(handle.xVariable, handle.yVariable)
@@ -771,6 +796,7 @@ export class Finger extends Constraint {
   override serialize(): SerializedConstraint {
     return {
       type: "finger",
+      id: this.id,
       paused: this.paused,
       handleId: this.handle.id,
       position: this.position
@@ -789,40 +815,45 @@ export class LinearRelationship extends Constraint {
   private static readonly memo = new Map<Variable, Map<Variable, LinearRelationship>>()
 
   static create(y: Variable, m: number, x: Variable, b: number) {
+    return this._create(generateId(), y, m, x, b)
+  }
+
+  static _create(id: number, y: Variable, m: number, x: Variable, b: number) {
     if (m === 0) {
       throw new Error("tried to create a linear relationship w/ m = 0")
     }
 
-    let lr = LinearRelationship.memo.get(y)?.get(x)
+    let lr = this.memo.get(y)?.get(x)
     if (lr) {
       lr.m = m
       lr.b = b
       return lr
     }
 
-    lr = LinearRelationship.memo.get(x)?.get(y)
+    lr = this.memo.get(x)?.get(y)
     if (lr) {
       lr.m = 1 / m
       lr.b = -b / m
       return lr
     }
 
-    lr = new LinearRelationship(y, m, x, b)
-    if (!LinearRelationship.memo.has(y)) {
-      LinearRelationship.memo.set(y, new Map())
+    lr = new this(id, y, m, x, b)
+    if (!this.memo.has(y)) {
+      this.memo.set(y, new Map())
     }
-    LinearRelationship.memo.get(y)!.set(x, lr)
+    this.memo.get(y)!.set(x, lr)
     return lr
   }
 
-  private constructor(readonly y: Variable, private m: number, readonly x: Variable, private b: number) {
-    super()
+  private constructor(id: number, readonly y: Variable, private m: number, readonly x: Variable, private b: number) {
+    super(id)
     this.variables.push(y, x)
   }
 
   override serialize(): SerializedConstraint {
     return {
       type: "linearRelationship",
+      id: this.id,
       paused: this.paused,
       yVariableId: this.y.id,
       m: this.m,
@@ -865,23 +896,28 @@ export class Absorb extends Constraint {
   private static readonly memo = new Map<Handle, Absorb>()
 
   static create(parent: Handle, child: Handle) {
-    if (Absorb.memo.has(child)) {
-      Absorb.memo.get(child)!.remove()
+    return this._create(generateId(), parent, child)
+  }
+
+  static _create(id: number, parent: Handle, child: Handle) {
+    if (this.memo.has(child)) {
+      this.memo.get(child)!.remove()
     }
 
-    const a = new Absorb(parent, child)
-    Absorb.memo.set(child, a)
+    const a = new this(id, parent, child)
+    this.memo.set(child, a)
     return a
   }
 
-  private constructor(readonly parent: Handle, readonly child: Handle) {
-    super()
+  private constructor(id: number, readonly parent: Handle, readonly child: Handle) {
+    super(id)
     this.variables.push(parent.xVariable, parent.yVariable, child.xVariable, child.yVariable)
   }
 
   override serialize(): SerializedConstraint {
     return {
       type: "absorb",
+      id: this.id,
       paused: this.paused,
       parentHandleId: this.parent.id,
       childHandleId: this.child.id
@@ -906,7 +942,8 @@ export class PolarVector extends Constraint {
   private static readonly memo = new Map<Handle, Map<Handle, PolarVector>>()
 
   static create(a: Handle, b: Handle) {
-    const pv = PolarVector._create(
+    const pv = this._create(
+      generateId(),
       a,
       b,
       variable(Vec.dist(a.position, b.position)),
@@ -923,24 +960,33 @@ export class PolarVector extends Constraint {
     return pv
   }
 
-  static _create(a: Handle, b: Handle, distance: Variable, angle: Variable) {
-    let pv = PolarVector.memo.get(a)?.get(b)
+  static _create(id: number, a: Handle, b: Handle, distance: Variable, angle: Variable) {
+    let pv = this.memo.get(a)?.get(b)
     if (pv) {
       equals(distance, pv.distance)
       equals(angle, pv.angle)
       return pv
     }
 
-    pv = new PolarVector(a, b, distance, angle)
-    if (!PolarVector.memo.get(a)) {
-      PolarVector.memo.set(a, new Map())
+    // TODO: if there's already one that goes in the other direction,
+    // just set up a linear relationship between the two angles
+
+    pv = new this(id, a, b, distance, angle)
+    if (!this.memo.get(a)) {
+      this.memo.set(a, new Map())
     }
-    PolarVector.memo.get(a)!.set(b, pv)
+    this.memo.get(a)!.set(b, pv)
     return pv
   }
 
-  private constructor(readonly a: Handle, readonly b: Handle, readonly distance: Variable, readonly angle: Variable) {
-    super()
+  private constructor(
+    id: number,
+    readonly a: Handle,
+    readonly b: Handle,
+    readonly distance: Variable,
+    readonly angle: Variable
+  ) {
+    super(id)
     this.lowLevelConstraints.push(new LLDistance(a, b, distance), new LLAngle(a, b, angle))
     this.variables.push(a.xVariable, a.yVariable, b.xVariable, b.yVariable, this.distance, this.angle)
   }
@@ -948,6 +994,7 @@ export class PolarVector extends Constraint {
   override serialize(): SerializedConstraint {
     return {
       type: "polarVector",
+      id: this.id,
       paused: this.paused,
       aHandleId: this.a.id,
       bHandleId: this.b.id,
@@ -971,8 +1018,8 @@ export const polarVector = PolarVector.create
 abstract class Formula extends Constraint {
   protected abstract fn(xs: number[]): number
 
-  protected constructor(args: Variable[], readonly result: Variable) {
-    super()
+  protected constructor(id: number, args: Variable[], readonly result: Variable) {
+    super(id)
     this.lowLevelConstraints.push(new LLFormula(args, result, this.fn))
     this.variables.push(...args, result)
   }
@@ -981,7 +1028,7 @@ abstract class Formula extends Constraint {
 export class LinearFormula extends Formula {
   static create(m: Variable, x: Variable, b: Variable) {
     const result = variable()
-    const lf = LinearFormula._create(m, x, b, result)
+    const lf = this._create(generateId(), m, x, b, result)
     result.value = lf.fn([m.value, x.value, b.value])
     result.represents = {
       object: lf,
@@ -990,8 +1037,8 @@ export class LinearFormula extends Formula {
     return lf
   }
 
-  static _create(m: Variable, x: Variable, b: Variable, result: Variable) {
-    return new LinearFormula([m, x, b], result)
+  static _create(id: number, m: Variable, x: Variable, b: Variable, result: Variable) {
+    return new this(id, [m, x, b], result)
   }
 
   protected override fn([m, x, b]: number[]) {
@@ -1001,6 +1048,7 @@ export class LinearFormula extends Formula {
   override serialize(): SerializedConstraint {
     return {
       type: "linearFormula",
+      id: this.id,
       paused: this.paused,
       mVariableId: this.variables[0].id,
       xVariableId: this.variables[1].id,
@@ -1402,7 +1450,7 @@ export function serializeVariables() {
 
 export function deserializeVariables(variables: SerializedVariable[]) {
   for (const variable of variables) {
-    Variable.create(variable.value, undefined, variable.id)
+    Variable._create(variable.id, variable.value)
   }
 }
 
@@ -1457,14 +1505,14 @@ function _deserializeConstraint(constraint: SerializedConstraint): Constraint {
       const b = Handle.withId(constraint.bHandleId)!
       const distance = Variable.withId(constraint.distanceVariableId)!
       const angle = Variable.withId(constraint.angleVariableId)!
-      return PolarVector._create(a, b, distance, angle)
+      return PolarVector._create(constraint.id, a, b, distance, angle)
     }
     case "linearFormula": {
       const m = Variable.withId(constraint.mVariableId)!
       const x = Variable.withId(constraint.xVariableId)!
       const b = Variable.withId(constraint.bVariableId)!
       const result = Variable.withId(constraint.resultVariableId)!
-      return LinearFormula._create(m, x, b, result)
+      return LinearFormula._create(constraint.id, m, x, b, result)
     }
   }
 }
