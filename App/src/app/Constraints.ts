@@ -593,6 +593,15 @@ export type SerializedConstraint =
 export abstract class Constraint {
   static readonly all = new Set<Constraint>()
 
+  static withId(id: number) {
+    for (const constraint of Constraint.all) {
+      if (constraint.id === id) {
+        return constraint
+      }
+    }
+    throw new Error("couldn't find constraint w/ id " + id)
+  }
+
   private _paused = false
 
   get paused() {
