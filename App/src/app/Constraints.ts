@@ -50,11 +50,11 @@ export class Variable {
   }
 
   static create(value = 0, represents?: { object: object; property: string }) {
-    return this._create(generateId(), value, represents)
+    return Variable._create(generateId(), value, represents)
   }
 
   static _create(id: number, value: number, represents?: { object: object; property: string }) {
-    return new this(id, value, represents)
+    return new Variable(id, value, represents)
   }
 
   info: VariableInfo = {
@@ -681,7 +681,7 @@ export class Constant extends Constraint {
   private static readonly memo = new Map<Variable, Constant>()
 
   static create(variable: Variable, value = variable.value) {
-    return this._create(generateId(), variable, value)
+    return Constant._create(generateId(), variable, value)
   }
 
   static _create(id: number, variable: Variable, value: number) {
@@ -689,8 +689,8 @@ export class Constant extends Constraint {
     if (constant) {
       constant.value = value
     } else {
-      constant = new this(id, variable, value)
-      this.memo.set(variable, constant)
+      constant = new Constant(id, variable, value)
+      Constant.memo.set(variable, constant)
     }
     return constant
   }
@@ -730,16 +730,16 @@ export class Pin extends Constraint {
   private static readonly memo = new Map<Handle, Pin>()
 
   static create(handle: Handle, position = handle.position) {
-    return this._create(generateId(), handle, position)
+    return Pin._create(generateId(), handle, position)
   }
 
   static _create(id: number, handle: Handle, position: Position) {
-    let pin = this.memo.get(handle)
+    let pin = Pin.memo.get(handle)
     if (pin) {
       pin.position = position
     } else {
-      pin = new this(id, handle, position)
-      this.memo.set(handle, pin)
+      pin = new Pin(id, handle, position)
+      Pin.memo.set(handle, pin)
     }
     return pin
   }
@@ -781,16 +781,16 @@ export class Finger extends Constraint {
   private static readonly memo = new Map<Handle, Finger>()
 
   static create(handle: Handle, position = handle.position) {
-    return this._create(generateId(), handle, position)
+    return Finger._create(generateId(), handle, position)
   }
 
   static _create(id: number, handle: Handle, position: Position) {
-    let finger = this.memo.get(handle)
+    let finger = Finger.memo.get(handle)
     if (finger) {
       finger.position = position
     } else {
-      finger = new this(id, handle, position)
-      this.memo.set(handle, finger)
+      finger = new Finger(id, handle, position)
+      Finger.memo.set(handle, finger)
     }
     return finger
   }
@@ -824,7 +824,7 @@ export class LinearRelationship extends Constraint {
   private static readonly memo = new Map<Variable, Map<Variable, LinearRelationship>>()
 
   static create(y: Variable, m: number, x: Variable, b: number) {
-    return this._create(generateId(), y, m, x, b)
+    return LinearRelationship._create(generateId(), y, m, x, b)
   }
 
   static _create(id: number, y: Variable, m: number, x: Variable, b: number) {
@@ -832,25 +832,25 @@ export class LinearRelationship extends Constraint {
       throw new Error("tried to create a linear relationship w/ m = 0")
     }
 
-    let lr = this.memo.get(y)?.get(x)
+    let lr = LinearRelationship.memo.get(y)?.get(x)
     if (lr) {
       lr.m = m
       lr.b = b
       return lr
     }
 
-    lr = this.memo.get(x)?.get(y)
+    lr = LinearRelationship.memo.get(x)?.get(y)
     if (lr) {
       lr.m = 1 / m
       lr.b = -b / m
       return lr
     }
 
-    lr = new this(id, y, m, x, b)
-    if (!this.memo.has(y)) {
-      this.memo.set(y, new Map())
+    lr = new LinearRelationship(id, y, m, x, b)
+    if (!LinearRelationship.memo.has(y)) {
+      LinearRelationship.memo.set(y, new Map())
     }
-    this.memo.get(y)!.set(x, lr)
+    LinearRelationship.memo.get(y)!.set(x, lr)
     return lr
   }
 
@@ -905,16 +905,16 @@ export class Absorb extends Constraint {
   private static readonly memo = new Map<Handle, Absorb>()
 
   static create(parent: Handle, child: Handle) {
-    return this._create(generateId(), parent, child)
+    return Absorb._create(generateId(), parent, child)
   }
 
   static _create(id: number, parent: Handle, child: Handle) {
-    if (this.memo.has(child)) {
-      this.memo.get(child)!.remove()
+    if (Absorb.memo.has(child)) {
+      Absorb.memo.get(child)!.remove()
     }
 
-    const a = new this(id, parent, child)
-    this.memo.set(child, a)
+    const a = new Absorb(id, parent, child)
+    Absorb.memo.set(child, a)
     return a
   }
 
@@ -951,7 +951,7 @@ export class PolarVector extends Constraint {
   private static readonly memo = new Map<Handle, Map<Handle, PolarVector>>()
 
   static create(a: Handle, b: Handle) {
-    const pv = this._create(
+    const pv = PolarVector._create(
       generateId(),
       a,
       b,
@@ -970,7 +970,7 @@ export class PolarVector extends Constraint {
   }
 
   static _create(id: number, a: Handle, b: Handle, distance: Variable, angle: Variable) {
-    let pv = this.memo.get(a)?.get(b)
+    let pv = PolarVector.memo.get(a)?.get(b)
     if (pv) {
       equals(distance, pv.distance)
       equals(angle, pv.angle)
@@ -980,11 +980,11 @@ export class PolarVector extends Constraint {
     // TODO: if there's already one that goes in the other direction,
     // just set up a linear relationship between the two angles
 
-    pv = new this(id, a, b, distance, angle)
-    if (!this.memo.get(a)) {
-      this.memo.set(a, new Map())
+    pv = new PolarVector(id, a, b, distance, angle)
+    if (!PolarVector.memo.get(a)) {
+      PolarVector.memo.set(a, new Map())
     }
-    this.memo.get(a)!.set(b, pv)
+    PolarVector.memo.get(a)!.set(b, pv)
     return pv
   }
 
@@ -1037,7 +1037,7 @@ abstract class Formula extends Constraint {
 export class LinearFormula extends Formula {
   static create(m: Variable, x: Variable, b: Variable) {
     const result = variable()
-    const lf = this._create(generateId(), m, x, b, result)
+    const lf = LinearFormula._create(generateId(), m, x, b, result)
     result.value = lf.fn([m.value, x.value, b.value])
     result.represents = {
       object: lf,
@@ -1047,7 +1047,7 @@ export class LinearFormula extends Formula {
   }
 
   static _create(id: number, m: Variable, x: Variable, b: Variable, result: Variable) {
-    return new this(id, [m, x, b], result)
+    return new LinearFormula(id, [m, x, b], result)
   }
 
   protected override fn([m, x, b]: number[]) {
@@ -1486,28 +1486,28 @@ function _deserializeConstraint(constraint: SerializedConstraint): Constraint {
     case "constant": {
       const variable = Variable.withId(constraint.variableId)!
       const { value } = constraint
-      return constant(variable, value)
+      return Constant._create(constraint.id, variable, value)
     }
     case "pin": {
       const handle = Handle.withId(constraint.handleId)!
       const { position } = constraint
-      return pin(handle, position)
+      return Pin._create(constraint.id, handle, position)
     }
     case "finger": {
       const handle = Handle.withId(constraint.handleId)!
       const { position } = constraint
-      return finger(handle, position)
+      return Finger._create(constraint.id, handle, position)
     }
     case "linearRelationship": {
       const y = Variable.withId(constraint.yVariableId)!
       const x = Variable.withId(constraint.xVariableId)!
       const { m, b } = constraint
-      return linearRelationship(y, m, x, b)
+      return LinearRelationship._create(constraint.id, y, m, x, b)
     }
     case "absorb": {
       const parent = Handle.withId(constraint.parentHandleId)!
       const child = Handle.withId(constraint.childHandleId)!
-      return absorb(parent, child)
+      return Absorb._create(constraint.id, parent, child)
     }
     case "polarVector": {
       const a = Handle.withId(constraint.aHandleId)!

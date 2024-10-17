@@ -8,7 +8,6 @@ import Gizmo, { SerializedGizmo } from "./meta/Gizmo"
 import LinearToken, { SerializedLinearToken } from "./meta/LinearToken"
 import NumberToken, { SerializedNumberToken } from "./meta/NumberToken"
 import PropertyPicker, { SerializedPropertyPicker } from "./meta/PropertyPicker"
-import PropertyPickerEditor, { SerializedPropertyPickerEditor } from "./meta/PropertyPickerEditor"
 import Wire, { SerializedWire } from "./meta/Wire"
 import { Root, SerializedRoot } from "./Root"
 
@@ -20,7 +19,6 @@ export type SerializedGameObject =
   | SerializedMetaToggle
   | SerializedNumberToken
   | SerializedPropertyPicker
-  | SerializedPropertyPickerEditor
   | SerializedRoot
   | SerializedStroke
   | SerializedStrokeGroup
@@ -36,7 +34,6 @@ export function deserialize(v: SerializedGameObject): GameObject {
     case "MetaToggle": return MetaToggle.deserialize(v)
     case "NumberToken": return NumberToken.deserialize(v)
     case "PropertyPicker": return PropertyPicker.deserialize(v)
-    case "PropertyPickerEditor": return PropertyPickerEditor.deserialize(v)
     case "Root": return Root.deserialize(v)
     case "Stroke": return Stroke.deserialize(v)
     case "StrokeGroup": return StrokeGroup.deserialize(v)

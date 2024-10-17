@@ -1,11 +1,11 @@
-import Token from "./Token"
-import SVG from "../Svg"
-import { Variable } from "../Constraints"
-import * as constraints from "../Constraints"
-import { GameObject } from "../GameObject"
 import { Position } from "../../lib/types"
+import * as constraints from "../Constraints"
+import { Variable } from "../Constraints"
+import { GameObject } from "../GameObject"
 import { generateId } from "../Root"
+import SVG from "../Svg"
 import { Pluggable } from "./Pluggable"
+import Token from "./Token"
 
 export type SerializedNumberToken = {
   type: "NumberToken"
@@ -36,11 +36,11 @@ export default class NumberToken extends Token implements Pluggable {
   protected readonly wholeElm = SVG.add("text", this.elm, { class: "token-text" })
   protected readonly fracElm = SVG.add("text", this.elm, { class: "token-frac-text" })
 
-  readonly plugs: { value: Variable }
+  readonly plugVars: { value: Variable }
 
   constructor(id: number, readonly variable: Variable) {
     super(id)
-    this.plugs = { value: variable }
+    this.plugVars = { value: variable }
   }
 
   getPlugPosition(id: string): Position {

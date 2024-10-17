@@ -43,7 +43,9 @@ export class Root extends GameObject {
     const json = JSON.stringify(stale)
     Root.deserialize(JSON.parse(json))
     const fresh = Root.current.serialize()
-    return json === JSON.stringify(fresh)
+    const freshJSON = JSON.stringify(fresh)
+    if (json === freshJSON) return true
+    debugger
   }
 
   static deserialize(v: SerializedRoot): Root {
@@ -60,8 +62,13 @@ export class Root extends GameObject {
     const { variables, children, constraints } = v
     const root = (Root.current = new Root())
     deserializeVariables(variables)
-    for (const c of children) {
-      root.adopt(deserialize(c))
+    while (children.length > 0) {
+      const c = children.shift()!
+      try {
+        root.adopt(deserialize(c))
+      } catch (e) {
+        children.push(c)
+      }
     }
     deserializeConstraints(constraints)
     nextId = v.nextId

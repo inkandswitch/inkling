@@ -1,22 +1,18 @@
 import { Position } from "../../lib/types"
 import Vec from "../../lib/vec"
 import { GameObject } from "../GameObject"
-import Handle from "./Handle"
+import Handle, { SerializedHandle } from "./Handle"
 import Stroke from "./Stroke"
 import StrokeGroup from "./StrokeGroup"
 
 export type SerializedLead = {
   type: "Lead"
-  handleId: number
+  handle: SerializedHandle
 }
 
 export default class Lead extends GameObject {
   static create(position: Position) {
-    return this._create(Handle.create(position))
-  }
-
-  static _create(handle: Handle) {
-    return new Lead(handle)
+    return new Lead(Handle.create(position))
   }
 
   stroke?: Stroke
@@ -35,11 +31,12 @@ export default class Lead extends GameObject {
   serialize(): SerializedLead {
     return {
       type: "Lead",
-      handleId: this.handle.id
+      handle: this.handle.serialize()
     }
   }
+
   static deserialize(v: SerializedLead) {
-    return Lead._create(Handle.withId(v.handleId))
+    return new Lead(Handle.deserialize(v.handle))
   }
 
   render(dt: number, t: number) {
@@ -53,6 +50,11 @@ export default class Lead extends GameObject {
     }
 
     this.handle.render(dt, t)
+  }
+
+  override remove() {
+    this.stroke?.remove()
+    this.handle.remove()
   }
 }
 

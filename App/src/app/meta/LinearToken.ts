@@ -38,13 +38,12 @@ export default class LinearToken extends Token {
     return new LinearToken(id, y, m, x, b)
   }
 
-  readonly id = generateId() // WHY DOES THIS NEED AN ID?
   width = 222
   height = 34
 
   private readonly elm = SVG.add("g", SVG.metaElm, { class: "linear-token" })
   private readonly boxElm = SVG.add("rect", this.elm, {
-    class: "token-box",
+    class: "hollow-box",
     x: -2,
     y: -2,
     width: this.width,

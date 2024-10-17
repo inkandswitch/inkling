@@ -2,15 +2,14 @@ import Config from "./Config"
 import { EventContext, Gesture } from "./Gesture"
 import { emptySpaceCreateGizmoOrLinear, emptySpaceDrawInk } from "./gestures/EmptySpace"
 import { erase } from "./gestures/Erase"
-import { gizmoCreateWire, gizmoCycleConstraints } from "./gestures/Gizmo"
+import { gizmoCycleConstraints } from "./gestures/Gizmo"
 import { handleBreakOff, handleCreateGizmo, handleGoAnywhere, handleMoveOrTogglePin } from "./gestures/Handle"
 import { metaToggleFingerActions, metaToggleIgnorePencil } from "./gestures/MetaToggle"
-import { propertyPickerCreateWire } from "./gestures/PropertyPicker"
-import { propertyPickerEditorChoose } from "./gestures/PropertyPickerEditor"
+import { pluggableCreateWire } from "./gestures/Pluggable"
 import { strokeAddHandles } from "./gestures/Stroke"
 import { strokeGroupRemoveHandles } from "./gestures/StrokeGroup"
 import { wireTogglePaused } from "./gestures/ToggleWire"
-import { numberTokenScrub, tokenCreateWire, tokenMoveOrToggleConstraint } from "./gestures/Token"
+import { numberTokenScrub, tokenMoveOrToggleConstraint } from "./gestures/Token"
 import { Event, TouchId } from "./NativeEvents"
 import SVG from "./Svg"
 
@@ -20,7 +19,6 @@ const gestureCreators = {
     numberTokenScrub,
     handleBreakOff,
     //
-    propertyPickerEditorChoose,
     tokenMoveOrToggleConstraint,
     handleMoveOrTogglePin,
     gizmoCycleConstraints,
@@ -35,11 +33,7 @@ const gestureCreators = {
     metaToggleIgnorePencil,
     erase,
     //
-    propertyPickerEditorChoose,
-    //
-    tokenCreateWire,
-    propertyPickerCreateWire,
-    gizmoCreateWire,
+    pluggableCreateWire,
     handleCreateGizmo,
     //
     emptySpaceCreateGizmoOrLinear,

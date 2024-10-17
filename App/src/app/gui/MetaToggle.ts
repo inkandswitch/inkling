@@ -1,9 +1,8 @@
-import { Position, isBoolean, isPosition } from "../../lib/types"
+import { Position } from "../../lib/types"
 import SVG from "../Svg"
 import { GameObject } from "../GameObject"
 import Vec from "../../lib/vec"
 import { TAU, lerpN, rand, randInt } from "../../lib/math"
-import { SerializedGameObject } from "../Core"
 
 const radius = 20
 const padding = 30

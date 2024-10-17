@@ -96,7 +96,7 @@ export default class Gizmo extends GameObject implements Pluggable {
     return a && b ? { a, b } : null
   }
 
-  readonly plugs: { value: { distance: Variable; angleInDegrees: Variable } }
+  readonly plugVars: { distance: Variable; angleInDegrees: Variable }
 
   private constructor(
     readonly id: number,
@@ -122,11 +122,9 @@ export default class Gizmo extends GameObject implements Pluggable {
       object: this,
       property: "angle-degrees"
     }
-    this.plugs = {
-      value: {
-        distance,
-        angleInDegrees
-      }
+    this.plugVars = {
+      distance,
+      angleInDegrees
     }
   }
 

@@ -1,10 +1,8 @@
 import { EventContext, Gesture } from "../Gesture"
 import MetaToggle from "../gui/MetaToggle"
 import { aGizmo } from "../meta/Gizmo"
-import { createWire } from "./effects/CreateWire"
 
 const tapDist = 50
-const wireDist = 30
 
 export function gizmoCycleConstraints(ctx: EventContext): Gesture | void {
   if (MetaToggle.active) {
@@ -23,20 +21,6 @@ export function gizmoCycleConstraints(ctx: EventContext): Gesture | void {
           gizmo.cycleConstraints()
         }
       })
-    }
-  }
-}
-
-export function gizmoCreateWire(ctx: EventContext): Gesture | void {
-  if (MetaToggle.active) {
-    // See comment above
-    const gizmo = ctx.root.find({
-      what: aGizmo,
-      that: (g) => g.centerDistanceToPoint(ctx.event.position) < wireDist
-    })
-
-    if (gizmo) {
-      return createWire(gizmo.wirePort, ctx)
     }
   }
 }

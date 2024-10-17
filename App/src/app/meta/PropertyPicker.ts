@@ -1,11 +1,12 @@
-import Token from "./Token"
-import SVG from "../Svg"
 import { Position } from "../../lib/types"
 import Vec from "../../lib/vec"
-import { GameObject } from "../GameObject"
+import * as constraints from "../Constraints"
 import { Variable } from "../Constraints"
-import { Pluggable } from "./Pluggable"
+import { GameObject } from "../GameObject"
 import { generateId } from "../Root"
+import SVG from "../Svg"
+import { Pluggable } from "./Pluggable"
+import Token from "./Token"
 
 const TAB_SIZE = 5
 
@@ -23,16 +24,24 @@ function PropertyPickerPath(pos: Position, w: number, h: number) {
 export type SerializedPropertyPicker = {
   type: "PropertyPicker"
   id: number
-  propertyName: string
+  propertyName: PropertyName
   variableId: number
 }
 
+type PropertyName = "distance" | "angleInDegrees"
+
 export default class PropertyPicker extends Token implements Pluggable {
-  static create(propertyName: string, variable: Variable) {
-    return this._create(generateId(), propertyName, variable)
+  static create(propertyName: PropertyName, value = 0) {
+    const variable = constraints.variable(value)
+    const picker = this._create(generateId(), propertyName, variable)
+    variable.represents = {
+      object: picker,
+      property: "value"
+    }
+    return picker
   }
 
-  static _create(id: number, propertyName: string, variable: Variable) {
+  static _create(id: number, propertyName: PropertyName, variable: Variable) {
     return new this(id, propertyName, variable)
   }
 
@@ -47,13 +56,13 @@ export default class PropertyPicker extends Token implements Pluggable {
     class: "property-picker-text"
   })
 
-  readonly plugs: { output: Variable }
+  readonly plugVars: { value: Variable }
 
-  private constructor(id: number, readonly propertyName: string, readonly variable: Variable) {
+  private constructor(id: number, readonly propertyName: PropertyName, readonly variable: Variable) {
     super(id)
     SVG.update(this.textElement, { content: propertyName })
     this.width = this.textElement.getComputedTextLength() + 10 + TAB_SIZE
-    this.plugs = { output: variable }
+    this.plugVars = { value: variable }
   }
 
   getPlugPosition(id: string): Position {
@@ -75,6 +84,11 @@ export default class PropertyPicker extends Token implements Pluggable {
     }
   }
 
+  override onTap() {
+    // TODO: Toggle the property
+    // Does that mean we need to know about any wires attached to us?
+  }
+
   render() {
     SVG.update(this.boxElement, {
       d: PropertyPickerPath(this.position, this.width, this.height)
@@ -89,6 +103,7 @@ export default class PropertyPicker extends Token implements Pluggable {
   remove() {
     this.boxElement.remove()
     this.textElement.remove()
+    this.variable.remove()
     super.remove()
   }
 }

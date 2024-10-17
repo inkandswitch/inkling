@@ -2,24 +2,7 @@ import { EventContext, Gesture } from "../Gesture"
 import { aToken } from "../meta/Token"
 import Vec from "../../lib/vec"
 import { aNumberToken } from "../meta/NumberToken"
-import { aTokenWithVariable, createWire } from "./effects/CreateWire"
 import MetaToggle from "../gui/MetaToggle"
-
-export function tokenCreateWire(ctx: EventContext): Gesture | void {
-  if (MetaToggle.active) {
-    const token = ctx.root.find({
-      what: aTokenWithVariable,
-      near: ctx.event.position
-    })
-    if (token) {
-      return new Gesture("Create Wire", {
-        dragged(ctx) {
-          return createWire(token.wirePort, ctx)
-        }
-      })
-    }
-  }
-}
 
 export function tokenMoveOrToggleConstraint(ctx: EventContext): Gesture | void {
   if (MetaToggle.active) {

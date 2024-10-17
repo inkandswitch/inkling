@@ -13,7 +13,7 @@ export function initialize() {
     variables: [],
     children: [{ type: "MetaToggle", position: { x: 30, y: 30 } }],
     constraints: [],
-    nextId: 100
+    nextId: 0
   })
 
   // root = deserialize(

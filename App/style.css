@@ -455,6 +455,12 @@ svg * {
   }
 }
 
+.hollow-box {
+  fill: none;
+  stroke: var(--token-stroke);
+  stroke-width: 0.5;
+}
+
 .token-text {
   fill: var(--token-text);
   translate: 5px 24px;
