@@ -41,7 +41,7 @@ export class Variable {
   static readonly all = new Set<Variable>()
 
   static withId(id: number) {
-    for (const variable of Variable.all) {
+    for (const variable of this.all) {
       if (variable.id === id) {
         return variable
       }
@@ -594,7 +594,7 @@ export abstract class Constraint {
   static readonly all = new Set<Constraint>()
 
   static withId(id: number) {
-    for (const constraint of Constraint.all) {
+    for (const constraint of this.all) {
       if (constraint.id === id) {
         return constraint
       }
