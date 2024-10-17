@@ -26,6 +26,7 @@ export type SerializedPropertyPicker = {
   id: number
   propertyName: PropertyName
   variableId: number
+  position: Position
 }
 
 type PropertyName = "distance" | "angleInDegrees"
@@ -33,16 +34,12 @@ type PropertyName = "distance" | "angleInDegrees"
 export default class PropertyPicker extends Token implements Pluggable {
   static create(propertyName: PropertyName, value = 0) {
     const variable = constraints.variable(value)
-    const picker = this._create(generateId(), propertyName, variable)
+    const picker = new PropertyPicker(generateId(), propertyName, variable, Vec(100, 100))
     variable.represents = {
       object: picker,
       property: "value"
     }
     return picker
-  }
-
-  static _create(id: number, propertyName: PropertyName, variable: Variable) {
-    return new this(id, propertyName, variable)
   }
 
   protected readonly boxElement = SVG.add("path", SVG.metaElm, {
@@ -58,11 +55,17 @@ export default class PropertyPicker extends Token implements Pluggable {
 
   readonly plugVars: { value: Variable }
 
-  private constructor(id: number, readonly propertyName: PropertyName, readonly variable: Variable) {
+  private constructor(
+    id: number,
+    readonly propertyName: PropertyName,
+    readonly variable: Variable,
+    position: Position
+  ) {
     super(id)
-    SVG.update(this.textElement, { content: propertyName })
+    SVG.update(this.textElement, { content: propertyName.replace("InDegrees", "").replace("distance", "length") })
     this.width = this.textElement.getComputedTextLength() + 10 + TAB_SIZE
     this.plugVars = { value: variable }
+    this.position = position
   }
 
   getPlugPosition(id: string): Position {
@@ -72,7 +75,7 @@ export default class PropertyPicker extends Token implements Pluggable {
   // Alias this so we conform to TokenWithVariable
 
   static deserialize(v: SerializedPropertyPicker): PropertyPicker {
-    return this._create(v.id, v.propertyName, Variable.withId(v.variableId))
+    return new PropertyPicker(v.id, v.propertyName, Variable.withId(v.variableId), v.position)
   }
 
   serialize(): SerializedPropertyPicker {
@@ -80,7 +83,8 @@ export default class PropertyPicker extends Token implements Pluggable {
       type: "PropertyPicker",
       id: this.id,
       propertyName: this.propertyName,
-      variableId: this.variable.id
+      variableId: this.variable.id,
+      position: this.position
     }
   }
 

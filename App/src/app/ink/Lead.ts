@@ -1,4 +1,5 @@
 import { Position } from "../../lib/types"
+import SVG from "../Svg"
 import Vec from "../../lib/vec"
 import { GameObject } from "../GameObject"
 import Handle, { SerializedHandle } from "./Handle"
@@ -17,6 +18,8 @@ export default class Lead extends GameObject {
 
   stroke?: Stroke
   lastPos?: Position
+
+  private readonly elm = SVG.add("circle", SVG.handleElm, { r: 3, fill: "black" })
 
   constructor(readonly handle: Handle) {
     super()
@@ -41,20 +44,27 @@ export default class Lead extends GameObject {
 
   render(dt: number, t: number) {
     this.lastPos ??= Vec.clone(this.handle.position)
+
     if (!Vec.equal(this.handle.position, this.lastPos)) {
       this.lastPos = Vec.clone(this.handle.position)
       if (this.stroke == null || this.stroke.parent == null || this.stroke.parent instanceof StrokeGroup) {
+        this.stroke?.remove()
         this.stroke = this.root.adopt(new Stroke())
       }
       this.stroke.points.push(Vec.clone(this.handle.position))
     }
 
+    SVG.update(this.elm, {
+      transform: SVG.positionToTransform(this.handle.position)
+    })
     this.handle.render(dt, t)
   }
 
   override remove() {
     this.stroke?.remove()
     this.handle.remove()
+    this.elm.remove()
+    super.remove()
   }
 }
 

@@ -11,6 +11,7 @@ import {
 } from "./Constraints"
 import { deserialize, SerializedGameObject } from "./Deserialize"
 import { GameObject } from "./GameObject"
+import Wire from "./meta/Wire"
 
 export type SerializedRoot = {
   type: "Root"
@@ -39,12 +40,13 @@ export class Root extends GameObject {
   }
 
   static roundtrip() {
-    const stale = Root.current.serialize()
-    const json = JSON.stringify(stale)
-    Root.deserialize(JSON.parse(json))
-    const fresh = Root.current.serialize()
+    let stale = Root.current.serialize()
+    const staleJSON = JSON.stringify(stale)
+    stale = JSON.parse(staleJSON)
+    Root.deserialize(stale)
+    let fresh = Root.current.serialize()
     const freshJSON = JSON.stringify(fresh)
-    if (json === freshJSON) return true
+    if (staleJSON === freshJSON) return true
     debugger
   }
 
@@ -62,15 +64,18 @@ export class Root extends GameObject {
     const { variables, children, constraints } = v
     const root = (Root.current = new Root())
     deserializeVariables(variables)
-    while (children.length > 0) {
-      const c = children.shift()!
-      try {
-        root.adopt(deserialize(c))
-      } catch (e) {
-        children.push(c)
+    const wires = []
+    for (const c of children) {
+      const go = deserialize(c)
+      root.adopt(go)
+      if (go instanceof Wire && c.type === "Wire") {
+        wires.push({ go, c })
       }
     }
     deserializeConstraints(constraints)
+    for (const { go, c } of wires) {
+      go.deserializeConstraint(c)
+    }
     nextId = v.nextId
     return root
   }

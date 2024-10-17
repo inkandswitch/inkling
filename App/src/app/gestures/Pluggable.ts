@@ -10,6 +10,7 @@ import Vec from "../../lib/vec"
 import { GameObject } from "../GameObject"
 import SVG from "../Svg"
 import * as constraints from "../Constraints"
+import { Root } from "../Root"
 
 export function pluggableCreateWire(ctx: EventContext): Gesture | void {
   if (MetaToggle.active) {
@@ -69,6 +70,7 @@ function createWire(from: Connection, ctx: EventContext): Gesture {
           const angleFrom: Connection = { obj: from.obj, plugId: "center", variableId: "angleInDegrees" }
           const angleTo: Connection = { obj: gizmo, plugId: "center", variableId: "angleInDegrees" }
           attachWire(ctx.root.adopt(new Wire(angleFrom)), angleTo)
+          return
         }
 
         // Wire to Empty Space
@@ -83,14 +85,14 @@ function createWire(from: Connection, ctx: EventContext): Gesture {
 function createPropertyPicker(ctx: EventContext, wire: Wire, fromObj: Gizmo) {
   const distValue = fromObj.plugVars.distance.value
   const distPicker = ctx.root.adopt(PropertyPicker.create("distance", distValue))
-  distPicker.position = ctx.event.position
+  distPicker.position = Vec.add(ctx.event.position, Vec(0, 5))
   attachWire(wire, { obj: distPicker, plugId: "input", variableId: "value" })
 
   // Make a second wire
   const angleFrom: Connection = { obj: fromObj, plugId: "center", variableId: "angleInDegrees" }
   const angleValue = fromObj.plugVars.angleInDegrees.value
   const anglePicker = ctx.root.adopt(PropertyPicker.create("angleInDegrees", angleValue))
-  anglePicker.position = ctx.event.position
+  anglePicker.position = Vec.add(ctx.event.position, Vec(0, -25))
   const angleTo: Connection = { obj: anglePicker, plugId: "input", variableId: "value" }
   attachWire(ctx.root.adopt(new Wire(angleFrom)), angleTo)
 }
@@ -107,17 +109,11 @@ function createNumberToken(ctx: EventContext, wire: Wire) {
 }
 
 function attachWire(wire: Wire, to: Connection) {
-  wire.attachEnd(to)
-
   // A wire between two single variables
   const from = wire.a
   const a = from.obj.plugVars[from.variableId] as Variable
   const b = to.obj.plugVars[to.variableId] as Variable
 
+  wire.attachEnd(to)
   wire.constraint = constraints.equals(a, b)
-
-  // if (!wire.constraint) {
-  //   SVG.showStatus("You can't wire those things together silly billy")
-  //   wire.remove()
-  // }
 }

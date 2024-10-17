@@ -13,6 +13,7 @@ import Token from "./Token"
 
 type SerializedConnection = {
   objId: number
+  type: "gizmo" | "token"
   plugId: PlugId
   variableId: VariableId
 }
@@ -32,40 +33,41 @@ export default class Wire extends GameObject {
 
   private readonly elm = SVG.add("polyline", SVG.wiresElm, { points: "", class: "wire" })
 
-  constructor(readonly a: Connection) {
+  constructor(private a: Connection) {
     super()
   }
 
-  private static getObjById(id: number) {
-    try {
-      return Token.withId(id) as NumberToken | PropertyPicker
-    } catch (e) {
-      return Gizmo.withId(id)
-    }
+  private static getObjById(type: "gizmo" | "token", id: number) {
+    return type === "gizmo" ? Gizmo.withId(id) : (Token.withId(id) as NumberToken | PropertyPicker)
   }
 
-  static deserializeConnection({ objId, plugId, variableId }: SerializedConnection): Connection {
-    return { obj: this.getObjById(objId), plugId, variableId } as Connection
+  static deserializeConnection({ objId, type, plugId, variableId }: SerializedConnection): Connection {
+    return { obj: this.getObjById(type, objId), plugId, variableId } as Connection
   }
 
   static deserialize(v: SerializedWire): Wire {
-    const w = new Wire(this.deserializeConnection(v.a))
-    if (v.b != null) {
-      w.b = this.deserializeConnection(v.b)
-      if (v.constraintId == null) throw new Error("We have a 'b' but no constraint")
-      w.constraint = constraints.Constraint.withId(v.constraintId)
-    } else {
-      w.toPosition = v.toPosition
-    }
+    const w = new Wire(null as unknown as Connection)
     return w
+  }
+
+  deserializeConstraint(v: SerializedWire) {
+    this.a = Wire.deserializeConnection(v.a)
+    this.b = v.b && Wire.deserializeConnection(v.b)
+    this.toPosition = v.toPosition
+    if (v.constraintId) this.constraint = constraints.Constraint.withId(v.constraintId)
+  }
+
+  serializeConnection(c: Connection): SerializedConnection {
+    const type = c.obj instanceof Gizmo ? "gizmo" : "token"
+    return { objId: c.obj.id, type, plugId: c.plugId, variableId: c.variableId }
   }
 
   serialize(): SerializedWire {
     return {
       type: "Wire",
       constraintId: this.constraint?.id,
-      a: { objId: this.a.obj.id, plugId: this.a.plugId, variableId: this.a.variableId },
-      b: this.b && { objId: this.b.obj.id, plugId: this.b.plugId, variableId: this.b.variableId },
+      a: this.serializeConnection(this.a),
+      b: this.b && this.serializeConnection(this.b),
       toPosition: this.toPosition
     }
   }

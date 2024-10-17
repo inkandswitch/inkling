@@ -56,7 +56,7 @@
   --formula-ink: transparent;
   --gizmo-arrow: transparent;
   --gizmo-thick: transparent;
-  --handle-fill: lch(var(--L5) 0 0 / 0.03);
+  --handle-fill: lch(var(--L5) 0 0 / 0.15);
   --ink-color: lch(var(--L5) 0 0 / 0.6);
   --label-box: transparent;
   --label-stroke: transparent;
