@@ -32,7 +32,8 @@ export default class StrokeGroup extends GameObject {
     }
     this.a = this.adopt(a)
     this.b = this.adopt(b)
-
+    this.a.getAbsorbedByNearestHandle()
+    this.b.getAbsorbedByNearestHandle()
     this.pointData = this.generatePointData()
   }
 

@@ -25,6 +25,7 @@ export default class Lead extends GameObject {
   constructor(readonly handle: Handle) {
     super()
     this.adopt(handle)
+    handle.getAbsorbedByNearestHandle()
   }
 
   distanceToPoint(point: Position) {

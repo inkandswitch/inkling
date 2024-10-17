@@ -27,8 +27,8 @@ export default class Handle extends GameObject {
     return handle
   }
 
-  static create(position: Position, getAbsorbed = true): Handle {
-    const handle = Handle._create(
+  static create(position: Position): Handle {
+    return new Handle(
       position,
       constraints.variable(0, {
         object: this,
@@ -39,14 +39,6 @@ export default class Handle extends GameObject {
         property: "y"
       })
     )
-    if (getAbsorbed) {
-      handle.getAbsorbedByNearestHandle()
-    }
-    return handle
-  }
-
-  static _create(position: Position, xVariable: Variable, yVariable: Variable, id = generateId()): Handle {
-    return new Handle(position, xVariable, yVariable, id)
   }
 
   private readonly backElm = SVG.add("g", SVG.handleElm, { class: "handle" })
@@ -56,7 +48,7 @@ export default class Handle extends GameObject {
     position: Position,
     public readonly xVariable: Variable,
     public readonly yVariable: Variable,
-    public readonly id: number
+    public readonly id: number = generateId()
   ) {
     super()
     this.position = position
@@ -86,7 +78,7 @@ export default class Handle extends GameObject {
   }
 
   static deserialize(v: SerializedHandle) {
-    return Handle._create(v.position, Variable.withId(v.xVariableId), Variable.withId(v.yVariableId), v.id)
+    return new Handle(v.position, Variable.withId(v.xVariableId), Variable.withId(v.yVariableId), v.id)
   }
 
   toggleGoesAnywhere() {
