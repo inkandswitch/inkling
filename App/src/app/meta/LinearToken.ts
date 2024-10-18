@@ -65,6 +65,7 @@ export default class LinearToken extends Token {
     this.adopt(m)
     this.adopt(x)
     this.adopt(b)
+    this.render(0, 0)
   }
 
   static deserialize(v: SerializedLinearToken): LinearToken {

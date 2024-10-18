@@ -61,15 +61,28 @@ function createWire(from: Connection, ctx: EventContext): Gesture {
       // Wire from Gizmo
       if (from.obj instanceof Gizmo) {
         // Wire to Gizmo
-        const gizmo = ctx.root.find({ what: aGizmo, that, near }) as Gizmo | null
-        if (gizmo) {
-          // Attach the distance wire
-          attachWire(wire, { obj: gizmo, plugId: "center", variableId: "distance" })
+        const fromGizmo = from.obj
+        const toGizmo = ctx.root.find({ what: aGizmo, that, near }) as Gizmo | null
+        if (toGizmo) {
+          // Prevent the Gizmo we're wiring from from moving
+          const preLengthLock = fromGizmo.distance.isLocked
+          const preAngleLock = fromGizmo.angleInDegrees.isLocked
+          if (!preLengthLock) fromGizmo.distance.lock()
+          if (!preAngleLock) fromGizmo.angleInDegrees.lock()
 
           // Make a second wire for the angle
-          const angleFrom: Connection = { obj: from.obj, plugId: "center", variableId: "angleInDegrees" }
-          const angleTo: Connection = { obj: gizmo, plugId: "center", variableId: "angleInDegrees" }
+          const angleFrom: Connection = { obj: fromGizmo, plugId: "center", variableId: "angleInDegrees" }
+          const angleTo: Connection = { obj: toGizmo, plugId: "center", variableId: "angleInDegrees" }
           attachWire(ctx.root.adopt(new Wire(angleFrom)), angleTo)
+
+          // Attach the distance wire
+          attachWire(wire, { obj: toGizmo, plugId: "center", variableId: "distance" })
+
+          constraints.solve(Root.current)
+
+          if (!preLengthLock) fromGizmo.distance.unlock()
+          if (!preAngleLock) fromGizmo.angleInDegrees.unlock()
+
           return
         }
 
