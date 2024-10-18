@@ -42,35 +42,19 @@
   --desire: var(--grey2);
   --eraser: var(--grey1);
   --gesture-circle: var(--grey2);
-  --gesture-text: var(--grey2);
   --pseudo-touch: var(--grey2);
   --status-text: var(--grey3);
 
   /* These colors are different in concrete and meta mode */
-  --component: transparent;
   --constrained: transparent;
-  --formula-editor-cell-non-default: transparent;
-  --formula-editor-cell-text: transparent;
-  --formula-editor-cell: transparent;
-  --formula-editor: transparent;
-  --formula-ink: transparent;
-  --gizmo-arrow: transparent;
   --gizmo-thick: transparent;
   --handle-fill: lch(var(--L5) 0 0 / 0.15);
   --ink-color: lch(var(--L5) 0 0 / 0.6);
-  --label-box: transparent;
-  --label-stroke: transparent;
-  --label-text: transparent;
   --meta-toggle: var(--grey5);
   --meta-circles: var(--grey5);
   --meta-splats: var(--grey5);
-  --op-token: transparent;
-  --parsed-formula: transparent;
   --property-picker-box: transparent;
-  --property-picker-editor-box: transparent;
-  --property-picker-editor-text: transparent;
   --property-picker-text: transparent;
-  --token-embedded-fill: transparent;
   --token-fill: transparent;
   --token-frac-text: transparent;
   --token-locked-fill: transparent;
@@ -80,27 +64,12 @@
   --wire: transparent;
 
   &[meta-mode] {
-    --component: var(--grey5);
     --constrained: var(--grey5);
-    --formula-editor-cell-non-default: var(--grey3);
-    --formula-editor-cell-text: var(--grey4);
-    --formula-editor-cell: var(--grey1);
-    --formula-editor: var(--grey2);
-    --formula-ink: var(--grey5);
-    --gizmo-arrow: var(--grey4);
     --gizmo-thick: var(--grey5);
     --handle-fill: transparent;
-    --ink-color: lch(var(--L5) 0 0 / 0.1);
-    --label-box: var(--grey3);
-    --label-stroke: var(--grey1);
-    --label-text: var(--grey1);
-    --op-token: var(--grey4);
-    --parsed-formula: var(--grey5);
+    --ink-color: lch(var(--L5) 0 0 / 0.3);
     --property-picker-box: var(--grey5);
-    --property-picker-editor-box: var(--grey5);
-    --property-picker-editor-text: var(--grey0);
     --property-picker-text: var(--grey5);
-    --token-embedded-fill: var(--bg-color);
     --token-fill: var(--bg-color);
     --token-frac-text: var(--grey4);
     --token-locked-fill: var(--grey1);
@@ -118,20 +87,18 @@
 :root[theme*="color"] {
   --blue: color(display-p3 0.4 0.8 1);
   --green: color(display-p3 0 0.5 0.5);
-  --yellow: color(display-p3 0.9 0.6 0);
+  --yellow: color(display-p3 1 0.7 0);
 
   --desire: var(--blue);
   --eraser: color(display-p3 1 0.4 0);
   --gesture-circle: var(--yellow);
-  --gesture-text: var(--yellow);
   --meta-circles: color(display-p3 1 0.7 0);
   --pseudo-touch: var(--yellow);
 
   &[meta-mode] {
     --constrained: var(--green);
-    --formula-editor-cell-non-default: var(--blue);
-    --label-box: var(--blue);
     --meta-toggle: color(display-p3 1 0.7 0);
+    --wire: var(--yellow);
   }
 }
 
@@ -297,27 +264,28 @@ svg * {
   stroke-width: 2;
 }
 
-.formula.stroke {
-  stroke: var(--formula-ink);
-}
-
 .handle {
   & circle {
     fill: transparent;
   }
 
-  &[is-canonical] circle {
-    fill: var(--handle-fill);
-  }
-
-  &[goes-anywhere] circle {
-    fill: yellow;
-  }
-
   & path {
     fill: none;
-    stroke: var(--unconstrained);
     stroke-width: 2;
+  }
+
+  &[is-canonical] {
+    circle {
+      fill: var(--handle-fill);
+    }
+
+    &[goes-anywhere] circle {
+      fill: yellow;
+    }
+
+    & path {
+      stroke: var(--unconstrained);
+    }
   }
 
   --arc-rotate: rotate 0.2s cubic-bezier(0.1, 0.4, 0.4, 0.9);
@@ -332,8 +300,9 @@ svg * {
   }
 
   &[has-pin] {
-    & path {
+    &[is-canonical] path {
       stroke: var(--constrained);
+      stroke-width: 3;
     }
 
     & .arcs1 {
@@ -355,7 +324,7 @@ svg * {
   .thick {
     stroke-width: 30;
     stroke: var(--gizmo-thick);
-    opacity: 0.03;
+    opacity: 0.07;
     transition: opacity var(--paste), var(--transition-stroke);
   }
 
@@ -387,68 +356,15 @@ svg * {
 
     .thick {
       stroke: var(--constrained);
-      opacity: 0.07;
+      opacity: 0.15;
     }
-  }
-}
-
-.component {
-  fill: none;
-  stroke: var(--component);
-  stroke-width: 2;
-}
-
-.formula-editor {
-  fill: var(--formula-editor);
-}
-
-.formula-editor-cell {
-  stroke: var(--formula-editor-cell);
-  fill: none;
-
-  &:not([is-default-type]) {
-    fill: none;
-  }
-}
-
-.formula-editor-cell-text {
-  fill: var(--formula-editor-cell-text);
-  font-size: 30px;
-}
-
-.label-box {
-  fill: var(--label-box);
-  &[is-hidden] {
-    fill: transparent;
-  }
-}
-
-.label-text {
-  fill: var(--label-text);
-  font-size: 24px;
-  &[is-hidden] {
-    fill: transparent;
-  }
-}
-
-.label-stroke {
-  fill: none;
-  stroke: var(--label-stroke);
-  stroke-width: 2;
-  &[is-hidden] {
-    stroke: transparent;
   }
 }
 
 .token-box {
   fill: var(--token-fill);
   stroke: var(--token-stroke);
-  stroke-width: 0.5;
-
-  [is-embedded] > & {
-    stroke: none;
-    fill: var(--token-embedded-fill);
-  }
+  stroke-width: 1;
 
   [is-locked] > & {
     fill: var(--token-locked-fill);
@@ -475,26 +391,10 @@ svg * {
   font-family: monospace;
 }
 
-.op.token {
-  fill: var(--op-token);
-  font-size: 24px;
-}
-
-.parsed-formula {
-  fill: none;
-  stroke: var(--parsed-formula);
-  stroke-width: 0.5;
-}
-
 .property-picker-box {
   stroke: var(--property-picker-box);
   fill: var(--token-fill);
-  stroke-width: 0.5;
-
-  [is-embedded] > & {
-    stroke: none;
-    fill: var(--token-embedded-fill);
-  }
+  stroke-width: 1;
 }
 
 .property-picker-text {
@@ -503,41 +403,16 @@ svg * {
   font-family: monospace;
 }
 
-.property-picker-editor-box {
-  fill: var(--property-picker-editor-box);
-}
-
-.property-picker-editor-text {
-  fill: var(--property-picker-editor-text);
-  font-size: 24px;
-  font-family: monospace;
-}
-
 .wire {
   fill: none;
   stroke: var(--wire);
-  stroke-width: 2;
+  stroke-width: 1.5;
   stroke-dasharray: 16 4;
-  stroke-dashoffset: -2;
-  transition: stroke-dasharray 0.3s cubic-bezier(1, -0.5, 0, 1.3), stroke-dashoffset 0.3s cubic-bezier(1, -0.5, 0, 1.3),
-    stroke-width 0.3s cubic-bezier(1, -0.5, 0, 1.3), var(--transition-stroke);
-
-  &[is-paused] {
-    stroke-dasharray: 4 16;
-    stroke-dashoffset: -7;
-    stroke-width: 1;
-  }
 }
 
 .gesture {
   & circle {
     fill: var(--gesture-circle);
-  }
-
-  & text {
-    fill: var(--gesture-text);
-    transform: translate(0, -50px);
-    text-anchor: middle;
   }
 }
 

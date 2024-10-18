@@ -76,15 +76,6 @@ export default class Wire extends GameObject {
     return distanceToPath(point, this.getPoints())
   }
 
-  togglePaused() {
-    // TODO
-  }
-
-  get paused() {
-    // TODO
-    return false
-  }
-
   private getPoints() {
     const a = this.a.obj.getPlugPosition(this.a.plugId)
     const b = this.toPosition ?? this.b!.obj.getPlugPosition(this.b!.plugId)
@@ -92,10 +83,7 @@ export default class Wire extends GameObject {
   }
 
   render(): void {
-    SVG.update(this.elm, {
-      points: SVG.points(this.getPoints()),
-      "is-paused": this.paused
-    })
+    SVG.update(this.elm, { points: SVG.points(this.getPoints()) })
   }
 
   isCollapsable() {

@@ -537,28 +537,24 @@ export type SerializedConstraint =
   | {
       type: "constant"
       id: number
-      paused: boolean
       variableId: number
       value: number
     }
   | {
       type: "pin"
       id: number
-      paused: boolean
       handleId: number
       position: Position
     }
   | {
       type: "finger"
       id: number
-      paused: boolean
       handleId: number
       position: Position
     }
   | {
       type: "linearRelationship"
       id: number
-      paused: boolean
       yVariableId: number
       m: number
       xVariableId: number
@@ -567,14 +563,12 @@ export type SerializedConstraint =
   | {
       type: "absorb"
       id: number
-      paused: boolean
       parentHandleId: number
       childHandleId: number
     }
   | {
       type: "polarVector"
       id: number
-      paused: boolean
       aHandleId: number
       bHandleId: number
       distanceVariableId: number
@@ -583,7 +577,6 @@ export type SerializedConstraint =
   | {
       type: "linearFormula"
       id: number
-      paused: boolean
       mVariableId: number
       xVariableId: number
       bVariableId: number
@@ -600,23 +593,6 @@ export abstract class Constraint {
       }
     }
     throw new Error("couldn't find constraint w/ id " + id)
-  }
-
-  private _paused = false
-
-  get paused() {
-    return this._paused
-  }
-
-  set paused(newValue: boolean) {
-    if (newValue !== this._paused) {
-      this._paused = newValue
-      forgetClustersForSolver()
-    }
-  }
-
-  togglePaused() {
-    this.paused = !this.paused
   }
 
   readonly variables = [] as Variable[]
@@ -704,7 +680,6 @@ export class Constant extends Constraint {
     return {
       type: "constant",
       id: this.id,
-      paused: this.paused,
       variableId: this.variable.id,
       value: this.value
     }
@@ -753,7 +728,6 @@ export class Pin extends Constraint {
     return {
       type: "pin",
       id: this.id,
-      paused: this.paused,
       handleId: this.handle.id,
       position: { x: this.position.x, y: this.position.y }
     }
@@ -806,7 +780,6 @@ export class Finger extends Constraint {
     return {
       type: "finger",
       id: this.id,
-      paused: this.paused,
       handleId: this.handle.id,
       position: this.position
     }
@@ -863,7 +836,6 @@ export class LinearRelationship extends Constraint {
     return {
       type: "linearRelationship",
       id: this.id,
-      paused: this.paused,
       yVariableId: this.y.id,
       m: this.m,
       xVariableId: this.x.id,
@@ -927,7 +899,6 @@ export class Absorb extends Constraint {
     return {
       type: "absorb",
       id: this.id,
-      paused: this.paused,
       parentHandleId: this.parent.id,
       childHandleId: this.child.id
     }
@@ -1004,7 +975,6 @@ export class PolarVector extends Constraint {
     return {
       type: "polarVector",
       id: this.id,
-      paused: this.paused,
       aHandleId: this.a.id,
       bHandleId: this.b.id,
       distanceVariableId: this.distance.id,
@@ -1058,7 +1028,6 @@ export class LinearFormula extends Formula {
     return {
       type: "linearFormula",
       id: this.id,
-      paused: this.paused,
       mVariableId: this.variables[0].id,
       xVariableId: this.variables[1].id,
       bVariableId: this.variables[2].id,
@@ -1107,8 +1076,7 @@ function getClustersForSolver(root: GameObject): Set<ClusterForSolver> {
     variable.info = { isCanonical: true, absorbedVariables: new Set() }
   }
 
-  // ignore constraints that are paused
-  const activeConstraints = [...Constraint.all].filter((constraint) => !constraint.paused)
+  const activeConstraints = [...Constraint.all]
 
   // set up updated relationships among handles and variables
   for (const constraint of activeConstraints) {
@@ -1330,9 +1298,6 @@ function solveCluster(cluster: ClusterForSolver, root: GameObject) {
     //   'while working on',
     //   cluster
     // );
-    // const lastConstraint = constraints[constraints.length - 1];
-    // lastConstraint.paused = true;
-    // console.log('paused', lastConstraint, 'to see if it helps');
     return
   }
 
@@ -1474,14 +1439,6 @@ export function deserializeConstraints(constraints: SerializedConstraint[]) {
 }
 
 function deserializeConstraint(constraint: SerializedConstraint): Constraint {
-  const ans = _deserializeConstraint(constraint)
-  if (constraint.paused) {
-    ans.paused = true
-  }
-  return ans
-}
-
-function _deserializeConstraint(constraint: SerializedConstraint): Constraint {
   switch (constraint.type) {
     case "constant": {
       const variable = Variable.withId(constraint.variableId)!

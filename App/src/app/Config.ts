@@ -1,5 +1,5 @@
 export default {
-  renderDebugPerf: true,
+  renderDebugPerf: false,
   presentationMode: true,
   fingerOfGod: true
 }

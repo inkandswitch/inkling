@@ -5,6 +5,7 @@ import { Variable } from "../Constraints"
 import { GameObject } from "../GameObject"
 import { generateId } from "../Root"
 import SVG from "../Svg"
+import NumberToken, { SerializedNumberToken } from "./NumberToken"
 import { Pluggable } from "./Pluggable"
 import Token from "./Token"
 
@@ -26,6 +27,7 @@ export type SerializedPropertyPicker = {
   id: number
   propertyName: PropertyName
   variableId: number
+  number: SerializedNumberToken
   position: Position
 }
 
@@ -59,6 +61,7 @@ export default class PropertyPicker extends Token implements Pluggable {
     id: number,
     readonly propertyName: PropertyName,
     readonly variable: Variable,
+    readonly number: NumberToken,
     position: Position
   ) {
     super(id)
