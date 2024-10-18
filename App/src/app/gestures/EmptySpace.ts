@@ -7,16 +7,20 @@ import MetaToggle from "../gui/MetaToggle"
 
 export function emptySpaceDrawInk(ctx: EventContext): Gesture | void {
   if (!MetaToggle.active) {
-    const stroke = ctx.root.adopt(new Stroke())
-
-    return new Gesture("Draw Ink", {
-      dragged(ctx) {
-        stroke.points.push(ctx.event.position)
-      },
-      endedTap(ctx) {
-        createLead(ctx)
-      }
-    })
+    if (ctx.pseudoCount >= 3) {
+      return new Gesture("Draw Ink", {
+        endedTap(ctx) {
+          createLead(ctx)
+        }
+      })
+    } else {
+      const stroke = ctx.root.adopt(new Stroke())
+      return new Gesture("Draw Ink", {
+        moved(ctx) {
+          stroke.points.push(ctx.event.position)
+        }
+      })
+    }
   }
 }
 
