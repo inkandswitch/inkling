@@ -30,10 +30,10 @@ export default class StrokeGroup extends GameObject {
       const points = this.strokes.flatMap((stroke) => stroke.points)
       ;[a, b] = farthestPair(points).map((pos) => Handle.create(pos))
     }
+    a.getAbsorbedByNearestHandle()
+    b.getAbsorbedByNearestHandle()
     this.a = this.adopt(a)
     this.b = this.adopt(b)
-    this.a.getAbsorbedByNearestHandle()
-    this.b.getAbsorbedByNearestHandle()
     this.pointData = this.generatePointData()
   }
 

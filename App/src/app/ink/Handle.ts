@@ -65,6 +65,7 @@ export default class Handle extends GameObject {
     SVG.add("path", arcs2, { d: arc((1 * TAU) / 4) })
     SVG.add("path", arcs2, { d: arc((2 * TAU) / 4) })
     SVG.add("path", arcs2, { d: arc((3 * TAU) / 4) })
+    Root.current.adopt(this)
   }
 
   serialize(): SerializedHandle {
