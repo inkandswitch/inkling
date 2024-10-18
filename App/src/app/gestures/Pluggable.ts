@@ -98,14 +98,14 @@ function createWire(from: Connection, ctx: EventContext): Gesture {
 function createPropertyPicker(ctx: EventContext, wire: Wire, fromObj: Gizmo) {
   const distValue = fromObj.plugVars.distance.value
   const distPicker = ctx.root.adopt(PropertyPicker.create("distance", distValue))
-  distPicker.position = Vec.add(ctx.event.position, Vec(0, 5))
+  distPicker.position = Vec.add(ctx.event.position, Vec(0, 10))
   attachWire(wire, { obj: distPicker, plugId: "input", variableId: "value" })
 
   // Make a second wire
   const angleFrom: Connection = { obj: fromObj, plugId: "center", variableId: "angleInDegrees" }
   const angleValue = fromObj.plugVars.angleInDegrees.value
   const anglePicker = ctx.root.adopt(PropertyPicker.create("angleInDegrees", angleValue))
-  anglePicker.position = Vec.add(ctx.event.position, Vec(0, -25))
+  anglePicker.position = Vec.add(ctx.event.position, Vec(0, -30))
   const angleTo: Connection = { obj: anglePicker, plugId: "input", variableId: "value" }
   attachWire(ctx.root.adopt(new Wire(angleFrom)), angleTo)
 }
