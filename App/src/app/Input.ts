@@ -1,6 +1,6 @@
 import Config from "./Config"
 import { EventContext, Gesture } from "./Gesture"
-import { emptySpaceCreateGizmoOrLinear, emptySpaceDrawInk } from "./gestures/EmptySpace"
+import { emptySpaceCreateGizmoOrLinear, emptySpaceDrawInk, emptySpaceEatLead } from "./gestures/EmptySpace"
 import { erase } from "./gestures/Erase"
 import { gizmoCycleConstraints } from "./gestures/Gizmo"
 import { handleBreakOff, handleCreateGizmo, handleGoAnywhere, handleMoveOrTogglePin } from "./gestures/Handle"
@@ -15,6 +15,8 @@ import SVG from "./Svg"
 
 const gestureCreators = {
   finger: [
+    metaToggleFingerActions,
+    //
     handleGoAnywhere,
     numberTokenScrub,
     handleBreakOff,
@@ -25,14 +27,13 @@ const gestureCreators = {
     wireTogglePaused,
     //
     strokeGroupRemoveHandles,
-    strokeAddHandles,
-    //
-    metaToggleFingerActions
+    strokeAddHandles
   ],
   pencil: [
     metaToggleIgnorePencil,
     erase,
     //
+    emptySpaceEatLead,
     pluggableCreateWire,
     handleCreateGizmo,
     //

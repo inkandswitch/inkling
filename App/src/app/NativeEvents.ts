@@ -13,7 +13,7 @@ import MetaToggle from "./gui/MetaToggle"
 
 // How far does the input need to move before we count it as a drag?
 const fingerMinDragDist = 10
-const pencilMinDragDist = 10
+const pencilMinDragDist = 15
 
 export type Event = PencilEvent | FingerEvent
 export type InputState = PencilState | FingerState
