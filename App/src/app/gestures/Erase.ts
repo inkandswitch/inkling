@@ -7,6 +7,7 @@ import Stroke from "../ink/Stroke"
 import StrokeGroup from "../ink/StrokeGroup"
 import MetaToggle from "../gui/MetaToggle"
 import Lead from "../ink/Lead"
+import { Root } from "../Root"
 
 export function erase(ctx: EventContext): Gesture | void {
   if (ctx.pseudoCount === 2) {
@@ -21,7 +22,11 @@ export function erase(ctx: EventContext): Gesture | void {
         })
 
         for (const go of gos) {
-          go.remove()
+          if (go instanceof MetaToggle) {
+            return Root.reset()
+          } else {
+            go.remove()
+          }
         }
       }
     })

@@ -7,18 +7,8 @@ import { Root } from "./Root"
 import SVG from "./Svg"
 import VarMover from "./VarMover"
 
-export function initialize() {
-  Root.deserialize({
-    type: "Root",
-    variables: [],
-    children: [{ type: "MetaToggle", position: { x: 30, y: 30 } }],
-    constraints: [],
-    nextId: 0
-  })
-  forDebugging("root", Root.current)
-}
-
-initialize()
+Root.reset()
+forDebugging("root", Root.current)
 
 // This is a pretzel, because the interface between NativeEvents and Input is a work in progress.
 const events = new Events((event: Event, state: InputState) => {

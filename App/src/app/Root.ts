@@ -39,6 +39,16 @@ export class Root extends GameObject {
     }
   }
 
+  static reset() {
+    Root.deserialize({
+      type: "Root",
+      variables: [],
+      children: [{ type: "MetaToggle", position: { x: 30, y: 30 } }],
+      constraints: [],
+      nextId: 0
+    })
+  }
+
   static roundtrip() {
     let stale = Root.current.serialize()
     const staleJSON = JSON.stringify(stale)
