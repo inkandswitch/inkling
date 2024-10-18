@@ -5,7 +5,6 @@ import { Variable } from "../Constraints"
 import { GameObject } from "../GameObject"
 import { generateId } from "../Root"
 import SVG from "../Svg"
-import NumberToken, { SerializedNumberToken } from "./NumberToken"
 import { Pluggable } from "./Pluggable"
 import Token from "./Token"
 
@@ -27,7 +26,6 @@ export type SerializedPropertyPicker = {
   id: number
   propertyName: PropertyName
   variableId: number
-  number: SerializedNumberToken
   position: Position
 }
 
@@ -61,7 +59,6 @@ export default class PropertyPicker extends Token implements Pluggable {
     id: number,
     readonly propertyName: PropertyName,
     readonly variable: Variable,
-    readonly number: NumberToken,
     position: Position
   ) {
     super(id)
@@ -75,8 +72,6 @@ export default class PropertyPicker extends Token implements Pluggable {
     return id === "input" ? Vec.add(this.position, Vec(0, this.height / 2)) : this.midPoint()
   }
 
-  // Alias this so we conform to TokenWithVariable
-
   static deserialize(v: SerializedPropertyPicker): PropertyPicker {
     return new PropertyPicker(v.id, v.propertyName, Variable.withId(v.variableId), v.position)
   }
@@ -89,11 +84,6 @@ export default class PropertyPicker extends Token implements Pluggable {
       variableId: this.variable.id,
       position: this.position
     }
-  }
-
-  override onTap() {
-    // TODO: Toggle the property
-    // Does that mean we need to know about any wires attached to us?
   }
 
   render() {
