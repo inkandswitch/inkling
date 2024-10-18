@@ -115,5 +115,5 @@ function attachWire(wire: Wire, to: Connection) {
   const b = to.obj.plugVars[to.variableId] as Variable
 
   wire.attachEnd(to)
-  wire.constraint = constraints.equals(a, b)
+  wire.constraint = constraints.equals(b, a)
 }
