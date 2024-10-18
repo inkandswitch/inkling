@@ -194,30 +194,22 @@ export default class Gizmo extends GameObject implements Pluggable {
 
     const solverLength = this.distance.value
     const realLength = Vec.dist(a, b)
-    const distanceTension = Math.abs(solverLength - realLength) / 100
+    const distanceTension = Math.abs(solverLength - realLength) / 50
 
     const solverAngle = normalizeAngle(this.angleInRadians.value)
     const realAngle = normalizeAngle(Vec.angle(Vec.sub(b, a)))
-    const angleTension = Math.abs(solverAngle - realAngle)
+    const angleTension = Math.abs(solverAngle - realAngle) * 10
 
     const aLock = this.angleInRadians.isLocked
     const dLock = this.distance.isLocked
     const fade = lerp(realLength, 80, 100, 0, 1)
 
-    SVG.update(this.thick, {
-      style:
-        distanceTension + angleTension < 0.1
-          ? ""
-          : `
-          stroke-dashoffset:${-realLength / 2}px;
-          stroke: color(display-p3 1 .3 .2);
-          stroke-dasharray: 20 20;
-          opacity: 0.3;
-        `
-    })
-
+    SVG.update(this.elm, { "is-uncomfortable": distanceTension + angleTension > 1 })
     SVG.update(this.elm, { "is-constrained": aLock || dLock })
-    SVG.update(this.thick, { points: SVG.points(a, b) })
+    SVG.update(this.thick, {
+      points: SVG.points(a, b),
+      style: `stroke-dashoffset:${-realLength / 2}px`
+    })
 
     if (realLength > 0) {
       const ab = Vec.sub(b, a)

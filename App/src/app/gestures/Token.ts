@@ -3,12 +3,18 @@ import { aToken } from "../meta/Token"
 import Vec from "../../lib/vec"
 import { aNumberToken } from "../meta/NumberToken"
 import MetaToggle from "../gui/MetaToggle"
+import LinearToken from "../meta/LinearToken"
 
 export function tokenMoveOrToggleConstraint(ctx: EventContext): Gesture | void {
   if (MetaToggle.active) {
     const token = ctx.root.find({
       what: aToken,
       near: ctx.event.position
+    })
+    const tappableToken = ctx.root.find({
+      what: aToken,
+      near: ctx.event.position,
+      that: (go) => !(go instanceof LinearToken)
     })
 
     if (token) {
@@ -19,7 +25,7 @@ export function tokenMoveOrToggleConstraint(ctx: EventContext): Gesture | void {
           token.position = Vec.add(ctx.event.position, offset)
         },
         endedTap(ctx) {
-          token.onTap()
+          tappableToken?.onTap()
         }
       })
     }

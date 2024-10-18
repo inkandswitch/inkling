@@ -60,6 +60,7 @@
   --token-locked-fill: transparent;
   --token-stroke: transparent;
   --token-text: transparent;
+  --uncomfortable: lch(var(--L4), 0 0 / 0.05);
   --unconstrained: transparent;
   --wire: transparent;
 
@@ -75,6 +76,7 @@
     --token-locked-fill: var(--grey1);
     --token-stroke: var(--grey5);
     --token-text: var(--grey5);
+    --uncomfortable: lch(var(--L4), 0 0 / 0.3);
     --unconstrained: var(--grey3);
     --wire: var(--grey4);
   }
@@ -94,10 +96,12 @@
   --gesture-circle: var(--yellow);
   --meta-circles: color(display-p3 1 0.7 0);
   --pseudo-touch: var(--yellow);
+  --uncomfortable: color(display-p3 1 0.3 0.2 / 0.05);
 
   &[meta-mode] {
     --constrained: var(--green);
     --meta-toggle: color(display-p3 1 0.7 0);
+    --uncomfortable: color(display-p3 1 0.3 0.2 / 0.3);
     --wire: var(--yellow);
   }
 }
@@ -359,6 +363,12 @@ svg * {
       opacity: 0.15;
     }
   }
+
+  &[is-uncomfortable] .thick {
+    stroke: var(--uncomfortable);
+    stroke-dasharray: 20 20;
+    opacity: 1;
+  }
 }
 
 .token-box {
@@ -373,7 +383,7 @@ svg * {
 
 .hollow-box {
   fill: none;
-  stroke: var(--token-stroke);
+  /* stroke: var(--token-stroke); */
   stroke-width: 0.5;
 }
 
