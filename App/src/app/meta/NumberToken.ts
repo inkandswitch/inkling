@@ -75,7 +75,9 @@ export default class NumberToken extends Token implements Pluggable {
 
     this.lastRenderedValue = newValue
 
-    const [whole, frac] = newValue.split(".")
+    let [whole, frac] = newValue.split(".")
+
+    if (whole === "-0") whole = "0"
 
     SVG.update(this.wholeElm, { content: whole, visibility: "visible" })
     SVG.update(this.fracElm, { content: frac, visibility: "visible" })
