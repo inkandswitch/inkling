@@ -6,9 +6,9 @@ import { gizmoCycleConstraints } from "./gestures/Gizmo"
 import { handleBreakOff, handleCreateGizmo, handleGoAnywhere, handleMoveOrTogglePin } from "./gestures/Handle"
 import { metaToggleFingerActions, metaToggleIgnorePencil } from "./gestures/MetaToggle"
 import { pluggableCreateWire } from "./gestures/Pluggable"
+import { edgeSwipe } from "./gestures/Preset"
 import { strokeAddHandles } from "./gestures/Stroke"
 import { strokeGroupRemoveHandles } from "./gestures/StrokeGroup"
-import { wireTogglePaused } from "./gestures/ToggleWire"
 import { numberTokenScrub, tokenMoveOrToggleConstraint } from "./gestures/Token"
 import { Event, TouchId } from "./NativeEvents"
 import SVG from "./Svg"
@@ -24,7 +24,8 @@ const gestureCreators = {
     tokenMoveOrToggleConstraint,
     handleMoveOrTogglePin,
     gizmoCycleConstraints,
-    wireTogglePaused,
+    //
+    edgeSwipe,
     //
     strokeGroupRemoveHandles,
     strokeAddHandles

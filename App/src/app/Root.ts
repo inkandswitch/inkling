@@ -1,3 +1,4 @@
+import { clip } from "../lib/math"
 import { Position } from "../lib/types"
 import {
   Constraint,
@@ -28,6 +29,7 @@ export function generateId() {
 
 export class Root extends GameObject {
   static current: Root
+  static preset = 0
 
   serialize(): SerializedRoot {
     return {
@@ -40,13 +42,17 @@ export class Root extends GameObject {
   }
 
   static reset() {
-    Root.deserialize({
-      type: "Root",
-      variables: [],
-      children: [{ type: "MetaToggle", position: { x: 30, y: 30 } }],
-      constraints: [],
-      nextId: 0
-    })
+    Root.deserialize(presets[Root.preset])
+  }
+
+  static nextPreset() {
+    this.preset = clip(this.preset + 1, 0, presets.length - 1)
+    this.reset()
+  }
+
+  static prevPreset() {
+    this.preset = clip(this.preset - 1, 0, presets.length - 1)
+    this.reset()
   }
 
   static roundtrip() {
@@ -106,3 +112,13 @@ export class Root extends GameObject {
 }
 
 ;(window as any).Root = Root
+
+const presets: SerializedRoot[] = []
+
+presets.push({
+  type: "Root",
+  variables: [],
+  children: [{ type: "MetaToggle", position: { x: 30, y: 30 } }],
+  constraints: [],
+  nextId: 0
+})
