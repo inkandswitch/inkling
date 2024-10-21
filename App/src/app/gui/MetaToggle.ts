@@ -46,8 +46,8 @@ function randomSplat(angle: number) {
 export default class MetaToggle extends GameObject {
   static active = false
 
-  static toggle() {
-    MetaToggle.active = !MetaToggle.active
+  static toggle(doToggle = !MetaToggle.active) {
+    MetaToggle.active = doToggle
     document.documentElement.toggleAttribute("meta-mode", MetaToggle.active)
   }
 
