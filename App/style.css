@@ -87,6 +87,7 @@
  */
 
 :root[theme*="color"] {
+  --purple: color(display-p3 0.5 0 1);
   --blue: color(display-p3 0.4 0.8 1);
   --green: color(display-p3 0 0.5 0.5);
   --yellow: color(display-p3 1 0.7 0);
@@ -268,6 +269,10 @@ svg * {
   stroke-width: 2;
 }
 
+.go-everywhere {
+  fill: var(--purple);
+}
+
 .handle {
   & circle {
     fill: transparent;
@@ -284,7 +289,8 @@ svg * {
     }
 
     &[goes-anywhere] circle {
-      fill: yellow;
+      scale: 0.7;
+      fill: var(--purple);
     }
 
     & path {

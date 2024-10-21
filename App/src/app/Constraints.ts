@@ -1322,9 +1322,8 @@ function solveCluster(cluster: ClusterForSolver, root: GameObject) {
     }
 
     const goesAnywhereMode = hauntedHandle.goesAnywhereMode
-    const gridSize = goesAnywhereMode === "continuous" ? 100 : 25
-    const maxIterations = goesAnywhereMode === "continuous" ? 25 : 100
-    const life = goesAnywhereMode === "continuous" ? 0 : 5
+    const gridSize = 50
+    const maxIterations = 25
     for (let x = -50; x < innerWidth + 50; x += gridSize) {
       if (xIndex !== undefined) {
         inputs[xIndex] = x
@@ -1351,8 +1350,7 @@ function solveCluster(cluster: ClusterForSolver, root: GameObject) {
             cx: xIndex !== undefined ? solution[xIndex] : hauntedHandle.x,
             cy: yIndex !== undefined ? solution[yIndex] : hauntedHandle.y,
             r: 2,
-            fill: "rgba(255, 255, 255, 0.2)",
-            life
+            class: "go-everywhere"
           })
         } catch {
           // ignore
