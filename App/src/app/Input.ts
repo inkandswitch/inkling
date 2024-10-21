@@ -38,7 +38,7 @@ const gestureCreators = {
     pluggableCreateWire,
     handleCreateGizmo,
     //
-    metaDrawInk,
+    // metaDrawInk,
     emptySpaceCreateGizmoOrLinear,
     emptySpaceDrawInk
   ]

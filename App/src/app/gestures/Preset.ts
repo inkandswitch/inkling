@@ -4,8 +4,8 @@ import Averager from "../../lib/Averager"
 import { Root } from "../Root"
 
 export function edgeSwipe(ctx: EventContext): Gesture | void {
-  const leftEdge = ctx.event.position.x < 100
-  const rightEdge = ctx.event.position.x > window.innerWidth - 100
+  const leftEdge = ctx.event.position.x < 20
+  const rightEdge = ctx.event.position.x > window.innerWidth - 20
   if (!(leftEdge || rightEdge)) return
 
   // Use this to make sure we only activate the pan when the user is actually pulling the page edge
