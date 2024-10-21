@@ -2,3 +2,4 @@
 node_modules
 xcuserdata
 package-lock.json
+dist
