@@ -4,7 +4,7 @@ import Handle, { aHandle } from "./ink/Handle"
 import { forDebugging, sets } from "../lib/helpers"
 import { uncmin } from "../lib/numeric"
 import { minimize } from "../lib/g9"
-import { TAU, normalizeAngle } from "../lib/math"
+import { TAU, clip, normalizeAngle } from "../lib/math"
 import { Position } from "../lib/types"
 import Vec from "../lib/vec"
 import { aGizmo } from "./meta/Gizmo"
@@ -1304,7 +1304,7 @@ function solveCluster(cluster: ClusterForSolver, root: GameObject) {
   function moveHauntedHandle() {
     const hauntedHandle = root.find({
       what: aHandle,
-      that: (handle) => handle.goesAnywhereMode !== "off"
+      that: (handle) => handle.id == Handle.goesAnywhereId
     })
     if (
       !hauntedHandle ||
@@ -1321,9 +1321,9 @@ function solveCluster(cluster: ClusterForSolver, root: GameObject) {
       return
     }
 
-    const goesAnywhereMode = hauntedHandle.goesAnywhereMode
-    const gridSize = 50
-    const maxIterations = 25
+    const gridSize = 100
+    const maxIterations = 10
+
     for (let x = -50; x < innerWidth + 50; x += gridSize) {
       if (xIndex !== undefined) {
         inputs[xIndex] = x
@@ -1335,17 +1335,6 @@ function solveCluster(cluster: ClusterForSolver, root: GameObject) {
         try {
           // @ts-ignore-error
           const solution = solver(computeTotalError, inputs, 1, undefined, maxIterations).solution
-          // SVG.now("polyline", {
-          //   points: SVG.points(
-          //     { x, y },
-          //     {
-          //       x: xIndex !== undefined ? solution[xIndex] : hauntedHandle.x,
-          //       y: yIndex !== undefined ? solution[yIndex] : hauntedHandle.y
-          //     }
-          //   ),
-          //   stroke: "rgba(255, 255, 255, 0.1)",
-          //   life
-          // })
           SVG.now("circle", {
             cx: xIndex !== undefined ? solution[xIndex] : hauntedHandle.x,
             cy: yIndex !== undefined ? solution[yIndex] : hauntedHandle.y,
@@ -1356,10 +1345,6 @@ function solveCluster(cluster: ClusterForSolver, root: GameObject) {
           // ignore
         }
       }
-    }
-
-    if (goesAnywhereMode === "snapshot") {
-      hauntedHandle.toggleGoesAnywhere()
     }
   }
 

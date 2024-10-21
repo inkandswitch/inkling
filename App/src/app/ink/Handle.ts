@@ -7,9 +7,6 @@ import Vec from "../../lib/vec"
 import { TAU } from "../../lib/math"
 import { generateId, Root } from "../Root"
 
-let goesAnywhereId = -1
-let goesAnywhereMode: "continuous" | "snapshot" = "continuous"
-
 export type SerializedHandle = {
   type: "Handle"
   id: number
@@ -19,6 +16,8 @@ export type SerializedHandle = {
 }
 
 export default class Handle extends GameObject {
+  static goesAnywhereId = -1
+
   static withId(id: number) {
     const handle = Root.current.find({ what: aHandle, that: (h) => h.id === id })
     if (handle == null) {
@@ -79,26 +78,16 @@ export default class Handle extends GameObject {
   }
 
   static deserialize(v: SerializedHandle) {
+    Handle.goesAnywhereId = -1
     return new Handle(v.position, Variable.withId(v.xVariableId), Variable.withId(v.yVariableId), v.id)
   }
 
   toggleGoesAnywhere() {
-    if (goesAnywhereId !== this.id) {
-      goesAnywhereId = this.id
-      goesAnywhereMode = "continuous"
-    } else if (goesAnywhereMode === "continuous") {
-      goesAnywhereMode = "snapshot"
+    if (Handle.goesAnywhereId !== this.id) {
+      Handle.goesAnywhereId = this.id
     } else {
-      goesAnywhereId = -1
+      Handle.goesAnywhereId = -1
     }
-
-    if (this.goesAnywhereMode !== "off") {
-      SVG.showStatus("goes anywhere: " + this.goesAnywhereMode)
-    }
-  }
-
-  get goesAnywhereMode(): "off" | typeof goesAnywhereMode {
-    return goesAnywhereId === this.id ? goesAnywhereMode : "off"
   }
 
   get x() {
@@ -222,7 +211,7 @@ export default class Handle extends GameObject {
       transform: SVG.positionToTransform(this),
       "is-canonical": this.isCanonical,
       "has-pin": this.hasPin,
-      "goes-anywhere": this.id === goesAnywhereId
+      "goes-anywhere": this.id === Handle.goesAnywhereId
     }
     SVG.update(this.backElm, attrs)
     SVG.update(this.frontElm, attrs)
