@@ -62,7 +62,7 @@ function createWire(from: Connection, ctx: EventContext): Gesture {
       if (from.obj instanceof Gizmo) {
         // Wire to Gizmo
         const fromGizmo = from.obj
-        const toGizmo = ctx.root.find({ what: aGizmo, that, near }) as Gizmo | null
+        const toGizmo = ctx.root.find({ what: aGizmo, that, near, tooFar: 30 }) as Gizmo | null
         if (toGizmo) {
           // Prevent the Gizmo we're wiring from from moving
           const preLengthLock = fromGizmo.distance.isLocked
