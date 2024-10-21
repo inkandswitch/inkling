@@ -22,9 +22,7 @@ export function erase(ctx: EventContext): Gesture | void {
         })
 
         for (const go of gos) {
-          if (go instanceof MetaToggle) {
-            return Root.reset()
-          } else {
+          if (!(go instanceof MetaToggle)) {
             go.remove()
           }
         }

@@ -1,6 +1,6 @@
 import Config from "./Config"
 import { EventContext, Gesture } from "./Gesture"
-import { emptySpaceCreateGizmoOrLinear, emptySpaceDrawInk, emptySpaceEatLead } from "./gestures/EmptySpace"
+import { emptySpaceCreateGizmoOrLinear, emptySpaceDrawInk, emptySpaceEatLead, metaDrawInk } from "./gestures/EmptySpace"
 import { erase } from "./gestures/Erase"
 import { gizmoCycleConstraints } from "./gestures/Gizmo"
 import { handleBreakOff, handleCreateGizmo, handleGoAnywhere, handleMoveOrTogglePin } from "./gestures/Handle"
@@ -38,6 +38,7 @@ const gestureCreators = {
     pluggableCreateWire,
     handleCreateGizmo,
     //
+    metaDrawInk,
     emptySpaceCreateGizmoOrLinear,
     emptySpaceDrawInk
   ]

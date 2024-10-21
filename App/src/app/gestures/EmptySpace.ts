@@ -5,6 +5,17 @@ import { createGizmo } from "./effects/CreateGizmo"
 import { createLead } from "./effects/CreateLead"
 import MetaToggle from "../gui/MetaToggle"
 
+export function metaDrawInk(ctx: EventContext): Gesture | void {
+  if (MetaToggle.active && ctx.pseudoCount === 1) {
+    const stroke = ctx.root.adopt(new Stroke())
+    return new Gesture("Draw Ink", {
+      moved(ctx) {
+        stroke.points.push(ctx.event.position)
+      }
+    })
+  }
+}
+
 export function emptySpaceDrawInk(ctx: EventContext): Gesture | void {
   if (!MetaToggle.active) {
     const stroke = ctx.root.adopt(new Stroke())

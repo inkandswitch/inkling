@@ -1,5 +1,6 @@
 import { EventContext, Gesture } from "../Gesture"
 import MetaToggle, { aMetaToggle } from "../gui/MetaToggle"
+import { Root } from "../Root"
 
 declare global {
   function cycleTheme(): void
@@ -47,6 +48,7 @@ export function metaToggleIgnorePencil(ctx: EventContext): Gesture | void {
     })
   ) {
     // This gesture exists just to block other gestures from running when a pencil touch begins on the Meta Toggle
+    Root.reset()
     return new Gesture("Ignore Pencil", {})
   }
 }
