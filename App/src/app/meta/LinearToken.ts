@@ -51,7 +51,7 @@ export default class LinearToken extends Token {
     height: this.height
   })
   private readonly eq = SVG.add("text", this.elm, { class: "token-text", content: "=" })
-  private readonly dot = SVG.add("text", this.elm, { class: "token-text", content: "•" })
+  private readonly times = SVG.add("text", this.elm, { class: "token-text", content: "×" })
   private readonly plus = SVG.add("text", this.elm, { class: "token-text", content: "+" })
 
   constructor(
@@ -98,20 +98,27 @@ export default class LinearToken extends Token {
     })
 
     let p = { x: 0, y: 0 }
-    this.y.position = Vec.add(this.position, p)
-    p.x += this.y.width
-    SVG.update(this.eq, { transform: SVG.positionToTransform(p) })
-    p.x += 25
     this.m.position = Vec.add(this.position, p)
     p.x += this.m.width
-    SVG.update(this.dot, { transform: SVG.positionToTransform(p) })
+
+    SVG.update(this.times, { transform: SVG.positionToTransform(p) })
     p.x += 25
+
     this.x.position = Vec.add(this.position, p)
     p.x += this.x.width
+
     SVG.update(this.plus, { transform: SVG.positionToTransform(p) })
     p.x += 25
+
     this.b.position = Vec.add(this.position, p)
     p.x += this.b.width + 5
+
+    SVG.update(this.eq, { transform: SVG.positionToTransform(p) })
+    p.x += 25
+
+    this.y.position = Vec.add(this.position, p)
+    p.x += this.y.width
+
     this.width = p.x
     SVG.update(this.boxElm, { width: this.width })
 
