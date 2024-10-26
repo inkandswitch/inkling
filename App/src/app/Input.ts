@@ -5,6 +5,7 @@ import { erase } from "./gestures/Erase"
 import { gizmoCycleConstraints } from "./gestures/Gizmo"
 import { handleBreakOff, handleCreateGizmo, handleGoAnywhere, handleMoveOrTogglePin } from "./gestures/Handle"
 import { metaToggleFingerActions, metaToggleIgnorePencil } from "./gestures/MetaToggle"
+import { penToggleFingerActions } from "./gestures/PenToggle"
 import { pluggableCreateWire } from "./gestures/Pluggable"
 import { edgeSwipe } from "./gestures/Preset"
 import { strokeAddHandles } from "./gestures/Stroke"
@@ -15,6 +16,7 @@ import SVG from "./Svg"
 
 const gestureCreators = {
   finger: [
+    penToggleFingerActions,
     metaToggleFingerActions,
     //
     handleGoAnywhere,
@@ -31,6 +33,7 @@ const gestureCreators = {
     strokeAddHandles
   ],
   pencil: [
+    penToggleFingerActions,
     metaToggleIgnorePencil,
     erase,
     //

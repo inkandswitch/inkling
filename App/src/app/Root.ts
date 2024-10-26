@@ -134,7 +134,10 @@ presets.push([
   {
     type: "Root",
     variables: [],
-    children: [{ type: "MetaToggle", position: { x: 30, y: 30 } }],
+    children: [
+      { type: "MetaToggle", position: { x: 30, y: 30 } },
+      { type: "PenToggle", position: { x: window.innerWidth / 2, y: 30 } }
+    ],
     constraints: [],
     nextId: 0
   }

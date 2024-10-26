@@ -458,3 +458,15 @@ svg * {
   font-size: 12px;
   translate: -50% 0;
 }
+
+.pen-toggle {
+  display: none;
+
+  &.showing {
+    display: block;
+  }
+
+  &.active {
+    fill: var(--blue);
+  }
+}

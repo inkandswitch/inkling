@@ -1,6 +1,8 @@
 import { Position } from "../lib/types"
 import Vec from "../lib/vec"
+import Config from "./Config"
 import MetaToggle from "./gui/MetaToggle"
+import PenToggle from "./gui/PenToggle"
 
 // TODO: Do we want to add some way to fake pencil input with a finger?
 // That might be a useful thing to add HERE, so that other parts of the system
@@ -125,7 +127,7 @@ export default class Events {
       position: { x: e.clientX, y: e.clientY },
       id: -1,
       state,
-      type: this.keymap.space ? "pencil" : "finger",
+      type: PenToggle.active ? "pencil" : "finger",
       timestamp: performance.now(),
       radius: 1,
       altitude: 0,
@@ -150,28 +152,29 @@ export default class Events {
     this.forcePseudo = [this.keymap["1"], this.keymap["2"], this.keymap["3"], this.keymap["4"]].lastIndexOf(true) + 1
 
     if (state === "began") {
-      if (this.shortcuts[k]) {
-        this.shortcuts[k]()
-        e.preventDefault()
+      if (k === "space") {
+        PenToggle.toggle(true)
+      } else if (k === "Tab") {
+        MetaToggle.toggle()
+      }
+    } else if (state === "ended") {
+      if (k === "space") {
+        PenToggle.toggle(false)
       }
     }
   }
 
-  private shortcuts: Record<string, Function> = {
-    Tab: () => {
-      MetaToggle.toggle()
-    }
-  }
-
   private setupFallbackEvents() {
-    window.onmousedown = (e: MouseEvent) => this.mouseEvent(e, "began")
-    window.onmousemove = (e: MouseEvent) => this.mouseEvent(e, "moved")
-    window.onmouseup = (e: MouseEvent) => this.mouseEvent(e, "ended")
+    Config.fallback = true
+    window.onpointerdown = (e: MouseEvent) => this.mouseEvent(e, "began")
+    window.onpointermove = (e: MouseEvent) => this.mouseEvent(e, "moved")
+    window.onpointerup = (e: MouseEvent) => this.mouseEvent(e, "ended")
     window.onkeydown = (e: KeyboardEvent) => this.keyboardEvent(e, "began")
     window.onkeyup = (e: KeyboardEvent) => this.keyboardEvent(e, "ended")
   }
 
   private disableFallbackEvents() {
+    Config.fallback = false
     window.onmousedown = null
     window.onmousemove = null
     window.onmouseup = null
