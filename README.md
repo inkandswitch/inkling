@@ -6,10 +6,8 @@ Inkling is a now-archived **research project**. We do not offer support for it. 
 
 You can use Inkling in one of two ways.
 
-* We *highly* recommend using an iPad and Apple Pencil, if you have those available. It takes a bit more effort to get up and running, but then you'll get to experience the system as it was meant to be used.
-* Alternatively, you can run the app on a desktop computer in a web browser. It's quick and easy to run, but a royal pain in the butt to use.
-
-Ironically, Inkling doesn't work in the browser on mobile devices.
+* We *highly* recommend using an iPad and Apple Pencil, if you have those available. It takes a little more effort initially, but then you get to experience the system as it was meant to be used. It feels fantastic.
+* Alternatively, you can run the app in a web browser. It's easier to get started, but two-handed gestures don't work, which ruins the feeling of the tool.
 
 ### Running on iPad
 You'll need a Mac with Xcode, an iPad, and an Apple Pencil.
