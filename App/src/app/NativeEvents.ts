@@ -21,24 +21,24 @@ export type Event = PencilEvent | FingerEvent
 export type InputState = PencilState | FingerState
 
 export type EventType = Event["type"]
-export type EventState = "began" | "moved" | "ended"
+export type EventState = "hover" | "began" | "moved" | "ended"
 export type TouchId = number
 
 // This is hacked in from PlayBook as part of the prep for LIVE — redundant with other stuff here, sorry past-Ivan
 export type NativeEventType = "pencil" | "finger"
-export type NativeEventPhase = "began" | "moved" | "ended"
+export type NativeEventPhase = "hover" | "began" | "moved" | "ended"
 export type NativeEvent = {
   id: TouchId
   type: NativeEventType
   phase: NativeEventPhase
   predicted: boolean
   position: Position
-  worldPos: Position
   pressure: number
   altitude: number
   azimuth: number
   rollAngle: number
   radius: number
+  z: number
   timestamp: number
 }
 
@@ -55,6 +55,7 @@ export interface PencilEvent extends SharedEventProperties {
   pressure: number
   altitude: number
   azimuth: number
+  z: number
 }
 
 export interface FingerEvent extends SharedEventProperties {
@@ -99,12 +100,14 @@ export default class Events {
       // prettier-ignore
       if (event.type === 'finger') {
         switch(event.state) {
+          case 'hover': throw new Error("Finger hovering isn't real")
           case 'began': state = this.fingerBegan(event); break;
           case 'moved': state = this.fingerMoved(event); break;
           case 'ended': state = this.fingerEnded(event); break;
         }
       } else {
         switch(event.state) {
+          case 'hover': state = this.pencilBegan(event); break;
           case 'began': state = this.pencilBegan(event); break;
           case 'moved': state = this.pencilMoved(event); break;
           case 'ended': state = this.pencilEnded(event); break;
@@ -132,7 +135,8 @@ export default class Events {
       radius: 1,
       altitude: 0,
       azimuth: 0,
-      pressure: 1
+      pressure: 1,
+      z: 0
     })
   }
 
@@ -187,11 +191,11 @@ export default class Events {
     (window as any).wrapperEvents = (nativeEvents: NativeEvent[]) => {
       this.disableFallbackEvents();
       for (const nativeEvent of nativeEvents) {
-        const { id, type, phase, timestamp, position, radius, pressure, altitude, azimuth } = nativeEvent;
+        const { id, type, phase, timestamp, position, radius, pressure, altitude, azimuth, z } = nativeEvent;
         const sharedProperties = { id, state: phase, type, timestamp, position, radius };
         const event: Event = type === 'finger'
           ? { ...sharedProperties, type }
-          : { ...sharedProperties, type, pressure, altitude, azimuth };
+          : { ...sharedProperties, type, pressure, altitude, azimuth, z };
         this.events.push(event);
       }
     };

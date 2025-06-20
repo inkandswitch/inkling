@@ -13,7 +13,7 @@ export type EventContext = {
 }
 
 type GestureAPI = Partial<{
-  claim: "pencil" | "finger" | "fingers" | PredicateFn
+  claim: "hover" | "pencil" | "finger" | "fingers" | PredicateFn
   pseudo: boolean
   began: EventHandler
   moved: EventHandler
