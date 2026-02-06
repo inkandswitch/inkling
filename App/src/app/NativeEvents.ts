@@ -87,7 +87,7 @@ export default class Events {
   forcePseudo: number = 0
 
   constructor(private applyEvent: ApplyEvent) {
-    this.setupFallbackEvents()
+    // this.setupFallbackEvents()
     this.setupNativeEventHandler()
   }
 
@@ -263,7 +263,7 @@ export default class Events {
   pencilEnded(event: PencilEvent) {
     let state = this.pencilState
     if (!state) {
-      ;(state = this.pencilBegan(event)), false
+      ;((state = this.pencilBegan(event)), false)
     }
     state.down = false
     state.event = event
