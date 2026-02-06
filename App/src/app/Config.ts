@@ -1,6 +1,6 @@
 export default {
   renderDebugPerf: false,
-  presentationMode: true,
+  presentationMode: false,
   fingerOfGod: true,
   fallback: false
 }
