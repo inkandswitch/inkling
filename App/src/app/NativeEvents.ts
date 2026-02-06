@@ -87,7 +87,7 @@ export default class Events {
   forcePseudo: number = 0
 
   constructor(private applyEvent: ApplyEvent) {
-    // this.setupFallbackEvents()
+    this.setupFallbackEvents()
     this.setupNativeEventHandler()
   }
 
