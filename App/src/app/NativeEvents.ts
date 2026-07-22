@@ -26,7 +26,9 @@ export type TouchId = number
 
 // This is hacked in from PlayBook as part of the prep for LIVE — redundant with other stuff here, sorry past-Ivan
 export type NativeEventType = "pencil" | "finger"
-export type NativeEventPhase = "began" | "moved" | "ended"
+// The (kiosk) wrapper also emits "hover"/"risen" for the pencil; Inkling has no hover support,
+// so those phases are filtered out in setupNativeEventHandler before they reach update().
+export type NativeEventPhase = "began" | "moved" | "ended" | "hover" | "risen"
 export type NativeEvent = {
   id: TouchId
   type: NativeEventType
@@ -187,7 +189,10 @@ export default class Events {
     (window as any).wrapperEvents = (nativeEvents: NativeEvent[]) => {
       this.disableFallbackEvents();
       for (const nativeEvent of nativeEvents) {
+        // The kiosk wrapper sends predicted touches and pencil hover/risen phases; Inkling wants neither.
+        if (nativeEvent.predicted) continue;
         const { id, type, phase, timestamp, position, radius, pressure, altitude, azimuth } = nativeEvent;
+        if (phase !== 'began' && phase !== 'moved' && phase !== 'ended') continue;
         const sharedProperties = { id, state: phase, type, timestamp, position, radius };
         const event: Event = type === 'finger'
           ? { ...sharedProperties, type }
